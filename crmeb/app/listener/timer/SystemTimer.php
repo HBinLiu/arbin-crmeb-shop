@@ -19,7 +19,6 @@ class SystemTimer implements ListenerInterface
 {
     public function handle($event): void
     {
-
         new Crontab('*/6 * * * * *', function () {
             file_put_contents(runtime_path() . '.timer', time());
         });
@@ -30,13 +29,9 @@ class SystemTimer implements ListenerInterface
         foreach ($list as &$item) {
             //获取定时任务时间字符串
             $timeStr = $this->getTimerStr($item);
-//            Log::error('mark:'.$item['mark']);
-//            Log::error($timeStr);
-
+            //未支付自动取消订单
             if ($item['mark'] == 'order_cancel') {
                 new Crontab($timeStr, function () {
-//                    Log::error('每隔30秒执行一次自动取消订单 '.date('Y-m-d H:i:s'));
-                    //未支付自动取消订单
                     try {
                         /** @var StoreOrderServices $orderServices */
                         $orderServices = app()->make(StoreOrderServices::class);
@@ -46,11 +41,9 @@ class SystemTimer implements ListenerInterface
                     }
                 });
             }
-
+            //拼团到期订单处理
             if ($item['mark'] == 'pink_expiration') {
                 new Crontab($timeStr, function () {
-//                    Log::error('每隔1分钟执行一次拼团到期订单处理 '.date('Y-m-d H:i:s'));
-                    //拼团到期订单处理
                     try {
                         /** @var StorePinkServices $storePinkServices */
                         $storePinkServices = app()->make(StorePinkServices::class);
@@ -60,11 +53,9 @@ class SystemTimer implements ListenerInterface
                     }
                 });
             }
-
+            //自动解绑上级绑定
             if ($item['mark'] == 'agent_unbind') {
                 new Crontab($timeStr, function () {
-//                    Log::error('每隔1分钟执行一次自动解除上级绑定 '.date('Y-m-d H:i:s'));
-                    //自动解绑上级绑定
                     try {
                         /** @var AgentManageServices $agentManage */
                         $agentManage = app()->make(AgentManageServices::class);
@@ -74,11 +65,9 @@ class SystemTimer implements ListenerInterface
                     }
                 });
             }
-
+            //更新直播商品状态
             if ($item['mark'] == 'live_product_status') {
                 new Crontab($timeStr, function () {
-//                    Log::error('每隔3分钟执行一次更新直播商品状态 '.date('Y-m-d H:i:s'));
-                    //更新直播商品状态
                     try {
                         /** @var LiveGoodsServices $liveGoods */
                         $liveGoods = app()->make(LiveGoodsServices::class);
@@ -88,11 +77,9 @@ class SystemTimer implements ListenerInterface
                     }
                 });
             }
-
+            //更新直播间状态
             if ($item['mark'] == 'live_room_status') {
                 new Crontab($timeStr, function () {
-//                    Log::error('每隔3分钟执行一次更新直播间状态 '.date('Y-m-d H:i:s'));
-                    //更新直播间状态
                     try {
                         /** @var LiveRoomServices $liveRoom */
                         $liveRoom = app()->make(LiveRoomServices::class);
@@ -102,11 +89,9 @@ class SystemTimer implements ListenerInterface
                     }
                 });
             }
-
+            //自动收货
             if ($item['mark'] == 'take_delivery') {
                 new Crontab($timeStr, function () {
-//                    Log::error('每隔5分钟执行一次自动收货 '.date('Y-m-d H:i:s'));
-                    //自动收货
                     try {
                         /** @var StoreOrderTakeServices $services */
                         $services = app()->make(StoreOrderTakeServices::class);
@@ -116,11 +101,9 @@ class SystemTimer implements ListenerInterface
                     }
                 });
             }
-
+            //查询预售到期商品自动下架
             if ($item['mark'] == 'advance_off') {
                 new Crontab($timeStr, function () {
-//                    Log::error('每隔5分钟执行一次查询预售到期商品自动下架 '.date('Y-m-d H:i:s'));
-                    //查询预售到期商品自动下架
                     try {
                         /** @var StoreProductServices $product */
                         $product = app()->make(StoreProductServices::class);
@@ -130,11 +113,9 @@ class SystemTimer implements ListenerInterface
                     }
                 });
             }
-
+            //自动好评
             if ($item['mark'] == 'product_replay') {
                 new Crontab($timeStr, function () {
-//                    Log::error('每隔5分钟执行一次自动好评 '.date('Y-m-d H:i:s'));
-                    //自动好评
                     try {
                         /** @var StoreOrderServices $orderServices */
                         $orderServices = app()->make(StoreOrderServices::class);
@@ -144,11 +125,9 @@ class SystemTimer implements ListenerInterface
                     }
                 });
             }
-
+            //清除昨日海报
             if ($item['mark'] == 'clear_poster') {
                 new Crontab($timeStr, function () {
-//                    Log::error('每天0时30分0秒执行一次清除昨日海报 '.date('Y-m-d H:i:s'));
-                    //清除昨日海报
                     try {
                         /** @var SystemAttachmentServices $attach */
                         $attach = app()->make(SystemAttachmentServices::class);
@@ -171,11 +150,11 @@ class SystemTimer implements ListenerInterface
             case 2:
                 $timeStr = '0 */' . $data['minute'] . ' * * * *';
                 break;
-            case 3:
-                $timeStr = '0 0 */' . $data['hour'] . ' * * *';
+            case 3:// 每隔几时第几分钟执行
+                $timeStr = '0 ' . $data['minute'] . ' */' . $data['hour'] . ' * * *';
                 break;
-            case 4:
-                $timeStr = '0 0 0 */' . $data['day'] . ' * *';
+            case 4:// 每隔几日第几小时第几分钟执行
+                $timeStr = '0 ' . $data['minute'] . ' ' . $data['hour'] . ' */' . $data['day'] . ' * *';
                 break;
             case 5:
                 $timeStr = $data['second'] . ' ' . $data['minute'] . ' ' . $data['hour'] . ' * * *';
