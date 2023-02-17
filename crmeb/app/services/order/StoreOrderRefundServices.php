@@ -992,8 +992,6 @@ class StoreOrderRefundServices extends BaseServices
                     $res4 = $res4 && $storeOrderCartInfoServices->update(['oid' => $id, 'cart_id' => $cart['cart_id']], ['refund_num' => (($cartInfo[$cart['cart_id']]['refund_num'] ?? 0) + $cart['cart_num'])]);
                 }
             } else {
-                //修改原订单状态
-                $res2 = false !== $orderServices->update(['id' => $order['id']], ['refund_status' => 1]);
                 foreach ($cartInfos as $cart) {
                     $res4 = $res4 && $storeOrderCartInfoServices->update(['oid' => $id, 'cart_id' => $cart['cart_id']], ['refund_num' => $cart['cart_num']]);
                 }
