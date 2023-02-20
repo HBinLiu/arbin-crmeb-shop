@@ -109,7 +109,7 @@ class StoreSeckill extends AuthController
             $name = 'seckill_' . $unique . '_1';
             /** @var CacheService $cache */
             $cache = app()->make(CacheService::class);
-            $cache->del($name);
+            $cache->delete($name);
         }
         return app('json')->success(100002);
     }
