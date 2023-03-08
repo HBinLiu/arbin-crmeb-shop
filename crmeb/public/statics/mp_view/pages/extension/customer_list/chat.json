@@ -1,8 +1,0 @@
-{
-  "navigationBarTitleText": "对话详情",
-  "navigationStyle": "custom",
-  "disableScroll": true,
-  "usingComponents": {
-    "loading": "/components/Loading/index"
-  }
-}

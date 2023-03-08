@@ -50,7 +50,7 @@ class UserAuthServices extends BaseServices
         if ($token === 'undefined') {
             throw new AuthException(110002);
         }
-        if (!$token || !$tokenData = CacheService::get($md5Token, '', NULL, 'api'))
+        if (!$token || !$tokenData = CacheService::get($md5Token))
             throw new AuthException(110002);
 
         if (!is_array($tokenData) || empty($tokenData) || !isset($tokenData['uid'])) {
