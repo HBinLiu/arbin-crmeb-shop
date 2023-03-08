@@ -214,8 +214,6 @@ export default {
       }
     },
     timerInfo(id) {
-      console.log(id);
-
       timerInfo(id).then((res) => {
         this.modal = true;
         this.formValidate = res.data;
@@ -228,7 +226,6 @@ export default {
     },
     // 提交
     handleSubmit() {
-      console.log(this.formValidate);
       if (!this.formValidate.mark) {
         return this.$Message.error({
           content: '请选择任务名称',
