@@ -36,6 +36,9 @@ class UserRechargeController
      * 用户充值
      * @param Request $request
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function recharge(Request $request)
     {
@@ -53,7 +56,7 @@ class UserRechargeController
         $uid = (int)$request->uid();
         $re = $this->services->recharge($uid, $price, $recharId, $type, $from, true);
         if ($re) {
-            $payType = $re['pay_type'];
+            $payType = $re['pay_type'] ?? '';
             unset($re['pay_type']);
             return app('json')->status($payType, 410125, $re);
         }

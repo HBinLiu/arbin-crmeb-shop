@@ -168,7 +168,7 @@ class StoreOrderController
         $userInfo = $request->user()->toArray();
         if ($checkOrder = $this->services->getOne(['order_id|unique' => $key, 'uid' => $userInfo['uid'], 'is_del' => 0]))
             return app('json')->status('extend_order', 410209, ['orderId' => $checkOrder['order_id'], 'key' => $key]);
-        [$addressId, $couponId, $payType, $useIntegral, $mark, $combinationId, $pinkId, $seckillId, $bargainId, $shipping_type, $real_name, $phone, $storeId, $news, $invoice_id, $quitUrl, $advanceId, $virtual_type, $customForm] = $request->postMore([
+        [$addressId, $couponId, $payType, $useIntegral, $mark, $combinationId, $pinkId, $seckillId, $bargainId, $shipping_type, $real_name, $phone, $storeId, $news, $invoice_id, $advanceId, $customForm] = $request->postMore([
             [['addressId', 'd'], 0],
             [['couponId', 'd'], 0],
             ['payType', ''],
@@ -184,9 +184,7 @@ class StoreOrderController
             [['store_id', 'd'], 0],
             ['new', 0],
             [['invoice_id', 'd'], 0],
-            ['quitUrl', ''],
             [['advanceId', 'd'], 0],
-            ['virtual_type', 0],
             ['custom_form', []],
         ], true);
         $payType = strtolower($payType);
@@ -213,9 +211,13 @@ class StoreOrderController
     }
 
     /**
+     * @param Request $request
      * @param $orderId
      * @param string $type
      * @return \think\Response
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      * @author 等风来
      * @email 136327134@qq.com
      * @date 2023/2/13
@@ -225,7 +227,6 @@ class StoreOrderController
         if (!$orderId) {
             return app('json')->fail(100100);
         }
-
         return app('json')->success($this->services->getCashierInfo((int)$request->uid(), $orderId, $type));
     }
 
@@ -249,6 +250,7 @@ class StoreOrderController
         if (!$uni) return app('json')->fail(100100);
         $orderInfo = $this->services->get(['order_id' => $uni]);
         $uid = $type == 1 ? (int)$request->uid() : $orderInfo->uid;
+        $orderInfo->is_channel = $this->getChennel[$request->getFromType()] ?? ($request->isApp() ? 0 : 1);
         $orderInfo->pay_uid = $uid;
         $orderInfo->save();
         $orderInfo = $orderInfo->toArray();
@@ -260,9 +262,6 @@ class StoreOrderController
         if ($order['pink_id'] && $services->isPinkStatus($order['pink_id'])) {
             return app('json')->fail(410215);
         }
-
-        //重新生成订单号去支付
-        $order['order_id'] = mt_rand(100, 999) . '_' . $order['order_id'];
 
         //0元支付
         if (bcsub((string)$orderInfo['pay_price'], '0', 2) <= 0) {
@@ -428,6 +427,7 @@ class StoreOrderController
      * 订单删除
      * @param Request $request
      * @return mixed
+     * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     public function del(Request $request)
     {
@@ -467,8 +467,14 @@ class StoreOrderController
     /**
      * 订单 查看物流
      * @param Request $request
+     * @param StoreOrderCartInfoServices $services
+     * @param ExpressServices $expressServices
      * @param $uni
+     * @param string $type
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function express(Request $request, StoreOrderCartInfoServices $services, ExpressServices $expressServices, $uni, $type = '')
     {
@@ -484,6 +490,7 @@ class StoreOrderController
             foreach ($order['cart_info'] as $k => $cart) {
                 $cartNew['cart_num'] = $cart['cart_num'];
                 $cartNew['truePrice'] = $cart['truePrice'];
+                $cartNew['postage_price'] = $cart['postage_price'];
                 $cartNew['productInfo']['image'] = $cart['productInfo']['image'];
                 $cartNew['productInfo']['store_name'] = $cart['productInfo']['store_name'];
                 $cartNew['productInfo']['unit_name'] = $cart['productInfo']['unit_name'] ?? '';
@@ -507,6 +514,7 @@ class StoreOrderController
                 $cart = json_decode($cart, true);
                 $cartNew['cart_num'] = $cart['cart_num'];
                 $cartNew['truePrice'] = $cart['truePrice'];
+                $cartNew['postage_price'] = $cart['postage_price'];
                 $cartNew['productInfo']['image'] = $cart['productInfo']['image'];
                 $cartNew['productInfo']['store_name'] = $cart['productInfo']['store_name'];
                 $cartNew['productInfo']['unit_name'] = $cart['productInfo']['unit_name'] ?? '';
