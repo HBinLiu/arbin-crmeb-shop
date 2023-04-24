@@ -55,9 +55,7 @@ export default {
     if (Number(this.$route.query.type) === 1) {
       this.iframeUrl = `${moveLink}/pages/index/index?type=iframeWindow`;
     } else {
-      this.iframeUrl = `https://v4.wuht.net/pages/index/index?type=iframeWindow`;
-
-      // this.iframeUrl = `${location.origin}/pages/index/index?type=iframeWindow`;
+      this.iframeUrl = `${location.origin}/pages/index/index?type=iframeWindow`;
     }
     diyGetInfo(parseInt(pageId)).then((datas) => {
       let data = datas.data.info.value;
