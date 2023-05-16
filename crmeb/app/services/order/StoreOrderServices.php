@@ -2588,7 +2588,7 @@ HTML;
             'is_del' => 0,
             'paid' => 1,
             'status' => 2,
-            'change_type' => ['take_delivery', 'user_take_delivery']
+            'change_type' => ['take_delivery','user_take_delivery']
         ], 30);
         foreach ($orderList as $item) {
             AutoCommentJob::dispatch([$item['id'], $item['cart_id']]);
