@@ -157,7 +157,7 @@ APP下载：http://app.crmeb.cn/bzv （苹果手机直接在APP Store里搜索CR
 
 UI：xy-yyds、LXT
 
-测试：夏天、绵绵羊、。ws
+测试：夏天、绵绵羊、。ws、半山
 
 ### 使用须知
 
