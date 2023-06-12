@@ -33762,7 +33762,6 @@ INSERT INTO `eb_system_config` (`id`, `menu_name`, `type`, `input_type`, `config
 (433, 'network_security', 'text', 'input', 26, '', 1, '', 0, 0, '\"\\u4eac\\u516c\\u7f51\\u5b89\\u5907xxxxxx\\u53f7\"', '网安备案', '公安部门登记的备案信息，显示在pc底部', 8, 1),
 (435, 'icp_url', 'text', 'input', 26, '', 1, '', 0, 0, '\"https:\\/\\/beian.miit.gov.cn\"', 'ICP备案链接', 'H5和PC底部显示的ICP备案号点击跳转的链接', 9, 1),
 (436, 'network_security_url', 'text', 'input', 26, '', 1, '', 0, 0, '\"https:\\/\\/www.beian.gov.cn\"', '网安备案链接', 'H5和PC底部显示的网安备案号点击跳转的链接', 7, 1),
-(437, 'agent_apply_open', 'radio', 'input', 72, '1=>开启\n0=>关闭', 1, '', 0, 0, '1', '代理商申请开关', '控制移动端我的推广页面的代理商申请按钮是否显示', 0, 1),
 (438, 'order_shipping_open', 'radio', 'input', 7, '1=>开启\n0=>关闭', 1, '', 0, 0, '0', '小程序发货信息管理服务', '小程序有订单发货管理时，请打开此开关，否则会导致订单资金冻结', 0, 1);
 
 -- --------------------------------------------------------
