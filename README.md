@@ -14,7 +14,7 @@
         <img src="https://img.shields.io/badge/Licence-GPL3.0-green.svg?style=flat" />
     </a>
     <a href="http://www.crmeb.com">
-        <img src="https://img.shields.io/badge/Edition-4.5-blue.svg" />
+        <img src="https://img.shields.io/badge/Edition-5.0-blue.svg" />
     </a>
      <a href="https://gitee.com/ZhongBangKeJi/CRMEB/repository/archive/master.zip">
         <img src="https://img.shields.io/badge/Download-150m-red.svg" />
