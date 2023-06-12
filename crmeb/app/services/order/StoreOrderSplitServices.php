@@ -168,9 +168,8 @@ class StoreOrderSplitServices extends BaseServices
                 }
                 $storeOrderCartInfoServices->saveAll($cart_data_all);
 
-                $new_order = $this->dao->get($new_id);
                 $storeOrderCartInfoServices->clearOrderCartInfo($new_id);
-                $this->splitComputeOrder((int)$new_id, $cart_data_all, (float)($change_price ? $order_pay_price : 0), (float)$orderInfo['pay_price'], (float)($new_order['pay_price'] ?? 0));
+                $this->splitComputeOrder((int)$new_id, $cart_data_all, (float)($change_price ? $order_pay_price : 0), (float)$orderInfo['pay_price'], (float)($order['pay_price'] ?? 0));
                 $new_order = $this->dao->get($new_id);
                 if ($key == 'new') {
                     $order = $new_order;
@@ -310,7 +309,7 @@ class StoreOrderSplitServices extends BaseServices
             if ($pre_pay_price) {//上一个已经计算 这里减法
                 $order_update['pay_price'] = bcsub((string)$pay_price, (string)$pre_pay_price, 2);
             } else {//按比例计算实际支付金额
-                $order_update['pay_price'] = bcmul((string)bcdiv((string)$pay_price, (string)$order_pay_price, 4), (string)$order_update['pay_price'], 2);
+                $order_update['pay_price'] = bcmul((string)bcdiv((string)$order_update['pay_price'], (string)$order_pay_price, 4), (string)$pay_price, 2);
             }
         }
 
@@ -335,6 +334,7 @@ class StoreOrderSplitServices extends BaseServices
      * 部分发货重新计算订单商品：实际金额、优惠、积分等金额
      * @param int $cart_num
      * @param array $cart_info
+     * @param string $orderType
      * @return array
      */
     public function slpitComputeOrderCart(int $cart_num, array $cart_info, $orderType = 'new')
@@ -353,9 +353,17 @@ class StoreOrderSplitServices extends BaseServices
             if ($field == 'use_integral') $scale = 0;
             $new_cart_info[$field] = bcmul((string)$cart_num, bcdiv((string)$cart_info[$field], (string)$cart_info['cart_num'], 4), $scale);
             if ($orderType == 'new') {//拆出
-                $new_cart_info[$field] = bcmul((string)$cart_num, bcdiv((string)$cart_info[$field], (string)$cart_info['cart_num'], 4), $scale);
+                if ($field == 'sum_true_price') {
+                    $new_cart_info[$field] = round(bcmul((string)$cart_num, bcdiv((string)$cart_info[$field], (string)$cart_info['cart_num'], 4), 4), 2, PHP_ROUND_HALF_UP);
+                } else {
+                    $new_cart_info[$field] = bcmul((string)$cart_num, bcdiv((string)$cart_info[$field], (string)$cart_info['cart_num'], 4), $scale);
+                }
             } else {
-                $field_number = bcmul((string)bcsub((string)$cart_info['cart_num'], (string)$cart_num, 0), bcdiv((string)$cart_info[$field], (string)$cart_info['cart_num'], 4), $scale);
+                if ($field == 'sum_true_price') {
+                    $field_number = round(bcmul((string)bcsub((string)$cart_info['cart_num'], (string)$cart_num, 0), bcdiv((string)$cart_info[$field], (string)$cart_info['cart_num'], 4), 4), 2, PHP_ROUND_HALF_UP);
+                } else {
+                    $field_number = bcmul((string)bcsub((string)$cart_info['cart_num'], (string)$cart_num, 0), bcdiv((string)$cart_info[$field], (string)$cart_info['cart_num'], 4), $scale);
+                }
                 $new_cart_info[$field] = bcsub((string)$cart_info[$field], (string)$field_number, $scale);
             }
         }

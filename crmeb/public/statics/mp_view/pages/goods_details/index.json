@@ -10,6 +10,7 @@
     "kefu-icon": "/components/kefuIcon/index",
     "menu-icon": "/components/menuIcon",
     "cus-preview-img": "/components/cusPreviewImg/index",
+    "swiper-previe": "/components/cusPreviewImg/swiperPrevie",
     "authorize": "/components/Authorize",
     "parser": "/components/jyf-parser/jyf-parser",
     "home-list": "/components/homeList/index"
