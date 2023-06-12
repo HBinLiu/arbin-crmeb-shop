@@ -51,15 +51,15 @@ CRMEB开源商城Java版：https://gitee.com/ZhongBangKeJi/crmeb_java
 ~~~
 多 语 言：后台随时配置语言包，移动端支持多语言切换；
 高 性 能：redis缓存、队列、长连接、多种云储存、支持集群部署；
-个 性 UI：多种风格切换、支持DIY各种首页/专题页面
+个 性 UI：前后台多种风格切换、支持DIY各种首页/专题页面
 前后端分离：后端TP6，管理端iviewui，移动端uniapp；
 代码规范：遵循PSR-2命名规范、Restful标准接口、代码严格分层、注释齐全、统一错误码；
 权限管理：内置强大灵活的权限管理，可以控制到每一个菜单；
 开发配置：低代码增加配置、系统组合数据模块；
-二开效率：PHP快速生成表单、内置所有事件、后台在线编辑器、代码注释齐全、完整接口文档；
-快速上手：详细帮助文档、接口文档、数据库字典、代码注释、一键安装；
+二开效率：PHP快速生成表单、内置所有事件、后台接口管理调试、后台代码在线编辑器、代码生成，快速对接第三方接口；
+快速上手：详细帮助文档、后台接口管理、后台数据库字典、系统文件管理备注、代码注释、一键安装；
 系统安全：系统操作日志、系统生产日志、文件校验、数据备份；
-系统功能：请看帮助文档 https://doc.crmeb.com/single/crmeb_v4/1758
+系统功能：请看帮助文档 https://doc.crmeb.com/single/v5
 用户体验：等您来评！
 ~~~
 
@@ -69,7 +69,7 @@ CRMEB开源商城Java版：https://gitee.com/ZhongBangKeJi/crmeb_java
 ```
 Nignx/Apache/IIS
 PHP 7.1 ~ 7.4 
-MySQL 5.7
+MySQL 5.7 ～ 8.0
 Redis
 ```
 
@@ -99,11 +99,11 @@ Redis
 
 ![输入图片说明](readme/pic/20公众号.jpg)
 
-管理后台： http://v4.crmeb.net/admin 账号：demo 密码：crmeb.com
+管理后台： http://v5.crmeb.net/admin 账号：demo 密码：crmeb.com
 
-H5端：http://v4.crmeb.net/（移动端打开）
+H5端：http://v5.crmeb.net/（移动端打开）
 
-PC端：http://v4.crmeb.net/（电脑端打开）
+PC端：http://v5.crmeb.net/（电脑端打开）
 
 APP下载：http://app.crmeb.cn/bzv （苹果手机直接在APP Store里搜索CRMEB下载）
 
