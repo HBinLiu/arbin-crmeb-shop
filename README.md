@@ -89,7 +89,7 @@ Redis
 #### 体验云部署
  不懂服务器？不懂技术？无法解决高并发？想数据私有化？还想后期定制开发？
 
- 推荐云部署版一键超低价格低至 :collision:  9.9元/年，解决以上所有问题<a href='https://saas.crmeb.com/saas-home-software-detail-50043-s-y.html' target='_blank'>点击了解 </a>
+ 推荐云部署版，解决以上所有问题<a href='https://saas.crmeb.com/saas-home-software-detail-50043-s-y.html' target='_blank'>点击了解 </a>
 
 ---
 
