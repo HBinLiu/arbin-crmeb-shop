@@ -13,7 +13,7 @@ CRMEB开源商城系统PHP版
         <img src="https://img.shields.io/badge/Licence-GPL3.0-green.svg?style=flat" />
     </a>
     <a href="http://www.crmeb.com">
-        <img src="https://img.shields.io/badge/Edition-4.5-blue.svg" />
+        <img src="https://img.shields.io/badge/Edition-5.0-blue.svg" />
     </a>
      <a href="https://gitee.com/ZhongBangKeJi/CRMEB/repository/archive/master.zip">
         <img src="https://img.shields.io/badge/Download-150m-red.svg" />
@@ -93,6 +93,7 @@ CRMEB开源商城Java版：https://gitee.com/ZhongBangKeJi/crmeb_java
 6.快速上手：详细帮助文档、后台接口管理、后台数据库字典、系统文件管理备注、代码注释、一键安装；
 7.系统安全：系统操作日志、系统生产日志、文件校验、数据备份；
 8.高 性 能：支持Redis缓存、队列、长连接、多种云储存、支持集群部署。
+
 ~~~
 ---
 
@@ -101,7 +102,7 @@ CRMEB开源商城Java版：https://gitee.com/ZhongBangKeJi/crmeb_java
 ```
 Nignx/Apache/IIS
 PHP 7.1 ~ 7.4 
-MySQL 5.7
+MySQL 5.7 ～ 8.0
 Redis
 ```
 
