@@ -178,7 +178,7 @@ So~~想要用CRMEB开源商城系统做公益项目的朋友，可以来免费�
 #### 技术娱乐！代码写累了？那就歇会吧！扫码让你开心一刻！
 ![输入图片说明](readme/pic/小剧场.jpg)
 #### 技术社区！找方法、提bug、看官方消息、拿活跃大奖！都在 <a href="https://www.crmeb.com/ask" target="_blank">CRMEB 技术社区</a> 应有尽有
-#### 技术交流！CRMEB开源商城系统开发 QQ频道 欢迎扫码加入 一起交流学习
+#### 技术交流！[CRMEB开源商城系统开发QQ频道已开启，点击加入一起交流学习]（https://pd.qq.com/s/1v2yb4e0p）
 ![输入图片说明](readme/pic/联系我们.jpg)
 
 ---
