@@ -2,10 +2,6 @@
   <div>
     <Row class="expand-row">
       <Col span="8">
-        <span class="expand-key">下单时间：</span>
-        <span class="expand-value" v-text="row.add_time"></span>
-      </Col>
-      <Col span="8">
         <span class="expand-key">用户备注：</span>
         <span class="expand-value" v-text="row.mark ? row.mark : '无'"></span>
       </Col>

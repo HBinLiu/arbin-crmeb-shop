@@ -25,6 +25,9 @@
 											<view class="fail-msg" v-if="child.fail_msg">
 												{{$t(`原因`)}}：{{child.fail_msg}}
 											</view>
+											<view class="fail-msg" v-else-if="child.extract_type">
+												{{$t(`提现方式`)}}：{{child.extract_type}}
+											</view>
 										</view>
 										<view class='num font-color' v-if="child.pm == 1">+{{child.number}}</view>
 										<view class='num' v-else>-{{child.number}}</view>

@@ -969,7 +969,7 @@
 						margin-bottom: 33rpx !important;
 
 						.pictrue {
-							height: 216rpx;
+							// height: 216rpx;
 						}
 
 						.text {

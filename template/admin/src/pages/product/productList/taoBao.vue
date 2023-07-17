@@ -1,6 +1,6 @@
 <template>
   <div class="Box">
-    <Card>
+    <Card :dis-hover="true">
       <div>
         生成的商品默认是没有上架的，请手动上架商品！
         <a href="http://help.crmeb.net/crmeb-v4/1863579" v-if="copyConfig.copy_type == 2" target="_blank"
@@ -69,7 +69,7 @@
                   v-model="formValidate.cate_id"
                   size="small"
                   :options="treeSelect"
-                  :props="{ multiple: true, emitPath: false }"
+                  :props="{ multiple: true, emitPath: false, checkStrictly: true }"
                   clearable
                 ></el-cascader>
               </FormItem>

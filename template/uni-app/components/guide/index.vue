@@ -70,22 +70,8 @@
 			jump(url) {
 				if (url) {
 					clearInterval(this.timecount)
-					if (url.indexOf("http") != -1) {
-						uni.navigateTo({
-							url: `/pages/annex/web_view/index?url=${url}`
-						});
-					} else {
-						uni.reLaunch({
-							url: url,
-							fail: () => {
-								uni.switchTab({
-									url
-								})
-							}
-						})
-					}
+					this.$util.JumpPath(url);
 				}
-
 			},
 		}
 	}

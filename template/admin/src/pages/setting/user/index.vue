@@ -14,13 +14,13 @@
         <FormItem label="姓名" prop="real_name">
           <Input type="text" v-model="formValidate.real_name" class="input"></Input>
         </FormItem>
-        <FormItem label="原始密码" prop="pwd">
+        <FormItem label="原始密码">
           <Input type="password" v-model="formValidate.pwd" class="input"></Input>
         </FormItem>
-        <FormItem label="新密码" prop="new_pwd">
+        <FormItem label="新密码">
           <Input type="password" v-model="formValidate.new_pwd" class="input"></Input>
         </FormItem>
-        <FormItem label="确认新密码" prop="conf_pwd">
+        <FormItem label="确认新密码">
           <Input type="password" v-model="formValidate.conf_pwd" class="input"></Input>
         </FormItem>
         <FormItem>
@@ -64,9 +64,6 @@ export default {
       },
       ruleValidate: {
         real_name: [{ required: true, message: '您的姓名不能为空', trigger: 'blur' }],
-        pwd: [{ required: true, message: '请输入您的原始密码', trigger: 'blur' }],
-        new_pwd: [{ required: true, message: '请输入您的新密码', trigger: 'blur' }],
-        conf_pwd: [{ required: true, message: '请确认您的新密码', trigger: 'blur' }],
       },
     };
   },

@@ -135,7 +135,11 @@ export default {
       if (evfile.target.files[0].type !== 'video/mp4') {
         return that.$Message.error('只能上传mp4文件');
       }
-      productGetTempKeysApi().then((res) => {
+      let types = {
+        key: evfile.target.files[0].name,
+        contentType: evfile.target.files[0].type,
+      };
+      productGetTempKeysApi(types).then((res) => {
         that.$videoCloud
           .videoUpload({
             type: res.data.type,

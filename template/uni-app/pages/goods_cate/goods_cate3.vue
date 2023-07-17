@@ -473,7 +473,6 @@
 				let list = this.cartData.cartList;
 				let num = list[index];
 				let stock = list[index].trueStock;
-				console.log(num, list[index].productInfo.limit_num)
 				if (changeValue && list[index].productInfo.limit_type == 1 && num.cart_num >= list[index].productInfo
 					.limit_num) {
 					this.$set(num, 'cart_num', list[index].productInfo.limit_num)
@@ -604,7 +603,6 @@
 						}
 					})
 					.catch(err => {
-						console.log(that.attr)
 						that.attr.productSelect.cart_num = that.attr.productSelect.limit_num
 						return that.$util.Tips({
 							title: err

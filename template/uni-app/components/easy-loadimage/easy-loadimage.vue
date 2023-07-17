@@ -75,17 +75,12 @@
 				this.$nextTick(this.onScroll)
 			},
 			handleImgLoad(e) {
-				// console.log('success');
 				this.showImg = true;
-				// this.$nextTick(function(){
-				//     this.showTransition = true
-				// })
 				setTimeout(() => {
 					this.showTransition = true
 				}, 50)
 			},
 			handleImgError(e) {
-				// console.log('fail');
 				this.isLoadError = true;
 			},
 			onScroll() {

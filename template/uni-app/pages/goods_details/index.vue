@@ -610,6 +610,7 @@
 						this.getCouponList();
 						this.getCartCount();
 						this.downloadFilePromotionCode();
+						// this.ShareInfo();
 					}
 				},
 				deep: true,
@@ -805,7 +806,15 @@
 			 *
 			 */
 			iptCartNum: function(e) {
-				this.$set(this.attr.productSelect, "cart_num", e);
+				if (e) {
+					let number = 1
+					if (Number.isInteger(parseInt(e)) && parseInt(e) > 0) {
+						number = parseInt(e);
+					}
+					this.$nextTick(e => {
+						this.$set(this.attr.productSelect, "cart_num", e < 0 ? 1 : number);
+					})
+				}
 			},
 			// 后退
 			returns() {
@@ -954,7 +963,6 @@
 			 */
 			ChangeAttr: function(res) {
 				let productSelect = this.productValue[res];
-				// console.log(productSelect)
 				if (!productSelect) {
 					this.$util.Tips({
 						title: this.$t(`重新选择`),
@@ -1122,18 +1130,19 @@
 						that.$set(that, "navList", navList);
 						that.$set(that, "storeImage", that.storeInfo.image);
 						that.$set(that, "svip_price_open", res.data.svip_price_open);
-						// #ifdef H5
-						if (that.isLogin) {
-							that.ShareInfo();
-						}
-						// #endif
 						if (that.isLogin) {
 							that.getUserInfo();
 						}
 						// #ifdef H5 || APP-PLUS
 						this.getImageBase64();
 						// #endif
+						// #ifdef H5
+						if (that.isLogin) {
+							that.ShareInfo();
+						}
+						// #endif
 						this.$nextTick(() => {
+
 							if (good_list.length) {
 								// #ifndef APP-PLUS
 								that.setClientHeight();
@@ -1477,7 +1486,6 @@
 						that.attr.productSelect.unique : "",
 					virtual_type: that.storeInfo.virtual_type,
 				};
-				// console.log(q)
 				postCartAdd(q)
 					.then(function(res) {
 						that.isOpen = false;
@@ -1555,6 +1563,7 @@
 			 */
 			listenerActionSheet() {
 				this.currentPage = false
+				this.downloadFilePromotionCode();
 				if (this.isLogin === false) {
 					toLogin();
 				} else {
@@ -1563,10 +1572,10 @@
 						return
 					}
 					// #ifdef H5
-					if (this.$wechat.isWeixin() === true) {
+					if (this.$wechat.isWeixin()) {
+						// this.ShareInfo()
 						this.weixinStatus = true;
 					}
-					this.downloadFilePromotionCode();
 					// #endif
 					// #ifdef MP
 					// this.downloadFilePromotionCode();

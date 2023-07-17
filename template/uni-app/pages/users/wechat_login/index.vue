@@ -22,11 +22,11 @@
 				<!-- #endif -->
 				<!-- #ifdef MP -->
 				<button hover-class="none" v-if="mp_is_new" @tap="userLogin"
-					class="bg-green btn1">{{$t(`微信登录`)}}</button>
+					class="bg-green btn1">{{$t(`授权登录`)}}</button>
 				<button v-else-if="canUseGetUserProfile && code" hover-class="none" @tap="getUserProfile"
-					class="bg-green btn1">{{$t(`微信登录`)}}</button>
+					class="bg-green btn1">{{$t(`授权登录`)}}</button>
 				<button v-else hover-class="none" open-type="getUserInfo" @getuserinfo="setUserInfo"
-					class="bg-green btn1">{{$t(`微信登录`)}}</button>
+					class="bg-green btn1">{{$t(`授权登录`)}}</button>
 				<!-- #endif -->
 				<!-- <button hover-class="none" @click="phoneLogin" class="btn2">{{$t(`手机号登录`)}}</button> -->
 			</view>
@@ -315,7 +315,7 @@
 					}, {
 						tab: 3
 					});
-					// #endiff
+					// #endif
 				}
 			},
 			// #ifdef MP

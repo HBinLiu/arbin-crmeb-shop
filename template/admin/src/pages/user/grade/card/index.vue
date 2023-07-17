@@ -18,7 +18,7 @@
         <Row type="flex">
           <Col v-bind="grid">
             <Button type="primary" icon="md-add" @click="addBatch" class="mr20">添加批次</Button>
-            <Button @click="getMemberScan">下载二维码</Button>
+            <Button @click="getMemberScan">卡密使用页面二维码</Button>
           </Col>
         </Row>
       </Form>

@@ -10,15 +10,15 @@
       >
         <Row type="flex" :gutter="24">
           <Col v-bind="grid">
-            <FormItem label="是否有效：" label-for="status">
+            <FormItem label="是否开启：" label-for="status">
               <Select v-model="tableFrom.status" placeholder="请选择" clearable @on-change="userSearchs">
-                <Option value="1">正常</Option>
-                <Option value="0">未开启</Option>
+                <Option value="1">开启</Option>
+                <Option value="0">关闭</Option>
               </Select>
             </FormItem>
           </Col>
           <Col v-bind="grid">
-            <FormItem label="类型：" label-for="status">
+            <FormItem label="发送方式：" label-for="status">
               <Select v-model="receive_type" placeholder="请选择" clearable @on-change="userSearchs">
                 <Option value="all">全部</Option>
                 <Option value="1">手动领取</Option>

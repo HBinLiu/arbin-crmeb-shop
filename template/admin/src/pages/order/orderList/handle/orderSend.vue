@@ -8,7 +8,14 @@
     width="1000"
     @on-visible-change="changeModal"
   >
-    <Form v-if="modals" ref="formItem" :model="formItem" :label-width="100" @submit.native.prevent>
+    <Form
+      v-if="modals"
+      ref="formItem"
+      :rules="ruleValidate"
+      :model="formItem"
+      :label-width="100"
+      @submit.native.prevent
+    >
       <FormItem label="选择类型：">
         <RadioGroup v-model="formItem.type" @on-change="changeRadio">
           <Radio label="1" v-if="virtual_type !== 3">发货</Radio>
@@ -18,58 +25,95 @@
       </FormItem>
       <FormItem v-if="formItem.type == 1" v-show="export_open" label="发货类型：">
         <RadioGroup v-model="formItem.express_record_type" @on-change="changeExpress">
-          <Radio label="1">手动填写</Radio>
+          <Radio label="3">商家寄件</Radio>
+          <Radio label="1">录入单号</Radio>
           <Radio label="2">电子面单打印</Radio>
         </RadioGroup>
       </FormItem>
+      <template v-if="['2', '3'].includes(formItem.express_record_type) && formItem.type == 1">
+        <FormItem label="寄件人姓名：">
+          <Input v-model="formItem.to_name" placeholder="请输入寄件人姓名" style="width: 60%"></Input>
+        </FormItem>
+        <FormItem label="寄件人电话：">
+          <Input v-model="formItem.to_tel" placeholder="请输入寄件人电话" style="width: 60%"></Input>
+        </FormItem>
+        <FormItem label="寄件人地址：">
+          <Input v-model="formItem.to_addr" placeholder="请输入寄件人地址" style="width: 60%" @on-blur="watchPrice"></Input>
+        </FormItem>
+      </template>
       <div>
         <FormItem label="快递公司：" v-if="formItem.type == 1">
-          <Select
-            v-model="formItem.delivery_name"
-            filterable
-            placeholder="请选择快递公司"
-            style="width: 80%"
-            @on-change="expressChange"
-          >
-            <Option v-for="(item, i) in express" :value="item.value" :key="item.value">{{ item.value }}</Option>
+          <div class="from-box">
+            <Select
+              v-model="formItem.delivery_name"
+              filterable
+              placeholder="请选择快递公司"
+              style="width: 60%"
+              @on-change="expressChange"
+            >
+              <Option
+                v-for="item in formItem.express_record_type == 3 ? kuaidiExpress : express"
+                :value="item.value"
+                :key="item.value"
+                >{{ item.value }}</Option
+              >
+            </Select>
+            <div class="trip">{{ deliveryErrorMsg }}</div>
+          </div>
+        </FormItem>
+        <FormItem label="快递业务类型：" v-if="formItem.type == 1 && formItem.express_record_type == 3">
+          <Select v-model="formItem.service_type" filterable placeholder="请选择业务类型" style="width: 60%" @on-change="watchPrice">
+            <Option v-for="item in serviceTypeList" :value="item" :key="item">{{ item }}</Option>
           </Select>
         </FormItem>
         <FormItem v-if="formItem.express_record_type === '1' && formItem.type == 1" label="快递单号：">
-          <Input v-model="formItem.delivery_id" placeholder="请输入快递单号" style="width: 80%"></Input>
+          <Input v-model="formItem.delivery_id" placeholder="请输入快递单号" style="width: 60%"></Input>
           <div class="trips" v-if="formItem.delivery_name == '顺丰速运'">
             <p>顺丰请输入单号 :收件人或寄件人手机号后四位，</p>
             <p>例如：SF000000000000:3941</p>
           </div>
         </FormItem>
-        <template v-if="formItem.express_record_type === '2' && formItem.type == 1">
+        <template v-if="['2', '3'].includes(formItem.express_record_type) && formItem.type == 1">
           <FormItem label="电子面单：" class="express_temp_id">
             <Select
               v-model="formItem.express_temp_id"
               placeholder="请选择电子面单"
-              style="width: 80%"
+              style="width: 60%"
               @on-change="expressTempChange"
             >
               <Option v-for="(item, i) in expressTemp" :value="item.temp_id" :key="i">{{ item.title }}</Option>
             </Select>
             <Button v-if="formItem.express_temp_id" type="text" @click="preview">预览</Button>
           </FormItem>
-          <FormItem label="寄件人姓名：">
-            <Input v-model="formItem.to_name" placeholder="请输入寄件人姓名" style="width: 80%"></Input>
+          <FormItem label="预计寄件金额：" v-if="formItem.express_record_type == 3">
+            <span class="red">{{ sendPrice }}</span>
+            <a class="ml10" @click="watchPrice">立即计算</a>
           </FormItem>
-          <FormItem label="寄件人电话：">
-            <Input v-model="formItem.to_tel" placeholder="请输入寄件人电话" style="width: 80%"></Input>
+          <FormItem label="取件日期：" v-if="formItem.express_record_type == 3">
+            <RadioGroup v-model="formItem.day_type" type="button">
+              <Radio :label="0">今天</Radio>
+              <Radio :label="1">明天</Radio>
+              <Radio :label="2">后天</Radio>
+            </RadioGroup>
           </FormItem>
-          <FormItem label="寄件人地址：">
-            <Input v-model="formItem.to_addr" placeholder="请输入寄件人地址" style="width: 80%"></Input>
+          <FormItem label="取件时间：" v-if="formItem.express_record_type == 3">
+            <TimePicker
+              v-model="formItem.pickup_time"
+              format="HH:mm"
+              type="timerange"
+              placement="bottom-end"
+              placeholder="选择取件时间范围"
+              style="width: 168px"
+            />
           </FormItem>
         </template>
       </div>
-      <div v-show="formItem.type === '2'">
-        <FormItem label="送货人：">
+      <div v-if="formItem.type === '2'">
+        <FormItem label="送货人：" :prop="formItem.type == '2' ? 'sh_delivery' : ''">
           <Select
             v-model="formItem.sh_delivery"
             placeholder="请选择送货人"
-            style="width: 80%"
+            style="width: 60%"
             @on-change="shDeliveryChange"
           >
             <Option v-for="(item, i) in deliveryList" :value="item.id" :key="i"
@@ -85,7 +129,7 @@
             type="textarea"
             :autosize="{ minRows: 2, maxRows: 5 }"
             placeholder="备注"
-            style="width: 80%"
+            style="width: 60%"
           ></Input>
         </FormItem>
       </div>
@@ -138,7 +182,7 @@
     <!-- <viewer @inited="inited">
             <img :src="temp.pic" style="display:none" />
         </viewer> -->
-    <div ref="viewer" v-viewer v-show="temp">
+    <div ref="viewer" v-viewer>
       <img :src="temp.pic" style="display: none" />
     </div>
   </Modal>
@@ -153,6 +197,8 @@ import {
   orderDeliveryList,
   orderSheetInfo,
   splitCartInfo,
+  kuaidiComsList,
+  orderPrice,
 } from '@/api/order';
 import printJS from 'print-js';
 export default {
@@ -162,11 +208,9 @@ export default {
     status: Number,
     // total_num: Number,
     pay_type: String,
-    virtual_type: Number,
-  },
-  watch: {
-    orderId(val) {
-      if (this.virtual_type == 3) this.formItem.type = '3';
+    virtual_type: {
+      type: Number,
+      default: 0,
     },
   },
   data() {
@@ -176,7 +220,7 @@ export default {
       splitSwitch: true,
       formItem: {
         type: '1',
-        express_record_type: '1',
+        express_record_type: '3',
         delivery_name: '',
         delivery_id: '',
         express_temp_id: '',
@@ -185,9 +229,12 @@ export default {
         to_addr: '',
         sh_delivery: '',
         fictitious_content: '',
+        service_type: '',
+        day_type: 0,
       },
       modals: false,
       express: [],
+      kuaidiExpress: [],
       expressTemp: [],
       deliveryList: [],
       temp: {},
@@ -254,9 +301,54 @@ export default {
         },
       ],
       selectData: [],
+      serviceTypeList: [],
+      sendPrice: 0,
+      ruleValidate: { sh_delivery: [{ required: true, message: '请输入送货人', trigger: 'change' }] },
+      deliveryErrorMsg: '',
     };
   },
+  watch: {
+    virtual_type(val) {
+      if (this.virtual_type == 3) this.formItem.type = '3';
+    },
+  },
+  mounted() {
+    this.kuaidiComsList(1);
+    let delData;
+    if (localStorage.getItem('DELIVERY_DATA')) delData = JSON.parse(localStorage.getItem('DELIVERY_DATA'));
+    if (delData) {
+      this.formItem.delivery_name = delData.delivery_name;
+      this.formItem.delivery_code = delData.delivery_code;
+    }
+  },
   methods: {
+    watchPrice() {
+      let data = {
+        kuaidicom: this.formItem.delivery_code,
+        send_address: this.formItem.to_addr,
+        orderId: this.orderId,
+        service_type: this.formItem.service_type,
+        cart_ids: [],
+      };
+      this.selectData.forEach((v) => {
+        data.cart_ids.push({
+          cart_id: v.cart_id,
+          cart_num: v.num || v.surplus_num,
+        });
+      });
+      orderPrice(data)
+        .then((res) => {
+          console.log(res);
+          this.sendPrice = res.data.price;
+          this.deliveryErrorMsg = '';
+        })
+        .catch((err) => {
+          if (this.formItem.type == 1) {
+            this.deliveryErrorMsg = err.msg;
+          }
+          this.$Message.error(err.msg);
+        });
+    },
     selectOne(data) {
       this.selectData = data;
     },
@@ -274,10 +366,14 @@ export default {
             this.manyFormValidate.push(res.data[key]);
           });
         });
+      } else {
+        this.formItem.cart_ids = [];
+        this.selectData = [];
       }
     },
     changeRadio(o) {
       this.$refs.formItem.resetFields();
+      this.deliveryErrorMsg = '';
       switch (o) {
         case '1':
           this.formItem.delivery_name = '';
@@ -310,25 +406,36 @@ export default {
     },
     changeExpress(j) {
       switch (j) {
+        case '1':
+          this.formItem.delivery_name = '';
+          this.formItem.delivery_id = '';
+          this.getList(1);
+          break;
         case '2':
           this.formItem.delivery_name = '';
           this.formItem.express_temp_id = '';
           this.expressTemp = [];
           this.getList(2);
           break;
-        case '1':
+        case '3':
           this.formItem.delivery_name = '';
           this.formItem.delivery_id = '';
-          this.getList(1);
           break;
         default:
           break;
       }
     },
+    kuaidiComsList(status) {
+      kuaidiComsList().then((res) => {
+        console.log(res);
+        this.kuaidiExpress = res.data;
+        if (this.formItem.delivery_name) this.expressChange(this.formItem.delivery_name);
+      });
+    },
     reset() {
       this.formItem = {
         type: '1',
-        express_record_type: '1',
+        express_record_type: '3',
         delivery_name: '',
         delivery_id: '',
         express_temp_id: '',
@@ -338,6 +445,7 @@ export default {
         to_addr: '',
         sh_delivery: '',
         fictitious_content: '',
+        service_type: '',
       };
     },
     // 物流公司列表
@@ -410,6 +518,7 @@ export default {
           .then((res) => {
             this.modals = false;
             this.$Message.success(res.msg);
+            localStorage.setItem('DELIVERY_DATA', JSON.stringify(this.formItem));
             this.$emit('submitFail');
             this.reset();
             this.splitSwitch = false;
@@ -423,6 +532,7 @@ export default {
           .then(async (res) => {
             this.modals = false;
             this.$Message.success(res.msg);
+            localStorage.setItem('DELIVERY_DATA', JSON.stringify(this.formItem));
             this.splitSwitch = false;
             this.$emit('submitFail');
             this.reset();
@@ -436,6 +546,8 @@ export default {
     cancel(name) {
       this.modals = false;
       this.orderStatus = 0;
+      this.sendPrice = 0;
+      this.deliveryErrorMsg = '';
       this.splitSwitch = false;
       this.selectData = [];
       this.formItem.type = '1';
@@ -446,13 +558,20 @@ export default {
     },
     // 电子面单列表
     expressChange(value) {
-      let expressItem = this.express.find((item) => {
+      this.formItem.service_type = '';
+      let expressItem = (this.formItem.express_record_type == '3' ? this.kuaidiExpress : this.express).find((item) => {
         return item.value === value;
       });
+      console.log(value, expressItem);
       if (expressItem === undefined) {
         return;
       }
+      this.serviceTypeList = expressItem.types;
+      if (this.formItem.type == 1 && this.formItem.express_record_type == 3) {
+        this.formItem.service_type = expressItem.types.length ? expressItem.types[0] : '';
+      }
       this.formItem.delivery_code = expressItem.code;
+      if (this.formItem.to_name && this.formItem.to_addr) this.watchPrice();
       if (this.formItem.express_record_type === '2') {
         this.expressTemp = [];
         this.formItem.express_temp_id = '';
@@ -461,6 +580,7 @@ export default {
         })
           .then((res) => {
             this.expressTemp = res.data;
+            this.formItem.express_temp_id = res.data.length ? res.data[0].temp_id : '';
             if (!res.data.length) {
               this.$Message.error('请配置你所选快递公司的电子面单');
             }
@@ -468,6 +588,13 @@ export default {
           .catch((err) => {
             this.$Message.error(err.msg);
           });
+      } else if (this.formItem.express_record_type == '3') {
+        this.expressTemp = expressItem.list;
+        if (expressItem.list.length) {
+          this.formItem.express_temp_id = expressItem.list[0].temp_id;
+          this.temp = expressItem.list[0];
+          console.log(expressItem.list[0], 'expressItem.list[0]');
+        }
       }
     },
     getCartInfo(data, orderid) {
@@ -502,7 +629,7 @@ export default {
           if (!this.export_open) {
             this.formItem.express_record_type = '1';
           }
-          this.formItem.to_addr = data.to_add;
+          // this.formItem.to_addr = data.to_add;
         })
         .catch((err) => {
           this.$Message.error(err.msg);
@@ -524,6 +651,7 @@ export default {
       if (this.temp === undefined) {
         this.temp = {};
       }
+      console.log(this.temp);
     },
     // inited (viewer) {
     //     this.$viewer = viewer;
@@ -544,7 +672,7 @@ export default {
 .express_temp_id button {
   position: absolute;
   top: 50%;
-  right: 110px;
+  left: 61%;
   padding: 0;
   border: none;
   background: none;
@@ -572,5 +700,15 @@ export default {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+.from-box {
+  position: relative;
+}
+.trip {
+  position: absolute;
+  bottom: -26px;
+  left: 0;
+  color: red;
+  font-size: 12px;
 }
 </style>

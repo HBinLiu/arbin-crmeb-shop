@@ -95,8 +95,7 @@ export function delayNProgressDone(time = 300) {
 router.beforeEach(async (to, from, next) => {
   // PrevLoading.start();
   keepAliveSplice(to);
-
-  if (to.fullPath.indexOf('kefu') != -1) {
+  if (to.fullPath.indexOf('kefu') != -1 || to.name == 'mobile_upload') {
     return next();
   }
   // if (Setting.showProgressBar) iView.LoadingBar.start()

@@ -124,23 +124,92 @@
         <Button @click="cancels">取消</Button>
       </div>
     </Modal>
+    <addReply
+      :visible.sync="replyModal"
+      :goods="goodsData"
+      :attr="attrData"
+      :avatar="avatarData"
+      :picture="pictureData"
+      @callGoods="callGoods"
+      @callAttr="callAttr"
+      @callPicture="callPicture"
+      @removePicture="removePicture"
+    ></addReply>
+    <Modal v-model="goodsModal" title="选择商品" width="960" scrollable footer-hide>
+      <goodsList v-if="replyModal" @getProductId="getProductId"></goodsList>
+    </Modal>
+    <Modal v-model="attrModal" title="选择商品规格" width="960" scrollable footer-hide>
+      <Table :columns="tableColumns" :data="goodsData.attrs" height="500">
+        <template slot-scope="{ row, index }" slot="image">
+          <div class="product-data">
+            <img class="image" :src="row.image" />
+          </div>
+        </template>
+      </Table>
+    </Modal>
+    <Modal
+      v-model="pictureModal"
+      width="960px"
+      scrollable
+      footer-hide
+      closable
+      title="上传商品图"
+      :mask-closable="false"
+      :z-index="1"
+    >
+      <uploadPictures
+        :isChoice="isChoice"
+        @getPic="getPic"
+        @getPicD="getPicD"
+        :gridBtn="gridBtn"
+        :gridPic="gridPic"
+        v-if="pictureModal"
+      ></uploadPictures>
+    </Modal>
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex';
 import { replyListApi, setReplyApi, fictitiousReply } from '@/api/product';
+import addReply from '../components/addReply.vue';
+import goodsList from '@/components/goodsList/index';
+import uploadPictures from '@/components/uploadPictures';
+
 export default {
   name: 'product_productEvaluate',
+  components: {
+    addReply,
+    goodsList,
+    uploadPictures,
+  },
   data() {
     return {
       modals: false,
+      replyModal: false,
+      pictureModal: false,
+      goodsModal: false,
+      attrModal: false, // 选择商品规格
       grid: {
         xl: 7,
         lg: 10,
         md: 12,
         sm: 12,
         xs: 24,
+      },
+      gridPic: {
+        xl: 6,
+        lg: 8,
+        md: 12,
+        sm: 12,
+        xs: 12,
+      },
+      gridBtn: {
+        xl: 4,
+        lg: 8,
+        md: 8,
+        sm: 8,
+        xs: 8,
       },
       formValidate: {
         is_reply: '',
@@ -166,8 +235,65 @@ export default {
           { text: '本年', val: 'year' },
         ],
       },
+      tableColumns: [
+        // {
+        //   type: "selection",
+        //   width: 60,
+        //   align: "center",
+        // },
+        {
+          width: 60,
+          align: 'center',
+          render: (h, params) => {
+            return h('Radio', {
+              props: {
+                value: params.row.unique === this.attrData.unique,
+              },
+              on: {
+                'on-change': () => {
+                  this.attrData = params.row;
+                  this.attrModal = false;
+                },
+              },
+            });
+          },
+        },
+        {
+          title: '图片',
+          slot: 'image',
+          width: 120,
+          align: 'center',
+        },
+        {
+          title: '规格',
+          key: 'suk',
+          align: 'center',
+          minWidth: 120,
+        },
+        {
+          title: '售价',
+          key: 'ot_price',
+          align: 'center',
+          minWidth: 120,
+        },
+        {
+          title: '优惠价',
+          key: 'price',
+          align: 'center',
+          minWidth: 120,
+        },
+      ],
       value: '45',
       tableList: [],
+      goodsAddType: '',
+      goodsData: {},
+      attrData: {},
+      avatarData: {},
+      pictureData: [],
+      selectProductAttrList: [],
+      isChoice: '',
+      picTit: '',
+      tableIndex: 0,
       total: 0,
       loading: false,
       columns: [
@@ -235,11 +361,21 @@ export default {
       this.formValidate.product_id = 0;
       this.getList();
     },
+    replyModal(value) {
+      if (!value) {
+        this.goodsData = {};
+        this.attrData = {};
+        this.avatarData = {};
+        this.pictureData = [];
+        this.getList();
+      }
+    },
   },
   methods: {
     // 添加虚拟评论；
     add() {
-      this.$modalForm(fictitiousReply(this.formValidate.product_id)).then(() => this.getList());
+      // this.$modalForm(fictitiousReply(this.formValidate.product_id)).then(() => this.getList());
+      this.replyModal = true;
     },
     oks() {
       this.modals = true;
@@ -339,6 +475,45 @@ export default {
       this.getList();
     },
     search() {},
+    callGoods() {
+      this.goodsModal = true;
+    },
+    callAttr() {
+      this.attrModal = true;
+    },
+    getProductId(goods) {
+      this.goodsData = goods;
+      this.goodsModal = false;
+      this.attrData.unique = '';
+    },
+    getPic(pc) {
+      this.avatarData = pc;
+      this.pictureModal = false;
+    },
+    getPicD(pc) {
+      let pictureData = [...this.pictureData];
+      pictureData = pictureData.concat(pc);
+      pictureData.sort((a, b) => a.att_id - b.att_id);
+      let picture = [];
+      for (let i = 0; i < pictureData.length; i++) {
+        if (pictureData[i + 1] && pictureData[i].att_id != pictureData[i + 1].att_id) {
+          picture.push(pictureData[i]);
+        }
+        if (!pictureData[i + 1]) {
+          picture.push(pictureData[i]);
+        }
+      }
+      this.pictureData = picture;
+      this.pictureModal = false;
+    },
+    callPicture(type) {
+      this.isChoice = type;
+      this.pictureModal = true;
+    },
+    removePicture(att_id) {
+      let index = this.pictureData.findIndex((item) => item.att_id === att_id);
+      this.pictureData.splice(index, 1);
+    },
   },
 };
 </script>
@@ -393,5 +568,15 @@ export default {
 .ivu-mt .picList .pictrue img {
   height: 100%;
   display: block;
+}
+.product-data {
+  display: flex;
+  align-items: center;
+
+  .image {
+    width: 50px !important;
+    height: 50px !important;
+    margin-right: 10px;
+  }
 }
 </style>

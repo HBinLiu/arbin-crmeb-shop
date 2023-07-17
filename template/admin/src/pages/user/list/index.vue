@@ -368,7 +368,7 @@
         @onceGetList="onceGetList"
       ></userLabel>
     </Modal>
-    <Drawer :closable="false" width="700" v-model="modals" title="用户信息填写">
+    <Drawer :mask-closable="false" width="700" v-model="modals" title="用户信息填写">
       <userEdit ref="userEdit" v-if="modals" :userData="userData"></userEdit>
       <div class="demo-drawer-footer">
         <Button style="margin-right: 8px" @click="modals = false">取消</Button>

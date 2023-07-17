@@ -386,12 +386,10 @@
 						switch (that.from) {
 							case 'order_confirm':
 								if (that.id) {
-									console.log(that.from, that.id, that.urlQuery, formData.type);
 									uni.navigateTo({
 										url: `/pages/goods/order_confirm/index${that.urlQuery}&invoice_id=${that.id}&invoice_type=${formData.type}`
 									})
 								} else {
-									console.log(that.from, that.id, '2');
 									uni.navigateTo({
 										url: `/pages/goods/order_confirm/index${that.urlQuery}&invoice_id=${res.data.id}&invoice_type=${formData.type}`
 									})

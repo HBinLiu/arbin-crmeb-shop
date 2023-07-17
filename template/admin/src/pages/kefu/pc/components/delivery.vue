@@ -3,7 +3,9 @@
     <Form ref="formValidate" :model="formValidate" :rules="ruleInline" inline>
       <FormItem label="选择类型：" class="form-item" label-position="right" :label-width="100">
         <RadioGroup v-model="formValidate.gender">
-          <Radio :label="item.key" v-for="(item, index) in radioList" :key="index">{{ item.title }}</Radio>
+          <Radio :label="1" v-if="virtualType !== 3">发货</Radio>
+          <Radio :label="2" v-if="virtualType !== 3">送货</Radio>
+          <Radio :label="3">虚拟</Radio>
         </RadioGroup>
       </FormItem>
       <FormItem
@@ -113,6 +115,10 @@ export default {
       type: String | Number,
       default: '',
     },
+    virtualType: {
+      type: Number,
+      default: 0,
+    },
   },
   watch: {
     'formValidate.shipStatus': {
@@ -133,6 +139,13 @@ export default {
         this.$refs['formValidate'].resetFields();
       },
       deep: true,
+    },
+    virtualType: {
+      handler(nVal, oVal) {
+        console.log(nVal);
+        if (nVal == 3) this.formValidate.gender = 3;
+      },
+      immediate: true,
     },
   },
   data() {

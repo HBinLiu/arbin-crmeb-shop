@@ -2,9 +2,12 @@
 	<view class="goodsList">
 		<view class="item" v-for="(item,index) in tempArr" :key='index' @click="goDetail(item)">
 			<view class="pictrue">
-				<span class="pictrue_log pictrue_log_class" v-if="item.activity && item.activity.type === '1'">{{$t(`秒杀`)}}</span>
-				<span class="pictrue_log pictrue_log_class" v-if="item.activity && item.activity.type === '2'">{{$t(`砍价`)}}</span>
-				<span class="pictrue_log pictrue_log_class" v-if="item.activity && item.activity.type === '3'">{{$t(`拼团`)}}</span>
+				<span class="pictrue_log pictrue_log_class"
+					v-if="item.activity && item.activity.type === '1'">{{$t(`秒杀`)}}</span>
+				<span class="pictrue_log pictrue_log_class"
+					v-if="item.activity && item.activity.type === '2'">{{$t(`砍价`)}}</span>
+				<span class="pictrue_log pictrue_log_class"
+					v-if="item.activity && item.activity.type === '3'">{{$t(`拼团`)}}</span>
 				<image :src="item.recommend_image" mode="" v-if="item.recommend_image"></image>
 				<image :src="item.image" mode="" v-else></image>
 			</view>
@@ -17,7 +20,8 @@
 				<view v-if="item.stock>0">
 					<view class="bnt"
 						v-if="(item.activity && (item.activity.type === '1' || item.activity.type === '2' || item.activity.type === '3') || item.is_virtual) || !item.cart_button">
-						{{$t(`立即购买`)}}</view>
+						{{$t(`立即购买`)}}
+					</view>
 					<view v-else>
 						<!-- 多规格 -->
 						<view class="bnt" @click.stop="goCartDuo(item)" v-if="item.spec_type">
@@ -26,7 +30,8 @@
 						</view>
 						<!-- 单规格 -->
 						<view class="bnt" v-if="!item.spec_type && !item.cart_num" @click.stop="goCartDan(item,index)">
-							{{$t(`加入购物车`)}}</view>
+							{{$t(`加入购物车`)}}
+						</view>
 						<view class="cart acea-row row-middle" v-if="!item.spec_type && item.cart_num">
 							<view class="pictrue iconfont icon-jianhao" @click.stop="CartNumDes(index,item)"></view>
 							<view class="num">{{item.cart_num}}</view>
@@ -98,15 +103,20 @@
 			margin-bottom: 63rpx;
 
 			.pictrue {
-				width: 100%;
-				height: 290rpx;
+				// width: 100%;
+				// height: 290rpx;
 				border-radius: 16rpx;
 				position: relative;
+				padding-top: 40%;
 
 				image {
+					border-radius: 10rpx;
+					position: absolute;
+					top: 0;
+					left: 0;
 					width: 100%;
 					height: 100%;
-					border-radius: 10rpx;
+					object-fit: cover;
 				}
 			}
 

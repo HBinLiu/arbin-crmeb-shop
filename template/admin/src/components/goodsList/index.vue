@@ -13,7 +13,7 @@
               v-model="formValidate.cate_id"
               size="small"
               :options="treeSelect"
-              :props="{ emitPath: false }"
+              :props="{ checkStrictly: true, emitPath: false }"
               clearable
             ></el-cascader>
           </FormItem>

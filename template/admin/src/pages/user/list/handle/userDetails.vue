@@ -1,6 +1,6 @@
 <template>
   <div style="width: 100%">
-    <Drawer title="用户详情" :closable="false" width="1100" scrollable v-model="modals" @on-visible-change="draChange">
+    <Drawer title="用户详情" :mask-closable="false" width="1100" scrollable v-model="modals" @on-visible-change="draChange">
       <Spin size="large" fix v-if="spinShow"></Spin>
       <div class="acea-row head">
         <div class="avatar mr15"><img :src="psInfo.avatar" /></div>

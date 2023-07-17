@@ -3,14 +3,15 @@
 		<view class='productList'>
 			<view class='search bg-color acea-row row-between-wrapper'>
 				<view class='input acea-row row-between-wrapper'><text class='iconfont icon-sousuo'></text>
-					<input :placeholder='$t(`搜索商品名称`)' placeholder-class='placeholder' confirm-type='search' name="search"
-						:value='where.keyword' @confirm="searchSubmit"></input>
+					<input :placeholder='$t(`搜索商品名称`)' placeholder-class='placeholder' confirm-type='search'
+						name="search" :value='where.keyword' @confirm="searchSubmit"></input>
 				</view>
 				<view class='iconfont' :class='is_switch==true?"icon-pailie":"icon-tupianpailie"' @click='Changswitch'>
 				</view>
 			</view>
 			<view class='nav acea-row row-middle'>
-				<view class='item line1' :class='title ? "font-num":""' @click='set_where(1)'>{{title ? $t(title) : $t(`默认`)}}
+				<view class='item line1' :class='title ? "font-num":""' @click='set_where(1)'>
+					{{title ? $t(title) : $t(`默认`)}}
 				</view>
 				<view class='item' @click='set_where(2)'>
 					{{$t(`价格`)}}
@@ -40,11 +41,12 @@
 							v-if="item.activity && item.activity.type === '3'">{{$t(`拼团`)}}</span>
 					</view>
 					<view class='text' :class='is_switch==true?"":"on"'>
-						<view class='name line1'>{{item.store_name}}</view>
+						<view class='name line2'>{{item.store_name}}</view>
 						<view class='money font-color' :class='is_switch==true?"":"on"'>{{$t(`￥`)}}<text
 								class='num'>{{item.price}}</text></view>
 						<view class='vip acea-row row-between-wrapper' :class='is_switch==true?"":"on"'>
-							<view class='vip-money' v-if="item.vip_price && item.vip_price > 0">{{$t(`￥`)}}{{item.vip_price}}
+							<view class='vip-money' v-if="item.vip_price && item.vip_price > 0">
+								{{$t(`￥`)}}{{item.vip_price}}
 								<image src='../../../static/images/vip.png'></image>
 							</view>
 							<view>{{$t(`已售`)}} {{item.sales}}{{$t(item.unit_name) || $t(`件`)}}</view>
@@ -82,7 +84,9 @@
 	import {
 		goShopDetail
 	} from '@/libs/order.js'
-	import {HTTP_REQUEST_URL} from '@/config/app';
+	import {
+		HTTP_REQUEST_URL
+	} from '@/config/app';
 	import colors from '@/mixins/color.js';
 	export default {
 		computed: mapGetters(['uid']),
@@ -90,10 +94,10 @@
 			recommend,
 			home
 		},
-		mixins:[colors],
+		mixins: [colors],
 		data() {
 			return {
-				imgHost:HTTP_REQUEST_URL,
+				imgHost: HTTP_REQUEST_URL,
 				productList: [],
 				is_switch: true,
 				where: {
@@ -353,6 +357,12 @@
 		position: relative;
 		width: 100%;
 		height: 345rpx;
+
+	}
+
+	.productList .list .item .name {
+		line-height: 42rpx;
+		height: 84rpx;
 	}
 
 	.productList .list .item .pictrue.on {
@@ -422,13 +432,16 @@
 	.noCommodity {
 		background-color: #fff;
 		padding-bottom: 30rpx;
-		.emptyBox{
+
+		.emptyBox {
 			text-align: center;
 			padding-top: 20rpx;
-			.tips{
+
+			.tips {
 				color: #aaa;
 				font-size: 26rpx;
 			}
+
 			image {
 				width: 414rpx;
 				height: 304rpx;

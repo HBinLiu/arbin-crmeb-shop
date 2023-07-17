@@ -73,10 +73,12 @@
             (row.status === 4 || row._status === 2 || row._status === 8) &&
             row.shipping_type === 1 &&
             (row.pinkStatus === null || row.pinkStatus === 2) &&
-            row.is_del !== 1
+            row.is_del !== 1 &&
+            !row.is_stock_up
           "
           >发送货</a
         >
+        <a v-else-if="row.is_stock_up" @click="shipmentClear(row)">取消商家寄件</a>
         <a @click="delivery(row)" v-if="row._status === 4 && !row.split.length">配送信息</a>
         <a
           @click="bindWrite(row)"
@@ -170,6 +172,8 @@
     <details-from ref="details" :orderDatalist="orderDatalist" :orderId="orderId"></details-from>
     <!-- 备注 -->
     <order-remark ref="remarks" :orderId="orderId" @submitFail="submitFail"></order-remark>
+    <!-- 取消寄件 -->
+    <order-shipment ref="shipment" :orderId="orderId" @submitFail="submitFail"></order-shipment>
     <!-- 记录 -->
     <order-record ref="record"></order-record>
     <!-- 发送货 -->
@@ -183,6 +187,7 @@
       @clearId="
         () => {
           orderId = 0;
+          virtual_type = null;
         }
       "
     ></order-send>
@@ -201,6 +206,7 @@ import {
   refundIntegral,
   getDistribution,
   writeUpdate,
+  shipmentCancelOrder,
 } from '@/api/order';
 import { mapState, mapMutations } from 'vuex';
 import editFrom from '../../../../components/from/from';
@@ -208,6 +214,7 @@ import detailsFrom from '../handle/orderDetails';
 import orderRemark from '../handle/orderRemark';
 import orderRecord from '../handle/orderRecord';
 import orderSend from '../handle/orderSend';
+import orderShipment from '../handle/orderShipment';
 
 export default {
   name: 'table_list',
@@ -218,6 +225,7 @@ export default {
     orderRemark,
     orderRecord,
     orderSend,
+    orderShipment,
   },
   data() {
     return {
@@ -327,6 +335,7 @@ export default {
     ...mapMutations('order', ['getIsDel', 'getisDelIdListl']),
     // 操作
     changeMenu(row, name) {
+      console.log(row, name);
       this.orderId = row.id;
       switch (name) {
         case '1':
@@ -432,6 +441,11 @@ export default {
           // this.modalTitleSs = '删除订单';
           this.delOrder(row, this.delfromData);
       }
+    },
+    shipmentClear(row) {
+      console.log(this.$refs.shipment);
+      this.orderId = row.id;
+      this.$refs.shipment.modals = true;
     },
     printImg(url) {
       printJS({
@@ -589,10 +603,6 @@ export default {
     getOrderData(id) {
       getOrdeDatas(id)
         .then(async (res) => {
-          if (res.data.status === false) {
-            return this.$authLapse(res.data);
-          }
-          this.$authLapse(res.data);
           this.FromData = res.data;
           this.$refs.edits.modals = true;
         })
@@ -653,11 +663,11 @@ export default {
     // 发送货
     sendOrder(row) {
       this.$refs.send.total_num = row.total_num;
+      this.virtual_type = row.virtual_type;
       this.$refs.send.modals = true;
       this.orderId = row.id;
       this.status = row._status;
       this.pay_type = row.pay_type;
-      this.virtual_type = row.virtual_type;
       this.$refs.send.getList();
       this.$refs.send.getDeliveryList();
       this.$nextTick((e) => {

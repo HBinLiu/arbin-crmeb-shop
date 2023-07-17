@@ -27,7 +27,7 @@
 							{{(item.day==$t(`第七天`) || item.day==$t(`第7天`))?$t(`奖励`):$t(item.day)}}
 						</view>
 						<view class='venus'
-							:class="(index + 1 === signSystemList.length ? 'reward' : '') + ' ' +(sign_index >= index + 1 ? 'venusSelect' : '')">
+							:class="(index + 1 === signSystemList.length ? 'venusSelect' : '') + ' ' +(sign_index >= index + 1 ? 'venusSelect' : '')">
 						</view>
 						<view class='num' :class="sign_index >= index + 1 ? 'on' : ''">+{{item.sign_num}}</view>
 					</view>

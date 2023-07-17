@@ -10,6 +10,15 @@
       >
         <Row type="flex" :gutter="24">
           <Col v-bind="grid">
+            <FormItem label="是否显示：" label-for="keyword">
+              <RadioGroup v-model="levelFrom.is_show" type="button" @on-change="userSearchs">
+                <Radio label="">全部</Radio>
+                <Radio label="1">显示</Radio>
+                <Radio label="0">隐藏</Radio>
+              </RadioGroup>
+            </FormItem>
+          </Col>
+          <Col v-bind="grid">
             <FormItem label="搜索：" label-for="keyword">
               <Input
                 search
@@ -125,6 +134,7 @@ export default {
       ],
       levelFrom: {
         keyword: '',
+        is_show: '',
         page: 1,
         limit: 20,
       },

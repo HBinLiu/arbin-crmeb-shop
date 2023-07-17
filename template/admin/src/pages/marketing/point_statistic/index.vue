@@ -158,7 +158,7 @@ export default {
           align: 'center',
         },
         {
-          title: '金额',
+          title: '积分',
           width: 180,
           key: 'value',
           align: 'center',

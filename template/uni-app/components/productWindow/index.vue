@@ -151,7 +151,7 @@
 			 * 
 			 */
 			bindCode: function(e) {
-				this.$emit('iptCartNum', this.attr.productSelect.cart_num);
+				this.$emit('iptCartNum', e);
 			},
 			closeAttr: function() {
 				this.$emit('myevent');

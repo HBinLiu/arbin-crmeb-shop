@@ -394,8 +394,8 @@ export default {
           this.total = data.list.count;
           this.extractStatistics = data.extract_statistics;
           this.cardLists = [
-            { col: 6, count: this.extractStatistics.price, name: '待提现金额', className: 'md-basket' },
             { col: 6, count: this.extractStatistics.brokerage_count, name: '佣金总金额', className: 'md-pricetags' },
+            { col: 6, count: this.extractStatistics.price, name: '待提现金额', className: 'md-basket' },
             { col: 6, count: this.extractStatistics.priced, name: '已提现金额', className: 'md-cash' },
             { col: 6, count: this.extractStatistics.brokerage_not, name: '未提现金额', className: 'ios-cash' },
           ];

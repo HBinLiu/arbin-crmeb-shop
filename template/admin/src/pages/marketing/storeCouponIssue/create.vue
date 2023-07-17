@@ -81,7 +81,7 @@
           </RadioGroup>
         </FormItem>
         <FormItem v-show="isCouponTime" label="">
-          <InputNumber :min="1" v-model="formData.coupon_time" :precision="0"></InputNumber>
+          <InputNumber :min="1" :max="99999" v-model="formData.coupon_time" :precision="0"></InputNumber>
           <div class="info">领取后多少天内有效</div>
         </FormItem>
         <FormItem v-show="!isCouponTime" label="">

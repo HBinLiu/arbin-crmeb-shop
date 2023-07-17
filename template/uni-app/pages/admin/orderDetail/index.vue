@@ -37,7 +37,7 @@
 			<image src="/static/images/line.jpg" />
 		</view>
 		<view class="pos-order-goods">
-			<navigator :url="`/pages/goods_details/index?id=${item.productInfo.id}`" hover-class="none"
+			<navigator :url="`/pages/goods_details/index?id=${item.productInfo.product_id}`" hover-class="none"
 				class="goods acea-row row-between-wrapper" v-for="(item, index) in orderInfo.cartInfo" :key="index">
 				<view class="picTxt acea-row row-between-wrapper">
 					<view class="pictrue">
@@ -188,6 +188,11 @@
 				@click="offlinePay">
 				{{$t(`确认付款`)}}
 			</view>
+			<navigator class='bnt cancel'
+				v-if="orderInfo.delivery_type == 'express' && orderInfo.status==1"
+				hover-class='none' :url="'/pages/goods/goods_logistics/index?is_admin=1&orderId='+ orderInfo.order_id">
+				{{$t(`查看物流`)}}
+			</navigator>
 			<navigator class="bnt delivery"
 				v-if="types == 1 && orderInfo.shipping_type === 1 && (orderInfo.pinkStatus === null || orderInfo.pinkStatus === 2)"
 				:url="'/pages/admin/delivery/index?id='+orderInfo.order_id">{{$t(`去发货`)}}</navigator>

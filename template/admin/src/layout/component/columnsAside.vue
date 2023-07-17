@@ -130,7 +130,6 @@ export default {
     },
     // 传送当前子级数据到菜单中
     setSendChildren(path) {
-      const currentPathSplit = path.split('/');
       let currentData = {};
       this.columnsAsideList.map((v, k) => {
         if (v.path === path) {
@@ -188,7 +187,7 @@ export default {
         let asideList = getMenuSider(this.columnsAsideList, HeadName)[0]?.children;
         const resData = this.setSendChildren(HeadName);
         if (resData.length <= 0) return false;
-        this.onColumnsAsideDown(resData.item[0].k);
+        if (resData.item) this.onColumnsAsideDown(resData.item[0].k);
         this.bus.$emit('oneCatName', resData.item[0].title);
         this.bus.$emit('setSendColumnsChildren', asideList || []);
         this.$store.commit('menus/childMenuList', asideList || []);

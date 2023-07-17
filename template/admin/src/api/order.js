@@ -503,6 +503,28 @@ export function otherBatchDelivery(data) {
   });
 }
 /**
+ * @description 商家寄件金额计算
+ * @param {Object} param data {Object} 传值参数
+ */
+export function orderPrice(data) {
+  return request({
+    url: 'order/price',
+    method: 'post',
+    data,
+  });
+}
+/**
+ * @description 取消商家寄件
+ * @param {Object} param data {Object} 传值参数
+ */
+export function shipmentCancelOrder(id, data) {
+  return request({
+    url: `order/shipment_cancel_order/${id}`,
+    method: 'post',
+    data: data,
+  });
+}
+/**
  * @description 重新执行
  * @param {Object} param data {Object} 传值参数
  */
@@ -530,6 +552,17 @@ export function queueDel(id, type) {
 export function stopWrongQueue(id) {
   return request({
     url: `queue/stop/wrong_queue/${id}`,
+    method: 'get',
+  });
+}
+
+/**
+ * @description 上架寄件快递列表
+ * @param {Object} param data {Object} 传值参数
+ */
+export function kuaidiComsList() {
+  return request({
+    url: `order/kuaidi_coms`,
     method: 'get',
   });
 }

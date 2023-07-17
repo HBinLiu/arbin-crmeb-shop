@@ -77,7 +77,7 @@
         <template slot-scope="{ row, index }" slot="right">
           <a
             href="javascript:void(0);"
-            v-if="row.refund_price <= 0 && row.paid && row.recharge_type != 'system'"
+            v-if="row.refund_price <= 0 && row.paid && row.recharge_type != 'system' && row.recharge_type != 'balance'"
             @click="refund(row)"
             >退款</a
           >

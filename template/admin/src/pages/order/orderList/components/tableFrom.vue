@@ -65,8 +65,8 @@
                   <Option value="all">全部</Option>
                   <Option value="order_id">订单号</Option>
                   <Option value="uid">UID</Option>
-                  <Option value="real_name">用户姓名</Option>
-                  <Option value="user_phone">用户电话</Option>
+                  <Option value="real_name">收件人姓名</Option>
+                  <Option value="user_phone">收件人电话</Option>
                   <Option value="title">商品名称(模糊)</Option>
                 </Select>
               </Input>

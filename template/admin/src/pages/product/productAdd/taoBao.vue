@@ -1,15 +1,13 @@
 <template>
   <div class="Box">
-    <Card>
+    <Card :dis-hover="true">
       <div>
         生成的商品默认是没有上架的，请手动上架商品！
         <a href="http://help.crmeb.net/crmeb-v4/1863579" v-if="copyConfig.copy_type == 2" target="_blank"
           >如何配置密钥</a
         >
         <span v-else
-          >您当前剩余{{ copyConfig.copy_num }}条采集次数，<span class="add" @click="mealPay('copy')"
-            >增加采集次数</span
-          ></span
+          >您当前剩余{{ copyConfig.copy_num }}条采集次数，<span class="add" @click="mealPay()">增加采集次数</span></span
         >
       </div>
       <div>商品采集设置：设置 > 系统设置 > 第三方接口设置 > 采集商品配置</div>
@@ -73,8 +71,8 @@ export default {
     this.getCopyConfig();
   },
   methods: {
-    mealPay(val) {
-      this.$router.push({ path: this.$routeProStr + '/setting/sms/sms_pay/index', query: { type: val } });
+    mealPay() {
+      this.$router.push({ path: this.$routeProStr + '/setting/sms/sms_config/index' });
     },
     getCopyConfig() {
       copyConfigApi().then((res) => {

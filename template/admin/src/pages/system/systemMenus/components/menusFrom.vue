@@ -48,11 +48,18 @@
             </FormItem>
           </Col>
           <Col v-bind="grid" v-if="authType == 2">
+            <FormItem label="请求方式：" prop="methods">
+              <Select v-model="formValidate.methods">
+                <Option value="GET">GET</Option>
+                <Option value="POST">POST</Option>
+                <Option value="PUT">PUT</Option>
+                <Option value="DELETE">DELETE</Option>
+              </Select>
+            </FormItem>
+          </Col>
+          <Col v-bind="grid" v-if="authType == 2">
             <FormItem label="接口地址：" prop="api_url">
               <Input v-model="formValidate.api_url" placeholder="请输入接口地址" @on-change="changeUnique">
-                <template #prepend>
-                  <span>adminapi/</span>
-                </template>
               </Input>
             </FormItem>
           </Col>
@@ -369,10 +376,13 @@ export default {
         datas: this.formValidate,
       };
       if (!this.formValidate.menu_name) {
-        return this.$Message.warning('请填写按钮名称');
+        return this.$Message.warning('请填写菜单/按钮/接口名称');
       }
-      if (!this.formValidate.menu_path) {
-        return this.$Message.warning('请填写路由地址');
+      if (!this.formValidate.menu_path && this.authType != 2) {
+        return this.$Message.warning('请填写页面/按钮地址');
+      }
+      if (!this.formValidate.api_url && this.authType == 2) {
+        return this.$Message.warning('请填写接口地址');
       }
       this.valids = true;
       addMenusApi(data)

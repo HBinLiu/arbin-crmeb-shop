@@ -211,7 +211,7 @@
             </Row>
             <Row class="row">
               <Col span="12">企业地址: {{ invoiceDetails.address }}</Col>
-              <Col span="12">企业电话: {{ invoiceDetails.drawer_phone }}</Col>
+              <Col span="12">企业电话: {{ invoiceDetails.tell }}</Col>
             </Row>
           </div>
           <div class="list">

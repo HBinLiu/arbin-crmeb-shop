@@ -568,13 +568,13 @@ export default {
       getDataInfoNew(id)
         .then(async (res) => {
           this.orderDatalist = res.data;
-          if (this.orderDatalist.orderInfo.refund_img.length) {
-            try {
-              this.orderDatalist.orderInfo.refund_img = JSON.parse(this.orderDatalist.orderInfo.refund_img);
-            } catch (e) {
-              this.orderDatalist.orderInfo.refund_img = [];
-            }
-          }
+          // if (this.orderDatalist.orderInfo.refund_img.length) {
+          //   try {
+          //     this.orderDatalist.orderInfo.refund_img = this.orderDatalist.orderInfo.refund_img;
+          //   } catch (e) {
+          //     this.orderDatalist.orderInfo.refund_img = [];
+          //   }
+          // }
           this.$nextTick((e) => {
             this.$refs.detailss.modals = true;
           });

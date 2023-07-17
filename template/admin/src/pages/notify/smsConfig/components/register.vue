@@ -25,9 +25,9 @@
           <!--<Input type="password" v-model="formInline.password" prefix="ios-lock-outline"-->
           <!--placeholder="请确认短信平台密码/token" />-->
           <!--</FormItem>-->
-          <FormItem prop="url" class="maxInpt">
-            <Input type="text" v-model="formInline.url" prefix="ios-contact-outline" placeholder="请输入网址域名" />
-          </FormItem>
+          <!-- <FormItem prop="url" class="maxInpt"> -->
+            <!-- <Input type="text" v-model="formInline.url" prefix="ios-contact-outline" placeholder="请输入网址域名" /> -->
+          <!-- </FormItem> -->
           <!--<FormItem prop="sign">-->
           <!--<Input type="text" v-model="formInline.sign" prefix="ios-contact-outline"-->
           <!--placeholder="请输入短信签名，例如：CRMEB" />-->
@@ -81,7 +81,7 @@ export default {
       ruleInline: {
         account: [{ required: true, message: '请输入短信平台账号', trigger: 'blur' }],
         password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-        url: [{ required: true, message: '请输入网址域名', trigger: 'blur' }],
+        // url: [{ required: true, message: '请输入网址域名', trigger: 'blur' }],
         phone: [{ required: true, validator: validatePhone, trigger: 'blur' }],
         sign: [{ required: true, message: '请输入短信签名', trigger: 'blur' }],
         verify_code: [{ required: true, message: '请输入验证码', trigger: 'blur' }],

@@ -213,11 +213,12 @@ body {
   font-size: 13px;
   padding: 10px 5px !important;
 }
-
-.ivu-form .ivu-form-item-label,
+.ivu-form .ivu-form-item-label {
+  font-size: 12px !important;
+}
 .ivu-radio-group-button .ivu-radio-wrapper,
 .ivu-table {
-  font-size: 12px !important;
+  font-size: 13px !important;
 }
 
 .ivu-table-cell {
@@ -726,4 +727,8 @@ body {
 
 .pl10 {
   padding-left: 10px;
+}
+.df-jcsb {
+  display: flex;
+  justify-content: space-between;
 }

@@ -769,13 +769,16 @@
 				data.from = 'routine';
 				// #endif
 				uni.showLoading({
-					title: this.$t(`active`)
+					title: this.$t(`激活中`)
 				});
 				memberCardDraw(data).then(res => {
 					let that = this;
 					uni.showToast({
 						title: res.msg,
 						success() {
+							that.memberCard();
+							that.groomList();
+							that.getOrderPayType();
 							that.popupShow = false;
 						}
 					});

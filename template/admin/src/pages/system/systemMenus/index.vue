@@ -71,10 +71,10 @@
             <span>
               <a @click="addRoute(row)" v-if="row.auth_type === 1 || row.auth_type === 3">选择权限</a>
               <Divider type="vertical" v-if="row.auth_type === 1 || row.auth_type === 3"/>
-              <a @click="addE(row, '添加子菜单')" v-if="row.auth_type === 1">添加下级</a>
+              <a @click="addE(row, '添加子菜单')" v-if="row.auth_type === 1 || row.auth_type === 3">添加下级</a>
               <!-- <a @click="addE(row, '添加规则')" v-else>添加规则</a> -->
             </span>
-            <Divider type="vertical" v-if="row.auth_type === 1" />
+            <Divider type="vertical" v-if="row.auth_type === 1 || row.auth_type === 3" />
             <a @click="edit(row, '编辑')">编辑</a>
             <Divider type="vertical" />
             <a @click="del(row, '删除规则')">删除</a>

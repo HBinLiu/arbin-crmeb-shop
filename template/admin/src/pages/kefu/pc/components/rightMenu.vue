@@ -235,7 +235,7 @@
     </template>
     <!-- 发货弹窗 -->
     <Modal v-model="isDelivery" title="订单发送货" :footer-hide="true">
-      <delivery v-if="isDelivery" @close="deliveryClose" @ok="deliveryOk" :orderId="orderId"></delivery>
+      <delivery v-if="isDelivery" :virtualType="virtual_type" @close="deliveryClose" @ok="deliveryOk" :orderId="orderId"></delivery>
     </Modal>
     <!-- 订单备注 -->
     <Modal
@@ -353,6 +353,7 @@ export default {
       userGroupSelect: [],
       model1: '',
       curMenuIndex: 0,
+      virtual_type: 0,
       menuList: [
         {
           key: '',
@@ -460,7 +461,9 @@ export default {
     },
     // 订单发货
     openDelivery(item) {
+      console.log(item);
       this.orderId = item.id;
+      this.virtual_type = item.virtual_type;
       this.isDelivery = true;
     },
     // 订单发货成功

@@ -1,9 +1,8 @@
 <template>
   <div class="Modal">
-    <Row class="colLeft">
-      <Col :xl="6" :lg="6" :md="6" :sm="6" :xs="24" class="colLeft">
-        <div class="Nav">
-          <div class="input">
+    <div class="colLeft">
+      <div class="Nav">
+        <!-- <div class="input">
             <Input
               search
               enter-button
@@ -12,126 +11,204 @@
               style="width: 90%"
               @on-search="changePage"
             />
-          </div>
-          <div class="trees-coadd">
-            <div class="scollhide">
-              <div class="trees">
-                <Tree :data="treeData" :render="renderContent" :load-data="loadData" class="treeBox" ref="tree"></Tree>
-              </div>
+          </div> -->
+        <div class="trees-coadd">
+          <div class="scollhide">
+            <div class="tree">
+              <el-tree
+                :data="treeData"
+                node-key="id"
+                default-expand-all
+                highlight-current
+                :expand-on-click-node="false"
+                @node-click="appendBtn"
+                :current-node-key="treeId"
+              >
+                <span class="custom-tree-node" slot-scope="{ data }">
+                  <span class="file-name">
+                    <i class="icon el-icon-folder-remove"></i>
+                    {{ data.title }}</span
+                  >
+                  <span>
+                    <el-dropdown @command="(command) => clickMenu(data, command)">
+                      <Icon class="add" type="ios-more" />
+                      <template slot="dropdown">
+                        <el-dropdown-menu>
+                          <el-dropdown-item command="1">新增分类</el-dropdown-item>
+                          <el-dropdown-item v-if="data.id" command="2">编辑分类</el-dropdown-item>
+                          <el-dropdown-item v-if="data.id" command="3">删除</el-dropdown-item>
+                        </el-dropdown-menu>
+                      </template>
+                    </el-dropdown>
+                  </span>
+                </span>
+              </el-tree>
             </div>
           </div>
         </div>
-      </Col>
-      <Col :xl="18" :lg="18" :md="18" :sm="18" :xs="24" class="colLeft">
-        <div class="conter">
-          <div class="bnt acea-row row-middle">
-            <Col span="24">
-              <Button
-                type="primary"
-                :disabled="checkPicList.length === 0"
-                @click="checkPics"
-                class="mr10"
-                v-if="isShow !== 0"
-                >使用选中图片</Button
-              >
-              <Upload
-                :show-upload-list="false"
-                :action="fileUrl"
-                class="mr10 mb10"
-                :before-upload="beforeUpload"
-                :data="uploadData"
-                :headers="header"
-                :multiple="true"
-                :format="['jpg', 'jpeg', 'png', 'gif']"
-                :on-success="handleSuccess"
-                style="margin-top: 1px; display: inline-block"
-              >
-                <Button type="primary">上传图片</Button>
-              </Upload>
-              <!--<Button type="success" @click.stop="add" class="mr10">添加分类</Button>-->
-              <Button type="error" class="mr10" :disabled="checkPicList.length === 0" @click.stop="editPicList('图片')"
-                >删除图片</Button
-              >
-              <i-select :value="pids" placeholder="图片移动至" style="width: 250px" class="treeSel">
-                <i-option v-for="(item, index) of list" :value="item.value" :key="index" style="display: none">
-                  {{ item.title }}
-                </i-option>
-                <Tree
-                  :data="treeData2"
-                  :render="renderContentSel"
-                  ref="reference"
-                  :load-data="loadData"
-                  class="treeBox"
-                ></Tree>
-              </i-select>
-            </Col>
+      </div>
+      <div class="conter">
+        <div class="bnt acea-row row-middle df-jcsb">
+          <div class="">
+            <el-button
+              type="primary"
+              :disabled="checkPicList.length === 0"
+              @click="checkPics"
+              size="small"
+              v-if="isShow !== 0"
+              >使用选中图片</el-button
+            >
+            <el-button size="small" type="primary" @click="uploadModal">上传图片</el-button>
+            <el-button
+              type="error"
+              class="mr10"
+              size="small"
+              :disabled="!checkPicList.length && !ids.length"
+              @click.stop="editPicList()"
+              >删除图片</el-button
+            >
+            <el-cascader
+              v-model="pids"
+              placeholder="图片移动至"
+              style="width: 150px"
+              class="treeSel"
+              :options="treeData2"
+              :props="{ checkStrictly: true, emitPath: false, label: 'title', value: 'id' }"
+              clearable
+              size="small"
+              @visible-change="moveImg"
+            ></el-cascader>
           </div>
-          <div class="pictrueList acea-row">
-            <Row :gutter="24" class="conter">
-              <div v-show="isShowPic" class="imagesNo">
-                <Icon type="ios-images" size="60" color="#dbdbdb" />
-                <span class="imagesNo_sp">图片库为空</span>
-              </div>
-              <div class="acea-row mb10">
-                <div
-                  class="pictrueList_pic mr10 mb10"
-                  v-for="(item, index) in pictrueList"
-                  :key="index"
-                  @mouseenter="enterMouse(item)"
-                  @mouseleave="enterMouse(item)"
-                >
-                  <p class="number" v-if="item.num > 0">
-                    <Badge :count="item.num" type="error" :offset="[11, 12]">
-                      <a href="#" class="demo-badge"></a>
-                    </Badge>
-                  </p>
-                  <img
-                    :class="item.isSelect ? 'on' : ''"
-                    v-lazy="item.satt_dir"
-                    @click.stop="changImage(item, index, pictrueList)"
-                  />
-                  <div
-                    style="display: flex; align-items: center; justify-content: space-between"
-                    @mouseenter="enterLeave(item)"
-                    @mouseleave="enterLeave(item)"
-                  >
-                    <p style="width: 80%" v-if="!item.isEdit">
-                      {{ item.editName }}
-                    </p>
-                    <Input
-                      size="small"
-                      style="width: 80%"
-                      type="text"
-                      v-model="item.real_name"
-                      v-else
-                      @on-blur="bindTxt(item)"
-                    />
-                    <span
-                      class="iconfont iconbianji1"
-                      @click="item.isEdit = !item.isEdit"
-                      v-if="item.isShowEdit"
-                    ></span>
-                  </div>
-                  <div class="nameStyle" v-show="item.realName && item.real_name">
-                    {{ item.real_name }}
-                  </div>
-                </div>
-              </div>
-              <!--<Col class="mb20" v-bind="gridPic"-->
-              <!--v-for="(item, index) in pictrueList" :key="index" >-->
-              <!--<div class="pictrueList_pic">-->
-              <!--<img :class="item.isSelect ? 'on': '' " v-lazy="item.satt_dir"-->
-              <!--@click.stop="changImage(item, index, pictrueList)"/>-->
-              <!--</div>-->
-              <!--</Col>-->
-            </Row>
-          </div>
-          <div class="footer acea-row row-right">
-            <Page :total="total" show-elevator show-total @on-change="pageChange" :page-size="fileData.limit" />
+          <div v-if="isPage">
+            <el-input
+              class="mr10"
+              v-model="fileData.real_name"
+              placeholder="请输入图片名"
+              size="small"
+              style="width: 150px"
+            >
+              <i slot="suffix" class="el-icon-search el-input__icon" @click="getFileList"></i>
+            </el-input>
+            <el-radio-group v-model="lietStyle" size="small" @change="radioChange">
+              <el-radio-button label="list">
+                <i class="el-icon-menu"></i>
+              </el-radio-button>
+              <el-radio-button label="table">
+                <i class="el-icon-files"></i>
+              </el-radio-button>
+            </el-radio-group>
           </div>
         </div>
-      </Col>
-    </Row>
+        <div class="pictrueList acea-row" :class="{ 'is-modal': !isPage }">
+          <div v-if="lietStyle == 'list'" style="width: 100%">
+            <div v-show="isShowPic" class="imagesNo">
+              <Icon type="ios-images" size="60" color="#dbdbdb" />
+              <span class="imagesNo_sp">图片库为空</span>
+            </div>
+            <div class="acea-row mb10">
+              <div
+                class="pictrueList_pic mr10 mb10"
+                v-for="(item, index) in pictrueList"
+                :key="index"
+                @mouseenter="enterMouse(item)"
+                @mouseleave="enterMouse(item)"
+              >
+                <p class="number" v-if="item.num > 0">
+                  <Badge :count="item.num" type="error" :offset="[11, 12]">
+                    <a href="#" class="demo-badge"></a>
+                  </Badge>
+                </p>
+                <img
+                  :class="item.isSelect ? 'on' : ''"
+                  v-lazy="item.satt_dir"
+                  @click.stop="changImage(item, index, pictrueList)"
+                />
+                <div style="operate-item " @mouseenter="enterLeave(item)" @mouseleave="enterLeave(item)">
+                  <p v-if="!item.isEdit">
+                    {{ item.editName }}
+                  </p>
+                  <el-input size="small" type="text" v-model="item.real_name" v-else @blur="bindTxt(item)" />
+                  <div class="operate-item operate-height">
+                    <span class="operate mr10" @click="editPicList(item.att_id)" v-if="item.isShowEdit">删除</span>
+                    <span class="operate mr10" @click="item.isEdit = !item.isEdit" v-if="item.isShowEdit">改名</span>
+                    <span class="operate" @click="lookImg(item)" v-if="item.isShowEdit">查看</span>
+                  </div>
+                </div>
+                <!-- <div class="nameStyle" v-show="item.realName && item.real_name">
+                    {{ item.real_name }}
+                  </div> -->
+              </div>
+            </div>
+            <!--<Col class="mb20" v-bind="gridPic"-->
+            <!--v-for="(item, index) in pictrueList" :key="index" >-->
+            <!--<div class="pictrueList_pic">-->
+            <!--<img :class="item.isSelect ? 'on': '' " v-lazy="item.satt_dir"-->
+            <!--@click.stop="changImage(item, index, pictrueList)"/>-->
+            <!--</div>-->
+            <!--</Col>-->
+          </div>
+          <el-table
+            v-if="lietStyle == 'table'"
+            ref="table"
+            :data="pictrueList"
+            v-loading="loading"
+            highlight-row
+            :row-key="getRowKey"
+            @selection-change="handleSelectRow"
+            no-data-text="暂无数据"
+            no-filtered-data-text="暂无筛选结果"
+          >
+            <el-table-column type="selection" width="60" :reserve-selection="true"> </el-table-column>
+            <el-table-column label="图片名称" min-width="190">
+              <template slot-scope="scope">
+                <div class="df-aic">
+                  <div class="tabBox_img mr10" v-viewer>
+                    <img v-lazy="scope.row.att_dir" />
+                  </div>
+                  <span v-if="!scope.row.isEdit" class="line2 real-name">{{ scope.row.real_name }}</span>
+                  <el-input
+                    size="small"
+                    type="text"
+                    style="width: 90%"
+                    v-model="scope.row.real_name"
+                    v-else
+                    @blur="bindTxt(scope.row)"
+                  />
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="上传时间" min-width="100">
+              <template slot-scope="scope">
+                <span>{{ scope.row.time }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" fixed="right" width="170">
+              <template slot-scope="scope">
+                <a @click="editPicList(scope.row)">删除</a>
+                <el-divider direction="vertical"></el-divider>
+                <a @click="scope.row.isEdit = !scope.row.isEdit">{{ scope.row.isEdit ? '确定' : '重名命' }}</a>
+                <el-divider direction="vertical"></el-divider>
+                <a @click="lookImg(scope.row)">查看</a>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+        <div class="footer acea-row row-right">
+          <Page :total="total" show-elevator show-total @on-change="pageChange" :page-size="fileData.limit" />
+        </div>
+      </div>
+    </div>
+    <uploadImg
+      ref="upload"
+      :isPage="isPage"
+      :isIframe="isIframe"
+      :categoryId="treeId"
+      :categoryList="treeData"
+      @uploadSuccess="uploadSuccess"
+    ></uploadImg>
+    <div class="images" v-show="false" v-viewer="{ movable: false }">
+      <img v-for="src in pictrueList" :src="src.att_dir" :key="src.att_id" />
+    </div>
   </div>
 </template>
 
@@ -146,13 +223,23 @@ import {
 } from '@/api/uploadPictures';
 import Setting from '@/setting';
 import { getCookies } from '@/libs/util';
+import uploadImg from '@/components/uploadImg';
+import { VueTreeList, Tree, TreeNode } from 'vue-tree-list';
 export default {
   name: 'uploadPictures',
-  // components: { editFrom },
+  components: { uploadImg, VueTreeList },
   props: {
     isChoice: {
       type: String,
       default: '',
+    },
+    isPage: {
+      type: Boolean,
+      default: false,
+    },
+    isIframe: {
+      type: Boolean,
+      default: false,
     },
     gridBtn: {
       type: Object,
@@ -183,9 +270,11 @@ export default {
       checkPicList: [],
       uploadName: {
         name: '',
+        all: 1,
       },
+      formValidate: { id: 0 },
       FromData: null,
-      treeId: 0,
+      treeId: '',
       isJudge: false,
       buttonProps: {
         type: 'default',
@@ -193,6 +282,7 @@ export default {
       },
       fileData: {
         pid: 0,
+        real_name: '',
         page: 1,
         limit: this.pageLimit || 18,
       },
@@ -203,6 +293,10 @@ export default {
       isShowPic: false,
       header: {},
       ids: [], // 选中附件的id集合
+      lietStyle: 'list',
+      imageUrl: '',
+      loading: false,
+      multipleSelection: [],
     };
   },
   mounted() {
@@ -211,6 +305,70 @@ export default {
     this.getFileList();
   },
   methods: {
+    radioChange() {
+      this.initData();
+    },
+    lookImg(item) {
+      this.imageUrl = item.att_dir;
+      const viewer = this.$el.querySelector('.images').$viewer;
+      viewer.show();
+      this.$nextTick(() => {
+        let i = this.pictrueList.findIndex((e) => e.att_dir === item.att_dir);
+        viewer.update().view(i);
+      });
+    },
+    onDel(node) {
+      let method = node.cate_id ? routeDel : routeCateDel;
+      this.$Modal.confirm({
+        title: '警告',
+        content: '<p>删除后无法恢复，请确认后删除！</p>',
+        onOk: () => {
+          method(node.id)
+            .then((res) => {
+              this.$Message.success(res.msg);
+              node.remove();
+            })
+            .catch((err) => {
+              this.$Message.error(err);
+            });
+        },
+        onCancel: () => {},
+      });
+    },
+
+    onChangeName(params) {
+      if (params.eventType == 'blur') {
+        let data = {
+          name: params.newName,
+          id: params.id,
+        };
+        interfaceEditName(data)
+          .then((res) => {
+            this.$Message.success(res.msg);
+          })
+          .catch((err) => {
+            this.$Message.error(err);
+          });
+      }
+    },
+    // 点击菜单
+    clickMenu(data, name) {
+      console.log(name, data);
+      if (name == 1) {
+        this.append(data);
+      } else if (name == 2) {
+        this.editPic(data);
+      } else if (name == 3) {
+        this.remove(data, '分类');
+      }
+    },
+    uploadSuccess() {
+      this.fileData.page = 1;
+      this.getFileList();
+    },
+    uploadModal() {
+      this.$refs.upload.uploadModal = true;
+    },
     enterMouse(item) {
       item.realName = !item.realName;
     },
@@ -221,263 +379,24 @@ export default {
     getToken() {
       this.header['Authori-zation'] = 'Bearer ' + getCookies('token');
     },
-    // 树状图
-    renderContent(h, { root, node, data }) {
-      let operate = [];
-      if (data.pid == 0) {
-        operate.push(
-          h(
-            'div',
-            {
-              class: ['ivu-dropdown-item'],
-              on: {
-                click: () => {
-                  this.append(root, node, data);
-                },
-              },
-            },
-            '添加分类',
-          ),
-        );
-      }
-      if (data.id !== '') {
-        operate.push(
-          h(
-            'div',
-            {
-              class: ['ivu-dropdown-item'],
-              on: {
-                click: () => {
-                  this.editPic(root, node, data);
-                },
-              },
-            },
-            '编辑分类',
-          ),
-          h(
-            'div',
-            {
-              class: ['ivu-dropdown-item'],
-              on: {
-                click: () => {
-                  this.remove(root, node, data, '分类');
-                },
-              },
-            },
-            '删除分类',
-          ),
-        );
-      }
-      return h(
-        'span',
-        {
-          class: ['ivu-span'],
-          style: {
-            display: 'inline-block',
-            width: '88%',
-            height: '32px',
-            lineHeight: '32px',
-            position: 'relative',
-            color: 'rgba(0,0,0,0.6)',
-            cursor: 'pointer',
-          },
-          on: {
-            mouseenter: () => {
-              this.onMouseOver(root, node, data);
-            },
-            mouseleave: () => {
-              this.onMouseOver(root, node, data);
-            },
-            // click: (e) => {
-            //   this.appendBtn(root, node, data, e);
-            // },
-          },
-        },
-        [
-          h(
-            'span',
-            {
-              on: {
-                click: (e) => {
-                  this.appendBtn(root, node, data, e);
-                },
-              },
-            },
-            data.title,
-          ),
-          h(
-            'div',
-            {
-              style: {
-                display: 'inline-block',
-                float: 'right',
-              },
-            },
-            [
-              h('Icon', {
-                props: {
-                  type: 'ios-more',
-                },
-                style: {
-                  marginRight: '8px',
-                  fontSize: '20px',
-                  display: 'inline',
-                },
-                on: {
-                  click: (e) => {
-                    this.onClick(root, node, data, e);
-                  },
-                },
-              }),
-              h(
-                'div',
-                {
-                  class: ['right-menu ivu-poptip-inner'],
-                  style: {
-                    width: '80px',
-                    position: 'absolute',
-                    zIndex: '9',
-                    top: '0',
-                    right: '0',
-                    display: data.flag2 ? 'block' : 'none',
-                  },
-                },
-                operate,
-              ),
-            ],
-          ),
-        ],
-      );
-    },
-    // renderContent (h, { root, node, data }) {
-    //     let actionData = [];
-    //     if (data.id !== '' && data.pid == 0) {
-    //         actionData.push(h('Button', {
-    //             props: Object.assign({}, this.buttonProps, {
-    //                 icon: 'ios-add'
-    //             }),
-    //             style: {
-    //                 marginRight: '8px',
-    //                 display: data.flag ? 'inline' : 'none'
-    //             },
-    //             on: {
-    //                 click: () => { this.append(root, node, data) }
-    //
-    //             }
-    //         }));
-    //     }
-    //     if (data.id !== '') {
-    //         actionData.push(h('Button', {
-    //             props: Object.assign({}, this.buttonProps, {
-    //                 icon: 'md-create'
-    //             }),
-    //             style: {
-    //                 marginRight: '8px',
-    //                 display: data.flag ? 'inline' : 'none'
-    //             },
-    //             on: {
-    //                 click: () => { this.editPic(root, node, data) }
-    //             }
-    //         }));
-    //         actionData.push(h('Button', {
-    //             props: Object.assign({}, this.buttonProps, {
-    //                 icon: 'ios-remove'
-    //             }),
-    //             style: {
-    //                 display: data.flag ? 'inline' : 'none'
-    //             },
-    //             on: {
-    //                 click: () => { this.remove(root, node, data, '分类') }
-    //             }
-    //         }));
-    //     }
-    //     return h('div', {
-    //         style: {
-    //             display: 'inline-block',
-    //             width: '90%'
-    //         },
-    //         on: {
-    //             mouseenter: () => { this.onMouseOver(root, node, data) },
-    //             mouseleave: () => { this.onMouseOver(root, node, data) }
-    //         }
-    //     }, [
-    //         h('span', [
-    //             h('span', {
-    //                 style: {
-    //                     cursor: 'pointer'
-    //                 },
-    //                 class: ['ivu-tree-title'],
-    //                 on: {
-    //                     click: (e) => { this.appendBtn(root, node, data, e) }
-    //                 }
-    //             }, data.title)
-    //         ]),
-    //         h('span', {
-    //             style: {
-    //                 display: 'inline-block',
-    //                 float: 'right'
-    //             }
-    //         }, actionData)
-    //     ]);
-    // },
-    renderContentSel(h, { root, node, data }) {
-      return h(
-        'div',
-        {
-          style: {
-            display: 'inline-block',
-            width: '90%',
-          },
-        },
-        [
-          h('span', [
-            h(
-              'span',
-              {
-                style: {
-                  cursor: 'pointer',
-                },
-                class: ['ivu-tree-title'],
-                on: {
-                  click: (e) => {
-                    this.handleCheckChange(root, node, data, e);
-                  },
-                },
-              },
-              data.title,
-            ),
-          ]),
-        ],
-      );
-    },
-    // 下拉树
-    handleCheckChange(root, node, data, e) {
-      this.list = [];
-      // this.pids = 0;
-      let value = data.id;
-      let title = data.title;
-      this.list.push({
-        value,
-        title,
-      });
-      if (this.ids.length) {
-        this.pids = value;
+    moveImg(status) {
+      if (!status) {
         this.getMove();
       } else {
-        this.$Message.warning('请先选择图片');
+        if (!this.ids.toString()) {
+          this.$Message.warning('请先选择图片');
+          return;
+        }
       }
-      let selected = this.$refs.reference.$el.querySelectorAll('.ivu-tree-title-selected');
-      for (let i = 0; i < selected.length; i++) {
-        selected[i].className = 'ivu-tree-title';
-      }
-      e.path[0].className = 'ivu-tree-title  ivu-tree-title-selected'; // 当前点击的元素
     },
+    searchImg() {},
     // 移动分类
     getMove() {
       let data = {
         pid: this.pids,
         images: this.ids.toString(),
       };
+      if (!data.images) return;
       moveApi(data)
         .then(async (res) => {
           this.$Message.success(res.msg);
@@ -490,11 +409,9 @@ export default {
           this.$Message.error(res.msg);
         });
     },
-    // 删除图片
-    editPicList(tit) {
-      this.tits = tit;
+    delImg(id) {
       let ids = {
-        ids: this.ids.toString(),
+        ids: id,
       };
       let delfromData = {
         title: '删除选中图片',
@@ -512,6 +429,32 @@ export default {
           this.$Message.error(res.msg);
         });
     },
+    // 删除图片
+    editPicList(id) {
+      let ids = {
+        ids: id || this.ids.toString(),
+      };
+      let delfromData = {
+        title: '删除选中图片',
+        url: `file/file/delete`,
+        method: 'POST',
+        ids: ids,
+      };
+      this.$modalSure(delfromData)
+        .then((res) => {
+          this.$Message.success(res.msg);
+          this.getFileList();
+          this.initData();
+        })
+        .catch((res) => {
+          this.$Message.error(res.msg);
+        });
+    },
+    initData() {
+      this.checkPicList = [];
+      this.ids = [];
+      this.multipleSelection = [];
+    },
     // 鼠标移入 移出
     onMouseOver(root, node, data) {
       event.preventDefault();
@@ -520,31 +463,24 @@ export default {
         data.flag2 = false;
       }
     },
-    onClick(root, node, data, e) {
-      e.preventDefault();
+    // onClick(root, node, data, e) {
+    //   e.preventDefault();
 
-      data.flag2 = !data.flag2;
-    },
+    //   data.flag2 = !data.flag2;
+    // },
     // 点击树
-    appendBtn(root, node, data, e) {
-      e.preventDefault();
-
+    appendBtn(data) {
       this.treeId = data.id;
       this.fileData.page = 1;
       this.getFileList();
-      let selected = this.$refs.tree.$el.querySelectorAll('.ivu-tree-title-selected');
-      for (let i = 0; i < selected.length; i++) {
-        selected[i].className = 'ivu-tree-title';
-      }
-      e.path[0].className = 'ivu-tree-title  ivu-tree-title-selected'; // 当前点击的元素
     },
     // 点击添加
-    append(root, node, data) {
+    append(data) {
       this.treeId = data.id;
       this.getFrom();
     },
     // 删除分类
-    remove(root, node, data, tit) {
+    remove(data, tit) {
       this.tits = tit;
       let delfromData = {
         title: '删除 [ ' + data.title + ' ] ' + '分类',
@@ -573,7 +509,7 @@ export default {
     //     }
     // },
     // 编辑树表单
-    editPic(root, node, data) {
+    editPic(data) {
       this.$modalForm(categoryEditApi(data.id)).then(() => this.getList());
     },
     // 搜索分类
@@ -589,12 +525,13 @@ export default {
       };
       getCategoryListApi(this.uploadName)
         .then(async (res) => {
-          this.treeData = res.data.list;
-          this.treeData.unshift(data);
           if (type !== 'search') {
-            this.treeData2 = [...this.treeData];
+            this.treeData2 = JSON.parse(JSON.stringify([...res.data.list]));
           }
-          this.addFlag(this.treeData);
+          res.data.list.unshift(data);
+          this.treeData = res.data.list;
+          console.log(this.treeData);
+          // this.addFlag(this.treeData);
         })
         .catch((res) => {
           this.$Message.error(res.msg);
@@ -643,10 +580,59 @@ export default {
             this.isShowPic = true;
           }
           this.total = res.data.count;
+          this.$nextTick(() => {
+            //确保dom加载完毕
+            // this.showSelectData();
+          });
         })
         .catch((res) => {
           this.$Message.error(res.msg);
         });
+    },
+    showSelectData() {
+      if (this.multipleSelection.length > 0) {
+        // 判断是否存在勾选过的数据
+        this.pictrueList.forEach((row) => {
+          // 获取数据列表接口请求到的数据
+          this.multipleSelection.forEach((item) => {
+            // 勾选到的数据
+            if (row.att_id === item.att_id) {
+              // this.$refs.table.toggleRowSelection(item, true); // 若有重合，则回显该条数据
+            }
+          });
+        });
+      }
+    },
+    getRowKey(row) {
+      return row.att_id;
+    },
+    //对象数组去重；
+    unique(arr) {
+      let result = arr.reduce((acc, curr) => {
+        const x = acc.find((item) => item.att_id === curr.att_id);
+        if (!x) {
+          return acc.concat([curr]);
+        } else {
+          return acc;
+        }
+      }, []);
+      return result;
+    },
+    //  选中某一行
+    handleSelectRow(selection) {
+      let arr = this.unique(selection);
+      console.log(selection, arr);
+      const uniqueArr = [];
+      const ids = [];
+      for (let i = 0; i < arr.length; i++) {
+        const item = arr[i];
+        if (!ids.includes(item.att_id)) {
+          uniqueArr.push(item);
+          ids.push(item.att_id);
+        }
+      }
+      this.ids = ids;
+      this.multipleSelection = uniqueArr;
     },
     pageChange(index) {
       this.fileData.page = index;
@@ -763,7 +749,7 @@ export default {
 };
 </script>
 
-<style scoped lang="stylus">
+<style scoped lang="scss">
 .nameStyle {
   position: absolute;
   white-space: nowrap;
@@ -782,55 +768,6 @@ export default {
   font-size: 13px;
 }
 
-/deep/.ivu-badge-count {
-  margin-top: 18px !important;
-  margin-right: 19px !important;
-}
-
-/deep/ivu-tree-title-selected:hover {
-  color: unset;
-  background-color: unset;
-}
-
-/deep/.ivu-tree-title {
-  padding: 0;
-  // width: 200px;
-  width: 100%;
-}
-
-/deep/.ivu-span {
-  padding: 0;
-  display: flex !important;
-  justify-content: space-between;
-}
-
-/deep/.ivu-tree ul li {
-  margin: 0;
-}
-
-/deep/.ivu-tree-arrow {
-  width: 17px;
-  color: #626262;
-}
-
-/deep/.ivu-span:hover {
-  background: #F5F5F5;
-  color: rgba(0, 0, 0, 0.4) !important;
-}
-
-/deep/.ivu-tree-arrow i {
-  vertical-align: bottom;
-}
-
-.Nav /deep/.ivu-icon-ios-arrow-forward:before {
-  content: '\F341' !important;
-  font-size: 20px;
-}
-
-/deep/.ivu-btn-icon-only.ivu-btn-small {
-  padding: unset !important;
-}
-
 .selectTreeClass {
   background: #d5e8fc;
 }
@@ -838,31 +775,26 @@ export default {
 .treeBox {
   width: 100%;
   height: 100%;
-
-  >>> .ivu-tree-title-selected, .ivu-tree-title-selected:hover {
-    color: #2D8cF0 !important;
-    background-color: #fff !important;
-  }
-
-  >>> .ivu-btn-icon-only {
-    width: 20px !important;
-    height: 20px !important;
-  }
-
-  >>> .ivu-tree-title:hover {
-    color: #2D8cF0 !important;
-    background-color: #fff !important;
-  }
+  max-width: 180px;
 }
-
-.pictrueList_pic {
-  position: relative;
+.is-modal .pictrueList_pic {
   width: 100px;
-  cursor: pointer;
+  margin-right: 10px !important;
 
   img {
     width: 100%;
     height: 100px;
+  }
+}
+.pictrueList_pic {
+  position: relative;
+  width: 146px;
+  cursor: pointer;
+  margin-right: 19px !important;
+  img {
+    width: 146px;
+    height: 146px;
+    object-fit: cover;
   }
 
   p {
@@ -870,6 +802,8 @@ export default {
     text-overflow: ellipsis;
     white-space: nowrap;
     height: 20px;
+    font-size: 12px;
+    color: #515a6d;
     text-align: center;
   }
 
@@ -883,7 +817,12 @@ export default {
     top: 0;
   }
 }
-
+.Nav {
+  width: 100%;
+  border-right: 1px solid #eee;
+  min-width: 220px;
+  max-width: 220px;
+}
 .trees-coadd {
   width: 100%;
   border-radius: 4px;
@@ -893,12 +832,48 @@ export default {
   .scollhide {
     overflow-x: hidden;
     overflow-y: scroll;
-    padding: 10px 0 10px 0;
+    padding: 0px 0 10px 0;
     box-sizing: border-box;
 
-    .trees {
-      width: 100%;
-      height: 374px;
+    .tree {
+      min-height: 374px;
+      /deep/ .file-name {
+        display: flex;
+        align-items: center;
+        .icon {
+          width: 12px;
+          height: 12px;
+          margin-right: 8px;
+        }
+      }
+      /deep/ .el-tree-node {
+        margin-right: 16px;
+      }
+      /deep/ .el-tree-node__children .el-tree-node {
+        margin-right: 0;
+      }
+      /deep/ .el-tree-node__content {
+        width: 100%;
+        height: 36px;
+      }
+      /deep/ .custom-tree-node {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-right: 17px;
+        font-size: 13px;
+        font-weight: 400;
+        color: rgba(0, 0, 0, 0.6);
+        line-height: 13px;
+      }
+      /deep/ .is-current {
+        background: #f1f9ff !important;
+        color: #1890ff !important;
+      }
+      /deep/ .is-current .custom-tree-node {
+        color: #1890ff !important;
+      }
     }
   }
 
@@ -907,12 +882,11 @@ export default {
   }
 }
 
-.treeSel >>>.ivu-select-dropdown-list {
+.treeSel >>> .ivu-select-dropdown-list {
   padding: 0 5px !important;
   box-sizing: border-box;
   width: 200px;
 }
-
 .imagesNo {
   display: flex;
   justify-content: center;
@@ -932,51 +906,59 @@ export default {
   height: 100%;
   background: #fff !important;
 }
-
-.Nav {
-  width: 100%;
-  border-right: 1px solid #eee;
+.fill-window {
+  height: 100vh;
 }
-
 .colLeft {
   padding-right: 0 !important;
   height: 100%;
+  display: flex;
+  flex-wrap: nowrap;
 }
 
 .conter {
   width: 100%;
   height: 100%;
-  margin-left: 0 !important;
+  margin-left: 20px !important;
 }
 
 .conter .bnt {
   width: 100%;
-  padding: 0 13px 10px 8px;
+  padding: 0 13px 20px 0px;
   box-sizing: border-box;
 }
 
 .conter .pictrueList {
-  padding-left: 6px;
-  width: 100%;
-  max-width: 1200px;
+  // width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
   // height: 300px;
 }
-
+.right-col {
+  // flex: 1;
+}
 .conter .pictrueList img {
   width: 100%;
-  border: 2px solid #fff;
 }
 
 .conter .pictrueList img.on {
-  border: 2px solid #5FB878;
+  border: 2px solid #5fb878;
 }
 
 .conter .footer {
   padding: 0 20px 10px 20px;
 }
-
+.tabBox_img {
+  display: flex;
+  align-items: center;
+}
+.real-name {
+  flex: 1;
+}
+.df-aic {
+  display: flex;
+  align-items: center;
+}
 .demo-badge {
   width: 42px;
   height: 42px;
@@ -989,7 +971,37 @@ export default {
   padding: 5px 0;
 }
 
-.trees-coadd /deep/ .ivu-tree-children .ivu-tree-arrow {
-  line-height: 25px;
+.card-tree {
+  background: #fff;
+  height: 72px;
+  box-sizing: border-box;
+  overflow-x: scroll; /* 设置溢出滚动 */
+  white-space: nowrap;
+  overflow-y: hidden;
+  /* 隐藏滚动条 */
+  border-radius: 4px;
+  scrollbar-width: none; /* firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+.card-tree::-webkit-scrollbar {
+  display: none; /* Chrome Safari */
+}
+.tabs {
+  background: #fff;
+  padding-top: 10px;
+  border-radius: 5px 5px 0 0;
+}
+.operate-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.operate-height {
+  height: 16px;
+}
+.operate {
+  color: #1890ff;
+  font-size: 12px;
+  white-space: nowrap;
 }
 </style>

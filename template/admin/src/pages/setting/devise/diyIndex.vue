@@ -976,7 +976,7 @@ export default {
     top 20px
     display: flex;
     flex-direction: column;
-    z-index: 1000;
+    z-index: 9;
   }
   /* min-width 700px; */
 }

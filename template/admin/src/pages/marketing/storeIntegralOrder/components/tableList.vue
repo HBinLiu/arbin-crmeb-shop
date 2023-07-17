@@ -49,7 +49,7 @@
               <!-- <DropdownItem name="10" v-show="row._status >= 2">订单打印</DropdownItem> -->
               <DropdownItem name="4" v-show="row.status !== 4">订单备注</DropdownItem>
               <DropdownItem name="8" v-show="row.status === 2">已收货</DropdownItem>
-              <!-- <DropdownItem name="9">删除订单</DropdownItem> -->
+              <DropdownItem name="9" v-show="row.is_del === 1">删除订单</DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </template>

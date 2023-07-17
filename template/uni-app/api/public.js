@@ -231,3 +231,12 @@ export function basicConfig(name) {
 		noAuth: true
 	});
 }
+/**
+ * 后台版本信息
+ * 
+ */
+export function getSystemVersion() {
+	return request.get(`version`, {}, {
+		noAuth: true
+	});
+}

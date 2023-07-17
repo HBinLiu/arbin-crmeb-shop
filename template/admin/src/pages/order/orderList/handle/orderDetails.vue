@@ -1,6 +1,6 @@
 <template>
   <div v-if="orderDatalist">
-    <Drawer title="订单详情" :closable="false" width="700" v-model="modals" scrollable>
+    <Drawer title="订单详情" :mask-closable="false" width="700" v-model="modals" scrollable>
       <Card :bordered="false" dis-hover class="i-table-no-border">
         <div class="ivu-description-list-title">收货信息</div>
         <Row class="mb10">
@@ -11,6 +11,7 @@
           <Col span="12">联系电话：{{ orderDatalist.orderInfo.user_phone || '' }}</Col>
           <Col span="12">收货地址：{{ orderDatalist.orderInfo.user_address || '' }}</Col>
         </Row>
+
         <Divider style="margin: 20px 0 !important" />
         <div class="ivu-description-list-title">订单信息</div>
         <Row class="mb10">
@@ -48,8 +49,8 @@
           <Col
             span="12"
             class="fontColor3 mb10"
-            v-if="parseFloat(orderDatalist.orderInfo.refund_price) && orderDatalist.orderInfo.refund_type != 3"
-            >退款金额：{{ parseFloat(orderDatalist.orderInfo.refund_price) }}</Col
+            v-if="parseFloat(orderDatalist.orderInfo.refunded_price) && orderDatalist.orderInfo.refund_type != 3"
+            >退款金额：{{ parseFloat(orderDatalist.orderInfo.refunded_price) }}</Col
           >
           <Col span="12" class="fontColor3 mb10" v-if="parseFloat(orderDatalist.orderInfo.use_integral)"
             >使用积分：{{ parseFloat(orderDatalist.orderInfo.use_integral) }}</Col
@@ -57,7 +58,10 @@
           <Col span="12" class="fontColor3 mb10" v-if="parseFloat(orderDatalist.orderInfo.back_integral)"
             >退回积分：{{ parseFloat(orderDatalist.orderInfo.back_integral) }}</Col
           >
-          <Col span="12" class="fontColor3 mb10" v-if="parseFloat(orderDatalist.orderInfo.gain_integral) && orderDatalist.orderInfo.paid == 1"
+          <Col
+            span="12"
+            class="fontColor3 mb10"
+            v-if="parseFloat(orderDatalist.orderInfo.gain_integral) && orderDatalist.orderInfo.paid == 1"
             >赠送积分：{{ parseFloat(orderDatalist.orderInfo.gain_integral) }}</Col
           >
           <Col span="12" class="mb10">创建时间：{{ orderDatalist.orderInfo._add_time }}</Col>
@@ -93,6 +97,110 @@
             >虚拟发货备注：{{ orderDatalist.orderInfo.fictitious_content }}</Col
           >
         </Row>
+        <Divider style="margin: 20px 0 !important" />
+        <div class="ivu-description-list-title">商品信息</div>
+        <Row class="mb10">
+          <div class="tabBox" v-for="(val, i) in orderDatalist.orderInfo.cartInfo" :key="i">
+            <div class="tabBox_img" v-viewer>
+              <img v-lazy="val.productInfo.attrInfo ? val.productInfo.attrInfo.image : val.productInfo.image" />
+            </div>
+            <span class="tabBox_tit"
+              >{{ val.productInfo.store_name + ' | '
+              }}{{ val.productInfo.attrInfo ? val.productInfo.attrInfo.suk : '' }}</span
+            >
+            <span class="tabBox_pice">{{ '￥' + val.truePrice + ' x ' + val.cart_num }}</span>
+          </div>
+        </Row>
+        <Divider v-if="orderDatalist.orderInfo.invoice" style="margin: 20px 0 !important" />
+        <div v-if="orderDatalist.orderInfo.invoice">
+          <Divider style="margin: 20px 0 !important" />
+          <div class="ivu-description-list-title">发票信息</div>
+          <Row class="mb10">
+            <Col span="12">发票抬头：{{ orderDatalist.orderInfo.invoice.name }}</Col>
+            <Col
+              span="12"
+              v-if="orderDatalist.orderInfo.invoice.header_type === 2 && orderDatalist.orderInfo.invoice.type === 1"
+              >企业税号：{{ orderDatalist.orderInfo.invoice.duty_number }}</Col
+            >
+          </Row>
+          <Row
+            class="mb10"
+            v-if="orderDatalist.orderInfo.invoice.header_type === 2 && orderDatalist.orderInfo.invoice.type === 1"
+          >
+            <Col span="12">发票类型: 电子普通发票</Col>
+            <Col span="12">发票抬头类型: 企业</Col>
+          </Row>
+          <Row
+            class="mb10"
+            v-if="orderDatalist.orderInfo.invoice.header_type === 1 && orderDatalist.orderInfo.invoice.type === 1"
+          >
+            <Col span="12">发票类型: 电子普通发票</Col>
+            <Col span="12">发票抬头类型: 个人</Col>
+          </Row>
+          <div class="ivu-description-list-title">联系信息</div>
+          <Row
+            class="mb10"
+            v-if="orderDatalist.orderInfo.invoice.header_type === 1 && orderDatalist.orderInfo.invoice.type === 1"
+          >
+            <Col span="12">真实姓名：{{ orderDatalist.orderInfo.invoice.name || '' }}</Col>
+            <Col span="12">联系电话：{{ orderDatalist.orderInfo.invoice.drawer_phone || '' }}</Col>
+          </Row>
+          <Row
+            class="mb10"
+            v-if="orderDatalist.orderInfo.invoice.header_type === 1 && orderDatalist.orderInfo.invoice.type === 1"
+          >
+            <Col span="12">联系邮箱：{{ orderDatalist.orderInfo.invoice.email || '' }}</Col>
+          </Row>
+          <Row
+            class="mb10"
+            v-if="orderDatalist.orderInfo.invoice.header_type === 2 && orderDatalist.orderInfo.invoice.type === 1"
+          >
+            <Col span="12">真实姓名：{{ orderDatalist.orderInfo.invoice.real_name || '' }}</Col>
+            <Col span="12">联系电话：{{ orderDatalist.orderInfo.invoice.user_phone || '' }}</Col>
+          </Row>
+          <Row
+            class="mb10"
+            v-if="orderDatalist.orderInfo.invoice.header_type === 2 && orderDatalist.orderInfo.invoice.type === 1"
+          >
+            <Col span="12">联系邮箱：{{ orderDatalist.orderInfo.invoice.email || '' }}</Col>
+            <Col span="12">联系电话：{{ orderDatalist.orderInfo.invoice.user_phone || '' }}</Col>
+          </Row>
+          <div v-if="orderDatalist.orderInfo.invoice.header_type === 2 && orderDatalist.orderInfo.invoice.type === 2">
+            <Row class="mb10">
+              <Col span="12"
+                >发票抬头: <span class="info">{{ orderDatalist.orderInfo.invoice.name }}</span></Col
+              >
+              <Col span="12"
+                >企业税号: <span class="info">{{ orderDatalist.orderInfo.invoice.duty_number }}</span></Col
+              >
+            </Row>
+            <Row class="mb10">
+              <Col span="12">发票类型: 纸质专用发票</Col>
+              <Col span="12">发票抬头类型: 企业</Col>
+            </Row>
+            <Row class="mb10">
+              <Col span="12"
+                >开户银行: <span class="info">{{ orderDatalist.orderInfo.invoice.bank }}</span></Col
+              >
+              <Col span="12"
+                >银行账号: <span class="info">{{ orderDatalist.orderInfo.invoice.card_number }}</span></Col
+              >
+            </Row>
+            <Row class="mb10">
+              <Col span="12">企业地址: {{ orderDatalist.orderInfo.invoice.address }}</Col>
+              <Col span="12">企业电话: {{ orderDatalist.orderInfo.invoice.tell }}</Col>
+            </Row>
+          </div>
+          <Row class="mb10" v-if="orderDatalist.orderInfo.invoice.is_invoice">
+            <Col span="12">发票编号: {{ orderDatalist.orderInfo.invoice.invoice_number }}</Col>
+          </Row>
+          <Row class="mb10" v-if="orderDatalist.orderInfo.invoice.is_invoice">
+            <Col span="12">发票备注: {{ orderDatalist.orderInfo.invoice.remark }}</Col>
+          </Row>
+          <Row class="mb10 fontColor1">
+            <Col span="12">开票状态：{{ orderDatalist.orderInfo.invoice.is_invoice ? '已开票' : '未开票' }}</Col>
+          </Row>
+        </div>
         <Divider style="margin: 20px 0 !important" v-if="orderDatalist.orderInfo.custom_form.length" />
         <div class="ivu-description-list-title" v-if="orderDatalist.orderInfo.custom_form.length">表单信息</div>
         <Row class="mb10" v-if="orderDatalist.orderInfo.custom_form.length">
@@ -137,6 +245,21 @@
           <div class="ivu-description-list-title" v-if="orderDatalist.orderInfo.mark">备注信息</div>
           <Row class="mb10">
             <Col span="12" class="fontColor2">{{ orderDatalist.orderInfo.mark }}</Col>
+          </Row>
+        </div>
+        <div v-if="orderDatalist.orderInfo.refund_type > 0">
+          <Divider style="margin: 20px 0 !important" />
+          <div class="ivu-description-list-title">售后信息</div>
+          <Row class="mb10">
+            <Col span="12">备注：{{ orderDatalist.orderInfo.refund_reason }}</Col>
+          </Row>
+          <Row class="mb10">
+            <Col span="12">
+              <div class="pic">
+                <div v-for="(img, i) in orderDatalist.orderInfo.refund_img" :key="i" class="img">
+                  <img v-viewer :src="img" alt="" />
+                </div></div
+            ></Col>
           </Row>
         </div>
       </Card>
@@ -318,6 +441,17 @@ export default {
   img {
     width: 100%;
     height: 100%;
+  }
+}
+.tabBox{
+  display:flex;
+  align-items center
+  .tabBox_img{
+    margin-right 10px
+  }
+  .tabBox_tit{
+    margin-right 20px
+
   }
 }
 </style>

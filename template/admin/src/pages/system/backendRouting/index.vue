@@ -671,7 +671,7 @@ export default {
           })
           .catch((err) => {
             console.log(err);
-            this.$Message.error(err);
+            this.$Message.error(err.msg);
           });
       } catch (error) {
         console.log(error);
@@ -692,17 +692,10 @@ export default {
           this.formValidate = res.data;
         })
         .catch((err) => {
-          this.$Message.error(err);
+          this.$Message.error(err.msg);
         });
     },
     async handleSubmit() {
-      if (!this.formValidate.name) {
-        return this.$Message.warning('请输入接口名称');
-      } else if (!this.formValidate.method) {
-        return this.$Message.warning('请选择请求类型');
-      } else if (!this.formValidate.path) {
-        return this.$Message.warning('请输入路由地址');
-      }
       this.formValidate.request = await this.$refs.xTable.getTableData().tableData;
       this.formValidate.response = await this.$refs.resTable.getTableData().tableData;
       this.formValidate.error_code = await this.$refs.codeTable.getTableData().tableData;
@@ -714,7 +707,7 @@ export default {
           this.getRoteData(this.paramsId);
         })
         .catch((err) => {
-          this.$Message.error(err);
+          this.$Message.error(err.msg);
         });
     },
     async insertEvent(type) {
@@ -829,7 +822,7 @@ export default {
           this.getInterfaceList();
         })
         .catch((err) => {
-          this.$Message.error(err);
+          this.$Message.error(err.msg);
         });
     },
     //侧边栏右键点击事件
@@ -934,7 +927,7 @@ export default {
               node.remove();
             })
             .catch((err) => {
-              this.$Message.error(err);
+              this.$Message.error(err.msg);
             });
         },
         onCancel: () => {},
@@ -952,7 +945,7 @@ export default {
             this.$Message.success(res.msg);
           })
           .catch((err) => {
-            this.$Message.error(err);
+            this.$Message.error(err.msg);
           });
       }
     },

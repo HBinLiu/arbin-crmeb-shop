@@ -49,7 +49,10 @@
                           </div>
                           <div class="attr">
                             <span>库存：{{ item.productInfo.stock }}</span>
-                            <span>销量：{{ item.productInfo.sales }}</span>
+                            <span>销量：{{
+                                parseInt(item.productInfo.sales) +
+                                parseInt(item.productInfo.ficti ? item.productInfo.ficti : 0)
+                              }}</span>
                           </div>
                           <div class="group">
                             <div class="money">￥{{ item.productInfo.price }}</div>

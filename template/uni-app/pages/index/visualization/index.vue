@@ -502,7 +502,6 @@
 			diyData() {
 				let that = this;
 				getDiy().then((res) => {
-					console.log('222', res)
 					let data = res.data;
 					that.headerSerch = data.headerSerch;
 					that.swiperBg = data.swiperBg;
