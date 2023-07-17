@@ -143,6 +143,18 @@ abstract class Make
     }
 
     /**
+     * 获取字段后缀
+     * @return string
+     * @author 等风来
+     * @email 136327134@qq.com
+     * @date 2023/5/22
+     */
+    public function getAttrPrefix()
+    {
+        return $this->attrPrefix;
+    }
+
+    /**
      * @return string
      * @author 等风来
      * @email 136327134@qq.com
@@ -204,7 +216,7 @@ abstract class Make
     public function setFilePathName(string $filePathName = '')
     {
         if ($filePathName) {
-            $this->filePathName = $filePathName;
+//            $this->filePathName = $filePathName;
         }
         return $this;
     }

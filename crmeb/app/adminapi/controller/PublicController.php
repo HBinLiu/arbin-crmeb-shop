@@ -12,6 +12,8 @@
 namespace app\adminapi\controller;
 
 
+use app\Request;
+use app\services\system\attachment\SystemAttachmentServices;
 use crmeb\services\CacheService;
 use think\Response;
 
@@ -43,5 +45,30 @@ class PublicController
     public function getWorkerManUrl()
     {
         return app('json')->success(getWorkerManUrl());
+    }
+
+    /**
+     * 扫码上传
+     * @param Request $request
+     * @param int $upload_type
+     * @param int $type
+     * @return Response
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/06/13
+     */
+    public function scanUpload(Request $request, $upload_type = 0, $type = 0)
+    {
+        [$file, $uploadToken, $pid] = $request->postMore([
+            ['file', 'file'],
+            ['uploadToken', ''],
+            ['pid', 0]
+        ], true);
+        $service = app()->make(SystemAttachmentServices::class);
+        if ($service->cacheDriver()->get('scan_upload') != $uploadToken) {
+            return app('json')->fail(410086);
+        }
+        $service->upload((int)$pid, $file, $upload_type, $type, '', $uploadToken);
+        return app('json')->success(100032);
     }
 }

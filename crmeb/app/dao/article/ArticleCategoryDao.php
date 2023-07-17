@@ -59,7 +59,7 @@ class ArticleCategoryDao extends BaseDao
     public function getArticleCategory()
     {
         return $this->search(['hidden' => 0, 'is_del' => 0, 'status' => 1, 'pid' => 0])->with(['children'])
-            ->order('sort DESC')
+            ->order('sort DESC,id DESC')
             ->field('id,pid,title')
             ->select()->toArray();
     }
@@ -77,7 +77,7 @@ class ArticleCategoryDao extends BaseDao
             ->where('hidden', 0)
             ->where('is_del', 0)
             ->where('status', 1)
-            ->order('sort DESC')
+            ->order('sort DESC,id DESC')
             ->field('id,pid,title')
             ->select()->toArray();
     }

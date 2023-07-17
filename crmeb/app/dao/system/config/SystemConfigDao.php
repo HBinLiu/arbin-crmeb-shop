@@ -84,7 +84,7 @@ class SystemConfigDao extends BaseDao
     {
         $where['tab_id'] = $tabId;
         if ($status == 1) $where['status'] = $status;
-        return $this->search($where)->order('sort desc')->select()->toArray();
+        return $this->search($where)->order('sort desc,id ASC')->select()->toArray();
     }
 
     /**

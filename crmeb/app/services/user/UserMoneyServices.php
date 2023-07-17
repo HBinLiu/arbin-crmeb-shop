@@ -202,8 +202,11 @@ class UserMoneyServices extends BaseServices
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
         $data['now_balance'] = $userServices->sum(['status' => 1], 'now_money', true);
-        $data['add_balance'] = $this->dao->sum(['pm' => 1], 'number', true);
-        $data['sub_balance'] = $this->dao->sum(['pm' => 0], 'number', true);
+        $data['add_balance'] = $this->dao->sum([
+            ['pm', '=', 1],
+            ['type', 'in', ['system_add', 'recharge', 'extract', 'lottery_add', 'register_system_add']]
+        ], 'number', false);
+        $data['sub_balance'] = bcsub($data['add_balance'], $data['now_balance'], 2);
         return $data;
     }
 

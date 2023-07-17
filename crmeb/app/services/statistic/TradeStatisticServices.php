@@ -663,12 +663,12 @@ class TradeStatisticServices extends BaseServices
      */
     public function getRechargeTotalMoney(array $where, string $selectType, string $group = "", bool $isNum = false)
     {
-        /** 用户充值金额 */
         /** @var UserRechargeServices $userRechageService */
         $userRechageService = app()->make(UserRechargeServices::class);
         $rechargeSumField = "price";
         $whereInRecharge['paid'] = 1;
         $whereInRecharge['refund_price'] = '0.00';
+        $whereInRecharge['no_recharge_type'] = 'system';
         $whereInRecharge['timeKey'] = $this->TimeConvert($where['time'], $isNum);
         $whereInRecharge['store_id'] = 0;
         $totalMoney = $userRechageService->getRechargeMoneyByWhere($whereInRecharge, $rechargeSumField, $selectType, $group);

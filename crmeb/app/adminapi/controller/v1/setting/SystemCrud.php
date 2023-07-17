@@ -619,14 +619,18 @@ class SystemCrud extends AuthController
                 continue;
             }
             if (isset($item['is_table']) && $item['is_table']) {
+                $label = '';
                 if (in_array($item['from_type'], ['frameImageOne', 'frameImages'])) {
                     $keyName = 'slot';
+                } elseif (in_array($item['from_type'], ['radio', 'select', 'checkbox'])) {
+                    $label = app()->make(Make::class)->getAttrPrefix();
                 } else {
                     $keyName = 'key';
                 }
+
                 $columns[] = [
                     'title' => $item['table_name'] ?: $item['comment'],
-                    $keyName => $item['field'],
+                    $keyName => $item['field'] . $label,
                     'from_type' => $item['from_type'],
                 ];
             }

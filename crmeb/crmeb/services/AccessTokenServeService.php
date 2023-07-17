@@ -66,7 +66,7 @@ class AccessTokenServeService extends HttpService
     /**
      * 登录接口
      */
-    const USER_LOGIN = "user/login";
+    const USER_LOGIN = "v2/user/login";
 
 
     /**
@@ -93,8 +93,8 @@ class AccessTokenServeService extends HttpService
     public function getConfig()
     {
         return [
-            'account' => $this->account,
-            'secret' => $this->secret
+            'access_key' => $this->account,
+            'secret_key' => $this->secret
         ];
     }
 
@@ -105,11 +105,11 @@ class AccessTokenServeService extends HttpService
      */
     public function getToken()
     {
-        $accessTokenKey = md5($this->account . '_' . $this->secret . $this->cacheTokenPrefix);
+        $accessTokenKey = md5($this->account . '_v2_' . $this->secret . $this->cacheTokenPrefix);
         $cacheToken = $this->cache->get($accessTokenKey);
         if (!$cacheToken) {
             $getToken = $this->getTokenFromServer();
-            $this->cache->set($accessTokenKey, $getToken['access_token'], 300);
+            $this->cache->set($accessTokenKey, $getToken['access_token'], $getToken['expires_in'] - 60);
             $cacheToken = $getToken['access_token'];
         }
         $this->accessToken = $cacheToken;
@@ -125,8 +125,8 @@ class AccessTokenServeService extends HttpService
     public function getTokenFromServer()
     {
         $params = [
-            'account' => $this->account,
-            'secret' => $this->secret,
+            'access_key' => $this->account,
+            'secret_key' => $this->secret,
         ];
         $response = $this->postRequest($this->get(self::USER_LOGIN), $params);
         $response = json_decode($response, true);

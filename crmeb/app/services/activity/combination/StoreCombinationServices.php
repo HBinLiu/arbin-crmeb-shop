@@ -393,11 +393,11 @@ class StoreCombinationServices extends BaseServices
 
         /** @var StorePinkServices $pinkService */
         $pinkService = app()->make(StorePinkServices::class);
-        list($pink, $pindAll) = $pinkService->getPinkList($id, true);//拼团列表
+        list($pink, $pinkAll) = $pinkService->getPinkList($id, true);//拼团列表
         $data['pink_ok_list'] = $pinkService->getPinkOkList($uid);
         $data['pink_ok_sum'] = $pinkService->getPinkOkSumTotalNum();
         $data['pink'] = $pink;
-        $data['pindAll'] = $pindAll;
+        $data['pinkAll'] = $pinkAll;
 
         /** @var StoreOrderServices $storeOrderServices */
         $storeOrderServices = app()->make(StoreOrderServices::class);

@@ -34,6 +34,7 @@ use app\services\order\{OtherOrderServices,
     StoreOrderInvoiceServices,
     StoreOrderRefundServices,
     StoreOrderServices,
+    StoreOrderStatusServices,
     StoreOrderSuccessServices,
     StoreOrderTakeServices
 };
@@ -43,6 +44,7 @@ use app\services\product\product\StoreProductReplyServices;
 use app\services\shipping\ShippingTemplatesServices;
 use crmeb\services\CacheService;
 use think\facade\Cache;
+use think\facade\Log;
 
 /**
  * 订单控制器
@@ -61,9 +63,9 @@ class StoreOrderController
      * @var int[]
      */
     protected $getChennel = [
-        'weixin' => 0,
+        'wechat' => 0,
         'routine' => 1,
-        'weixinh5' => 2,
+        'h5' => 2,
         'pc' => 3,
         'app' => 4
     ];
@@ -255,10 +257,11 @@ class StoreOrderController
         $orderInfo = $this->services->get(['order_id' => $uni]);
         $uid = $type == 1 ? (int)$request->uid() : $orderInfo->uid;
         $orderInfo->is_channel = $this->getChennel[$request->getFromType()] ?? ($request->isApp() ? 0 : 1);
+        $orderInfo->order_id = $uid != $orderInfo->pay_uid ? app()->make(StoreOrderCreateServices::class)->getNewOrderId('cp') : $uni;
         $orderInfo->pay_uid = $uid;
         $orderInfo->save();
         $orderInfo = $orderInfo->toArray();
-        $order = $this->services->get(['order_id' => $uni]);
+        $order = $this->services->get(['order_id' => $orderInfo['order_id']]);
         if (!$order)
             return app('json')->fail(410173);
         if ($order['paid'])
@@ -715,6 +718,7 @@ class StoreOrderController
         if (!$order || $uid != $order['uid']) {
             return app('json')->fail(410173);
         }
+        if ($order['pid'] == -1) return app('json')->fail('主订单已拆单，请刷新页面');
         $refundData = [
             'refund_reason' => $data['text'],
             'refund_explain' => $data['refund_reason_wap_explain'],
@@ -792,5 +796,102 @@ class StoreOrderController
         $cartProduct['bargain_id'] = $cartInfo['cart_info']['bargain_id'] ?? 0;
         $cartProduct['order_id'] = $this->services->value(['id' => $cartInfo['oid']], 'order_id');
         return app('json')->success($cartProduct);
+    }
+
+    /**
+     * 商家寄件回调
+     * @param Request $request
+     * @return \think\Response
+     * @author 等风来
+     * @email 136327134@qq.com
+     * @date 2023/6/12
+     */
+    public function callBack(Request $request)
+    {
+        $data = $request->postMore([
+            ['t', ''],
+            ['sign', ''],
+            ['type', ''],
+            ['data', ''],
+        ]);
+
+        \think\facade\Log::error('回调:' . json_encode($data));
+
+        $data['data']['id'] = (int)$data['data']['id'];
+        if (md5(json_encode($data['data']) . $data['t']) != $data['sign']) {
+            return app('json')->fail('验签失败');
+        }
+
+        switch ($data['type']) {
+            case 'order_success'://下单成功
+                $update = [
+                    'label' => $data['data']['label'] ?? '',
+                ];
+                //韵达会异步推送单号
+                if (isset($data['kuaidinum'])) {
+                    $update['delivery_id'] = $data['kuaidinum'];
+                }
+                if (isset($data['task_id'])) {
+                    $this->services->update(['task_id' => $data['task_id']], $update);
+                }
+                break;
+            case 'order_take'://取件
+                if (isset($data['data']['task_id'])) {
+                    $orderInfo = $this->services->get(['kuaidi_task_id' => $data['data']['task_id']]);
+                    if (!$orderInfo) {
+                        return app('json')->fail('订单不存在');
+                    }
+                    $this->services->transaction(function () use ($data, $orderInfo) {
+                        $this->services->update(['kuaidi_task_id' => $data['data']['task_id']], [
+                            'status' => 1,
+                            'is_stock_up' => 0
+                        ]);
+                        /** @var StoreOrderStatusServices $services */
+                        $services = app()->make(StoreOrderStatusServices::class);
+                        $services->save([
+                            'oid' => $orderInfo->id,
+                            'change_time' => time(),
+                            'change_type' => 'delivery_goods',
+                            'change_message' => '已发货 快递公司：' . $orderInfo->delivery_name . ' 快递单号：' . $orderInfo->delivery_id
+                        ]);
+                    });
+                }
+                break;
+            case 'order_cancel'://取消寄件
+                if (isset($data['data']['task_id'])) {
+                    $orderInfo = $this->services->get(['kuaidi_task_id' => $data['data']['task_id']]);
+                    if (!$orderInfo) {
+                        return app('json')->fail('订单不存在');
+                    }
+                    if ($orderInfo->is_stock_up && $orderInfo->status == 0) {
+                        app()->make(StoreOrderStatusServices::class)->save([
+                            'oid' => $orderInfo->id,
+                            'change_time' => time(),
+                            'change_type' => 'delivery_goods_cancel',
+                            'change_message' => '已取消发货，取消原因：用户手动取消'
+                        ]);
+
+                        $orderInfo->status = 0;
+                        $orderInfo->is_stock_up = 0;
+                        $orderInfo->kuaidi_task_id = '';
+                        $orderInfo->kuaidi_order_id = '';
+                        $orderInfo->express_dump = '';
+                        $orderInfo->kuaidi_label = '';
+                        $orderInfo->delivery_id = '';
+                        $orderInfo->delivery_code = '';
+                        $orderInfo->delivery_name = '';
+                        $orderInfo->delivery_type = '';
+                        $orderInfo->save();
+                    } else {
+                        Log::error('商家寄件自动回调，订单状态不正确：', [
+                            'kuaidi_task_id' => $data['data']['task_id']
+                        ]);
+                    }
+                }
+
+                break;
+        }
+
+        return app('json')->success();
     }
 }

@@ -41,14 +41,24 @@ class SystemAttachmentCategoryServices extends BaseServices
      * 获取分类列表
      * @param array $where
      * @return array
+     * @throws \ReflectionException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function getAll(array $where)
     {
         $list = $this->dao->getList($where);
-        foreach ($list as &$item) {
-            $item['title'] = $item['name'];
-            $item['children'] = [];
-            if ($where['name'] == '' && $this->dao->count(['pid' => $item['id']])) $item['loading'] = false;
+        if ($where['all'] == 1) {
+            $list = $this->tidyMenuTier($list);
+        } else {
+            foreach ($list as &$item) {
+                $item['title'] = $item['name'];
+                if ($where['name'] == '' && $this->dao->count(['pid' => $item['id']])) {
+                    $item['loading'] = false;
+                    $item['children'] = [];
+                }
+            }
         }
         return compact('list');
     }
@@ -67,7 +77,11 @@ class SystemAttachmentCategoryServices extends BaseServices
             if ($menu['pid'] == $pid) {
                 unset($menusList[$k]);
                 $menu['children'] = $this->tidyMenuTier($menusList, $menu['id']);
-                if ($menu['children']) $menu['expand'] = true;
+                if (count($menu['children'])) {
+                    $menu['expand'] = true;
+                } else {
+                    unset($menu['children']);
+                }
                 $navList[] = $menu;
             }
         }

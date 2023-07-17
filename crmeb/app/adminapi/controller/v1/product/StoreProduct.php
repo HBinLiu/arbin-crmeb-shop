@@ -19,6 +19,7 @@ use app\services\product\product\StoreProductServices;
 use crmeb\services\FileService;
 use app\services\other\UploadService;
 use think\facade\App;
+use think\Request;
 
 /**
  * Class StoreProduct
@@ -339,10 +340,21 @@ class StoreProduct extends AuthController
      * @return mixed
      * @throws \Exception
      */
-    public function getTempKeys()
+    public function getTempKeys(Request $request)
     {
         $upload = UploadService::init();
-        $re = $upload->getTempKeys();
+        $type = (int)sys_config('upload_type', 1);
+        $key = $request->get('key', '');
+        $path = $request->get('path', '');
+        $contentType = $request->get('contentType', '');
+        if ($type === 5) {
+            if (!$key || !$contentType) {
+                return app('json')->fail('缺少参数');
+            }
+            $re = $upload->getTempKeys($key, $path, $contentType);
+        } else {
+            $re = $upload->getTempKeys();
+        }
         return $re ? app('json')->success($re) : app('json')->fail(100016);
     }
 

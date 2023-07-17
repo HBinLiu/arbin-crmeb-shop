@@ -127,6 +127,9 @@ class StoreProductServices extends BaseServices
         /** @var StoreCategoryServices $categoryService */
         $categoryService = app()->make(StoreCategoryServices::class);
         $cateList = $categoryService->getCateParentAndChildName($cateIds);
+        $preantCateList = $categoryService->getColumn([
+            ['id', 'in', $cateIds]
+        ], 'cate_name', 'id');
         foreach ($list as &$item) {
             $cateName = array_filter($cateList, function ($val) use ($item) {
                 if (in_array($val['id'], explode(',', $item['cate_id']))) {
@@ -136,6 +139,9 @@ class StoreProductServices extends BaseServices
             $item['cate_name'] = [];
             foreach ($cateName as $k => $v) {
                 $item['cate_name'][] = $v['one'] . '/' . $v['two'];
+            }
+            if (!count($item['cate_name']) && isset($preantCateList[$item['cate_id']])) {
+                $item['cate_name'][] = $preantCateList[$item['cate_id']];
             }
             $item['cate_name'] = is_array($item['cate_name']) ? implode(',', $item['cate_name']) : '';
             $item['stock_attr'] = $item['stock'] > 0;//库存
@@ -620,7 +626,7 @@ class StoreProductServices extends BaseServices
                 $cateGory = $storeCategoryServices->getColumn([['id', 'IN', $cate_id]], 'id,pid', 'id');
                 foreach ($cate_id as $cid) {
                     if ($cid && isset($cateGory[$cid]['pid'])) {
-                        $cateData[] = ['product_id' => $id, 'cate_id' => $cid, 'cate_pid' => $cateGory[$cid]['pid'], 'status' => $data['is_show'], 'add_time' => $time];
+                        $cateData[] = ['product_id' => $id, 'cate_id' => $cid, 'cate_pid' => $cateGory[$cid]['pid'] ?: $cid, 'status' => $data['is_show'], 'add_time' => $time];
                     }
                 }
                 $storeProductCateServices->change($id, $cateData);
@@ -661,7 +667,7 @@ class StoreProductServices extends BaseServices
                             ProductCopyJob::dispatch('copySliderImage', [$res->id, $s_image, count($slider_image)]);
                         } else {
                             //下载图片
-                            $s_image_down[] = app()->make(CopyTaobaoServices::class)->downloadCopyImage($s_image);
+                            $s_image_down[] = app()->make(CopyTaobaoServices::class)->downloadCopyImage(!is_int(strpos($s_image, 'http')) ? 'http://' . ltrim($s_image, '\//') : $s_image);
                         }
                     }
 
@@ -676,9 +682,20 @@ class StoreProductServices extends BaseServices
                         }
                     }
 
+                    //下载商品规格图
+                    $productAttrValue = app()->make(StoreProductAttrValueServices::class);
+                    $attrValueList = $productAttrValue->getColumn(['product_id' => $res->id, 'type' => 0], 'image', 'id');
+                    foreach ($attrValueList as $value_id => $value_image) {
+                        if (sys_config('queue_open', 0) == 1) {
+                            ProductCopyJob::dispatch('copyAttrImage', [$value_id, $value_image]);
+                        } else {
+                            $v_img = app()->make(CopyTaobaoServices::class)->downloadCopyImage(!is_int(strpos($value_image, 'http')) ? 'http://' . ltrim($value_image, '\//') : $value_image);
+                            $productAttrValue->update($value_id, ['image' => $v_img]);
+                        }
+                    }
+
                     if (sys_config('queue_open', 0) == 0) {
                         $this->update($res->id, ['slider_image' => $s_image_down ? json_encode($s_image_down) : '', 'image' => $s_image_down[0]]);
-                        app()->make(StoreProductAttrValueServices::class)->update(['product_id' => $res->id], ['image' => $s_image_down[0]]);
                         $storeDescriptionServices->saveDescription((int)$res->id, $description);
                     }
                 }
@@ -865,6 +882,16 @@ class StoreProductServices extends BaseServices
             $item['cost'] = floatval($item['cost']);
             $item['is_product_type'] = 1;
             $item['logistics'] = explode(',', $item['logistics']);
+            $attrs = $this->getProductRules($item['id'], 0)['attrs'];
+            foreach ($attrs as $items) {
+                $item['attrs'][] = [
+                    'image' => $items['pic'],
+                    'price' => $items['price'],
+                    'ot_price' => $items['ot_price'],
+                    'suk' => implode(',', $items['detail']),
+                    'unique' => $items['unique'],
+                ];
+            }
         }
         return $data;
     }
@@ -942,6 +969,7 @@ class StoreProductServices extends BaseServices
             $valueNew[$count]['stock'] = intval($sukValue[$suk]['stock']);
             $valueNew[$count]['quota'] = intval($sukValue[$suk]['quota']);
             $valueNew[$count]['bar_code'] = $sukValue[$suk]['bar_code'];
+            $valueNew[$count]['unique'] = $sukValue[$suk]['unique'];
             $valueNew[$count]['weight'] = $sukValue[$suk]['weight'] ? floatval($sukValue[$suk]['weight']) : 0;
             $valueNew[$count]['volume'] = $sukValue[$suk]['volume'] ? floatval($sukValue[$suk]['volume']) : 0;
             $valueNew[$count]['brokerage'] = $sukValue[$suk]['brokerage'] ? floatval($sukValue[$suk]['brokerage']) : 0;

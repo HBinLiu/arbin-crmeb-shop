@@ -1482,7 +1482,7 @@ class UserServices extends BaseServices
         $userMoney = app()->make(UserMoneyServices::class);
 
         $user['recharge'] = $userMoney->sum([
-            ['uid', '=', $uid], ['pm', '=', 1], ['type', 'in', ['recharge', 'system_add', 'extract', 'register_system_add']]
+            ['uid', '=', $uid], ['pm', '=', 1], ['type', 'in', ['recharge', 'system_add', 'extract', 'register_system_add', 'lottery_add']]
         ], 'number');
         $user['orderStatusSum'] = bcsub((string)$user['recharge'], (string)$user['now_money'], 2);
         $user['extractTotalPrice'] = $userExtract->getExtractSum(['uid' => $uid, 'status' => 1]);//累计提现

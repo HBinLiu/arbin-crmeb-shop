@@ -175,7 +175,7 @@ class Service extends Make
      * @email 136327134@qq.com
      * @date 2023/4/14
      */
-    protected function getframeImageOnePhpContent(string $field, string $name, bool $required = false, string $icon = 'ios-add', string $width = '950px', string $height = '505px')
+    protected function getframeImageOnePhpContent(string $field, string $name, bool $required = false, string $icon = 'ios-add', string $width = '950px', string $height = '560px')
     {
         $name = addslashes($name);
         $requiredText = $required ? '->required()' : '';
@@ -198,7 +198,7 @@ CONTENT;
      * @email 136327134@qq.com
      * @date 2023/4/14
      */
-    protected function getframeImagesPhpContent(string $field, string $name, bool $required = false, string $icon = 'ios-images', int $maxLength = 10, string $width = '950px', string $height = '505px')
+    protected function getframeImagesPhpContent(string $field, string $name, bool $required = false, string $icon = 'ios-images', int $maxLength = 10, string $width = '950px', string $height = '560px')
     {
         $name = addslashes($name);
         $requiredText = $required ? '->required()' : '';

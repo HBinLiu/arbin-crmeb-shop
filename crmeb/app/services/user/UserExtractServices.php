@@ -274,9 +274,10 @@ class UserExtractServices extends BaseServices
         /** @var UserBrokerageServices $userBrokerageServices */
         $userBrokerageServices = app()->make(UserBrokerageServices::class);
         $where['pm'] = 1;
-        $extract_statistics['brokerage_count'] = $userBrokerageServices->getUsersBokerageSum($where);
+        $brokerage_count = $userBrokerageServices->getUsersBokerageSum($where);
+        $extract_statistics['brokerage_count'] = bcadd((string)$brokerage_count, (string)$extract_statistics['price'], 2);
         //未提现金额
-        $extract_statistics['brokerage_not'] = $extract_statistics['brokerage_count'] > $extract_statistics['priced'] ? bcsub((string)$extract_statistics['brokerage_count'], (string)$extract_statistics['priced'], 2) : 0.00;
+        $extract_statistics['brokerage_not'] = $extract_statistics['brokerage_count'] > $extract_statistics['priced'] ? bcsub((string)$brokerage_count, (string)$extract_statistics['priced'], 2) : 0.00;
         return compact('extract_statistics', 'list');
     }
 
@@ -299,6 +300,7 @@ class UserExtractServices extends BaseServices
             $f[] = Form::input('alipay_code', '支付宝账号', $UserExtract['alipay_code']);
         } else if ($UserExtract['extract_type'] == 'weixin') {
             $f[] = Form::input('wechat', '微信号', $UserExtract['wechat']);
+        } else if ($UserExtract['extract_type'] == 'balance') {
         } else {
             $f[] = Form::input('bank_code', '银行卡号', $UserExtract['bank_code']);
             $f[] = Form::input('bank_address', '开户行', $UserExtract['bank_address']);

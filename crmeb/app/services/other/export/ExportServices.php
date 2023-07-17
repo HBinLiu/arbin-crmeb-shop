@@ -129,7 +129,11 @@ class ExportServices extends BaseServices
                 }
                 $custom_form = '';
                 foreach ($item['custom_form'] as $custom_form_value) {
-                    $custom_form .= $custom_form_value['title'] . '：' . $custom_form_value['value'] . '；';
+                    if (is_string($custom_form_value['value'])) {
+                        $custom_form .= $custom_form_value['title'] . '：' . $custom_form_value['value'] . '；';
+                    } elseif (is_array($custom_form_value['value'])) {
+                        $custom_form .= $custom_form_value['title'] . '：' . implode(',', $custom_form_value['value']) . '；';
+                    }
                 }
 
                 $goodsName = [];
@@ -354,8 +358,8 @@ class ExportServices extends BaseServices
                 $one_data = [
                     'card_number' => $item['card_number'],
                     'card_password' => $item['card_password'],
-                    'user_name' => $userList[$item['use_uid']]['real_name'] ?: $userList[$item['use_uid']]['nickname'],
-                    'user_phone' => $userList[$item['use_uid']] ? $userList[$item['use_uid']]['phone'] : "",
+                    'user_name' => $userList[$item['use_uid']]['real_name'] ?? $userList[$item['use_uid']]['nickname'] ?? '',
+                    'user_phone' => $userList[$item['use_uid']]['phone'] ?? "",
                     'use_time' => $item['use_time'],
                     'use_uid' => $item['use_uid'] ? '已领取' : '未领取'
                 ];

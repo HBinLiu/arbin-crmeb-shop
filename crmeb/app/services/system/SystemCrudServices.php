@@ -545,10 +545,6 @@ class SystemCrudServices extends BaseServices
             }
         }
 
-        //读取字段
-        //读取数据库字段信息
-        $tableInfo = $this->getTableInfo($tableName);
-
         //获取主键
         foreach ($tableField as $value) {
             if ($value['primaryKey']) {

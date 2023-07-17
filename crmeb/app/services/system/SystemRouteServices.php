@@ -84,7 +84,7 @@ class SystemRouteServices extends BaseServices
      */
     public function getTreeList(string $appName = 'adminapi', string $name = '')
     {
-        return $this->cacheDriver()->remember('ROUTE_LIST' . strtoupper($appName), function () use ($name, $appName) {
+//        return $this->cacheDriver()->remember('ROUTE_LIST' . strtoupper($appName), function () use ($name, $appName) {
             $list = app()->make(SystemRouteCateServices::class)
                 ->selectList(['app_name' => $appName], '*', 0, 0, 'id asc,sort desc', [
                     'children' => function ($query) use ($name, $appName) {
@@ -110,7 +110,7 @@ class SystemRouteServices extends BaseServices
                 }
             }
             return get_tree_children($list);
-        }, 600);
+//        }, 600);
     }
 
     /**
@@ -295,7 +295,7 @@ class SystemRouteServices extends BaseServices
                 $delete[] = $item['id'];
                 $deleteData[] = [
                     'path' => $item['path'],
-                    'methods' => $item['method']
+                    'method' => $item['method']
                 ];
             }
         }

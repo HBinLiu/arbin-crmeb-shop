@@ -143,35 +143,6 @@ class WechatService
                         case 'view':
                             $response = $messageService->wechatEventView($message);
                             break;
-                        case 'funds_order_pay':
-                            if (($count = strpos($message['order_info']['trade_no'], '_')) !== false) {
-                                $trade_no = substr($message['order_info']['trade_no'], $count + 1);
-                            } else {
-                                $trade_no = $message['order_info']['trade_no'];
-                            }
-                            $prefix = substr($trade_no, 0, 2);
-                            //处理一下参数
-                            switch ($prefix) {
-                                case 'cp':
-                                    $data['attach'] = 'Product';
-                                    break;
-                                case 'hy':
-                                    $data['attach'] = 'Member';
-                                    break;
-                                case 'cz':
-                                    $data['attach'] = 'UserRecharge';
-                                    break;
-                            }
-                            $data['out_trade_no'] = $message['order_info']['trade_no'];
-                            $data['transaction_id'] = $message['order_info']['transaction_id'];
-                            $data['opneid'] = $message['FromUserName'];
-                            if (Event::until('NotifyListener', [$data, PayServices::WEIXIN_PAY])) {
-                                $response = 'success';
-                            } else {
-                                $response = 'faild';
-                            }
-                            Log::error(['data' => $data, 'res' => $response, 'message' => $message]);
-                            break;
                     }
                     break;
                 case 'text':

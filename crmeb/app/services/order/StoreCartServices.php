@@ -556,14 +556,7 @@ class StoreCartServices extends BaseServices
      */
     public function handleCartList(int $uid, array $cartList, array $addr = [], int $shipping_type = 1)
     {
-        if (!$cartList) {
-            return [$cartList, [], []];
-        }
-        /** @var StoreProductServices $productServices */
-        $productServices = app()->make(StoreProductServices::class);
-        /** @var MemberCardServices $memberCardService */
-        $memberCardService = app()->make(MemberCardServices::class);
-        $vipStatus = $memberCardService->isOpenMemberCard('vip_price', false);
+        if (!$cartList) return [$cartList, [], []];
         $tempIds = [];
         $userInfo = [];
         $discount = 100;
@@ -578,6 +571,12 @@ class StoreCartServices extends BaseServices
                 $discount = $systemLevel->value(['id' => $userInfo['level'], 'is_del' => 0, 'is_show' => 1], 'discount') ?: 100;
             }
         }
+
+        //付费会员是否开启，用户是否是付费会员，两个都满足，订单计算金额才会按照付费会员计算。
+        /** @var MemberCardServices $memberCardService */
+        $memberCardService = app()->make(MemberCardServices::class);
+        $vipStatus = $memberCardService->isOpenMemberCard('vip_price', false) && $userInfo['is_money_level'] > 0;
+
         //不送达运费模板
         if ($shipping_type == 1 && $addr) {
             $cityId = (int)($addr['city_id'] ?? 0);
@@ -596,6 +595,8 @@ class StoreCartServices extends BaseServices
             }
         }
 
+        /** @var StoreProductServices $productServices */
+        $productServices = app()->make(StoreProductServices::class);
         $valid = $invalid = [];
         foreach ($cartList as &$item) {
             $item['productInfo']['express_delivery'] = false;

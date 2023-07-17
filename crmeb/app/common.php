@@ -23,6 +23,7 @@ use app\services\system\lang\LangCodeServices;
 use app\services\system\lang\LangCountryServices;
 use think\facade\Config;
 use think\facade\Log;
+use think\facade\Db;
 
 if (!function_exists('crmebLog')) {
     /**
@@ -682,10 +683,10 @@ if (!function_exists('get_file_link')) {
         if (!$link) {
             return '';
         }
-        if (strstr('http', $link) === false) {
-            return app()->request->domain() . $link;
-        } else {
+        if (substr($link, 0, 4) === "http" || substr($link, 0, 2) === "//") {
             return $link;
+        } else {
+            return app()->request->domain() . $link;
         }
     }
 }
@@ -1088,5 +1089,21 @@ if (!function_exists('out_push')) {
             return false;
         }
         return true;
+    }
+}
+
+if (!function_exists('dump_sql')) {
+    /**
+     * 默认数据推送
+     * @param string $pushUrl
+     * @param array $data
+     * @param string $tip
+     * @return bool
+     */
+    function dump_sql()
+    {
+        Db::listen(function ($sql) {
+            var_dump($sql);
+        });
     }
 }

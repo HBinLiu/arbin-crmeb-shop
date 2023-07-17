@@ -38,15 +38,20 @@ class SystemAttachmentCategory extends AuthController
 
     /**
      * 显示资源列表
-     * @return mixed
+     * @return \think\Response
+     * @throws \ReflectionException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function index()
     {
         $where = $this->request->getMore([
             ['name', ''],
-            ['pid', 0]
+            ['pid', 0],
+            ['all', 0]
         ]);
-        if ($where['name'] != '') $where['pid'] = '';
+        if ($where['name'] != '' || $where['all'] == 1) $where['pid'] = '';
         return app('json')->success($this->service->getAll($where));
     }
 

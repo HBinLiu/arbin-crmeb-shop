@@ -33,7 +33,8 @@ class Request extends \think\Request
      * 不过滤变量名
      * @var array
      */
-    protected $except = ['menu_path', 'api_url', 'unique_auth', 'description', 'custom_form', 'content'];
+    protected $except = ['menu_path', 'api_url', 'unique_auth',
+        'description', 'custom_form', 'content', 'tableField'];
 
     /**
      * 获取请求的数据

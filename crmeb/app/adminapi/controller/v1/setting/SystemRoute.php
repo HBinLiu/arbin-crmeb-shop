@@ -111,24 +111,25 @@ class SystemRoute extends AuthController
             ['describe', ''],
         ]);
 
-        if (!$data['name']) {
-            return app('json')->fail(500031);
-        }
-        if (!$data['path']) {
-            return app('json')->fail(500032);
-        }
-        if (!$data['method']) {
-            return app('json')->fail(500033);
-        }
-        if (!$data['app_name']) {
-            return app('json')->fail(500034);
-        }
+//        if (!$data['name']) {
+//            return app('json')->fail(500031);
+//        }
+//        if (!$data['path']) {
+//            return app('json')->fail(500032);
+//        }
+//        if (!$data['method']) {
+//            return app('json')->fail(500033);
+//        }
+//        if (!$data['app_name']) {
+//            return app('json')->fail(500034);
+//        }
         if ($id) {
             $this->services->update($id, $data);
         } else {
             $data['add_time'] = date('Y-m-d H:i:s');
             $this->services->save($data);
         }
+        $this->services->cacheDriver()->clear();
 
         return app('json')->success($id ? 100001 : 100021);
     }

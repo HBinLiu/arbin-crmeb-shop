@@ -139,21 +139,17 @@ class UserSignServices extends BaseServices
         if (!$user) {
             throw new ApiException(410032);
         }
-        if ($this->getIsSign($uid, 'today')) {
-            throw new ApiException(410293);
-        }
+//        if ($this->getIsSign($uid, 'today')) {
+//            throw new ApiException(410293);
+//        }
         $sign_num = 0;
-        $user_sign_num = $user['sign_num'];
         //检测昨天是否签到
-        if ($this->getIsSign($uid, 'yesterday')) {
-            if ($user->sign_num > (count($sign_list) - 1)) {
-                $user->sign_num = 0;
-            }
-        } else {
-            $user->sign_num = 0;
-        }
+//        if (!$this->getIsSign($uid, 'yesterday')) {
+//            $user->sign_num = 0;
+//        }
+
         foreach ($sign_list as $key => $item) {
-            if ($key == $user->sign_num) {
+            if ($key == $user->sign_num || ($user->sign_num > 6 && $key == 6)) {
                 $sign_num = $item['sign_num'];
                 break;
             }

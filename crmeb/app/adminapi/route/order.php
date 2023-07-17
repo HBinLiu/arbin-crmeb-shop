@@ -36,6 +36,8 @@ Route::group('order', function () {
     Route::put('take/:id', 'v1.order.StoreOrder/take_delivery')->name('StoreOrderTakeDelivery')->option(['real_name' => '确认收货']);
     //发送货
     Route::put('delivery/:id', 'v1.order.StoreOrder/update_delivery')->name('StoreOrderUpdateDelivery')->option(['real_name' => '订单发送货']);
+    //获取商家寄件金额
+    Route::post('price', 'v1.order.StoreOrder/getPrice')->name('getPrice')->option(['real_name' => '获取商家寄件金额']);
     //获取订单可拆分商品列表
     Route::get('split_cart_info/:id', 'v1.order.StoreOrder/split_cart_info')->name('StoreOrderSplitCartInfo')->option(['real_name' => '获取订单可拆分商品列表']);
     //拆单发送货

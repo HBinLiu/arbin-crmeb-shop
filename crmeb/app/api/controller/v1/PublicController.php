@@ -217,8 +217,8 @@ class PublicController
     /**
      * 图片上传
      * @param Request $request
+     * @param SystemAttachmentServices $services
      * @return mixed
-     * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     public function upload_image(Request $request, SystemAttachmentServices $services)
     {
@@ -643,7 +643,8 @@ class PublicController
      */
     public function getVersion()
     {
-        return app('json')->success(['version' => get_crmeb_version()]);
+        $version = parse_ini_file(app()->getRootPath() . '.version');
+        return app('json')->success(['version' => $version['version'], 'version_code' => $version['version_code']]);
     }
 
     /**

@@ -85,7 +85,7 @@ class WechatUserServices extends BaseServices
      */
     public function openidToUid($openid, string $openidType = 'openid')
     {
-        $uid = $this->dao->value([[$openidType, '=', $openid], ['user_type', '<>', 'h5']], 'uid');
+        $uid = $this->dao->value([$openidType => $openid, 'is_del' => 0], 'uid');
         if (!$uid)
             throw new AdminException(400710);
         return $uid;

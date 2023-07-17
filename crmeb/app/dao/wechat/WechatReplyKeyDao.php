@@ -106,7 +106,7 @@ class WechatReplyKeyDao extends BaseDao
      * @param bool $search
      * @return int
      */
-    public function count(array $where = [], bool $search = true): int
+    public function count(array $where = [], bool $search = true)
     {
         return $this->search($where, $search)->group($this->alias . '.id')->count();
     }

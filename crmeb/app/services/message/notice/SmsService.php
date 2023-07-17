@@ -66,12 +66,12 @@ class SmsService extends NoticeService
             $this->isOpen = $this->noticeInfo['is_sms'] === 1;
             $mark = $this->noticeInfo['mark'];
             if ($this->isOpen) {
-                try{
+                try {
                     /** @var SmsService $smsServices */
                     $smsServices = app()->make(SmsService::class);
                     $smsServices->send(true, $phone, $data, $mark);
                     return true;
-                }catch (\Throwable $e) {
+                } catch (\Throwable $e) {
                     Log::error('发送短信失败,失败原因:' . $e->getMessage());
                 }
                 //SmsJob::dispatch('doJob', [$phone, $data, $mark]);
