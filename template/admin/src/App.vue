@@ -133,32 +133,6 @@ body {
   height: 100%;
   font-family: PingFang SC, Arial, Microsoft YaHei, sans-serif;
 }
-// .dialog-fade-enter-active {
-//   animation: anim-open 0.3s;
-// }
-// .dialog-fade-leave-active {
-//   animation: anim-close 0.3s;
-// }
-// @keyframes anim-open {
-//   0% {
-//     transform: translate3d(100%, 0, 0);
-//     opacity: 0;
-//   }
-//   100% {
-//     transform: translate3d(0, 0, 0);
-//     opacity: 1;
-//   }
-// }
-// @keyframes anim-close {
-//   0% {
-//     transform: translate3d(0, 0, 0);
-//     opacity: 1;
-//   }
-//   100% {
-//     transform: translate3d(100%, 0, 0);
-//     opacity: 0;
-//   }
-// }
 .ivu-modal-wrap ::v-deep .connect_customerServer_img {
   display: none;
 }
