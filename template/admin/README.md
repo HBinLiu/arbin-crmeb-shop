@@ -127,7 +127,7 @@ utils 自定义工具js 独立命名，一般不用新建文件夹
 │   │    └──header-search     # 头部搜索
 │   │    └──header-setting    # 设置页面风格
 │   │    └──header-user       # 我的（个人中心、退出登录）
-│   │    └──menu-head         # 
+│   │    └──menu-head         #
 │   │    └──menu-side         # 侧边导航栏
 │   │    └──tabs              # 头部的横向导航标签
 │   │    └──mixins            # 用于横向滚动获取title的一个js
@@ -214,7 +214,7 @@ utils 自定义工具js 独立命名，一般不用新建文件夹
 │   │              └──404            # 404
 │   │              └──500            # 500
 │   │         └──group               # 组合数据
-│   │         └──maintain              
+│   │         └──maintain
 │   │              └──systemCleardata    # 清除数据
 │   │              └──systemDatabackup   # 数据备份
 │   │              └──systemFile         # 文件校验
