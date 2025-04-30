@@ -232,11 +232,6 @@ class AgentLevelServices extends BaseServices
             $oneLevelInfo = $this->getLevelInfo($one_agent_level);
             if ($oneLevelInfo && $oneLevelInfo['status'] == 1) {
                 $storeBrokerageRatio = $oneLevelInfo['one_brokerage_percent'];
-//                if ($oneLevelInfo['one_brokerage_percent'] == '0.00') {
-//                    $storeBrokerageRatio = $storeBrokerageRatio + (($storeBrokerageRatio * $oneLevelInfo['one_brokerage'] ?? 0) / 100);
-//                } else {
-//                    $storeBrokerageRatio = $oneLevelInfo['one_brokerage_percent'];
-//                }
             }
         }
 
@@ -244,11 +239,6 @@ class AgentLevelServices extends BaseServices
             $twoLevelInfo = $this->getLevelInfo($two_agent_level);
             if ($twoLevelInfo && $twoLevelInfo['status'] == 1) {
                 $storeBrokerageTwo = $twoLevelInfo['two_brokerage_percent'];
-//                if ($twoLevelInfo['two_brokerage_percent'] == '0.00') {
-//                    $storeBrokerageTwo = $storeBrokerageTwo + (($storeBrokerageTwo * $twoLevelInfo['two_brokerage'] ?? 0) / 100);
-//                } else {
-//                    $storeBrokerageTwo = $twoLevelInfo['two_brokerage_percent'];
-//                }
             }
         }
 
