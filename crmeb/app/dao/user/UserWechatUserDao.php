@@ -178,7 +178,7 @@ class UserWechatUserDao extends BaseDao
                     if (strpos($where['label_id'], ',') !== false) {
                         $query->name('user_label_relation')->whereIn('label_id', explode(',', $where['label_id']))->field('uid')->select();
                     } else {
-                        $query->name('user_label_relation')->where('label_id', $where['label_id'])->field('uid')->select();
+                        $query->name('user_label_relation')->where('label_id', (int)$where['label_id'])->field('uid')->select();
                     }
                 }
             });
