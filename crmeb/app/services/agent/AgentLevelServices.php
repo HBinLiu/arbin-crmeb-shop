@@ -200,7 +200,7 @@ class AgentLevelServices extends BaseServices
                 $finish_task = $levelTaskRecordServices->count(['level_id' => $levelInfo['id'], 'uid' => $uid, 'task_id' => $ids]);
                 //任务完成升这一等级
                 if ($finish_task >= count($task_list)) {
-                    $userServices->update($uid, ['agent_level' => $levelInfo['grade']]);
+                    $userServices->update($uid, ['agent_level' => $levelInfo['id']]);
                 } else {
                     break;
                 }
