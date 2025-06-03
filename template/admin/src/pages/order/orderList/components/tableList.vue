@@ -40,8 +40,8 @@
         <template slot-scope="scope">
           <div>{{ scope.row.order_id }}</div>
           <div class="pink_name" :style="{ color: scope.row.color }">{{ scope.row.pink_name }}</div>
-          <span v-show="scope.row.is_del === 1" style="color: #ed4014; display: block">用户已删除</span>
-          <span v-show="scope.row.refund_type === 6" style="color: #ed4014; display: block">订单已退款</span>
+          <span v-if="scope.row.is_del === 1" style="color: #ed4014; display: block">用户已删除</span>
+          <span v-if="scope.row.refund_type === 6" style="color: #ed4014; display: block">订单已退款</span>
         </template>
       </el-table-column>
       <el-table-column label="商品信息" min-width="250">
@@ -133,7 +133,7 @@
               (scope.row.status === 4 || scope.row._status === 2 || scope.row._status === 8) &&
               scope.row.shipping_type === 1 &&
               (scope.row.pinkStatus === null || scope.row.pinkStatus === 2) &&
-              scope.row.is_del !== 1 && 
+              scope.row.is_del !== 1 &&
               !scope.row.refund.length
             "
             >发送货</a

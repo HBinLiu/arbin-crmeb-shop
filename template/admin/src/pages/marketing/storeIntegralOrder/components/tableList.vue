@@ -14,7 +14,7 @@
       <el-table-column label="订单号" min-width="150">
         <template slot-scope="scope">
           <span v-text="scope.row.order_id" style="display: block"></span>
-          <span v-show="scope.row.is_del == 1" style="color: #ed4014; display: block">用户已删除</span>
+          <span v-if="scope.row.is_del == 1" style="color: #ed4014; display: block">用户已删除</span>
         </template>
       </el-table-column>
       <el-table-column label="用户信息" min-width="100">
