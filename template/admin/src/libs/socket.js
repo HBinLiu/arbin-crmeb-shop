@@ -20,9 +20,6 @@ class wsSocket {
   constructor(opt) {
     this.ws = null;
     this.opt = opt || {};
-    this.reconnectAttempts = 0;
-    this.reconnectMaxAttempts = 10; // 最大重连次数
-    this.reconnectInterval = 3000; // 重连间隔时间(ms)
     this.init(opt.key);
   }
 
@@ -48,18 +45,12 @@ class wsSocket {
       wsUrl = wsKefuSocketUrl;
     }
     if (wsUrl) {
-      this.wsUrl = wsUrl;
-      this.key = key;
-      this.connect();
+      this.ws = new WebSocket(wsUrl);
+      this.ws.onopen = this.onOpen.bind(this);
+      this.ws.onerror = this.onError.bind(this);
+      this.ws.onmessage = this.onMessage.bind(this);
+      this.ws.onclose = this.onClose.bind(this);
     }
-  }
-
-  connect() {
-    this.ws = new WebSocket(this.wsUrl);
-    this.ws.onopen = this.onOpen.bind(this);
-    this.ws.onerror = this.onError.bind(this);
-    this.ws.onmessage = this.onMessage.bind(this);
-    this.ws.onclose = this.onClose.bind(this);
   }
 
   ping() {
@@ -87,24 +78,10 @@ class wsSocket {
   onClose() {
     this.timer && clearInterval(this.timer);
     this.opt.close && this.opt.close();
-    this.reconnect();
   }
 
   onError(e) {
     this.opt.error && this.opt.error(e);
-    // 错误发生时不立即重连，等待onClose触发重连
-  }
-
-  reconnect() {
-    if (this.reconnectAttempts < this.reconnectMaxAttempts) {
-      this.reconnectAttempts++;
-      setTimeout(() => {
-        console.log(`WebSocket 尝试第 ${this.reconnectAttempts} 次重连...`);
-        this.connect();
-      }, this.reconnectInterval);
-    } else {
-      console.log('WebSocket 重连次数已达上限，停止重连');
-    }
   }
 
   $on(...args) {

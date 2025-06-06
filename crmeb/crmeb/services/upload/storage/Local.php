@@ -42,7 +42,7 @@ class Local extends BaseUpload
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->defaultPath = Config::get('filesystem.disks.' . Config::get('filesystem.default') . '.url');
+//        $this->defaultPath = Config::get('filesystem.disks.' . Config::get('filesystem.default') . '.url');
         $this->waterConfig['watermark_text_font'] = app()->getRootPath() . 'public' . '/statics/font/simsunb.ttf';
     }
 
@@ -137,14 +137,26 @@ class Local extends BaseUpload
                 }
             }
         }
-        if ($realName) {
-            $fileName = Filesystem::putFileAs($this->path, $fileHandle, $fileHandle->getOriginalName());
-        } else {
-            $fileName = Filesystem::putFile($this->path, $fileHandle);
+        $disk = 'public';
+        $path = $this->path;
+        $rule = null;
+        if (in_array($fileHandle->getOriginalMime(), ['application/x-x509-ca-cert', 'application/octet-stream'])) {
+            $disk = 'pem';
+            $path = '';
+            $rule = function () {
+                return md5(microtime(true));
+            };
         }
-        if (!$fileName)
+        $this->defaultPath = Config::get('filesystem.disks.' . $disk . '.url');
+        if ($realName) {
+            $fileName = Filesystem::disk($disk)->putFileAs($path, $fileHandle, $fileHandle->getOriginalName());
+        } else {
+            $fileName = Filesystem::disk($disk)->putFile($path, $fileHandle, $rule);
+        }
+        if (!$fileName) {
             return $this->setError('Upload failure');
-        $filePath = Filesystem::path($fileName);
+        }
+        $filePath = Filesystem::disk($disk)->path($fileName);
         $this->fileInfo->uploadInfo = new File($filePath);
         $this->fileInfo->realName = $fileHandle->getOriginalName();
         $this->fileInfo->fileName = $this->fileInfo->uploadInfo->getFilename();
@@ -179,6 +191,7 @@ class Local extends BaseUpload
         $this->fileInfo->uploadInfo = new File($fileName);
         $this->fileInfo->realName = $key;
         $this->fileInfo->fileName = $key;
+        $this->defaultPath = Config::get('filesystem.disks.' . Config::get('filesystem.default') . '.url');
         $this->fileInfo->filePath = $this->defaultPath . '/' . $this->path . '/' . $key;
         if ($this->checkImage(public_path() . $this->fileInfo->filePath) && $this->authThumb) {
             try {
@@ -210,6 +223,7 @@ class Local extends BaseUpload
         $this->downFileInfo->downloadInfo = new File($fileName);
         $this->downFileInfo->downloadRealName = $key;
         $this->downFileInfo->downloadFileName = $key;
+        $this->defaultPath = Config::get('filesystem.disks.' . Config::get('filesystem.default') . '.url');
         $this->downFileInfo->downloadFilePath = $this->defaultPath . '/' . $this->path . '/' . $key;
         return $this->downFileInfo;
     }
@@ -303,6 +317,7 @@ class Local extends BaseUpload
             if ($pathName == $watermark_image) {//不再本地  继续下载
                 [$p, $e] = $this->getFileName($watermark_image);
                 $name = 'water_image_' . md5($watermark_image) . '.' . $e;
+                $this->defaultPath = Config::get('filesystem.disks.' . Config::get('filesystem.default') . '.url');
                 $watermark_image = '.' . $this->defaultPath . '/' . $this->thumbWaterPath . '/' . $name;
                 if (!file_exists($watermark_image)) {
                     try {
