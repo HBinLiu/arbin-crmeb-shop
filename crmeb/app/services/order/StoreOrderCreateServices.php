@@ -839,10 +839,6 @@ class StoreOrderCreateServices extends BaseServices
                     }
                 }
 
-                $staffBrokerage = bcmul((string)$price, (string)bcdiv($staffPercent, 100, 4), 2);
-                $agentBrokerage = bcmul((string)$price, (string)bcdiv($agentPercent, 100, 4), 2);
-                $divisionBrokerage = bcmul((string)$price, (string)bcdiv($divisionPercent, 100, 4), 2);
-
                 //指定返佣金额
                 if (isset($productInfo['is_sub']) && $productInfo['is_sub'] == 1) {
                     $oneBrokerage = bcmul((string)($productInfo['attrInfo']['brokerage'] ?? '0'), $cartNum, 2);
@@ -862,6 +858,9 @@ class StoreOrderCreateServices extends BaseServices
                             $twoBrokerage = bcmul((string)$price, (string)$brokerageTwo, 2);
                         }
                     }
+                    $staffBrokerage = bcmul((string)$price, (string)bcdiv($staffPercent, 100, 4), 2);
+                    $agentBrokerage = bcmul((string)$price, (string)bcdiv($agentPercent, 100, 4), 2);
+                    $divisionBrokerage = bcmul((string)$price, (string)bcdiv($divisionPercent, 100, 4), 2);
                 }
             }
 
