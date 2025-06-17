@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS `eb_article` (
   `is_hot` tinyint(1) UNSIGNED NOT NULL DEFAULT '0' COMMENT '是否热门(小程序)',
   `is_banner` tinyint(1) UNSIGNED NOT NULL DEFAULT '0' COMMENT '是否轮播图(小程序)',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='文章管理表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='文章管理表';
 
 -- --------------------------------------------------------
 
@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS `eb_article_category` (
   `add_time` varchar(255) NOT NULL DEFAULT '' COMMENT '添加时间',
   `hidden` tinyint(1) UNSIGNED NOT NULL DEFAULT '0' COMMENT '是否隐藏',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='文章分类表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='文章分类表';
 
 -- --------------------------------------------------------
 
