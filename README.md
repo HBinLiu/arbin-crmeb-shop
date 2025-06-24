@@ -17,7 +17,7 @@ CRMEB开源商城系统（PHP版）
         <img src="https://img.shields.io/badge/Licence-apache2.0-green.svg?style=flat" />
     </a>
     <a href="http://www.crmeb.com">
-        <img src="https://img.shields.io/badge/Edition-5.4-blue.svg" />
+        <img src="https://img.shields.io/badge/Edition-5.6.1-blue.svg" />
     </a>
      <a href="https://gitee.com/ZhongBangKeJi/CRMEB/repository/archive/master.zip">
         <img src="https://img.shields.io/badge/Download-240m-red.svg" />
