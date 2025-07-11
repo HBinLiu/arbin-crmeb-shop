@@ -133,7 +133,7 @@ CRMEB开源商城系统代码100%开源，基于 **Apache-2.0协议** 免费商�
 
 ###  📱 系统演示
 
-![输入图片说明](readme/pic/contact.jpg)
+![输入图片说明](readme/pic/contact2.jpg)
 
 管理后台： http://v5.crmeb.net/admin
 
