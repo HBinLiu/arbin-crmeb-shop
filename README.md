@@ -281,13 +281,13 @@ docker-compose一键部署：https://doc.crmeb.com/single_open/open_v54/20145
 
 ###  📕 CRMEB PRO版
 
-[![输入图片说明](readme/pic/PRO版1.jpg)](https://www.crmeb.com/index/pro)
+[![输入图片说明](readme/pic/PRO版2.jpg)](https://www.crmeb.com/index/pro)
 
 
 
 ###  📕 CRMEB 多商户版
 
-[![输入图片说明](readme/pic/duoshanghu1.jpg)](https://www.crmeb.com/index/merchant)
+[![输入图片说明](readme/pic/duoshanghu2.jpg)](https://www.crmeb.com/index/merchant)
 
 ---
 
