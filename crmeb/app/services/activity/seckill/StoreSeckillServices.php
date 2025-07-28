@@ -861,9 +861,9 @@ class StoreSeckillServices extends BaseServices
                         if (!isset($sattr['price']) || !$sattr['price']) {
                             throw new AdminException('请填写商品（' . $product['store_name'] . ' | ' . $sattr['suk'] . '）活动价');
                         }
-                        if ($sattr['price'] > $sattr['ot_price']) {
-                            throw new AdminException('商品（' . $product['store_name'] . ' | ' . $sattr['suk'] . '）活动价不能大于原价');
-                        }
+//                        if ($sattr['price'] > $sattr['ot_price']) {
+//                            throw new AdminException('商品（' . $product['store_name'] . ' | ' . $sattr['suk'] . '）活动价不能大于原价');
+//                        }
                         if (!isset($sattr['quota']) || !$sattr['quota']) {
                             throw new AdminException('请填写商品（' . $product['store_name'] . ' | ' . $sattr['suk'] . '）限量');
                         }
