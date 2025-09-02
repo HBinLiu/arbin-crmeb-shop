@@ -659,7 +659,6 @@ export default {
         item.attrs.forEach((value) => {
           value.cate_name = item.cate_name;
           value.store_label = item.store_label;
-          value.product_price = item.price;
           value.status = 1;
         });
       });

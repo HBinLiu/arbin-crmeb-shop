@@ -629,7 +629,7 @@ export default {
         attends_user: 1, //参与用户1：所有  2：部分
         user_level: [], //参与用户等级
         user_label: [], //参与用户标签
-        is_svip: '-1', //参与用户是否付费会员
+        is_svip: '', //参与用户是否付费会员
         prize_num: 0, //奖品数量
         period: [], //活动时间
         prize: [], //奖品数组

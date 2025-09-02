@@ -954,7 +954,7 @@ class StoreProductServices extends BaseServices
             $res = $this->dao->update($id, $data);
             $storeProductCateServices->update(['product_id' => $id], ['status' => 0]);
             if (!$res) throw new AdminException(100008);
-            return 100002;
+            return '移动回收站成功';
         }
     }
 
@@ -994,6 +994,7 @@ class StoreProductServices extends BaseServices
             foreach ($attrs as $items) {
                 $item['attrs'][$key] = $items;
                 $item['attrs'][$key]['suk'] = implode(',', $items['detail']);
+                $item['attrs'][$key]['product_price'] = $items['price'];
                 $key += 1;
             }
         }

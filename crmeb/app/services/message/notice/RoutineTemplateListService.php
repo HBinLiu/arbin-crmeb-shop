@@ -138,7 +138,7 @@ class RoutineTemplateListService extends NoticeService
             'thing2' => $storeTitle,
             'amount3' => $order['pay_price'],
             'character_string6' => $data['order_id']
-        ], '/pages/goods/order_details/index?order_id=' . $data['order_id'] . '&isReturen=1');
+        ], '/pages/goods/order_details/index?order_id=' . $data['order_id'] . '&isReturn=1');
     }
 
     /**
@@ -155,7 +155,7 @@ class RoutineTemplateListService extends NoticeService
             'thing2' => $storeTitle,
             'amount3' => $order['pay_price'],
             'character_string6' => $order['order_id']
-        ], '/pages/goods/order_details/index?order_id=' . $order['order_id'] . '&isReturen=1');
+        ], '/pages/goods/order_details/index?order_id=' . $order['order_id'] . '&isReturn=1');
     }
 
     /**

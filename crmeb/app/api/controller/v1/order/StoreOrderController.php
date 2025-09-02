@@ -258,7 +258,7 @@ class StoreOrderController
         CacheService::set('PAY_LOCK_' . $uni, 'PAY_LOCK', 2);
         if (!$uni) return app('json')->fail(100100);
         $orderInfo = $this->services->get(['order_id' => $uni]);
-        if ($orderInfo->is_del == 1 || $orderInfo->is_system_del == 1) return app('json')->fail('订单已经超过系统支付时间，无法支付，请重新下单');
+        if ($orderInfo->is_cancel == 1 || $orderInfo->is_del == 1 || $orderInfo->is_system_del == 1) return app('json')->fail('订单已经超过系统支付时间，无法支付，请重新下单');
         $uid = $type == 1 ? (int)$request->uid() : $orderInfo->uid;
         $orderInfo->is_channel = $this->getChennel[$request->getFromType()] ?? ($request->isApp() ? 0 : 1);
         $orderInfo->order_id = $uid != $orderInfo->pay_uid ? app()->make(StoreOrderCreateServices::class)->getNewOrderId('cp') : $uni;

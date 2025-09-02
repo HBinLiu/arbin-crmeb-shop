@@ -151,7 +151,7 @@ class WechatTemplateListService extends NoticeService
             'time5' => date('Y-m-d H:i:s', time()),
             'thing2' => $title,
             'amount3' => $order['refund_price'],
-        ], '/pages/goods/order_details/index?order_id=' . $order['refund_no'] . '&isReturen=1');
+        ], '/pages/goods/order_details/index?order_id=' . $order['refund_no'] . '&isReturn=1');
     }
 
     /**
@@ -168,7 +168,7 @@ class WechatTemplateListService extends NoticeService
             'thing2' => $title,
             'amount3' => $order['refund_price'],
             'thing4' => $order['refuse_reason'],
-        ], '/pages/goods/order_details/index?order_id=' . $order['refund_no'] . '&isReturen=1');
+        ], '/pages/goods/order_details/index?order_id=' . $order['refund_no'] . '&isReturn=1');
     }
 
     /**
