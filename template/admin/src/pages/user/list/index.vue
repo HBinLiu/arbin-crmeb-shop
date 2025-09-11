@@ -378,6 +378,11 @@
             <div>{{ scope.row.user_type }}</div>
           </template>
         </el-table-column>
+        <el-table-column label="上级用户" min-width="100">
+          <template slot-scope="scope">
+            <div>{{ scope.row.spread_uid_nickname }}</div>
+          </template>
+        </el-table-column>
         <el-table-column label="余额" prop="now_money" min-width="100" :sortable="true">
           <template slot-scope="scope">
             <div>{{ scope.row.now_money }}</div>

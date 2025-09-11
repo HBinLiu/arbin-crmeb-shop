@@ -129,6 +129,31 @@
                 </li>
               </ul>
             </div>
+            <div class="section">
+              <div class="title">返佣信息(金额｜用户UID)</div>
+              <ul class="list">
+                <li class="item">
+                  <div>一级佣金：</div>
+                  <div class="value">{{ orderDatalist.orderInfo.one_brokerage }} | {{ orderDatalist.orderInfo.spread_uid }}</div>
+                </li>
+                <li class="item">
+                  <div>二级佣金：</div>
+                  <div class="value">{{ orderDatalist.orderInfo.two_brokerage }} | {{ orderDatalist.orderInfo.spread_two_uid }}</div>
+                </li>
+                <li class="item">
+                  <div>员工返佣：</div>
+                  <div class="value">{{ orderDatalist.orderInfo.staff_brokerage }} | {{ orderDatalist.orderInfo.staff_id }}</div>
+                </li>
+                <li class="item">
+                  <div>代理商佣金：</div>
+                  <div class="value">{{ orderDatalist.orderInfo.agent_brokerage }} | {{ orderDatalist.orderInfo.agent_id }}</div>
+                </li>
+                <li class="item">
+                  <div>事业部佣金：</div>
+                  <div class="value">{{ orderDatalist.orderInfo.division_brokerage }} | {{ orderDatalist.orderInfo.division_id }}</div>
+                </li>
+              </ul>
+            </div>
             <div class="section" v-if="orderDatalist.orderInfo.delivery_name">
               <div class="title">
                 {{ orderDatalist.orderInfo.delivery_type == 'express' ? '物流信息' : '送货人信息' }}

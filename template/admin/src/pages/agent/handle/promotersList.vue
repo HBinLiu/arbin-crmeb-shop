@@ -138,6 +138,11 @@
               <span>{{ scope.row.agent_brokerage || 0 }}</span>
             </template>
           </el-table-column>
+          <el-table-column label="员工返佣金额" min-width="130" v-if="rowsList.division_type == 3">
+            <template slot-scope="scope">
+              <span>{{ scope.row.staff_brokerage || 0 }}</span>
+            </template>
+          </el-table-column>
         </template>
       </el-table>
       <div class="acea-row row-right page">

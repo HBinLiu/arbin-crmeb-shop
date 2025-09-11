@@ -763,7 +763,7 @@ export default {
           is_host: row.is_hot,
           is_show: 0,
           section_time: [],
-          description: row.description, // 不取商品中的
+          description: '', // 不取商品中的
           id: 0,
           people: 2,
           num: 1,

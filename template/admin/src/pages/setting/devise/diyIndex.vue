@@ -447,7 +447,7 @@ export default {
         confirmButtonClass: 'btn-custom-cancel',
       })
         .then(() => {
-          this.$router.push('/admin/setting/pages/devise/0');
+          this.$router.push(this.$routeProStr + '/setting/pages/devise/0');
         })
         .catch(() => {});
     },
@@ -844,7 +844,7 @@ export default {
           if (num == 2) {
             this.relLoading = false;
             setTimeout(() => {
-              window.location.replace('/admin/setting/pages/devise/0');
+              window.location.replace(this.$routeProStr + '/setting/pages/devise/0');
             }, 2000);
           } else {
             this.loading = false;

@@ -75,7 +75,19 @@ class SystemDatabackup extends AuthController
         if ($is_field == 0) {
             $sql = "ALTER TABLE $table COMMENT '$mark'";
         } else {
-            $sql = "ALTER TABLE $table MODIFY COLUMN $field $type COMMENT '$mark'";
+            $fieldInfo = Db::query("SHOW FULL COLUMNS FROM `{$table}` WHERE Field = '{$field}'");
+            $sql = "ALTER TABLE $table MODIFY COLUMN ";
+            $sql .= $field . ' ' . $type . ' ';
+            if ($fieldInfo[0]['Null'] == 'NO') {
+                $sql .= 'NOT NULL ';
+                if (!is_null($fieldInfo[0]['Default'])) {
+                    $sql .= "DEFAULT '" . $fieldInfo[0]['Default'] . "' ";
+                }
+            }
+            if ($fieldInfo[0]['Extra']) {
+                $sql .= $fieldInfo[0]['Extra'] . ' ';
+            }
+            $sql .= "COMMENT '$mark'";
         }
         Db::execute($sql);
         return app('json')->success(100024);

@@ -590,7 +590,7 @@ export default {
           // type: 1,
           num: 1,
           deposit: 1,
-          description: row.description, // 不取商品中的
+          description: '', // 不取商品中的
           id: 0,
           num: 1,
           status: 1,

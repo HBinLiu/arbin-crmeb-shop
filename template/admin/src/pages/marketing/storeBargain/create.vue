@@ -710,7 +710,7 @@ export default {
           is_hot: row.is_hot,
           status: 0,
           section_time: [],
-          description: row.description, // 不取商品中的
+          description: '', // 不取商品中的
           rule: '',
           id: 0,
           product_id: row.id,
@@ -830,9 +830,9 @@ export default {
               }
             }
             this.current += 1;
-            setTimeout((e) => {
-              this.formValidate.description += ' ';
-            }, 0);
+            // setTimeout((e) => {
+            //   this.formValidate.description += ' ';
+            // }, 0);
           } else {
             return this.$message.warning('请完善您的信息');
           }

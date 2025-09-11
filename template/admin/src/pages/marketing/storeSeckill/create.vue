@@ -685,7 +685,7 @@ export default {
           is_postage: row.is_postage,
           is_hot: row.is_hot,
           status: 0,
-          description: row.description,
+          description: '',
           id: 0,
           product_id: row.id,
           temp_id: row.temp_id,

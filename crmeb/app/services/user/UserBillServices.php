@@ -1192,8 +1192,8 @@ class UserBillServices extends BaseServices
         $storeOrderServices = app()->make(StoreOrderServices::class);
         [$page, $limit] = $this->getPageValue();
         $time = [];
-        $where = ['paid' => 1, 'type' => 6, 'spread_or_uid' => $uid, 'pid' => 0, 'refund_status' => 0];
-        $list = $storeOrderServices->getlist($where, ['id,order_id,uid,add_time,spread_uid,status,spread_two_uid,one_brokerage,two_brokerage,pay_price,pid'], $page, $limit, ['split']);
+        $where = ['paid' => 1, 'type' => 6, 'all_spread' => $uid, 'pid' => 0, 'refund_status' => 0];
+        $list = $storeOrderServices->getlist($where, ['id,order_id,uid,add_time,spread_uid,status,spread_two_uid,one_brokerage,two_brokerage,pay_price,pid,staff_id,agent_id,division_id,staff_brokerage,agent_brokerage,division_brokerage'], $page, $limit, ['split']);
         $result['count'] = $storeOrderServices->count($where);
         $time_data = [];
         if ($list) {
@@ -1202,7 +1202,15 @@ class UserBillServices extends BaseServices
             foreach ($list as &$item) {
                 $item['avatar'] = $userInfos[$item['uid']]['avatar'] ?? '';
                 $item['nickname'] = $userInfos[$item['uid']]['nickname'] ?? '';
-                $item['number'] = $item['spread_uid'] == $uid ? $item['one_brokerage'] : $item['two_brokerage'];
+                if ($item['division_id'] == $uid) {
+                    $item['number'] = $item['division_brokerage'];
+                } elseif ($item['agent_id'] == $uid) {
+                    $item['number'] = $item['agent_brokerage'];
+                } elseif ($item['staff_id'] == $uid) {
+                    $item['number'] = $item['staff_brokerage'];
+                } else {
+                    $item['number'] = $item['spread_uid'] == $uid ? $item['one_brokerage'] : $item['two_brokerage'];
+                }
                 $item['time'] = $item['add_time'] ? date('Y-m-d H:i', $item['add_time']) : '';
                 $item['time_key'] = $item['add_time'] ? date('Y-m', $item['add_time']) : '';
                 $item['type'] = in_array($item['status'], [2, 3]) ? 'brokerage' : 'number';

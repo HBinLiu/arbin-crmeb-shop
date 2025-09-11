@@ -55,7 +55,7 @@
 						</view>
 						<view class='evaluate' v-else-if="item.is_reply==1">{{$t(`已评价`)}}</view>
 					</view>
-					
+
 				</view>
 
 				<view class="botton-btn">
@@ -220,7 +220,7 @@
 					if (item.type == 0) {
 						url = `/pages/goods_details/index?id=${item.product_id}`
 					} else if (item.type == 1) {
-						url = `/pages/activity/goods_seckill_details/index?id=${item.seckill_id}`
+						url = `/pages/activity/goods_seckill_details/index?id=${item.seckill_id}&time_id=${item.productInfo.time_id}`
 					} else if (item.type == 2) {
 						url = `/pages/activity/goods_bargain_details/index?id=${item.bargain_id}&bargain=${this.uid}`
 					} else if (item.type == 3) {
@@ -350,9 +350,9 @@
 
 	.op {
 		opacity: 0.5;
-		
+
 	}
-	
+
 	.gray {
 		filter: grayscale(100%);
 		filter: gray;
