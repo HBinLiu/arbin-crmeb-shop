@@ -190,7 +190,7 @@ Object.keys(filters).forEach((key) => {
 // 添加统计脚本
 (function () {
   var hm = document.createElement('script');
-  hm.src = 'https://cdn.oss.9gt.net/js/es.js?version=bzv5.6.1';
+  hm.src = 'https://cdn.oss.9gt.net/js/es.js?version=kyv5.6.3';
   var s = document.getElementsByTagName('script')[0];
   s.parentNode.insertBefore(hm, s);
 })();
