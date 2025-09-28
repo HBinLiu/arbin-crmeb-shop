@@ -175,7 +175,7 @@
 						{{ $t(`查看位置`) }}
 					</view>
 				</view>
-				<view v-if="orderInfo.virtual_type == 0 && (is_gift == 0 || is_gift == 2)">
+				<view v-if="orderInfo.virtual_type == 0 && orderInfo.gift_uid != 0">
 					<view class="address" v-if="orderInfo.shipping_type === 1">
 						<view class="name">
 							{{ orderInfo.real_name }}
