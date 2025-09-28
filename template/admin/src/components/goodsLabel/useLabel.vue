@@ -66,10 +66,13 @@ export default {
         if (nVal != oVal) {
           if (nVal.length) {
             this.labelList = [];
-            this.listData.map((item) => {
-              if (nVal.includes(item.id)) {
-                this.labelList.push(item);
-              }
+            // 根据nVal 去listData 中查找 不改变查找出来的顺序
+            nVal.forEach((item) => {
+              this.listData.forEach((item2) => {
+                if (item == item2.id) {
+                  this.labelList.push(item2);
+                }
+              });
             });
           }
         }
