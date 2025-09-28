@@ -13,6 +13,7 @@ namespace app\services\user;
 
 use app\dao\user\UserMoneyDao;
 use app\services\BaseServices;
+use app\services\order\OtherOrderServices;
 use app\services\order\StoreOrderServices;
 use crmeb\exceptions\AdminException;
 
@@ -27,6 +28,13 @@ class UserMoneyServices extends BaseServices
             'title' => '余额支付购买商品',
             'type' => 'pay_product',
             'mark' => '余额支付{%num%}元购买商品',
+            'status' => 1,
+            'pm' => 0
+        ],
+        'pay_member' => [
+            'title' => '余额支付购买会员',
+            'type' => 'pay_member',
+            'mark' => '余额支付{%num%}元购买会员',
             'status' => 1,
             'pm' => 0
         ],
@@ -162,13 +170,17 @@ class UserMoneyServices extends BaseServices
         $orderServices = app()->make(StoreOrderServices::class);
         /** @var UserRechargeServices $rechargeServices */
         $rechargeServices = app()->make(UserRechargeServices::class);
+        /** @var OtherOrderServices $otherOrderServices */
+        $otherOrderServices = app()->make(OtherOrderServices::class);
         foreach ($list as &$item) {
             $item['nickname'] = $nicknameArr[$item['uid']];
             if ($item['type'] == 'pay_product' || $item['type'] == 'pay_product_refund') {
                 $item['relation'] = $orderServices->value(['id' => $item['link_id']], 'order_id');
             } elseif ($item['type'] == 'recharge' || $item['type'] == 'recharge_refund') {
                 $item['relation'] = $rechargeServices->value(['id' => $item['link_id']], 'order_id');
-            } else {
+            } elseif ($item['type'] == 'pay_member') {
+                $item['relation'] = $otherOrderServices->value(['id' => $item['link_id']], 'order_id');
+            }  else {
                 $item['relation'] = $status[$item['type']];
             }
             $item['add_time'] = date('Y-m-d H:i:s', $item['add_time']);
@@ -194,16 +206,19 @@ class UserMoneyServices extends BaseServices
 
     /**
      * 余额统计基础
-     * @param $where
      * @return array
+     * @throws \ReflectionException
      */
-    public function getBasic($where)
+    public function getBasic()
     {
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
         $data['now_balance'] = $userServices->sum(['status' => 1], 'now_money', true);
-        $data['add_balance'] = $this->dao->sum(['pm' => 1], 'number', true);
-        $data['sub_balance'] = $this->dao->sum(['pm' => 0], 'number', true);
+        $data['add_balance'] = $this->dao->sum([
+            ['pm', '=', 1],
+            ['type', 'in', ['system_add', 'recharge', 'extract', 'lottery_add', 'register_system_add']]
+        ], 'number', false);
+        $data['sub_balance'] = bcsub($data['add_balance'], $data['now_balance'], 2);
         return $data;
     }
 
@@ -215,7 +230,7 @@ class UserMoneyServices extends BaseServices
     public function getTrend($where)
     {
         $time = explode('-', $where['time']);
-        if (count($time) != 2) throw new AdminException(100100);
+        if (count($time) != 2) throw new AdminException('请选择时间');
         $dayCount = (strtotime($time[1]) - strtotime($time[0])) / 86400 + 1;
         $data = [];
         if ($dayCount == 1) {
@@ -314,9 +329,9 @@ class UserMoneyServices extends BaseServices
      */
     public function getType($where)
     {
-        $bing_xdata = ['系统减少', '充值退款', '购买商品'];
+        $bing_xdata = ['系统减少', '充值退款', '购买商品', '购买会员'];
         $color = ['#64a1f4', '#3edeb5', '#70869f'];
-        $data = ['system_sub', 'recharge_refund', 'pay_product'];
+        $data = ['system_sub', 'recharge_refund', 'pay_product', 'pay_member'];
         $bing_data = [];
         foreach ($data as $key => $item) {
             $bing_data[] = [

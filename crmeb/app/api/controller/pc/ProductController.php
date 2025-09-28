@@ -43,7 +43,7 @@ class ProductController
             [['news', 'd'], 0, '', 'timeOrder'],
             [['type', 0], 0],
             ['ids', ''],
-            ['selectId', '']
+            [['selectId', 'd'], 0]
         ]);
         if ($where['selectId'] && (!$where['sid'] || !$where['cid'])) {
             if ($services->value(['id' => $where['selectId']], 'pid')) {
@@ -107,7 +107,7 @@ class ProductController
             if (count($item['star'])) {
                 $item['star'] = bcdiv((string)array_sum(array_column($item['star'], 'product_score')), (string)count($item['star']), 1);
             } else {
-                $item['star'] = '3.0';
+                $item['star'] = '5.0';
             }
         }
         $data['count'] = $product->getCount($where);

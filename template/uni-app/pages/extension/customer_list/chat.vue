@@ -1,13 +1,13 @@
 <template>
 	<view class="chat-box" :style="colorStyle">
 		<!-- #ifdef MP -->
-		<view class="head-box">
+		<!-- 		<view class="head-box">
 			<view class="system-head" :style="{ height: sysHead }"></view>
 			<view class="title-hd">
 				<view class="iconfont icon-fanhui" @click="goBack"></view>
 				<view>{{ titleName }}</view>
 			</view>
-		</view>
+		</view> -->
 		<!-- #endif -->
 		<view class="broadcast-details_order">
 			<!-- 商品信息 -->
@@ -80,7 +80,7 @@
 								</view>
 							</view>
 							<!-- 订单 -->
-							<view class="order-box" v-if="item.msn_type == 6" @click="goOrder(item)">
+							<view class="order-box" v-if="item.msn_type == 6 && item.orderInfo" @click="goOrder(item)">
 								<view class="title">{{$t(`订单号`)}}: {{ item.orderInfo.order_id }}</view>
 								<view class="info">
 									<image :src="item.orderInfo.cartInfo[0].productInfo.image"></image>
@@ -416,7 +416,7 @@
 			},
 			// 聊天表情转换
 			replace_em(str) {
-				str = str.replace(/\[em-([\s\S]*)\]/g, "<span class='em em-$1' style='background-image:url(" + this
+				str = str.replace(/\[([^\[\]]+)\]/g, "<span class='em $1' style='background-image:url(" + this
 					.httpUrl + ")'></span>");
 				return str;
 			},
@@ -434,7 +434,7 @@
 							if (this.uidTo == 0) {
 								selector = `#msg-${res.data.serviceList[res.data.serviceList.length - 1].id}`;
 							} else {
-								selector = `#msg-${this.chatList[0].id}`;
+								selector = `#msg-${this.chatList.length ? this.chatList[0].id : 0}`;
 							}
 						}
 						let arr = [];
@@ -451,13 +451,15 @@
 								el.msn = this.replace_em(el.msn);
 							}
 						});
-
 						this.loading = false;
 						this.chatList = [...res.data.serviceList, ...this.chatList];
 
 						this.$nextTick(() => {
-							this.setPageScrollTo(selector);
-							this.isScroll = res.data.serviceList.length >= this.limit;
+							if (this.chatList.length) {
+								this.setPageScrollTo(selector);
+								this.isScroll = res.data.serviceList.length >= this.limit;
+							}
+
 						});
 						this.$socket.send({
 							data: {
@@ -565,7 +567,7 @@
 				let self = this;
 				if (this.isScroll) {
 					this.loading = true;
-					this.uidTo = this.chatList[0].id;
+					this.uidTo = this.chatList.length ? this.chatList[0].id : 0;
 					this.isScroll = false;
 					setTimeout(res => {
 						this.getChatList();
@@ -636,13 +638,20 @@
 		.footer-box {
 			display: flex;
 			align-items: center;
-			padding: 0 30rpx;
 			color: rgba(0, 0, 0, 0.8);
 			background: #f7f7f7;
-			height: 100rpx;
-			height: calc(100rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
-			height: calc(100rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
+			/* #ifdef APP-PLUS */
+			padding: 0 30rpx;
+			height: 70rpx;
+			height: (70rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+			height: calc(70rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
+			/* #endif */
 
+			/* #ifndef APP-PLUS */
+			padding: 0 30rpx 15rpx 30rpx;
+			height: 115rpx;
+
+			/* #endif */
 			.words .icon-tupian {
 				font-size: 50rpx;
 			}
@@ -707,6 +716,9 @@
 
 	.slider-banner {
 		background: #fff;
+		padding-bottom: 0rpx;
+		padding-bottom: calc(constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+		padding-bottom: calc(env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
 	}
 
 	.words-mask {
@@ -922,6 +934,7 @@
 		color: #333333;
 		height: 85rpx;
 		font-weight: 800;
+		line-height: 40rpx;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		display: -webkit-box;

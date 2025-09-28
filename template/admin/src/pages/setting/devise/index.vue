@@ -1,6 +1,6 @@
 <template>
   <div class="diy-page">
-    <Card :bordered="false" dis-hover class="ivu-mt" style="margin: 0 10px">
+    <el-card :bordered="false" shadow="never" class="ivu-mt" style="margin: 0 10px">
       <div class="diy-wrapper" :style="'height:' + clientHeight + 'px;'">
         <!-- 左侧 -->
         <div class="left">
@@ -10,6 +10,7 @@
               :class="{ on: tabCur == index }"
               v-for="(item, index) in tabList"
               :key="index"
+              v-db-click
               @click="bindTab(index)"
             >
               {{ item.title }}
@@ -17,11 +18,10 @@
           </div>
           <div class="wrapper" :style="'height:' + (clientHeight - 46) + 'px;'" v-if="tabCur == 0">
             <div v-for="(item, index) in leftMenu" :key="index">
-              <div class="tips" @click="item.isOpen = !item.isOpen">
+              <div class="tips" v-db-click @click="item.isOpen = !item.isOpen">
                 {{ item.title }}
-
-                <Icon type="ios-arrow-forward" size="16" v-if="!item.isOpen" />
-                <Icon type="ios-arrow-down" size="16" v-else />
+                <i class="el-icon-arrow-right" style="font-size: 16px" v-if="!item.isOpen" />
+                <i type="ios-el-icon-arrow-down" style="font-size: 16px" v-else />
               </div>
               <draggable
                 class="dragArea list-group"
@@ -38,6 +38,7 @@
                   :class="{ search: element.cname == '搜索框' }"
                   v-for="(element, index) in item.list"
                   :key="element.id"
+                  v-db-click
                   @click="addDom(element, 1)"
                   v-show="item.isOpen"
                 >
@@ -50,7 +51,7 @@
               </draggable>
             </div>
           </div>
-          <!--                    <div style="padding: 0 20px"><Button type="primary" style="width: 100%" @click="saveConfig">保存</Button></div>-->
+          <!--                    <div style="padding: 0 20px"><el-button type="primary" style="width: 100%" v-db-click @click="saveConfig">保存</el-button></div>-->
           <div class="wrapper" v-else :style="'height:' + (clientHeight - 46) + 'px;'">
             <div class="link-item" v-for="(item, index) in urlList" :key="index">
               <div class="name">{{ item.name }}</div>
@@ -61,7 +62,7 @@
               </div>
               <div class="lable">
                 <p class="txt">例如：{{ item.example }}</p>
-                <Button size="small" @click="onCopy(item.example)">复制 </Button>
+                <el-button size="small" v-db-click @click="onCopy(item.example)">复制 </el-button>
               </div>
             </div>
           </div>
@@ -77,7 +78,7 @@
                 <div class="picture">
                   <img src="@/assets/images/electric.png" />
                 </div>
-                <div class="page-title" :class="{ on: activeIndex == -100 }" @click="showTitle">
+                <div class="page-title" :class="{ on: activeIndex == -100 }" v-db-click @click="showTitle">
                   {{ titleTxt }}
                   <div class="delete-box"></div>
                   <div class="handle"></div>
@@ -122,6 +123,7 @@
                         }"
                         v-for="(item, key) in mConfig"
                         :key="key"
+                        v-db-click
                         @click.stop="bindconfig(item, key)"
                         :style="colorTxt ? 'background-color:' + colorPickerTxt + ';' : 'background-color:#fff;'"
                       >
@@ -134,16 +136,18 @@
                         ></component>
                         <div class="delete-box">
                           <div class="handleType">
-                            <div class="iconfont iconshanchu2" @click.stop="bindDelete(item, key)"></div>
-                            <div class="iconfont iconfuzhi" @click.stop="bindAddDom(item, 0, key)"></div>
+                            <div class="iconfont iconshanchu2" v-db-click @click.stop="bindDelete(item, key)"></div>
+                            <div class="iconfont iconfuzhi" v-db-click @click.stop="bindAddDom(item, 0, key)"></div>
                             <div
                               class="iconfont iconshangyi"
                               :class="key === 0 ? 'on' : ''"
+                              v-db-click
                               @click.stop="movePage(item, key, 1)"
                             ></div>
                             <div
                               class="iconfont iconxiayi"
                               :class="key === mConfig.length - 1 ? 'on' : ''"
+                              v-db-click
                               @click.stop="movePage(item, key, 0)"
                             ></div>
                           </div>
@@ -155,15 +159,15 @@
                 </div>
               </div>
               <div class="overflowy">
-                <div class="page-foot" @click="showFoot" :class="{ on: activeIndex == -101 }">
+                <div class="page-foot" v-db-click @click="showFoot" :class="{ on: activeIndex == -101 }">
                   <footPage></footPage>
                   <div class="delete-box"></div>
                   <div class="handle"></div>
                 </div>
               </div>
               <div class="defaultData" v-if="pageId !== 0">
-                <div class="data" @click="setmoren">设置默认</div>
-                <div class="data" @click="getmoren">恢复默认</div>
+                <div class="data" v-db-click @click="setmoren">设置默认</div>
+                <div class="data" v-db-click @click="getmoren">恢复默认</div>
               </div>
             </div>
           </div>
@@ -182,12 +186,12 @@
           </div>
         </div>
       </div>
-    </Card>
+    </el-card>
     <!--<div class="foot-box">-->
-    <!--<Button @click="reast">重置</Button>-->
-    <!--<Button type="primary" @click="saveConfig" :loading="loading"-->
+    <!--<el-button v-db-click @click="reast">重置</el-button>-->
+    <!--<el-button type="primary" v-db-click @click="saveConfig" :loading="loading"-->
     <!--&gt;保存-->
-    <!--</Button-->
+    <!--</el-button-->
     <!--&gt;-->
     <!--</div>-->
   </div>
@@ -196,8 +200,6 @@
 <script crossorigin="anonymous">
 import { categoryList, diyGetInfo, diySave, getUrl, setDefault, recovery } from '@/api/diy';
 import vuedraggable from 'vuedraggable';
-import mPage from '@/components/mobilePage/index.js';
-import mConfig from '@/components/mobileConfig/index.js';
 import footPage from '@/components/pagesFoot';
 import { mapState } from 'vuex';
 import html2canvas from 'html2canvas';
@@ -210,8 +212,6 @@ export default {
     footPage,
     html2canvas,
     draggable: vuedraggable,
-    ...mPage,
-    ...mConfig,
   },
   filters: {
     filterTxt(val) {
@@ -263,6 +263,7 @@ export default {
       footActive: false,
       loading: false,
       isSearch: false,
+      isHomeProduct: false,
       isTab: false,
       isFllow: false,
     };
@@ -325,34 +326,34 @@ export default {
     onCopy(copyData) {
       this.$copyText(copyData)
         .then((message) => {
-          this.$Message.success('复制成功');
+          this.$message.success('复制成功');
         })
         .catch((err) => {
-          this.$Message.error('复制失败');
+          this.$message.error('复制失败');
         });
     },
     onError() {
-      this.$Message.error('复制失败');
+      this.$message.error('复制失败');
     },
     //设置默认数据
     setmoren() {
       setDefault(this.pageId)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
         })
         .catch((err) => {
-          this.$Message.error(err.msg);
+          this.$message.error(err.msg);
         });
     },
     //恢复默认
     getmoren() {
       recovery(this.pageId)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.reload();
         })
         .catch((err) => {
-          this.$Message.error(err.msg);
+          this.$message.error(err.msg);
         });
     },
     // 获取url
@@ -406,11 +407,11 @@ export default {
     log(evt) {
       // 中间拖拽排序
       if (evt.moved) {
-        if (evt.moved.element.name == 'search_box') {
-          return this.$Message.warning('该组件禁止拖拽');
+        if (evt.moved.element.name == 'search_box' || evt.moved.element.name == 'nav_bar') {
+          return this.$message.warning('该组件禁止拖拽');
         }
         // if (evt.moved.element.name == "nav_bar") {
-        //     return this.$Message.warning("该组件禁止拖拽");
+        //     return this.$message.warning("该组件禁止拖拽");
         // }
         evt.moved.oldNum = this.mConfig[evt.moved.oldIndex].num;
         evt.moved.newNum = this.mConfig[evt.moved.newIndex].num;
@@ -471,16 +472,16 @@ export default {
           return;
         }
       }
-      if (item.name == 'search_box') {
-        return this.$Message.warning('该组件禁止移动');
+      if (item.name == 'search_box' || item.name == 'nav_bar') {
+        return this.$message.warning('该组件禁止移动');
       }
       // if (item.name == "nav_bar") {
-      //     return this.$Message.warning("该组件禁止移动");
+      //     return this.$message.warning("该组件禁止移动");
       // }
       if (type) {
         // if(this.mConfig[index-1].name  == "search_box" || this.mConfig[index-1].name  == "nav_bar"){
         if (this.mConfig[index - 1].name == 'search_box') {
-          return this.$Message.warning('搜索框必须为顶部');
+          return this.$message.warning('搜索框必须为顶部');
         }
         this.swapArray(this.mConfig, index - 1, index);
       } else {
@@ -512,12 +513,16 @@ export default {
     // 组件添加
     addDomCon(item, type, index) {
       if (item.name == 'search_box') {
-        if (this.isSearch) return this.$Message.error('该组件只能添加一次');
+        if (this.isSearch) return this.$message.error('该组件只能添加一次');
         this.isSearch = true;
       }
       if (item.name == 'nav_bar') {
-        if (this.isTab) return this.$Message.error('该组件只能添加一次');
+        if (this.isTab) return this.$message.error('该组件只能添加一次');
         this.isTab = true;
+      }
+      if (item.name == 'home_product') {
+        if (this.isHomeProduct) return this.$message.error('该组件只能添加一次');
+        this.isHomeProduct = true;
       }
       idGlobal += 1;
       let obj = {};
@@ -591,6 +596,9 @@ export default {
         this.isSearch = false;
       }
       if (item.name == 'nav_bar') {
+        this.isTab = false;
+      }
+      if (item.name == 'home_product') {
         this.isTab = false;
       }
       this.mConfig.splice(key, 1);
@@ -677,17 +685,17 @@ export default {
         .then((res) => {
           this.loading = false;
           this.pageId = res.data.id;
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
         })
         .catch((res) => {
           this.loading = false;
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     // 保存配置
     saveConfig() {
       if (this.mConfig.length == 0) {
-        return this.$Message.error('暂未添加任何组件，保存失败！');
+        return this.$message.error('暂未添加任何组件，保存失败！');
       }
       this.loading = true;
       let val = this.$store.state.mobildConfig.defaultArray;
@@ -727,6 +735,9 @@ export default {
             this.isSearch = true;
           }
           if (el.name == 'tabNav') {
+            this.isTab = true;
+          }
+          if (el.name == 'promotionList') {
             this.isTab = true;
           }
           if (el.name == 'goodList') {
@@ -770,19 +781,24 @@ export default {
     // 重置
     reast() {
       if (this.pageId == 0) {
-        this.$Message.error('新增页面，无法重置');
+        this.$message.error('新增页面，无法重置');
       } else {
-        this.$Modal.confirm({
+        this.$msgbox({
           title: '提示',
-          content: '<p>是否重置当前页面数据</p>',
-          onOk: () => {
+          message: '重置会恢复到上次保存的数据，确定不保存当前操作吗？',
+          showCancelButton: true,
+          cancelButtonText: '取消',
+          confirmButtonText: '确定',
+          iconClass: 'el-icon-warning',
+          confirmButtonClass: 'btn-custom-cancel',
+        })
+          .then(() => {
             this.mConfig = [];
             this.rConfig = [];
             this.activeIndex = -99;
             this.getDefaultConfig();
-          },
-          onCancel: () => {},
-        });
+          })
+          .catch(() => {});
       }
     },
   },
@@ -811,7 +827,7 @@ export default {
 };
 </script>
 
-<style scoped lang="stylus">
+<style scoped lang="scss">
 .ysize {
   background-size: 100%;
 }
@@ -879,7 +895,8 @@ export default {
   display: none;
 }
 
-.left:hover::-webkit-scrollbar-thumb, .right-box:hover::-webkit-scrollbar-thumb {
+.left:hover::-webkit-scrollbar-thumb,
+.right-box:hover::-webkit-scrollbar-thumb {
   display: block;
 }
 
@@ -901,8 +918,8 @@ export default {
   height: 40px;
   text-align: center;
   line-height: 40px;
-  border: 1px dashed #1890ff;
-  color: #1890ff;
+  border: 1px dashed var(--prev-color-primary);
+  color: var(--prev-color-primary);
   background-color: #edf4fb;
 }
 
@@ -921,7 +938,7 @@ export default {
 
 .iconfont-diy {
   font-size: 24px;
-  color: #1890ff;
+  color: var(--prev-color-primary);
 }
 
 .diy-wrapper {
@@ -953,9 +970,9 @@ export default {
         height: 45px;
 
         &.on {
-          color: #1890FF;
+          color: var(--prev-color-primary);
           font-size: 14px;
-          border-bottom: 1px solid #1890FF;
+          border-bottom: 1px solid var(--prev-color-primary);
         }
       }
     }
@@ -981,13 +998,13 @@ export default {
 
     .link-item {
       padding: 10px;
-      border-bottom: 1px solid #F5F5F5;
+      border-bottom: 1px solid #f5f5f5;
       font-size: 12px;
       color: #323232;
 
       .name {
         font-size: 14px;
-        color: #1890FF;
+        color: var(--prev-color-primary);
       }
 
       .link-txt {
@@ -997,7 +1014,7 @@ export default {
 
       .params {
         margin-top: 5px;
-        color: #1CBE6B;
+        color: #1cbe6b;
         word-break: break-all;
 
         .txt {
@@ -1077,11 +1094,12 @@ export default {
         top: 0;
         width: 383px;
         height: 100%;
-        border: 2px dashed #1890ff;
+        border: 2px dashed var(--prev-color-primary);
         padding: 10px 0;
       }
 
-      &:hover, &.on {
+      &:hover,
+      &.on {
         /* cursor: move; */
         .delete-box {
           /* display: block; */
@@ -1093,7 +1111,7 @@ export default {
 
         .delete-box {
           display: block;
-          border: 2px solid #1890ff;
+          border: 2px solid var(--prev-color-primary);
           box-shadow: 0 0 10px 0 rgba(24, 144, 255, 0.3);
         }
       }
@@ -1117,7 +1135,7 @@ export default {
         top: 0;
         width: 383px;
         height: 100%;
-        border: 2px dashed #1890ff;
+        border: 2px dashed var(--prev-color-primary);
         padding: 10px 0;
 
         span {
@@ -1138,7 +1156,8 @@ export default {
         }
       }
 
-      &:hover, &.on {
+      &:hover,
+      &.on {
         /* cursor: move; */
         .delete-box {
           /* display: block; */
@@ -1150,7 +1169,7 @@ export default {
 
         .delete-box {
           display: block;
-          border: 2px solid #1890ff;
+          border: 2px solid var(--prev-color-primary);
           box-shadow: 0 0 10px 0 rgba(24, 144, 255, 0.3);
         }
       }
@@ -1179,7 +1198,7 @@ export default {
           top: 0;
           width: 383px;
           height: 100%;
-          border: 2px dashed #1890ff;
+          border: 2px dashed var(--prev-color-primary);
 
           /* padding: 10px 0; */
           .handleType {
@@ -1189,7 +1208,7 @@ export default {
             width: 36px;
             height: 143px;
             border-radius: 4px;
-            background-color: #1890ff;
+            background-color: var(--prev-color-primary);
             cursor: pointer;
             color: #fff;
             font-weight: bold;
@@ -1211,7 +1230,7 @@ export default {
 
           .delete-box {
             display: block;
-            border: 2px solid #1890ff;
+            border: 2px solid var(--prev-color-primary);
             box-shadow: 0 0 10px 0 rgba(24, 144, 255, 0.3);
           }
         }
@@ -1273,11 +1292,11 @@ export default {
   }
 }
 
-/deep/ .ivu-scroll-loader {
+::v-deep .ivu-scroll-loader {
   display: none;
 }
 
-/deep/ .ivu-card-body {
+::v-deep .ivu-card-body {
   width: 100%;
 }
 </style>

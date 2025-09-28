@@ -11,6 +11,7 @@
 namespace crmeb\services;
 
 use crmeb\exceptions\AdminException;
+use crmeb\services\crud\Make;
 
 /**
  * 文件操作类
@@ -38,8 +39,8 @@ class FileService
     }
 
     /**
-     * @param $filename 写入文件名
-     * @param $writetext 保存内容
+     * @param string $filename 写入文件名
+     * @param string $writetext 保存内容
      * @param string $openmod 打开方式
      * @return bool
      */
@@ -942,21 +943,25 @@ class FileService
         return is_writable($file);
     }
 
-    /**读取excel文件内容
+    /**
+     * 读取excel文件内容
      * @param $filePath
+     * @param $type
+     * @param int $row_num
      * @param string $suffix
-     * @return bool
+     * @return mixed
      * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
      */
-    public function readExcel($filePath, $row_num = 1, $suffix = 'Xlsx')
+    public function readExcel($filePath, $type, int $row_num = 1, string $suffix = 'Xlsx')
     {
         if (!$filePath) return false;
         $pathInfo = pathinfo($filePath, PATHINFO_EXTENSION);
-        if (!$pathInfo || $pathInfo != "xlsx") throw new AdminException(400728);
+        if (!$pathInfo || ($pathInfo != "xlsx" && $pathInfo != "xls")) throw new AdminException(400728);
         //加载读取模型
         $readModel = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($suffix);
         // 创建读操作
         // 打开文件 载入excel表格
+
         try {
             $spreadsheet = $readModel->load($filePath);
             $sheet = $spreadsheet->getActiveSheet();
@@ -969,13 +974,114 @@ class FileService
             // 用于存储表格数据
             $data = [];
             for ($i = $row_num; $i <= $highestRow; $i++) {
-                $t1 = $this->objToStr($sheet->getCellByColumnAndRow(1, $i)->getValue()) ?? '';
-                $t2 = $this->objToStr($sheet->getCellByColumnAndRow(2, $i)->getValue());
-                if ($t2) {
-                    $data[] = [
-                        'key' => $t1,
-                        'value' => $t2
-                    ];
+                if ($type == 'card') {
+                    $t1 = $this->objToStr($sheet->getCellByColumnAndRow(1, $i)->getValue()) ?? '';
+                    $t2 = $this->objToStr($sheet->getCellByColumnAndRow(2, $i)->getValue());
+                    if ($t2) {
+                        $data[] = [
+                            'key' => $t1,
+                            'value' => $t2
+                        ];
+                    }
+                }
+                if ($type == 'express') {
+                    $t1 = $this->objToStr($sheet->getCellByColumnAndRow(1, $i)->getValue());
+                    $t3 = $this->objToStr($sheet->getCellByColumnAndRow(3, $i)->getValue());
+                    $t4 = $this->objToStr($sheet->getCellByColumnAndRow(4, $i)->getValue());
+                    $t5 = $this->objToStr($sheet->getCellByColumnAndRow(5, $i)->getValue());
+                    if ($t3 && $t5) {
+                        $data[] = [
+                            'id' => $t1,
+                            'delivery_name' => $t3,
+                            'delivery_code' => $t4,
+                            'delivery_id' => $t5,
+                        ];
+                    }
+                }
+                if ($type == 'product') {
+                    $t1 = $this->objToStr($sheet->getCellByColumnAndRow(1, $i)->getValue());
+                    $t2 = $this->objToStr($sheet->getCellByColumnAndRow(2, $i)->getValue());
+                    $t3 = $this->objToStr($sheet->getCellByColumnAndRow(3, $i)->getValue());
+                    $t4 = $this->objToStr($sheet->getCellByColumnAndRow(4, $i)->getValue());
+                    $t5 = $this->objToStr($sheet->getCellByColumnAndRow(5, $i)->getValue());
+                    $t6 = $this->objToStr($sheet->getCellByColumnAndRow(6, $i)->getValue());
+                    $t7 = $this->objToStr($sheet->getCellByColumnAndRow(7, $i)->getValue());
+                    $t8 = $this->objToStr($sheet->getCellByColumnAndRow(8, $i)->getValue());
+                    $t9 = $this->objToStr($sheet->getCellByColumnAndRow(9, $i)->getValue());
+                    $t10 = $this->objToStr($sheet->getCellByColumnAndRow(10, $i)->getValue());
+                    $t11 = $this->objToStr($sheet->getCellByColumnAndRow(11, $i)->getValue());
+                    $t12 = $this->objToStr($sheet->getCellByColumnAndRow(12, $i)->getValue());
+                    $t13 = $this->objToStr($sheet->getCellByColumnAndRow(13, $i)->getValue());
+                    $t14 = $this->objToStr($sheet->getCellByColumnAndRow(14, $i)->getValue());
+                    $t15 = $this->objToStr($sheet->getCellByColumnAndRow(15, $i)->getValue());
+                    $t16 = $this->objToStr($sheet->getCellByColumnAndRow(16, $i)->getValue());
+                    $t17 = $this->objToStr($sheet->getCellByColumnAndRow(17, $i)->getValue());
+                    $t18 = $this->objToStr($sheet->getCellByColumnAndRow(18, $i)->getValue());
+                    $t19 = $this->objToStr($sheet->getCellByColumnAndRow(19, $i)->getValue());
+                    $t20 = $this->objToStr($sheet->getCellByColumnAndRow(20, $i)->getValue());
+                    $t21 = $this->objToStr($sheet->getCellByColumnAndRow(21, $i)->getValue());
+                    $t22 = $this->objToStr($sheet->getCellByColumnAndRow(22, $i)->getValue());
+                    $t23 = $this->objToStr($sheet->getCellByColumnAndRow(23, $i)->getValue());
+                    $t24 = $this->objToStr($sheet->getCellByColumnAndRow(24, $i)->getValue());
+                    $t25 = $this->objToStr($sheet->getCellByColumnAndRow(25, $i)->getValue());
+                    $t26 = $this->objToStr($sheet->getCellByColumnAndRow(26, $i)->getValue());
+                    $t27 = $this->objToStr($sheet->getCellByColumnAndRow(27, $i)->getValue());
+                    $t28 = $this->objToStr($sheet->getCellByColumnAndRow(28, $i)->getValue());
+                    if ($i == 1) {
+                        $header = [
+                            $t1,
+                            $t2, $t3, $t4, $t5, $t6,
+                            $t7, $t8, $t9,
+                            $t10, $t11,
+                            $t12, $t13, $t14, $t15, $t16, $t17, $t18, $t19, $t20, $t21, $t22, $t23, $t24,
+                            $t25, $t26, $t27,
+                            $t28
+                        ];
+                        $verify = [
+                            '商品编号',
+                            '商品名称', '商品类型', '商品分类(一级)', '商品分类(二级)', '商品单位',
+                            '商品图片', '商品视频', '商品详情',
+                            '已售数量', '起购数量',
+                            '规格类型', '规格类型值', '规格名称', '规格值组合', '规格图片', '售价', '划线价', '成本价', '库存', '重量', '体积', '商品编码', '条形码',
+                            '商品简介', '商品关键字', '商品口令',
+                            '购买送积分'
+                        ];
+                        if ($header !== $verify) {
+                            throw new AdminException('数据结构不正确');
+                        }
+                    } else {
+                        $data[] = [
+                            'id' => $t1,
+                            'store_name' => $t2,
+                            'virtual_type' => $t3,
+                            'cate_name_one' => $t4,
+                            'cate_name_two' => $t5,
+                            'unit_name' => $t6,
+                            'slider_image' => $t7,
+                            'video_link' => $t8,
+                            'description' => $t9,
+                            'ficti' => $t10,
+                            'min_qty' => $t11,
+                            'spec_type' => $t12,
+                            'sku_type_value' => $t13,
+                            'sku_name' => $t14,
+                            'sku_value' => $t15,
+                            'pic' => $t16,
+                            'price' => $t17,
+                            'ot_price' => $t18,
+                            'cost' => $t19,
+                            'stock' => $t20,
+                            'weight' => $t21,
+                            'volume' => $t22,
+                            'bar_code' => $t23,
+                            'bar_code_number' => $t24,
+                            'store_info' => $t25,
+                            'keyword' => $t26,
+                            'command_word' => $t27,
+                            'give_integral' => $t28,
+                        ];
+                    }
+
                 }
             }
             return $data;
@@ -1018,9 +1124,11 @@ class FileService
                 $file = str_replace('\\', '/', $file);
                 if (in_array(substr($file, strrpos($file, '/') + 1), array('.', '..'))) continue;
                 if (is_dir($file) === true) {
-                    $zip->addEmptyDir(str_replace($folder . '/', '', $file . '/'));
+                    $fileName = $folder ? str_replace($folder . '/', '', $file . '/') : $file . '/';
+                    $zip->addEmptyDir($fileName);
                 } else if (is_file($file) === true) {
-                    $zip->addFromString(str_replace($folder . '/', '', $file), file_get_contents($file));
+                    $fileName = $folder ? str_replace($folder . '/', '', $file) : $file;
+                    $zip->addFromString($fileName, file_get_contents($file));
                 }
             }
         } else if (is_file($source) === true) {
@@ -1044,6 +1152,47 @@ class FileService
         $zip = new \ZipArchive;
         $zip->open($source);
         return $zip->extractTo($folder);
+    }
+
+    /**
+     * 批量写入文件
+     * @param array $make
+     * @return bool
+     * @author 等风来
+     * @email 136327134@qq.com
+     * @date 2023/4/18
+     */
+    public static function batchMakeFiles(array $make)
+    {
+
+        $files = [];
+        $dirnames = [];
+        foreach ($make as $item) {
+            if ($item instanceof Make) {
+                $files[] = $item = $item->toArray();
+            }
+            try {
+                $dirnames[] = $dirname = dirname($item['path']);
+                if (!is_dir($dirname)) {
+                    mkdir($dirname, 0755, true);
+                }
+            } catch (\Throwable $e) {
+                if ($dirnames) {
+                    foreach ($dirnames as $dirname) {
+                        if (strstr($dirname, app()->getRootPath() . 'backup') !== false) {
+                            rmdir($dirname);
+                        }
+                    }
+                }
+                throw new \RuntimeException($e->getMessage());
+            }
+        }
+        $res = true;
+        foreach ($files as $item) {
+            $res = $res && file_put_contents($item['path'], $item['content'], LOCK_EX);
+        }
+
+        return $res;
     }
 
 }

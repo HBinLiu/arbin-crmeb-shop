@@ -40,25 +40,29 @@ class StoreOrderDao extends BaseDao
     /**
      * 订单搜索
      * @param array $where
+     * @param bool $search
      * @return \crmeb\basic\BaseModel|mixed|\think\Model
+     * @throws \ReflectionException
      */
-    public function search(array $where = [])
+    public function search(array $where = [], bool $search = false)
     {
         $isDel = isset($where['is_del']) && $where['is_del'] !== '' && $where['is_del'] != -1;
         $realName = $where['real_name'] ?? '';
         $fieldKey = $where['field_key'] ?? '';
         $fieldKey = $fieldKey == 'all' ? '' : $fieldKey;
-        return parent::search($where)->when($isDel, function ($query) use ($where) {
+        $status = $where['status'] ?? '';
+        unset($where['status']);
+        return parent::search($where, $search)->when($isDel, function ($query) use ($where) {
             $query->where('is_del', $where['is_del']);
         })->when(isset($where['is_system_del']), function ($query) {
             $query->where('is_system_del', 0);
-        })->when(isset($where['status']) && $where['status'] !== '', function ($query) use ($where) {
-            switch ((int)$where['status']) {
+        })->when($status !== '', function ($query) use ($where, $status) {
+            switch ((int)$status) {
                 case 0://未支付
-                    $query->where('paid', 0)->where('status', 0)->where('refund_status', 0)->where('is_del', 0);
+                    $query->where('paid', 0)->where('status', 0)->where('refund_status', 0)->where('is_del', 0)->where('is_cancel', 0);
                     break;
                 case 1://已支付 未发货
-                    $query->where('paid', 1)->whereIn('status', [0, 4])->whereIn('refund_status', [0, 3])->when(isset($where['shipping_type']), function ($query) {
+                    $query->where('paid', 1)->where('status', 0)->whereIn('refund_status', [0, 3])->when(isset($where['shipping_type']), function ($query) {
                         $query->where('shipping_type', 1);
                     })->where('is_del', 0);
                     break;
@@ -78,7 +82,7 @@ class StoreOrderDao extends BaseDao
                     $query->where('paid', 1)->where('status', 0)->where('refund_status', 0)->where('shipping_type', 2)->where('is_del', 0);
                     break;
                 case 6://已支付 已核销 没有退款
-                    $query->where('paid', 1)->where('status', 2)->where('refund_status', 0)->where('shipping_type', 2)->where('is_del', 0);
+                    $query->where('paid', 1)->whereIn('status', [2, 3])->where('refund_status', 0)->where('shipping_type', 2)->where('is_del', 0);
                     break;
                 case -1://退款中
                     $query->where('paid', 1)->whereIn('refund_status', [1, 4])->where('is_del', 0);
@@ -93,7 +97,7 @@ class StoreOrderDao extends BaseDao
                     $query->where('is_del', 1);
                     break;
                 case 9://全部用户未删除的订单
-                    $query->where('is_del', 0);
+                    $query->whereIn('refund_status', [0, 3])->where('is_del', 0);
                     break;
             }
         })->when(isset($where['paid']) && $where['paid'] !== '', function ($query) use ($where) {
@@ -163,18 +167,30 @@ class StoreOrderDao extends BaseDao
                 $query->where(trim($fieldKey), trim($realName));
             } else {
                 $query->where('id', 'in', function ($que) use ($where) {
-                    $que->name('store_order_cart_info')->whereIn('product_id', function ($q) use ($where) {
+                    $que->name('store_order_cart_info')->whereOr('product_id', 'in', function ($q) use ($where) {
                         $q->name('store_product')->whereLike('store_name|keyword', '%' . $where['real_name'] . '%')->field(['id'])->select();
+                    })->whereOr('product_id', 'in', function ($q) use ($where) {
+                        $q->name('store_bargain')->whereLike('title|info', '%' . $where['real_name'] . '%')->field(['id'])->select();
+                    })->whereOr('product_id', 'in', function ($q) use ($where) {
+                        $q->name('store_combination')->whereLike('title|info', '%' . $where['real_name'] . '%')->field(['id'])->select();
+                    })->whereOr('product_id', 'in', function ($q) use ($where) {
+                        $q->name('store_seckill')->whereLike('title|info', '%' . $where['real_name'] . '%')->field(['id'])->select();
                     })->field(['oid'])->select();
                 });
             }
         })->when($realName && !$fieldKey, function ($query) use ($where) {
             $query->where(function ($que) use ($where) {
-                $que->whereLike('order_id|real_name', '%' . $where['real_name'] . '%')->whereOr('uid', 'in', function ($q) use ($where) {
+                $que->whereLike('order_id|real_name|user_phone', '%' . $where['real_name'] . '%')->whereOr('uid', 'in', function ($q) use ($where) {
                     $q->name('user')->whereLike('nickname|uid|phone', '%' . $where['real_name'] . '%')->field(['uid'])->select();
                 })->whereOr('id', 'in', function ($que) use ($where) {
-                    $que->name('store_order_cart_info')->whereIn('product_id', function ($q) use ($where) {
+                    $que->name('store_order_cart_info')->whereOr('product_id', 'in', function ($q) use ($where) {
                         $q->name('store_product')->whereLike('store_name|keyword', '%' . $where['real_name'] . '%')->field(['id'])->select();
+                    })->whereOr('product_id', 'in', function ($q) use ($where) {
+                        $q->name('store_bargain')->whereLike('title|info', '%' . $where['real_name'] . '%')->field(['id'])->select();
+                    })->whereOr('product_id', 'in', function ($q) use ($where) {
+                        $q->name('store_combination')->whereLike('title|info', '%' . $where['real_name'] . '%')->field(['id'])->select();
+                    })->whereOr('product_id', 'in', function ($q) use ($where) {
+                        $q->name('store_seckill')->whereLike('title|info', '%' . $where['real_name'] . '%')->field(['id'])->select();
                     })->field(['oid'])->select();
                 });
             });
@@ -261,11 +277,13 @@ class StoreOrderDao extends BaseDao
     /**
      * 获取订单总数
      * @param array $where
+     * @param bool $search
      * @return int
+     * @throws \ReflectionException
      */
-    public function count(array $where = []): int
+    public function count(array $where = [], bool $search = true)
     {
-        return $this->search($where)->count();
+        return $this->search($where, $search)->count();
     }
 
     /**
@@ -445,8 +463,9 @@ class StoreOrderDao extends BaseDao
 
     /**
      * 获取订单详情
-     * @param $uid
-     * @param $key
+     * @param string $key
+     * @param int $uid
+     * @param array $with
      * @return array|\think\Model|null
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
@@ -454,7 +473,9 @@ class StoreOrderDao extends BaseDao
      */
     public function getUserOrderDetail(string $key, int $uid, $with = [])
     {
-        return $this->getOne(['order_id|unique' => $key, 'uid' => $uid, 'is_del' => 0], '*', $with);
+        $where = ['order_id|unique' => $key, 'is_del' => 0];
+        if ($uid > 0) $where = $where + ['uid|gift_uid' => $uid];
+        return $this->getOne($where, '*', $with);
     }
 
     /**
@@ -495,7 +516,7 @@ class StoreOrderDao extends BaseDao
      */
     public function chartTimePrice($start, $stop)
     {
-        return $this->search(['is_del' => 0, 'paid' => 1, 'refund_status' => 0])
+        return $this->search(['pid' => 0, 'is_del' => 0, 'paid' => 1, 'refund_status' => [0, 3]])
             ->where('add_time', '>=', $start)
             ->where('add_time', '<', $stop)
             ->field('sum(pay_price) as num,FROM_UNIXTIME(add_time, \'%Y-%m-%d\') as time')
@@ -511,7 +532,7 @@ class StoreOrderDao extends BaseDao
      */
     public function chartTimeNumber($start, $stop)
     {
-        return $this->search(['is_del' => 0, 'paid' => 1, 'refund_status' => 0])
+        return $this->search(['pid' => 0, 'is_del' => 0, 'paid' => 1, 'refund_status' => [0, 3]])
             ->where('add_time', '>=', $start)
             ->where('add_time', '<', $stop)
             ->field('count(id) as num,FROM_UNIXTIME(add_time, \'%Y-%m-%d\') as time')
@@ -548,7 +569,7 @@ class StoreOrderDao extends BaseDao
      */
     public function getOrderUnPaidList(array $field = ['*'])
     {
-        return $this->getModel()->where(['paid' => 0, 'is_del' => 0, 'status' => 0, 'refund_status' => 0])
+        return $this->getModel()->where(['paid' => 0, 'is_cancel' => 0, 'is_del' => 0, 'status' => 0, 'refund_status' => 0])
             ->where('pay_type', '<>', 'offline')->field($field)->select();
     }
 
@@ -693,7 +714,7 @@ class StoreOrderDao extends BaseDao
                 $query->field("sum($sumField) as number,FROM_UNIXTIME($group, '$timeUinx') as time");
                 $query->group("FROM_UNIXTIME($group, '$timeUinx')");
             })
-            ->order('pay_time ASC')->select()->toArray();
+            ->order('pay_time ASC,id DESC')->select()->toArray();
     }
 
     /**时间分组订单数统计
@@ -721,7 +742,7 @@ class StoreOrderDao extends BaseDao
                 $query->field("count($sumField) as number,FROM_UNIXTIME(pay_time, '$timeUinx') as time");
                 $query->group("FROM_UNIXTIME(pay_time, '$timeUinx')");
             })
-            ->order('pay_time ASC')->select()->toArray();
+            ->order('pay_time ASC,id DESC')->select()->toArray();
     }
 
     /**时间段支付订单人数
@@ -764,7 +785,7 @@ class StoreOrderDao extends BaseDao
                 $query->field("count(distinct uid) as number,FROM_UNIXTIME(pay_time, '$timeUinx') as time");
                 $query->group("FROM_UNIXTIME(pay_time, '$timeUinx')");
             })
-            ->order('pay_time ASC')->select()->toArray();
+            ->order('pay_time ASC,id DESC')->select()->toArray();
     }
 
 
@@ -894,7 +915,7 @@ class StoreOrderDao extends BaseDao
      */
     public function seckillPeople($id, $keyword, $page = 0, $limit = 0)
     {
-        return $this->getModel()
+        return $this->getModel()->where('paid', 1)->where('pid', '<>', -1)->whereIn('refund_type', [0, 3])->where('is_del', 0)
             ->when($id != 0, function ($query) use ($id) {
                 $query->where('seckill_id', $id);
             })->when($keyword != '', function ($query) use ($keyword) {
@@ -902,6 +923,7 @@ class StoreOrderDao extends BaseDao
             })->where('paid', 1)->field([
                 'real_name',
                 'uid',
+                'user_phone',
                 'SUM(total_num) as goods_num',
                 'COUNT(id) as order_num',
                 'SUM(pay_price) as total_price',
@@ -927,7 +949,22 @@ class StoreOrderDao extends BaseDao
         return $this->search($where)->where('seckill_id', $id)
             ->when($page && $limit, function ($query) use ($page, $limit) {
                 $query->page($page, $limit);
-            })->field(['order_id', 'real_name', 'status', 'pay_price', 'total_num', 'add_time', 'pay_time', 'paid'])->select()->toArray();
+            })->field(['order_id', 'real_name', 'status', 'pay_price', 'total_num', 'add_time', 'pay_time', 'paid'])->order('add_time desc')->select()->toArray();
+    }
+
+    /**
+     * 秒杀订单统计总数
+     * @param $id
+     * @param $where
+     * @return int
+     * @throws \ReflectionException
+     * @author: 吴汐
+     * @email: 442384644@qq.com
+     * @date: 2023/8/31
+     */
+    public function seckillCount($id, $where)
+    {
+        return $this->search($where)->where('seckill_id', $id)->count();
     }
 
     /**
@@ -946,7 +983,22 @@ class StoreOrderDao extends BaseDao
         return $this->search($where)->where('bargain_id', $id)
             ->when($page && $limit, function ($query) use ($page, $limit) {
                 $query->page($page, $limit);
-            })->field(['order_id', 'real_name', 'status', 'pay_price', 'total_num', 'add_time', 'pay_time', 'paid'])->select()->toArray();
+            })->field(['uid', 'order_id', 'real_name', 'status', 'pay_price', 'total_num', 'add_time', 'pay_time', 'paid'])->order('add_time desc')->select()->toArray();
+    }
+
+    /**
+     * 砍价订单统计数量
+     * @param $id
+     * @param $where
+     * @return int
+     * @throws \ReflectionException
+     * @author: 吴汐
+     * @email: 442384644@qq.com
+     * @date: 2023/8/31
+     */
+    public function bargainStatisticsOrderCount($id, $where)
+    {
+        return $this->search($where)->where('bargain_id', $id)->count();
     }
 
     /**
@@ -962,9 +1014,106 @@ class StoreOrderDao extends BaseDao
      */
     public function combinationStatisticsOrder($id, $where, $page = 0, $limit = 0)
     {
-        return $this->search($where)->where('combination_id', $id)
+        return $this->search($where)->where('combination_id', $id)->where('pid', '<>', -1)
             ->when($page && $limit, function ($query) use ($page, $limit) {
                 $query->page($page, $limit);
-            })->field(['order_id', 'real_name', 'status', 'pay_price', 'total_num', 'add_time', 'pay_time', 'paid'])->select()->toArray();
+            })->field(['uid', 'order_id', 'real_name', 'status', 'pay_price', 'total_num', 'add_time', 'pay_time', 'paid'])->order('add_time desc')->select()->toArray();
+    }
+
+    /**
+     * 拼团订单统计数量
+     * @param $id
+     * @param $where
+     * @param int $page
+     * @param int $limit
+     * @return int
+     * @throws \ReflectionException
+     * @author: 吴汐
+     * @email: 442384644@qq.com
+     * @date: 2023/8/31
+     */
+    public function combinationStatisticsCount($id, $where)
+    {
+        return $this->search($where)->where('combination_id', $id)->count();
+    }
+
+    /**
+     * 查找待收货的子订单
+     * @param int $pid
+     * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author: 吴汐
+     * @email: 442384644@qq.com
+     * @date: 2023/8/31
+     */
+    public function getSubOrderNotSendList(int $pid)
+    {
+        return $this->getModel()->where('pid', $pid)->where('status', 1)->select()->toArray();
+    }
+
+    /**
+     * 判断订单是否全部发货
+     * @param int $pid
+     * @param int $order_id
+     * @return int
+     * @author: 吴汐
+     * @email: 442384644@qq.com
+     * @date: 2023/8/31
+     */
+    public function getSubOrderNotSend(int $pid, int $order_id)
+    {
+        return $this->getModel()->where('pid', $pid)->where('status', 0)->where('id', '<>', $order_id)->count();
+    }
+
+    /**
+     * 判断是否存在子未收货子订单
+     * @param int $pid
+     * @param int $order_id
+     * @return int
+     * @author: 吴汐
+     * @email: 442384644@qq.com
+     * @date: 2023/8/31
+     */
+    public function getSubOrderNotTake(int $pid, int $order_id)
+    {
+        return $this->getModel()->where('pid', $pid)->where('status', 1)->where('id', '<>', $order_id)->count();
+    }
+
+    /**
+     * 分销订单统计
+     * @param $field
+     * @param $time
+     * @param $page
+     * @param $limit
+     * @param $sort
+     * @param $order
+     * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2025/4/8
+     */
+    public function divisionStatistics($field, $time, $page, $limit, $sort, $order)
+    {
+        $model = $this->getModel()
+            ->where('paid', 1)
+            ->where('pid', '>=', 0)
+            ->where('refund_status', 0)
+            ->where($field, '>', 0)->group($field)
+            ->when(!empty($time), function ($query) use ($time) {
+                $query->whereBetween('add_time', [strtotime($time[0]), strtotime($time[1] . ' 23:59:59')]);
+            });
+        $count = $model->count();
+        $orderStr = $sort == '' ? 'order_sum desc' : $sort . ' ' . $order;
+        $list = $model->field([
+            $field,
+            'COUNT(*) AS order_sum',
+            'SUM(pay_price) AS order_sum_price'
+        ])->order($orderStr)->page($page, $limit)->select()->toArray();
+        return compact('count', 'list');
     }
 }

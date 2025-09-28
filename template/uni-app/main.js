@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -25,14 +25,20 @@ Vue.config.productionTip = false
 import pageLoading from './components/pageLoading.vue'
 import skeleton from './components/skeleton/index.vue'
 import easyLoadimage from '@/components/easy-loadimage/easy-loadimage.vue'
+import BaseMoney from './components/BaseMoney.vue';
+import BaseTag from './components/BaseTag.vue';
 Vue.component('skeleton', skeleton)
 Vue.component('pageLoading', pageLoading)
 Vue.component('easyLoadimage', easyLoadimage)
-
-
+Vue.component('BaseMoney', BaseMoney)
+Vue.component('BaseTag', BaseTag)
+import ActivePermission from './libs/permission.js';
+Vue.prototype.$permission = ActivePermission;
+import {
+	Debounce
+} from '@/utils/validate.js'
+Vue.prototype.$Debounce = Debounce
 // #ifdef H5
-
-
 import {
 	parseQuery
 } from "./utils";
@@ -41,8 +47,6 @@ import {
 	SPREAD
 } from './config/cache';
 Vue.prototype.$wechat = Auth;
-
-
 
 let cookieName = "VCONSOLE",
 	query = parseQuery(),
@@ -66,12 +70,12 @@ if (vconsole !== undefined) {
 		Cache.clear(cookieName);
 } else vconsole = Cache.get(cookieName);
 
-import VConsole from './pages/extension/components/vconsole.min.js'
+// import VConsole from './pages/extension/components/vconsole.min.js'
 
-if (vconsole !== undefined && vconsole === md5Crmeb) {
-	Cache.set(cookieName, md5Crmeb, 3600);
-	let vConsole = new VConsole();
-}
+// if (vconsole !== undefined && vconsole === md5Crmeb) {
+// 	Cache.set(cookieName, md5Crmeb, 3600);
+// 	let vConsole = new VConsole();
+// }
 
 // let snsapiBase = 'snsapi_base';
 // Auth.isWeixin() && Auth.oAuth(snsapiBase);

@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -342,9 +342,17 @@ export function rechargeRoutine(data) {
 }
 /*
  * 公众号充值
- * */
+ * 
+ */
 export function rechargeWechat(data) {
 	return request.post("recharge/wechat", data);
+}
+/*
+ * 公众号充值
+ * 
+ */
+export function recharge(data) {
+	return request.post("recharge/recharge", data);
 }
 /**
  * 获取默认地址
@@ -362,7 +370,7 @@ export function getRechargeApi() {
 }
 
 /**
- * 登陆记录
+ * 登录记录
  */
 export function setVisit(data) {
 	return request.post('user/set_visit', {
@@ -407,13 +415,6 @@ export function getlevelExpList(data) {
 	return request.get("user/level/expList", data);
 }
 
-/**
- * 修改用户信息
- * @param {Object} data
- */
-export function updateUserInfo(data) {
-	return request.post('v2/user/user_update', data);
-}
 
 /**
  * 微信直接手机号登录
@@ -688,4 +689,47 @@ export function getLangJson() {
 	return request.get('get_lang_json', {}, {
 		noAuth: true
 	})
+}
+
+/**
+ * 获取多语言是否切换
+ */
+
+export function getLangVersion() {
+	return request.get('lang_version', {}, {
+		noAuth: true
+	})
+}
+
+/**
+ * 
+ * 小程序绑定手机号
+ * @param object data
+ */
+export function mpBindingPhone(data) {
+	return request.post('v2/routine/binding_phone', data);
+}
+
+/**
+ *  签到提醒切换
+ */
+
+export function changeRemindStatus(status) {
+	return request.get(`sign/remind/${status}`, {}, {
+		noAuth: true
+	})
+}
+
+
+/**
+ * 绑定员工
+ * 
+ */
+export function spreadAgent(data) {
+	return request.post(`agent/spread`, data);
+}
+
+// 用户确认商家转账
+export function transferInfoApi(data) {
+	return request.get(`transfer/info`, data);
 }

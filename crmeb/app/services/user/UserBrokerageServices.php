@@ -28,6 +28,27 @@ class UserBrokerageServices extends BaseServices
      * @var array[]
      */
     protected $incomeData = [
+        'get_self_member_brokerage' => [
+            'title' => '获得自购付费会员佣金',
+            'type' => 'self_member_brokerage',
+            'mark' => '您成功消费{%pay_price%}元,奖励自购佣金{%number%}',
+            'status' => 1,
+            'pm' => 1
+        ],
+        'get_member_brokerage' => [
+            'title' => '获得下级购买付费会员佣金',
+            'type' => 'one_member_brokerage',
+            'mark' => '{%nickname%}成功消费{%pay_price%}元,奖励推广佣金{%number%}',
+            'status' => 1,
+            'pm' => 1
+        ],
+        'get_two_member_brokerage' => [
+            'title' => '获得二级购买付费会员佣金',
+            'type' => 'two_member_brokerage',
+            'mark' => '二级推广人{%nickname%}成功消费{%pay_price%}元,奖励推广佣金{%number%}',
+            'status' => 1,
+            'pm' => 1
+        ],
         'get_self_brokerage' => [
             'title' => '获得自购订单佣金',
             'type' => 'self_brokerage',
@@ -166,6 +187,7 @@ class UserBrokerageServices extends BaseServices
      * @param array|string[] $type
      * @param string $time
      * @return float
+     * @throws \ReflectionException
      */
     public function getUserBrokerageSum(int $uid, array $type = ['one_brokerage', 'two_brokerage', 'brokerage_user'], $time = '')
     {
@@ -250,7 +272,7 @@ class UserBrokerageServices extends BaseServices
      */
     public function brokerageRankList(string $time = 'week')
     {
-        $where = [];
+        $where = ['pm' => 1];
         if ($time) {
             $where['time'] = $time;
         }
@@ -275,10 +297,14 @@ class UserBrokerageServices extends BaseServices
      * 获取用户排名
      * @param int $uid
      * @param string $time
+     * @return false|int|string
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function getUserBrokerageRank(int $uid, string $time = 'week')
     {
-        $where = [];
+        $where = ['pm' => 1];
         if ($time) {
             $where['time'] = $time;
         }
@@ -306,6 +332,9 @@ class UserBrokerageServices extends BaseServices
      * 推广数据    昨天的佣金   累计提现金额  当前佣金
      * @param int $uid
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function commission(int $uid)
     {
@@ -320,6 +349,8 @@ class UserBrokerageServices extends BaseServices
         $data['uid'] = $uid;
         $data['pm'] = 1;
         $data['commissionSum'] = $this->getUsersBokerageSum($data);
+        $extract_fail = $this->dao->sum(['uid' => $uid, 'pm' => 1, 'type' => 'extract_fail'], 'number');
+        $data['commissionSum'] = bcadd($data['commissionSum'], $extract_fail, 2);
         $data['pm'] = 0;
         $data['commissionRefund'] = $this->getUsersBokerageSum($data);
         $data['commissionCount'] = $data['commissionSum'] > $data['commissionRefund'] ? bcsub((string)$data['commissionSum'], (string)$data['commissionRefund'], 2) : 0.00;
@@ -333,6 +364,7 @@ class UserBrokerageServices extends BaseServices
      * @param array $where
      * @param int $time
      * @return mixed
+     * @throws \ReflectionException
      */
     public function getUsersBokerageSum(array $where, $time = 0)
     {
@@ -351,6 +383,10 @@ class UserBrokerageServices extends BaseServices
      * @param $uid
      * @param $type
      * @return array
+     * @throws \ReflectionException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function getBrokerageList($uid, $type)
     {
@@ -362,7 +398,7 @@ class UserBrokerageServices extends BaseServices
         }
         /** @var UserExtractServices $userExtractService */
         $userExtractService = app()->make(UserExtractServices::class);
-        $userExtract = $userExtractService->getColumn(['uid' => $uid], 'fail_msg', 'id');
+        $userExtract = $userExtractService->getColumn(['uid' => $uid], 'fail_msg,extract_type,state,wechat_order_id', 'id');
         $list = $this->dao->getList($where, '*', $page, $limit);
         $count = $this->dao->count($where);
         $times = [];
@@ -370,7 +406,23 @@ class UserBrokerageServices extends BaseServices
             foreach ($list as &$item) {
                 $item['time'] = $item['time_key'] = $item['add_time'] ? date('Y-m', (int)$item['add_time']) : '';
                 $item['add_time'] = $item['add_time'] ? date('Y-m-d H:i', (int)$item['add_time']) : '';
-                $item['fail_msg'] = $item['type'] == 'extract_fail' ? $userExtract[$item['link_id']] : '';
+                $item['fail_msg'] = $item['type'] == 'extract_fail' ? $userExtract[$item['link_id']]['fail_msg'] : '';
+                if ($type == 4) {
+                    $extract_type = $userExtract[$item['link_id']]['extract_type'] ?? '';
+                    if ($extract_type == 'alipay') {
+                        $item['extract_type'] = '支付宝';
+                    } elseif ($extract_type == 'weixin') {
+                        $item['extract_type'] = '微信';
+                    } elseif ($extract_type == 'bank') {
+                        $item['extract_type'] = '银行卡';
+                    } else {
+                        $item['extract_type'] = '余额';
+                    }
+                    $item['state'] = $userExtract[$item['link_id']]['state'] ?? '';
+                    $item['wechat_order_id'] = $userExtract[$item['link_id']]['wechat_order_id'] ?? '';
+                } else {
+                    $item['extract_type'] = '';
+                }
             }
             $times = array_merge(array_unique(array_column($list, 'time_key')));
         }

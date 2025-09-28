@@ -33,7 +33,8 @@ class Request extends \think\Request
      * 不过滤变量名
      * @var array
      */
-    protected $except = ['menu_path', 'api_url', 'unique_auth', 'description', 'custom_form', 'content'];
+    protected $except = ['menu_path', 'api_url', 'unique_auth',
+        'description', 'custom_form', 'params_list', 'content', 'tableField', 'url', 'customCode', 'value', 'refund_reason_wap_img'];
 
     /**
      * 获取请求的数据
@@ -48,7 +49,7 @@ class Request extends \think\Request
         $i = 0;
         foreach ($params as $param) {
             if (!is_array($param)) {
-                $p[$suffix == true ? $i++ : $param] = $this->filterWord(is_string($this->param($param)) ? trim($this->param($param)) : $this->param($param), $filter && !in_array($param, $this->except));
+                $p[$suffix == true ? $i++ : $param] = $this->param($param);
             } else {
                 if (!isset($param[1])) $param[1] = null;
                 if (!isset($param[2])) $param[2] = '';
@@ -59,41 +60,42 @@ class Request extends \think\Request
                     $name = is_array($param[1]) ? $param[0] . '/a' : $param[0];
                     $keyName = $param[0];
                 }
-                $p[$suffix == true ? $i++ : ($param[3] ?? $keyName)] = $this->filterWord(is_string($this->param($name, $param[1], $param[2])) ? trim($this->param($name, $param[1], $param[2])) : $this->param($name, $param[1], $param[2]), $filter && !in_array($keyName, $this->except));
+
+                $p[$suffix == true ? $i++ : ($param[3] ?? $keyName)] = $this->param($name, $param[1], $param[2]);
             }
         }
+
+        if ($filter && $p) {
+            $p = $this->filterArrayValues($p);
+        }
+
         return $p;
     }
 
     /**
-     * 过滤接受的参数
+     * 过滤接数组中的字符串
      * @param $str
      * @param bool $filter
      * @return array|mixed|string|string[]
      */
-    public function filterWord($str, bool $filter = true)
+    public function filterArrayValues($array)
     {
-        if (!$str || !$filter) return $str;
-        // 把数据过滤
-        $farr = [
-            "/<(\\/?)(script|i?frame|style|html|body|title|link|meta|object|\\?|\\%)([^>]*?)>/isU",
-            "/(<[^>]*)on[a-zA-Z]+\s*=([^>]*>)/isU",
-            "/select|join|where|drop|like|modify|rename|insert|update|table|database|alter|truncate|\'|\/\*|\.\.\/|\.\/|union|into|load_file|outfile/is"
-        ];
-        if (is_array($str)) {
-            foreach ($str as &$v) {
-                if (is_array($v)) {
-                    foreach ($v as &$vv) {
-                        if (!is_array($vv)) $vv = preg_replace($farr, '', $vv);
-                    }
+        $result = [];
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                // 如果值是数组，并且不在不过滤变量名里面，递归调用 filterArrayValues，否则直接赋值
+                $result[$key] = in_array($key, $this->except) ? $value : $this->filterArrayValues($value);
+            } else {
+                if (in_array($key, $this->except) || is_int($value) || is_null($value)) {
+                    $result[$key] = $value;
                 } else {
-                    $v = preg_replace($farr, '', $v);
+                    // 如果值是字符串，过滤特殊字符
+                    $result[$key] = filter_str($value);
                 }
+
             }
-        } else {
-            $str = preg_replace($farr, '', $str);
         }
-        return $str;
+        return $result;
     }
 
     /**
@@ -176,7 +178,7 @@ class Request extends \think\Request
     }
 
     /**
-     * 是否是app端
+     * 是否是pc端
      * @return bool
      */
     public function isPc()

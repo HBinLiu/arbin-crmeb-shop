@@ -30,7 +30,7 @@
 				<image src="../static/groupLine.png"></image>
 			</view>
 		</view>
-		<view class="list">
+		<view class="list" v-if="combinationList.length">
 			<view class="item acea-row row-between-wrapper" v-for="(item,index) in combinationList" :key='index'
 				@tap="openSubcribe(item)">
 				<view class="pictrue">
@@ -116,24 +116,7 @@
 			},
 			goDetail(item) {
 				let url = item.link;
-				if (url.indexOf("http") != -1) {
-					// #ifdef H5
-					location.href = url
-					// #endif
-				} else {
-					if (['/pages/goods_cate/goods_cate', '/pages/order_addcart/order_addcart', '/pages/user/index',
-							'/pages/index/index'
-						]
-						.indexOf(url) == -1) {
-						uni.navigateTo({
-							url: url
-						})
-					} else {
-						uni.switchTab({
-							url: url
-						})
-					}
-				}
+				this.$util.JumpPath(url);
 			},
 			openSubcribe: function(item) {
 				let page = item;
@@ -305,7 +288,8 @@
 					.name {
 						color: #333;
 						font-size: 30rpx;
-						height: 82rpx;
+						line-height: 38rpx;
+						height: 70rpx;
 					}
 
 					.bottom {

@@ -9,7 +9,7 @@
 // +----------------------------------------------------------------------
 /* eslint-disable */
 require('script-loader!file-saver');
-require('script-loader!@/vendor/Blob');
+require('./Blob');
 require('script-loader!xlsx/dist/xlsx.core.min');
 function generateArray(table) {
   var out = [];
@@ -33,7 +33,7 @@ function generateArray(table) {
         }
       });
 
-      //Handle Row Span
+      //Handle el-row Span
       if (rowspan || colspan) {
         rowspan = rowspan || 1;
         colspan = colspan || 1;

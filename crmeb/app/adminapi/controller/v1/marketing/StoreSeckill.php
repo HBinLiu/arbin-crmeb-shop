@@ -12,6 +12,7 @@ namespace app\adminapi\controller\v1\marketing;
 
 use app\adminapi\controller\AuthController;
 use app\services\activity\seckill\StoreSeckillServices;
+use app\services\activity\StoreActivityServices;
 use app\services\product\sku\StoreProductAttrValueServices;
 use crmeb\services\CacheService;
 use think\facade\App;
@@ -41,7 +42,11 @@ class StoreSeckill extends AuthController
         $where = $this->request->getMore([
             ['start_status', ''],
             [['status', 's'], ''],
-            [['store_name', 's'], '']
+            [['store_name', 's'], ''],
+            [['product_id', 'd'], 0],
+            ['activity_name', ''],
+            ['time', ''],
+            ['time_ids', []],
         ]);
         return app('json')->success($this->services->systemPage($where));
     }
@@ -75,7 +80,7 @@ class StoreSeckill extends AuthController
             [['status', 'd'], 0],
             [['num', 'd'], 0],
             [['once_num', 'd'], 0],
-            [['time_id', 'd'], 0],
+            ['time_id', []],
             [['temp_id', 'd'], 0],
             [['sort', 'd'], 0],
             [['description', 's'], ''],
@@ -87,6 +92,7 @@ class StoreSeckill extends AuthController
             ['postage', 0],//邮费
             ['custom_form', ''],
             ['virtual_type', 0],
+            ['is_commission', 0],
         ]);
         $this->validate($data, \app\adminapi\validate\marketing\StoreSeckillValidate::class, 'save');
         $this->services->saveData($id, $data);
@@ -106,10 +112,7 @@ class StoreSeckill extends AuthController
         $storeProductAttrValueServices = app()->make(StoreProductAttrValueServices::class);
         $unique = $storeProductAttrValueServices->value(['product_id' => $id, 'type' => 1], 'unique');
         if ($unique) {
-            $name = 'seckill_' . $unique . '_1';
-            /** @var CacheService $cache */
-            $cache = app()->make(CacheService::class);
-            $cache->del($name);
+            CacheService::delete('seckill_' . $unique . '_1');
         }
         return app('json')->success(100002);
     }
@@ -122,6 +125,12 @@ class StoreSeckill extends AuthController
      */
     public function set_status($id, $status)
     {
+        if ($status == 1) {
+            $info = $this->services->get($id);
+            if ($info['stop_time'] < time()) {
+                return app('json')->fail('活动已结束，无法继续上架');
+            }
+        }
         $this->services->update($id, ['status' => $status]);
         return app('json')->success(100014);
     }
@@ -133,12 +142,21 @@ class StoreSeckill extends AuthController
     public function time_list()
     {
         $list['data'] = sys_data('routine_seckill_time');
+        foreach ($list['data'] as &$item) {
+            $startTime = sprintf("%02d:00", $item['time']);
+            $endTime = sprintf("%02d:00", $item['time'] + $item['continued']);
+            $item['time_name'] = $startTime . '-' . $endTime;
+        }
         return app('json')->success(compact('list'));
     }
 
     /**
      * 秒杀统计
+     * @param $id
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function seckillStatistics($id)
     {
@@ -154,7 +172,7 @@ class StoreSeckill extends AuthController
     public function seckillPeople($id)
     {
         [$keyword] = $this->request->getMore([
-            ['keyword', '']
+            ['real_name', '', '', 'keyword']
         ], true);
         return app('json')->success($this->services->seckillPeople($id, $keyword));
     }
@@ -171,5 +189,51 @@ class StoreSeckill extends AuthController
             ['status', '']
         ]);
         return app('json')->success($this->services->seckillOrder($id, $where));
+    }
+
+    public function seckillActivityList()
+    {
+        $where = $this->request->getMore([
+            ['time', ''],
+            ['status', ''],
+            ['title', ''],
+            ['time_ids', []]
+        ]);
+        $where['is_del'] = 0;
+        $where['type'] = 1;
+        return app('json')->success(app()->make(StoreActivityServices::class)->activityList($where));
+    }
+
+    public function seckillActivityInfo($id)
+    {
+        return app('json')->success(app()->make(StoreActivityServices::class)->activityInfo($id));
+    }
+
+    public function seckillActivitySave($id)
+    {
+        $data = $this->request->postMore([
+            ['title', ''],
+            ['section_time', []],
+            ['time_ids', []],
+            ['num', 0],
+            ['once_num', 0],
+            ['status', 1],
+            ['is_commission', 0],
+            ['product_infos', []]
+        ]);
+        $this->services->seckillActivitySave($id, $data);
+        return app('json')->success('保存成功');
+    }
+
+    public function seckillActivityDel($id)
+    {
+        app()->make(StoreActivityServices::class)->activityDel($id, 1);
+        return app('json')->success('删除成功');
+    }
+
+    public function seckillActivityStatus($id, $status)
+    {
+        app()->make(StoreActivityServices::class)->activityStatus($id, $status, 1);
+        return app('json')->success('修改成功');
     }
 }

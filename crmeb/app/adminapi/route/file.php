@@ -27,14 +27,34 @@ Route::group('file', function () {
     //上传图片
     Route::post('upload/[:upload_type]', 'v1.file.SystemAttachment/upload')->option(['real_name' => '上传图片']);
     //附件分类管理资源路由
-    Route::resource('category', 'v1.file.SystemAttachmentCategory')->option(['real_name' => '附件分类管理']);
+    Route::resource('category', 'v1.file.SystemAttachmentCategory')->except(['read'])->option([
+        'real_name' => [
+            'index' => '获取附件分类管理列表',
+            'create' => '获取附件分类管理表单',
+            'save' => '保存附件分类管理',
+            'edit' => '获取修改附件分类管理表单',
+            'update' => '修改附件分类管理',
+            'delete' => '删除附件分类管理'
+        ],
+
+    ]);
     //获取上传类型
     Route::get('upload_type', 'v1.file.SystemAttachment/uploadType')->option(['real_name' => '上传类型']);
     //分片上传本地视频
     Route::post('video_upload', 'v1.file.SystemAttachment/videoUpload')->option(['real_name' => '分片上传本地视频']);
+    //云存储视频保存数据
+    Route::post('video_data_save', 'v1.file.SystemAttachment/videoDataSave')->option(['real_name' => '云存储视频保存数据']);
+    //获取扫码上传页面链接以及参数
+    Route::get('scan_upload/qrcode', 'v1.file.SystemAttachment/scanUploadQrcode')->option(['real_name' => '扫码上传页面链接']);
+    //删除扫码上传token
+    Route::delete('scan_upload/qrcode', 'v1.file.SystemAttachment/removeUploadQrcode')->option(['real_name' => '删除扫码上传页面链接']);
+    //获取扫码上传的图片数据
+    Route::get('scan_upload/image/:scan_token', 'v1.file.SystemAttachment/scanUploadImage')->option(['real_name' => '获取扫码上传的图片数据']);
+    //网络图片上传
+    Route::post('online_upload', 'v1.file.SystemAttachment/onlineUpload')->option(['real_name' => '网络图片上传']);
 })->middleware([
     \app\http\middleware\AllowOriginMiddleware::class,
     \app\adminapi\middleware\AdminAuthTokenMiddleware::class,
     \app\adminapi\middleware\AdminCheckRoleMiddleware::class,
     \app\adminapi\middleware\AdminLogMiddleware::class
-]);
+])->option(['mark' => 'file', 'mark_name' => '素材管理']);

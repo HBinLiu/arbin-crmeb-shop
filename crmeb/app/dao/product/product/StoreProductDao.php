@@ -39,18 +39,30 @@ class StoreProductDao extends BaseDao
      */
     public function getCount(array $where)
     {
-        return $this->search($where)->when(isset($where['sid']) && $where['sid'], function ($query) use ($where) {
+        return $this->search($where, false)->when(isset($where['sid']) && $where['sid'], function ($query) use ($where) {
             $query->whereIn('id', function ($query) use ($where) {
-                $query->name('store_product_cate')->where('cate_id', $where['sid'])->field('product_id')->select();
+                $query->name('store_product_cate')->where('cate_id', is_array($where['sid']) ? 'in' : '=', $where['sid'])->field('product_id')->select();
             });
         })->when(isset($where['cid']) && $where['cid'], function ($query) use ($where) {
             $query->whereIn('id', function ($query) use ($where) {
                 $query->name('store_product_cate')->whereIn('cate_id', function ($query) use ($where) {
-                    $query->name('store_category')->where('pid', $where['cid'])->field('id')->select();
+                    $query->name('store_category')->where('pid', is_array($where['cid']) ? 'in' : '=', $where['cid'])
+                        ->whereOr('id', is_array($where['cid']) ? 'in' : '=', $where['cid'])->field('id')->select();
                 })->field('product_id')->select();
             });
-        })->when(isset($where['ids']), function ($query) use ($where) {
-            $query->whereIn('id', $where['ids'])->orderField('id', $where['ids'], 'asc');
+        })->when(isset($where['coupon_category_id']) && $where['coupon_category_id'] != '', function ($query) use ($where) {
+            $where['coupon_category_id'] = toIntArray($where['coupon_category_id']);
+            $query->whereIn('id', function ($query) use ($where) {
+                $query->name('store_product_cate')->whereIn('cate_id', function ($query) use ($where) {
+                    $query->name('store_category')->whereIn('pid', $where['coupon_category_id'])->field('id')->select();
+                })->whereOr('cate_id', 'in', $where['coupon_category_id'])->field('product_id')->select();
+            });
+        })->when(isset($where['ids']) && $where['ids'], function ($query) use ($where) {
+            if ((isset($where['priceOrder']) && $where['priceOrder'] != '') || (isset($where['salesOrder']) && $where['salesOrder'] != '')) {
+                $query->whereIn('id', $where['ids']);
+            } else {
+                $query->whereIn('id', $where['ids'])->orderField('id', $where['ids'], 'asc');
+            }
         })->when(isset($where['is_live']) && $where['is_live'] == 1, function ($query) use ($where) {
             $query->whereNotIn('id', function ($query) {
                 $query->name('live_goods')->where('is_del', 0)->where('audit_status', '<>', 3)->field('product_id')->select();
@@ -63,7 +75,9 @@ class StoreProductDao extends BaseDao
      * @param array $where
      * @param int $page
      * @param int $limit
+     * @param string $order
      * @return array
+     * @throws \ReflectionException
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
@@ -71,7 +85,7 @@ class StoreProductDao extends BaseDao
     public function getList(array $where, int $page = 0, int $limit = 0, string $order = '')
     {
         $prefix = Config::get('database.connections.' . Config::get('database.default') . '.prefix');
-        return $this->search($where)->order(($order ? $order . ' ,' : '') . 'sort desc,id desc')
+        return $this->search($where, false)->order(($order ? $order . ' ,' : '') . 'sort desc,id desc')
             ->when($page != 0 && $limit != 0, function ($query) use ($page, $limit) {
                 $query->page($page, $limit);
             })->field([
@@ -79,7 +93,6 @@ class StoreProductDao extends BaseDao
                 '(SELECT count(*) FROM `' . $prefix . 'store_product_relation` WHERE `product_id` = `' . $prefix . 'store_product`.`id` AND `type` = \'collect\') as collect',
                 '(SELECT count(*) FROM `' . $prefix . 'store_product_relation` WHERE `product_id` = `' . $prefix . 'store_product`.`id` AND `type` = \'like\') as likes',
                 '(SELECT SUM(stock) FROM `' . $prefix . 'store_product_attr_value` WHERE `product_id` = `' . $prefix . 'store_product`.`id` AND `type` = 0) as stock',
-//                '(SELECT SUM(sales) FROM `' . $prefix . 'store_product_attr_value` WHERE `product_id` = `' . $prefix . 'store_product`.`id` AND `type` = 0) as sales',
                 '(SELECT count(*) FROM `' . $prefix . 'store_visit` WHERE `product_id` = `' . $prefix . 'store_product`.`id` AND `product_type` = \'product\') as visitor',
             ])->select()->toArray();
     }
@@ -109,22 +122,24 @@ class StoreProductDao extends BaseDao
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
      */
-    public function getSearchList(array $where, int $page = 0, int $limit = 0, array $field = ['*'], array $with = ['couponId', 'description'])
+    public function getSearchList(array $where, int $page = 0, int $limit = 0, array $field = ['*'], array $with = [])
     {
         if (isset($where['star'])) $with[] = 'star';
-        return $this->search($where)->with($with)->when($page != 0 && $limit != 0, function ($query) use ($page, $limit) {
+        return $this->search($where, false)->with($with)->when($page != 0 && $limit != 0, function ($query) use ($page, $limit) {
             $query->page($page, $limit);
         })->when(isset($where['sid']) && $where['sid'], function ($query) use ($where) {
             $query->whereIn('id', function ($query) use ($where) {
-                $query->name('store_product_cate')->where('cate_id', $where['sid'])->field('product_id')->select();
+                $query->name('store_product_cate')->where('cate_id', is_array($where['sid']) ? 'in' : '=', $where['sid'])->field('product_id')->select();
             });
         })->when(isset($where['cid']) && $where['cid'], function ($query) use ($where) {
             $query->whereIn('id', function ($query) use ($where) {
                 $query->name('store_product_cate')->whereIn('cate_id', function ($query) use ($where) {
-                    $query->name('store_category')->where('pid', $where['cid'])->field('id')->select();
+                    $query->name('store_category')->where('pid', is_array($where['cid']) ? 'in' : '=', $where['cid'])
+                        ->whereOr('id', is_array($where['cid']) ? 'in' : '=', $where['cid'])->field('id')->select();
                 })->field('product_id')->select();
             });
         })->when(isset($where['coupon_category_id']) && $where['coupon_category_id'] != '', function ($query) use ($where) {
+            $where['coupon_category_id'] = toIntArray($where['coupon_category_id']);
             $query->whereIn('id', function ($query) use ($where) {
                 $query->name('store_product_cate')->whereIn('cate_id', function ($query) use ($where) {
                     $query->name('store_category')->whereIn('pid', $where['coupon_category_id'])->field('id')->select();
@@ -166,6 +181,12 @@ class StoreProductDao extends BaseDao
             }
         })->when(!$page && $limit, function ($query) use ($limit) {
             $query->limit($limit);
+        })->when(isset($where['store_label_id']), function ($query) use ($where) {
+            $query->where(function ($query) use ($where) {
+                foreach ($where['store_label_id'] as $value) {
+                    $query->whereOr('FIND_IN_SET(:value, label_list)', ['value' => $value]);
+                }
+            });
         })->order('sort desc')->field($field)->select()->toArray();
     }
 

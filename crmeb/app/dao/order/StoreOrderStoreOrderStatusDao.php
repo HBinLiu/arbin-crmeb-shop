@@ -59,7 +59,7 @@ class StoreOrderStoreOrderStatusDao extends BaseDao
      * @param array $where
      * @return \crmeb\basic\BaseModel|mixed|\think\Model
      */
-    protected function search(array $where = [])
+    public function search(array $where = [], bool $search = false)
     {
         return $this->getModel()->when(isset($where['paid']), function ($query) use ($where) {
             $query->where($this->alias . '.paid', $where['paid']);
@@ -81,6 +81,12 @@ class StoreOrderStoreOrderStatusDao extends BaseDao
      * @param array $where
      * @param int $limit
      * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/03/01
      */
     public function getTakeOrderIds(array $where, int $limit = 0)
     {

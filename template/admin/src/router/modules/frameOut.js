@@ -8,12 +8,14 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
 
+import setting from '@/setting';
+let routePre = setting.routePre;
 const pre = 'kefu_';
 
 export default [
   // 登录
   {
-    path: '/admin/login',
+    path: routePre + '/login',
     name: 'login',
     meta: {
       title: '登录',
@@ -21,7 +23,6 @@ export default [
     },
     component: () => import('@/pages/account/login'),
   },
-  // 客服
   {
     path: '/kefu',
     name: `${pre}index`,
@@ -29,6 +30,20 @@ export default [
       auth: true,
       title: '客服管理',
       kefu: true,
+    },
+    component: () => import('@/pages/kefu/index'),
+  },
+  // 客服
+  {
+    path: routePre + '/kefu',
+    name: `${pre}index`,
+    meta: {
+      auth: true,
+      title: '客服管理',
+      kefu: true,
+    },
+    redirect: {
+      name: `setting_service`,
     },
     component: () => import('@/pages/kefu/index'),
   },
@@ -151,5 +166,23 @@ export default [
       kefu: true,
     },
     component: () => import('@/pages/kefu/appChat/mobile/feedback'),
+  },
+  {
+    path: '/app/upload',
+    name: `mobile_upload`,
+    meta: {
+      auth: true,
+      title: '手机端扫码上传',
+      kefu: true,
+    },
+    component: () => import('@/pages/app/upload'),
+  },
+  {
+    path: routePre + '/order/print',
+    name: `order-print-print`,
+    meta: {
+      title: '配货单打印',
+    },
+    component: () => import('@/pages/order/print/index'),
   },
 ];

@@ -11,13 +11,16 @@
 
 namespace app\services\order;
 
+use app\jobs\MiniOrderJob;
 use app\services\activity\coupon\StoreCouponIssueServices;
+use app\services\activity\integral\StoreIntegralOrderServices;
 use app\services\BaseServices;
 use app\dao\order\StoreOrderDao;
 use app\services\message\MessageSystemServices;
 use app\services\product\sku\StoreProductAttrValueServices;
 use app\services\product\sku\StoreProductVirtualServices;
 use app\services\serve\ServeServices;
+use app\services\wechat\WechatUserServices;
 use crmeb\exceptions\AdminException;
 use crmeb\exceptions\ApiException;
 use crmeb\services\FormBuilder as Form;
@@ -45,7 +48,7 @@ class StoreOrderDeliveryServices extends BaseServices
      * 订单发货
      * @param int $id
      * @param array $data
-     * @return bool
+     * @return array
      */
     public function delivery(int $id, array $data)
     {
@@ -70,9 +73,9 @@ class StoreOrderDeliveryServices extends BaseServices
             // 检测快递公司编码
             /** @var ExpressServices $expressServices */
             $expressServices = app()->make(ExpressServices::class);
-           if (!$expressServices->be(['code' => $data['delivery_code']])) {
-               throw new AdminException(410324);
-           }
+            if (!$expressServices->be(['code' => $data['delivery_code']])) {
+                throw new AdminException(410324);
+            }
         }
 
         /** @var StoreOrderRefundServices $storeOrderRefundServices */
@@ -80,8 +83,7 @@ class StoreOrderDeliveryServices extends BaseServices
         if ($storeOrderRefundServices->count(['store_order_id' => $id, 'refund_type' => [1, 2, 4, 5], 'is_cancel' => 0, 'is_del' => 0])) {
             throw new AdminException(400475);
         }
-        $this->doDelivery($id, $orderInfo, $data);
-        return true;
+        return $this->doDelivery($id, $orderInfo, $data);
     }
 
     /**
@@ -328,12 +330,21 @@ class StoreOrderDeliveryServices extends BaseServices
      * @param $orderId
      * @return bool|mixed
      */
-    public function orderDump($orderId)
+    public function orderDump($orderId, $type = 'order')
     {
         if (!$orderId) throw new AdminException(10100);
-        /** @var StoreOrderServices $orderService */
-        $orderService = app()->make(StoreOrderServices::class);
-        $orderInfo = $orderService->getOne(['id' => $orderId]);
+//        /** @var StoreOrderServices $orderService */
+//        $orderService = app()->make(StoreOrderServices::class);
+//        $orderInfo = $orderService->getOne(['id' => $orderId]);
+if ($type == 'order') {
+    /** @var StoreOrderServices $orderService */
+    $orderService = app()->make(StoreOrderServices::class);
+    $orderInfo = $orderService->getOne(['id' => $orderId]);
+} else {
+    /** @var StoreIntegralOrderServices $integralOrderService */
+    $integralOrderService = app()->make(StoreIntegralOrderServices::class);
+    $orderInfo = $integralOrderService->getOne(['id' => $orderId]);
+}
         if (!$orderInfo) throw new AdminException(400118);
         if ($orderInfo->shipping_type != 1) throw new AdminException(400481);
         if (!$orderInfo->express_dump) throw new AdminException(400482);
@@ -355,6 +366,7 @@ class StoreOrderDeliveryServices extends BaseServices
         $expData['cargo'] = $dumpInfo['cargo'];
         $expData['count'] = $orderInfo->total_num;
         $expData['order_id'] = $orderInfo->order_id;
+        $expData['weight'] = 1;
 
         return $expressService->express()->dump($expData);
     }
@@ -364,8 +376,14 @@ class StoreOrderDeliveryServices extends BaseServices
      * @param int $id
      * @param array $data
      * @return bool
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/02/21
      */
-    public function splitDelivery(int $id, array $data)
+    public function splitDelivery(int $id, array $data, $delivery_code = true)
     {
         $orderInfo = $this->dao->get($id, ['*'], ['pink']);
         if (!$orderInfo) {
@@ -386,7 +404,7 @@ class StoreOrderDeliveryServices extends BaseServices
             throw new AdminException(400475);
         }
 
-        if ($data['type'] == 1) {
+        if ($data['type'] == 1 && $delivery_code) {
             // 检测快递公司编码
             /** @var ExpressServices $expressServices */
             $expressServices = app()->make(ExpressServices::class);
@@ -396,10 +414,8 @@ class StoreOrderDeliveryServices extends BaseServices
         }
 
         $cart_ids = $data['cart_ids'];
-        /** @var StoreOrderCartInfoServices $storeOrderCartInfoServices */
-        $storeOrderCartInfoServices = app()->make(StoreOrderCartInfoServices::class);
         unset($data['cart_ids']);
-        $this->transaction(function () use ($id, $cart_ids, $orderInfo, $data, $storeOrderCartInfoServices) {
+        $this->transaction(function () use ($id, $cart_ids, $orderInfo, $data) {
             /** @var StoreOrderSplitServices $storeOrderSplitServices */
             $storeOrderSplitServices = app()->make(StoreOrderSplitServices::class);
             //订单拆单
@@ -427,7 +443,7 @@ class StoreOrderDeliveryServices extends BaseServices
      * @param int $id
      * @param $orderInfo
      * @param array $data
-     * @return bool
+     * @return array
      */
     public function doDelivery(int $id, $orderInfo, array $data)
     {
@@ -437,14 +453,41 @@ class StoreOrderDeliveryServices extends BaseServices
         /** @var StoreOrderCartInfoServices $orderInfoServices */
         $orderInfoServices = app()->make(StoreOrderCartInfoServices::class);
         $storeName = $orderInfoServices->getCarIdByProductTitle((int)$orderInfo->id);
+
+        if (isset($data['pickup_time']) && count($data['pickup_time']) == 2) {
+            $data['pickup_start_time'] = $data['pickup_time'][0];
+            $data['pickup_end_time'] = $data['pickup_time'][1];
+        } else {
+            $data['pickup_start_time'] = '';
+            $data['pickup_end_time'] = '';
+        }
+
+        // 发货信息录入
+        $res = [];
         switch ($type) {
             case 1://快递发货
-                $this->orderDeliverGoods($id, $data, $orderInfo, $storeName);
-                event('notice.notice', [['orderInfo' => $orderInfo, 'storeName' => $storeName, 'data' => $data], 'order_postage_success']);
+                $res = $this->orderDeliverGoods($id, $data, $orderInfo, $storeName);
+                event('NoticeListener', [['orderInfo' => $orderInfo, 'storeName' => $storeName, 'data' => $data], 'order_postage_success']);
+
+                //自定义消息-快递发货
+                $orderInfo['storeName'] = $storeName;
+                $orderInfo['delivery_name'] = $data['delivery_name'];
+                $orderInfo['delivery_id'] = $data['delivery_id'];
+                $orderInfo['time'] = date('Y-m-d H:i:s');
+                $orderInfo['phone'] = $orderInfo['user_phone'];
+                event('CustomNoticeListener', [$orderInfo['uid'], $orderInfo, 'order_express_success']);
                 break;
             case 2://配送
                 $this->orderDelivery($id, $data, $orderInfo, $storeName);
-                event('notice.notice', [['orderInfo' => $orderInfo, 'storeName' => $storeName, 'data' => $data], 'order_deliver_success']);
+                event('NoticeListener', [['orderInfo' => $orderInfo, 'storeName' => $storeName, 'data' => $data], 'order_deliver_success']);
+
+                //自定义消息-配送员配送
+                $orderInfo['storeName'] = $storeName;
+                $orderInfo['delivery_name'] = $data['delivery_name'];
+                $orderInfo['delivery_id'] = $data['delivery_id'];
+                $orderInfo['time'] = date('Y-m-d H:i:s');
+                $orderInfo['phone'] = $orderInfo['user_phone'];
+                event('CustomNoticeListener', [$orderInfo['uid'], $orderInfo, 'order_send_success']);
                 break;
             case 3://虚拟发货
                 $this->orderVirtualDelivery($id, $data, $orderInfo, $storeName);
@@ -452,9 +495,30 @@ class StoreOrderDeliveryServices extends BaseServices
             default:
                 throw new AdminException(400522);
         }
+        if (!$data['delivery_id'] && !empty($res['kuaidinum'])) {
+            $data['delivery_id'] = $res['kuaidinum'];
+        }
+        if (!$data['delivery_id']) {
+            $data['delivery_id'] = uniqid();
+        }
+        // 小程序订单管理
+        event('OrderShippingListener', ['product', $orderInfo, $type, $data['delivery_id'], $data['delivery_name']]);
         //到期自动收货
-        event('order.orderDelivery', [$orderInfo, $storeName, $data, $type]);
-        return true;
+        event('OrderDeliveryListener', [$orderInfo, $storeName, $data, $type]);
+
+        //自定义事件-订单发货
+        event('CustomEventListener', ['admin_order_express', [
+            'uid' => $orderInfo['uid'],
+            'real_name' => $orderInfo['real_name'],
+            'user_phone' => $orderInfo['user_phone'],
+            'user_address' => $orderInfo['user_address'],
+            'order_id' => $orderInfo['order_id'],
+            'delivery_name' => $orderInfo['delivery_name'],
+            'delivery_id' => $orderInfo['delivery_id'],
+            'express_time' => date('Y-m-d H:i:s'),
+        ]]);
+
+        return $res;
     }
 
     /**
@@ -469,6 +533,7 @@ class StoreOrderDeliveryServices extends BaseServices
         if (!$data['delivery_name']) {
             throw new AdminException(400007);
         }
+        $dump = [];
         $data['delivery_type'] = 'express';
         if ($data['express_record_type'] == 2) {//电子面单
             if (!$data['delivery_code']) {
@@ -515,31 +580,114 @@ class StoreOrderDeliveryServices extends BaseServices
                 'cargo' => $expData['cargo'],
             ]);
             $data['delivery_id'] = $dump['kuaidinum'];
+            if (!empty($dump['label'])) {
+                $data['kuaidi_label'] = $dump['label'];
+            }
+        } else if ($data['express_record_type'] == 3) {
+            //商家寄件
+            if (!$data['delivery_code']) {
+                throw new AdminException(400476);
+            }
+            if (!$data['express_temp_id']) {
+                throw new AdminException(400527);
+            }
+            if (!$data['to_name']) {
+                throw new AdminException(400008);
+            }
+            if (!$data['to_tel']) {
+                throw new AdminException(400477);
+            }
+            if (!$data['to_addr']) {
+                throw new AdminException(400478);
+            }
+            /** @var ServeServices $expressService */
+            $expressService = app()->make(ServeServices::class);
+            $expData['kuaidicom'] = $data['delivery_code'];
+            $expData['man_name'] = $orderInfo->real_name;
+            $expData['phone'] = $orderInfo->user_phone;
+            $expData['address'] = $orderInfo->user_address;
+            $expData['send_real_name'] = $data['to_name'];
+            $expData['send_phone'] = $data['to_tel'];
+            $expData['send_address'] = $data['to_addr'];
+            $expData['temp_id'] = $data['express_temp_id'];
+            $expData['weight'] = $this->getOrderSumWeight($id);
+            $expData['cargo'] = $orderInfoServices->getCarIdByProductTitle((int)$orderInfo->id, true);
+            $expData['day_type'] = $data['day_type'];
+            $expData['pickup_start_time'] = $data['pickup_start_time'];
+            $expData['pickup_end_time'] = $data['pickup_end_time'];
+//            if (!sys_config('config_shippment_open', 0)) {
+//                throw new AdminException('商家寄件未开启无法寄件');
+//            }
+            $dump = $expressService->express()->shippmentCreateOrder($expData);
+            Log::error('商家寄件返回数据：' . json_encode($dump));
+            $orderInfo->delivery_id = $dump['kuaidinum'] ?? '';
+            $data['express_dump'] = json_encode([
+                'com' => $expData['kuaidicom'],
+                'from_name' => $expData['send_real_name'],
+                'from_tel' => $expData['send_phone'],
+                'from_addr' => $expData['send_address'],
+                'temp_id' => $expData['temp_id'],
+                'cargo' => $expData['cargo'],
+            ]);
+            $data['delivery_id'] = $dump['kuaidinum'] ?? '';
+            $data['kuaidi_label'] = $dump['label'] ?? '';
+            $data['kuaidi_task_id'] = $dump['task_id'] ?? '';
+            $data['kuaidi_order_id'] = $dump['order_id'] ?? '';
         } else {
             if (!$data['delivery_id']) {
                 throw new AdminException(400531);
             }
             $orderInfo->delivery_id = $data['delivery_id'];
         }
-        $data['status'] = 1;
-        $orderInfo->delivery_type = $data['delivery_type'];
-        $orderInfo->delivery_name = $data['delivery_name'];
-        $orderInfo->status = $data['status'];
-        /** @var StoreOrderStatusServices $services */
-        $services = app()->make(StoreOrderStatusServices::class);
-        $this->transaction(function () use ($id, $data, $services) {
-            $res = $this->dao->update($id, $data);
-            $res = $res && $services->save([
-                    'oid' => $id,
-                    'change_time' => time(),
-                    'change_type' => 'delivery_goods',
-                    'change_message' => '已发货 快递公司：' . $data['delivery_name'] . ' 快递单号：' . $data['delivery_id']
-                ]);
-            if (!$res) {
-                throw new AdminException(400529);
-            }
-        });
-        return true;
+        if (true) {
+            $data['status'] = 1;
+            $orderInfo->delivery_type = $data['delivery_type'];
+            $orderInfo->delivery_name = $data['delivery_name'];
+            $orderInfo->status = $data['status'];
+            /** @var StoreOrderStatusServices $services */
+            $services = app()->make(StoreOrderStatusServices::class);
+            $this->transaction(function () use ($id, $data, $services) {
+                $res = $this->dao->update($id, $data);
+                $res = $res && $services->save([
+                        'oid' => $id,
+                        'change_time' => time(),
+                        'change_type' => 'delivery_goods',
+                        'change_message' => '已发货 快递公司：' . $data['delivery_name'] . ' 快递单号：' . $data['delivery_id']
+                    ]);
+                if (!$res) {
+                    throw new AdminException(400529);
+                }
+            });
+        } else {
+
+            $update = [
+                'is_stock_up' => 1,
+                'delivery_type' => $data['delivery_type'],
+                'delivery_name' => $data['delivery_name'],
+                'delivery_code' => $data['delivery_code'],
+                'delivery_id' => $data['delivery_id'],
+                'kuaidi_label' => $data['kuaidi_label'],
+                'kuaidi_task_id' => $data['kuaidi_task_id'],
+                'kuaidi_order_id' => $data['kuaidi_order_id'],
+                'express_dump' => $data['express_dump']
+            ];
+
+            /** @var StoreOrderStatusServices $services */
+            $services = app()->make(StoreOrderStatusServices::class);
+            $this->transaction(function () use ($id, $data, $services, $update) {
+                $res = $this->dao->update($id, $update);
+                $res = $res && $services->save([
+                        'oid' => $id,
+                        'change_time' => time(),
+                        'change_type' => 'stock_up_goods',
+                        'change_message' => '备货中 快递公司：' . $data['delivery_name'] . ' 快递单号：' . $data['delivery_id']
+                    ]);
+                if (!$res) {
+                    throw new AdminException(400529);
+                }
+            });
+        }
+        return $dump;
     }
 
     /**
@@ -565,6 +713,7 @@ class StoreOrderDeliveryServices extends BaseServices
     /**
      * 虚拟商品自动发货
      * @param $orderInfo
+     * @throws \ReflectionException
      */
     public function virtualSend($orderInfo)
     {
@@ -605,6 +754,7 @@ class StoreOrderDeliveryServices extends BaseServices
                 /** @var StoreProductVirtualServices $virtualService */
                 $virtualService = app()->make(StoreProductVirtualServices::class);
                 $virtual = $virtualService->get(['attr_unique' => $unique, 'uid' => 0]);
+                if (!$virtual) throw new ApiException(100026);
                 $virtual->order_id = $orderInfo['order_id'];
                 $virtual->uid = $orderInfo['uid'];
                 $virtual->save();
@@ -651,6 +801,15 @@ class StoreOrderDeliveryServices extends BaseServices
                 'change_type' => 'delivery_fictitious',
                 'change_message' => '优惠券自动发货',
                 'change_time' => time()
+            ]);
+        }
+        if ($orderInfo['is_channel'] == 1 && $orderInfo['pay_type'] == 'weixin') {
+            MiniOrderJob::dispatchSecs(10, 'doJob', [
+                $orderInfo['order_id'],
+                3,
+                [['item_desc' => $orderInfo['virtual_type'] == 1 ? '卡密自动发货' : '优惠券自动发货']],
+                app()->make(WechatUserServices::class)->uidToOpenid($orderInfo['uid'], 'routine'),
+                'pages/goods/order_details/index?order_id=' . $orderInfo['order_id']
             ]);
         }
     }

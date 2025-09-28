@@ -32,13 +32,12 @@ class SystemConfigValidata extends Validate
         'site_url' => 'url',
         'store_brokerage_ratio' => 'float|egt:0|elt:100|regex:float_two',
         'store_brokerage_two' => 'float|egt:0|elt:100|regex:float_two',
-        'user_extract_min_price' => 'float|gt:0|checkMinPrice',
+        'user_extract_min_price' => 'float|gt:0',
         'extract_time' => 'number|between:0,180',
         'replenishment_num' => 'number',
         'store_stock' => 'number',
         'store_brokerage_price' => 'float',
         'integral_ratio' => 'float|egt:0|elt:1000|regex:float_two',
-        'integral_max_num' => 'number|egt:0',
         'order_give_integral' => 'float|egt:0|elt:1000',
         'order_cancel_time' => 'float',
         'order_activity_time' => 'float',
@@ -52,7 +51,6 @@ class SystemConfigValidata extends Validate
         'sign_rule_number' => 'number|gt:0',
         'offline_rule_number' => 'number|gt:0',
         'order_give_exp' => 'number|egt:0',
-        'sign_give_exp' => 'number|egt:0',
         'invite_user_exp' => 'number|egt:0',
         'config_export_to_name' => 'chs|length:2,10',
         'config_export_to_tel' => 'mobile|number',
@@ -100,8 +98,6 @@ class SystemConfigValidata extends Validate
         'integral_ratio.regex' => '400055',
         'integral_ratio.egt' => '400056',
         'integral_ratio.elt' => '400056',
-        'integral_max_num.number' => '400057',
-        'integral_max_num.egt' => '400058',
         'order_give_integral.float' => '400059',
         'order_give_integral.egt' => '400060',
         'order_give_integral.elt' => '400060',
@@ -117,8 +113,6 @@ class SystemConfigValidata extends Validate
         'offline_rule_number.number' => '400070',
         'order_give_exp.number' => '400071',
         'order_give_exp.egt' => '400072',
-        'sign_give_exp.number' => '400073',
-        'sign_give_exp.egt' => '400074',
         'invite_user_exp.number' => '400075',
         'invite_user_exp.egt' => '400076',
         'config_export_to_name.chs' => '400077',
@@ -155,13 +149,4 @@ class SystemConfigValidata extends Validate
     protected $scene = [
 
     ];
-
-
-    protected function checkMinPrice($value, $rule, $data = [])
-    {
-        if ($data['brokerage_type'] == 1 && bccomp($value, '1', 2) < 0) {
-            return 410112;
-        }
-        return true;
-    }
 }

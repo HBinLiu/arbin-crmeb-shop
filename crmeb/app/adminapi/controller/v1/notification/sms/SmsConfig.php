@@ -10,10 +10,11 @@
 // +----------------------------------------------------------------------
 namespace app\adminapi\controller\v1\notification\sms;
 
+use app\services\system\config\SystemConfigServices;
 use app\services\yihaotong\SmsAdminServices;
 use app\services\serve\ServeServices;
-use crmeb\services\CacheService;
 use app\adminapi\controller\AuthController;
+use crmeb\services\CacheService;
 use think\facade\App;
 
 /**
@@ -64,6 +65,7 @@ class SmsConfig extends AuthController
      */
     public function is_login(ServeServices $services)
     {
+        $configServices = app()->make(SystemConfigServices::class);
         $sms_info = CacheService::get('sms_account');
         $data = ['status' => false, 'info' => ''];
         if ($sms_info) {
@@ -103,14 +105,10 @@ class SmsConfig extends AuthController
      */
     public function logout()
     {
-        $res = CacheService::delete('sms_account');
-        if ($res) {
-            $this->services->updateSmsConfig('', '');
-            CacheService::clear();
-            return app('json')->success(100042);
-        } else {
-            return app('json')->fail(100043);
-        }
+        CacheService::delete('sms_account');
+        $this->services->updateSmsConfig('', '');
+        CacheService::clear();
+        return app('json')->success(100042);
     }
 
     /**

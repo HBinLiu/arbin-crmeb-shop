@@ -24,24 +24,22 @@ class SystemConfigService
 
     /**
      * 获取单个配置效率更高
-     * @param $key
-     * @param string $default
+     * @param string $key
+     * @param $default
      * @param bool $isCaChe 是否获取缓存配置
      * @return bool|mixed|string
      */
-    public static function get(string $key, $default = '', bool $isCaChe = false)
+    public static function get(string $key, $default = '', bool $isCaChe = true)
     {
         $callable = function () use ($key) {
-            /** @var SystemConfigServices $service */
-            $service = app()->make(SystemConfigServices::class);
-            return $service->getConfigValue($key);
+            return app()->make(SystemConfigServices::class)->getConfigValue($key);
         };
 
         try {
             if ($isCaChe) {
-                return $callable();
+                return CacheService::remember(self::CACHE_SYSTEM . '_' . $key, $callable);
             }
-            return CacheService::remember(self::CACHE_SYSTEM . ':' . $key, $callable);
+            return $callable();
         } catch (\Throwable $e) {
             return $default;
         }
@@ -53,21 +51,19 @@ class SystemConfigService
      * @param bool $isCaChe 是否获取缓存配置
      * @return array
      */
-    public static function more(array $keys, bool $isCaChe = false)
+    public static function more(array $keys, bool $isCaChe = true)
     {
         $callable = function () use ($keys) {
-            /** @var SystemConfigServices $service */
-            $service = app()->make(SystemConfigServices::class);
-            return Arr::getDefaultValue($keys, $service->getConfigAll($keys));
+            return Arr::getDefaultValue($keys, app()->make(SystemConfigServices::class)->getConfigAll($keys));
         };
-        try {
-            if ($isCaChe)
-                return $callable();
 
-            return CacheService::remember(self::CACHE_SYSTEM . ':' . md5(implode(',', $keys)), $callable);
+        try {
+            if ($isCaChe){
+                return CacheService::remember(self::CACHE_SYSTEM . '_' . md5(implode(',', $keys)), $callable);
+            }
+            return $callable();
         } catch (\Throwable $e) {
             return Arr::getDefaultValue($keys);
         }
     }
-
 }

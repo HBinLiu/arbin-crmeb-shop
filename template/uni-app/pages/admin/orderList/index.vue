@@ -94,8 +94,8 @@
 							{{$t(`确认付款`)}}
 						</view>
 						<navigator class="bnt"
-							v-if="where.status == 1 && item.shipping_type === 1 && (item.pinkStatus === null || item.pinkStatus === 2)"
-							:url="'/pages/admin/delivery/index?id='+item.order_id+'&listId='+item.id+'&totalNum='+item.total_num+'&orderStatus='+item._status+'&comeType=1'">
+							v-if="where.status == 1 && item.shipping_type === 1 && (item.pinkStatus === null || item.pinkStatus === 2) && !item.refund.length"
+							:url="'/pages/admin/delivery/index?id='+item.order_id+'&listId='+item.id+'&totalNum='+item.total_num+'&orderStatus='+item._status+'&comeType=1'+'&virtualType='+item.virtual_type">
 							{{$t(`去发货`)}}
 						</navigator>
 					</view>
@@ -161,6 +161,8 @@
 		onLoad(option) {
 			let type = option.types;
 			this.where.status = type;
+		},
+		onShow() {
 			this.init();
 		},
 		methods: {
@@ -175,9 +177,6 @@
 			},
 			searchBut() {
 				let that = this;
-				if (!that.where.keywords.trim()) return this.$util.Tips({
-					title: that.$t(`请输入要搜索的商品`)
-				});
 				that.focus = false;
 				that.where.page = 1;
 				that.loading = false;
@@ -371,6 +370,7 @@
 <style lang="scss" scoped>
 	.pos-order-list {
 		padding-top: 96rpx;
+
 		.search {
 			padding-left: 30rpx;
 			padding-top: 30rpx;
@@ -379,6 +379,7 @@
 			top: 0;
 			left: 0;
 			z-index: 99;
+
 			.input {
 				width: 598rpx;
 				background-color: #f7f7f7;
@@ -460,6 +461,7 @@
 	.pos-order-list .list .item .order-num .state {
 		color: #2291f8;
 		font-weight: normal;
+		font-size: 24rpx;
 	}
 
 	.pos-order-list .list .item .order-num .state.on {

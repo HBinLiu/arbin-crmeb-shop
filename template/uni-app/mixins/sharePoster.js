@@ -162,7 +162,7 @@ export const sharePoster = {
 			// #ifdef MP
 			let met = type === 'scombination' ? scombinationCode(that.id) : type === 'seckill' ? seckillCode(
 				that
-				.id) : getProductCode(that.id)
+				.id,{time_id:this.time_id}) : getProductCode(that.id)
 			met.then((res) => {
 					uni.downloadFile({
 						url: that.setDomain(res.data.code),
@@ -190,7 +190,6 @@ export const sharePoster = {
 			// #endif
 			// #ifdef H5 || APP-PLUS
 			arr2 = [that.posterbackgd, that.storeImageBase64, that.PromotionCode];
-			console.log(arr2)
 			if (!that.storeImageBase64)
 				return that.$util.Tips({
 					title: i18n.t(`正在下载海报,请稍后再试`),

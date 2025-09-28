@@ -70,10 +70,11 @@ export function releasedListApi(params) {
  * @description 已发布管理--领取记录
  * @param {Number} param id {Number} 已发布优惠券id
  */
-export function releasedissueLogApi(id) {
+export function releasedissueLogApi(id, params) {
   return request({
     url: `marketing/coupon/released/issue_log/${id}`,
     method: 'get',
+    params,
   });
 }
 
@@ -95,17 +96,6 @@ export function releaseStatusApi(id) {
 export function couponStatusApi(data) {
   return request({
     url: `marketing/coupon/status/${data.id}/${data.status}`,
-    method: 'get',
-  });
-}
-
-/**
- * @description 优惠券制作--品类
- * @param {*} type 默认 1
- */
-export function couponCategoryApi(type) {
-  return request({
-    url: `product/category/tree/${type}`,
     method: 'get',
   });
 }
@@ -352,6 +342,47 @@ export function seckillAddApi(data) {
 export function seckillStatusApi(data) {
   return request({
     url: `marketing/seckill/set_status/${data.id}/${data.status}`,
+    method: 'put',
+  });
+}
+
+/**
+ * @description 秒杀活动 -- 列表
+ */
+export function seckillActivityListApi(params) {
+  return request({
+    url: `marketing/seckill_activity/list`,
+    method: 'GET',
+    params,
+  });
+}
+
+/**
+ * @description 秒杀商品 -- 批量保存编辑
+ */
+export function seckillActivityAddApi(data) {
+  return request({
+    url: `marketing/seckill_activity/save/${data.id}`,
+    method: 'post',
+    data,
+  });
+}
+/**
+ * @description 批量秒杀活动 -- 详情
+ */
+export function seckillActivityInfoApi(id) {
+  return request({
+    url: `marketing/seckill_activity/info/${id}`,
+    method: 'get',
+  });
+}
+
+/**
+ * @description 秒杀活动 -- 修改状态
+ */
+export function seckillActivityStatusApi(data) {
+  return request({
+    url: `marketing/seckill_activity/status/${data.id}/${data.status}`,
     method: 'put',
   });
 }
@@ -862,5 +893,66 @@ export function getbargainStatisticsOrder(id, params) {
     url: `marketing/bargain/statistics/order/${id}`,
     method: 'get',
     params,
+  });
+}
+/**
+ * 签到奖励列表
+ * @param {com} data
+ */
+export function signRewards(data) {
+  return request({
+    url: 'marketing/sign/rewards',
+    method: 'get',
+    params: data,
+  });
+}
+/**
+ * 新增签到奖励
+ * @param {com} data
+ */
+export function addSignRewards(data) {
+  return request({
+    url: 'marketing/sign/add_rewards',
+    method: 'get',
+    params: data,
+  });
+}
+/**
+ * 编辑签到奖励
+ */
+export function editSignRewards(id) {
+  return request({
+    url: 'marketing/sign/edit_rewards/' + id,
+    method: 'get',
+  });
+}
+
+/**
+ * 编辑新人礼
+ */
+export function editNewbie(data) {
+  return request({
+    url: 'user/new_gift/save',
+    method: 'post',
+    data,
+  });
+}
+/**
+ * 编辑新人礼
+ */
+export function getNewbie(data) {
+  return request({
+    url: 'user/new_gift',
+    method: 'get',
+  });
+}
+
+/**
+ * 拼团立即成团
+ */
+export function combineJoinApi(id) {
+  return request({
+    url: 'marketing/combination/immediately/' + id,
+    method: 'get',
   });
 }

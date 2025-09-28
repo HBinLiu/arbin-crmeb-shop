@@ -47,6 +47,7 @@ class StoreBargain extends AuthController
             ['start_status', ''],
             ['status', ''],
             ['store_name', ''],
+            ['product_id', 0],
         ]);
         $where['is_del'] = 0;
         $list = $this->services->getStoreBargainList($where);
@@ -65,6 +66,7 @@ class StoreBargain extends AuthController
             ['info', ''],
             ['unit_name', ''],
             ['section_time', []],
+            ['image', ''],
             ['images', []],
             ['bargain_max_price', 0],
             ['bargain_min_price', 0],
@@ -87,6 +89,7 @@ class StoreBargain extends AuthController
             ['postage', 0],//邮费
             ['custom_form', ''],
             ['virtual_type', 0],
+            ['is_commission', 0],
         ]);
         $this->validate($data, \app\adminapi\validate\marketing\StoreBargainValidate::class, 'save');
         if ($data['section_time']) {
@@ -151,9 +154,16 @@ class StoreBargain extends AuthController
     {
         /** @var StoreBargainUserServices $bargainUserService */
         $bargainUserService = app()->make(StoreBargainUserServices::class);
-        $bargainUserService->userBargainStatusFail($id, false);
+        if ($status == 0) {
+            $bargainUserService->userBargainStatusFail($id, false);
+        } else {
+            $info = $this->services->get($id);
+            if ($info['stop_time'] < time()) {
+                return app('json')->fail('活动已结束，无法继续上架');
+            }
+        }
         $this->services->update($id, ['status' => $status]);
-        return app('json')->success($status == 0 ? 100001 : 100007);
+        return app('json')->success(100001);
     }
 
     /**
@@ -181,7 +191,7 @@ class StoreBargain extends AuthController
     {
         /** @var StoreBargainUserHelpServices $bargainUserHelpService */
         $bargainUserHelpService = app()->make(StoreBargainUserHelpServices::class);
-        $list = $bargainUserHelpService->getHelpList($id);
+        $list = $bargainUserHelpService->getHelpList((int)$id);
         return app('json')->success(compact('list'));
     }
 

@@ -1,194 +1,212 @@
 <template>
   <div>
-    <div class="i-layout-page-header header_top">
-      <div class="i-layout-page-header fl_header">
-        <router-link :to="{ path: '/admin/marketing/live/live_room' }"
-          ><Button icon="ios-arrow-back" size="small" type="text">返回</Button></router-link
-        >
-        <Divider type="vertical" />
-        <span class="ivu-page-header-title" style="padding: 0">{{ $route.meta.title }}</span>
-      </div>
-    </div>
-    <Card :bordered="false" dis-hover class="ivu-mt">
-      <Form
+    <pages-header
+      ref="pageHeader"
+      :title="$route.meta.title"
+      :backUrl="$routeProStr + '/marketing/live/live_room'"
+    ></pages-header>
+    <el-card :bordered="false" shadow="never" class="mt16">
+      <el-form
         ref="formValidate"
         :model="formValidate"
         :label-width="labelWidth"
         :label-position="labelPosition"
         class="tabform"
+        :rules="ruleValidate"
         @submit.native.prevent
       >
-        <Col span="24">
-          <Alert type="warning" show-icon style="width: 550px; margin-left: 17px; margin-bottom: 25px"
-            >必须前往微信小程序官方后台开通直播权限，关注<span style="color: red; cursor: pointer" @click="codeImg"
-              >【小程序直播】</span
-            >须知直播状态</Alert
-          >
-        </Col>
-        <Col span="24">
-          <FormItem label="选择主播：">
-            <Select
-              v-model="formValidate.anchor_wechat"
-              filterable
-              clearable
-              style="width: 300px"
-              @on-change="anchorName"
-            >
-              <Option v-for="(item, index) in liveList" :value="item.wechat" :key="index">{{ item.wechat }}</Option>
-            </Select>
-          </FormItem>
-        </Col>
-        <Row :gutter="24" type="flex">
-          <Col span="24">
-            <FormItem label="直播间名称：">
-              <Input
+        <el-row :gutter="24">
+          <el-col :span="24">
+            <el-alert class="mb10" type="warning" show-icon :closable="false">
+              <span slot="title"
+                >必须前往微信小程序官方后台开通直播权限，关注<span
+                  style="color: red; cursor: pointer"
+                  v-db-click
+                  @click="codeImg"
+                  >【小程序直播】</span
+                >须知直播状态</span
+              >
+            </el-alert>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="选择主播：" prop="anchor_wechat">
+              <el-select
+                v-model="formValidate.anchor_wechat"
+                filterable
+                clearable
+                class="content_width"
+                @change="anchorName"
+              >
+                <el-option
+                  v-for="(item, index) in liveList"
+                  :value="item.wechat"
+                  :key="index"
+                  :label="item.wechat"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="直播间名称：" prop="name">
+              <el-input
                 enter-button
                 placeholder="请输入直播间名称"
                 element-id="name"
                 v-model="formValidate.name"
-                style="width: 300px"
+                class="content_width"
+                maxlength="80"
+                show-word-limit
               />
-            </FormItem>
-          </Col>
-          <Col span="24">
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
             <div style="display: flex">
-              <FormItem label="背景图：">
-                <div @click="modalPicTap(0)" class="box">
+              <el-form-item label="背景图：" prop="name">
+                <div v-db-click @click="modalPicTap(0)" class="box">
                   <img :src="formValidate.cover_img" alt="" v-if="formValidate.cover_img" />
-                  <div class="upload-box" v-else>
-                    <Icon type="ios-camera-outline" size="36" />
+                  <div class="upload-box acea-row row-center-wrapper" v-else>
+                    <i class="el-icon-picture-outline" style="font-size: 24px"></i>
                   </div>
                 </div>
-              </FormItem>
-              <span style="margin-left: 20px; color: #b0bac5">尺寸：1080*1920px</span>
+                <div class="desc">尺寸：1080*1920px</div>
+              </el-form-item>
             </div>
-          </Col>
-          <Col span="24">
+          </el-col>
+          <el-col :span="24">
             <div style="display: flex">
-              <FormItem label="分享图：">
-                <div @click="modalPicTap(1)" class="box">
+              <el-form-item label="分享图：" prop="name">
+                <div v-db-click @click="modalPicTap(1)" class="box">
                   <img :src="formValidate.share_img" alt="" v-if="formValidate.share_img" />
-                  <div class="upload-box" v-else>
-                    <Icon type="ios-camera-outline" size="36" />
+                  <div class="upload-box acea-row row-center-wrapper" v-else>
+                    <i class="el-icon-picture-outline" style="font-size: 24px"></i>
                   </div>
                 </div>
-              </FormItem>
-              <span style="margin-left: 20px; color: #b0bac5">尺寸：800*640px</span>
+                <div class="desc">尺寸：800*640px</div>
+              </el-form-item>
             </div>
-          </Col>
-          <!--<Col span="24">-->
-          <!--<FormItem label="主播昵称：">-->
-          <!--<Input enter-button  placeholder="请输入主播昵称" element-id="anchor_name" v-model="formValidate.anchor_name" style="width: 60%;"/>-->
-          <!--</FormItem>-->
-          <!--</Col>-->
-          <Col span="24">
-            <FormItem label="联系电话：">
-              <Input
-                enter-button
+          </el-col>
+          <!--<el-col :span="24">-->
+          <!--<el-form-item label="主播昵称：">-->
+          <!--<el-input enter-button  placeholder="请输入主播昵称" element-id="anchor_name" v-model="formValidate.anchor_name" style="width: 60%;"/>-->
+          <!--</el-form-item>-->
+          <!--</el-col>-->
+          <el-col :span="24">
+            <el-form-item label="联系电话：">
+              <el-input
                 placeholder="请输入主播联系电话"
-                element-id="phone"
                 v-model="formValidate.phone"
-                style="width: 300px"
+                class="content_width"
+                maxlength="11"
+                show-word-limit
               />
-            </FormItem>
-          </Col>
-          <Col span="24">
-            <FormItem label="直播时间：">
-              <DatePicker
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="直播时间：" prop="name">
+              <el-date-picker
+                clearable
                 type="datetimerange"
                 format="yyyy-MM-dd HH:mm"
                 placeholder="请选择直播时间"
-                style="width: 300px"
-                :value="timeVal"
-                @on-change="selectDate"
-              ></DatePicker>
-            </FormItem>
-          </Col>
-          <Col span="24">
-            <FormItem label="排序：">
-              <Input
-                type="number"
-                enter-button
-                placeholder="0"
-                element-id="phone"
-                v-model="formValidate.sort"
-                style="width: 300px"
-              />
-            </FormItem>
-          </Col>
-          <Col span="24">
-            <FormItem label="显示样式：">
-              <RadioGroup v-model="formValidate.screen_type">
-                <Radio :label="item.label" v-for="(item, index) in screen_type" :key="index">
+                class="content_width"
+                v-model="timeVal"
+                @change="selectDate"
+                value-format="yyyy-MM-dd HH:mm"
+                range-separator="-"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+              ></el-date-picker>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="排序：">
+              <el-input type="number" placeholder="0" v-model="formValidate.sort" class="content_width" />
+            </el-form-item>
+          </el-col>
+          <!-- <el-col :span="24">
+            <el-form-item label="显示样式：">
+              <el-radio-group v-model="formValidate.screen_type">
+                <el-radio :label="item.label" v-for="(item, index) in screen_type" :key="index">
                   <span>{{ item.value }}</span>
-                </Radio>
-              </RadioGroup>
-            </FormItem>
-          </Col>
-          <Col span="24">
-            <FormItem label="直播间类型：">
-              <RadioGroup v-model="formValidate.type">
-                <Radio :label="item.label" v-for="(item, index) in type" :key="index">
+                </el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col> -->
+          <el-col :span="24">
+            <el-form-item label="直播间类型：">
+              <el-radio-group v-model="formValidate.type">
+                <el-radio :label="item.label" v-for="(item, index) in type" :key="index">
                   <span>{{ item.value }}</span>
-                </Radio>
-              </RadioGroup>
-            </FormItem>
-          </Col>
-          <Col span="24">
-            <FormItem label="直播间点赞：">
-              <RadioGroup v-model="formValidate.close_like">
-                <Radio :label="item.label" v-for="(item, index) in close_like" :key="index">
-                  <span>{{ item.value }}</span>
-                </Radio>
-              </RadioGroup>
-            </FormItem>
-          </Col>
-          <Col span="24">
-            <FormItem label="直播卖货：">
-              <RadioGroup v-model="formValidate.close_goods">
-                <Radio :label="item.label" v-for="(item, index) in close_goods" :key="index">
-                  <span>{{ item.value }}</span>
-                </Radio>
-              </RadioGroup>
-            </FormItem>
-          </Col>
-          <Col span="24">
-            <FormItem label="直播间评论：">
-              <RadioGroup v-model="formValidate.close_comment">
-                <Radio :label="item.label" v-for="(item, index) in close_comment" :key="index">
-                  <span>{{ item.value }}</span>
-                </Radio>
-              </RadioGroup>
-            </FormItem>
-          </Col>
-        </Row>
-        <Row :gutter="24" type="flex">
-          <Col v-bind="grid" span="24">
-            <Button :loading="loading" type="primary" style="margin-left: 99px" @click="handleSubmit('formItem')">
-              <span v-if="!loading">提交</span>
-              <span v-else>提交中...</span>
-            </Button>
-            <!-- <Button
+                </el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="直播间点赞：">
+              <el-switch
+                class="defineSwitch"
+                :active-value="1"
+                :inactive-value="0"
+                v-model="formValidate.close_like"
+                size="large"
+                active-text="开启"
+                inactive-text="关闭"
+              >
+              </el-switch>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="直播卖货：">
+              <el-switch
+                class="defineSwitch"
+                :active-value="1"
+                :inactive-value="0"
+                v-model="formValidate.close_goods"
+                size="large"
+                active-text="开启"
+                inactive-text="关闭"
+              >
+              </el-switch>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="直播间评论：">
+              <el-switch
+                class="defineSwitch"
+                :active-value="1"
+                :inactive-value="0"
+                v-model="formValidate.close_comment"
+                size="large"
+                active-text="开启"
+                inactive-text="关闭"
+              >
+              </el-switch>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="24">
+          <el-col v-bind="grid" :span="24">
+            <el-button
+              :loading="loading"
               type="primary"
+              style="margin-left: 120px"
+              v-db-click
               @click="handleSubmit('formItem')"
+            >
+              提交
+            </el-button>
+            <!-- <el-button
+              type="primary"
+              v-db-click @click="handleSubmit('formItem')"
               style="width: 19%; margin-left: 99px"
-              >提交</Button
+              >提交</el-button
             > -->
-          </Col>
-        </Row>
-      </Form>
-    </Card>
+          </el-col>
+        </el-row>
+      </el-form>
+    </el-card>
     <div>
-      <Modal
-        v-model="modalPic"
-        width="950px"
-        scrollable
-        footer-hide
-        closable
-        title="上传商品图"
-        :mask-closable="false"
-        :z-index="888"
-      >
+      <el-dialog :visible.sync="modalPic" width="950px" title="上传商品图" :close-on-click-modal="false" :z-index="888">
         <uploadPictures
           :isChoice="isChoice"
           @getPic="getPic"
@@ -196,16 +214,15 @@
           :gridPic="gridPic"
           v-if="modalPic"
         ></uploadPictures>
-      </Modal>
+      </el-dialog>
     </div>
-    <Modal v-model="modal3" title="二维码" @on-cancel="cancel" footer-hide>
+    <el-dialog :visible.sync="modal3" title="二维码">
       <div class="acea-row row-around">
         <div v-viewer class="QRpic">
           <img src="https://res.wx.qq.com/op_res/9rSix1dhHfK4rR049JL0PHJ7TpOvkuZ3mE0z7Ou_Etvjf-w1J_jVX0rZqeStLfwh" />
         </div>
       </div>
-      <!-- <Spin fix v-if="spin"></Spin> -->
-    </Modal>
+    </el-dialog>
   </div>
 </template>
 
@@ -221,7 +238,7 @@ export default {
   computed: {
     ...mapState('media', ['isMobile']),
     labelWidth() {
-      return this.isMobile ? undefined : 100;
+      return this.isMobile ? undefined : '120px';
     },
     labelPosition() {
       return this.isMobile ? 'top' : 'right';
@@ -322,6 +339,10 @@ export default {
       activeIndex: 0,
       liveList: [],
       modal3: false,
+      ruleValidate: {
+        anchor_wechat: [{ required: true, message: 'Please select the city', trigger: 'change' }],
+        name: [{ required: true, message: 'The name cannot be empty', trigger: 'blur' }],
+      },
     };
   },
   mounted() {
@@ -353,7 +374,7 @@ export default {
           this.liveList = res.data.list;
         })
         .catch((error) => {
-          this.$Message.error(error.msg);
+          this.$message.error(error.msg);
         });
     },
     // 点击图文封面
@@ -381,24 +402,27 @@ export default {
       this.loading = true;
       liveAdd(this.formValidate)
         .then((res) => {
-          this.$Message.success('添加成功');
+          this.$message.success('添加成功');
           setTimeout(() => {
             this.loading = false;
-            this.$router.push({ path: '/admin/marketing/live/live_room' });
+            this.$router.push({ path: this.$routeProStr + '/marketing/live/live_room' });
           }, 500);
         })
         .catch((error) => {
           setTimeout(() => {
             this.loading = false;
           }, 1000);
-          this.$Message.error(error.msg);
+          this.$message.error(error.msg);
         });
     },
   },
 };
 </script>
 
-<style scoped lang="stylus">
+<style lang="scss" scoped>
+.content_width {
+  width: 460px;
+}
 .QRpic {
   width: 180px;
   height: 180px;
@@ -408,20 +432,24 @@ export default {
     height: 100%;
   }
 }
-
-.upload-box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 60px;
-  height: 60px;
-  background: #ccc;
+.desc {
+  font-size: 12px;
+  color: #999;
 }
-
+.upload-box {
+  width: 58px;
+  height: 58px;
+  line-height: 58px;
+  border: 1px dotted rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+}
 .box {
   width: 60px;
   height: 60px;
-  margin-bottom: 10px;
+  border-radius: 4px;
+  cursor: pointer;
 
   img {
     width: 100%;

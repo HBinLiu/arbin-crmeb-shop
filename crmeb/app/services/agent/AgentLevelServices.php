@@ -66,6 +66,13 @@ class AgentLevelServices extends BaseServices
             $query->field('count(*) as sum');
         }], $page, $limit);
         $count = $this->dao->count($where);
+        foreach ($list as &$item) {
+            $item['one_brokerage_ratio'] = $item['one_brokerage_percent'];
+            $item['two_brokerage_ratio'] = $item['two_brokerage_percent'];
+            if (strpos($item['image'], '/statics/system_images/') !== false) {
+                $item['image'] = set_file_url($item['image']);
+            }
+        }
         return compact('count', 'list');
     }
 
@@ -90,6 +97,9 @@ class AgentLevelServices extends BaseServices
         $this->checkUserLevelFinish($uid);
 
         $list = $this->dao->getList(['is_del' => 0, 'status' => 1]);
+        foreach ($list as &$item) {
+            $item['image'] = set_file_url($item['image']);
+        }
         $agent_level = $user['agent_level'] ?? 0;
         //没等级默认最低等级
         if (!$agent_level) {
@@ -190,8 +200,8 @@ class AgentLevelServices extends BaseServices
                 $ids = array_column($task_list, 'id');
                 $finish_task = $levelTaskRecordServices->count(['level_id' => $levelInfo['id'], 'uid' => $uid, 'task_id' => $ids]);
                 //任务完成升这一等级
-                if ($finish_task >= count($task_list)) {
-                    $userServices->update($uid, ['agent_level' => $levelInfo['grade']]);
+                if ($finish_task >= $levelInfo['task_num']) {
+                    $userServices->update($uid, ['agent_level' => $levelInfo['id']]);
                 } else {
                     break;
                 }
@@ -203,46 +213,37 @@ class AgentLevelServices extends BaseServices
 
     /**
      * 分销等级上浮
-     * @param int $uid
-     * @param array $userInfo
+     * @param $storeBrokerageRatio
+     * @param $storeBrokerageTwo
+     * @param $spread_one_uid
+     * @param $spread_two_uid
      * @return array|int[]
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
      */
-    public function getAgentLevelBrokerage(int $uid, $userInfo = [])
+    public function getAgentLevelBrokerage($storeBrokerageRatio, $storeBrokerageTwo, $spread_one_uid, $spread_two_uid)
     {
-        $one_brokerage_up = $two_brokerage_up = $spread_one_uid = $spread_two_uid = 0;
-        if (!$uid) {
-            return [$one_brokerage_up, $two_brokerage_up, $spread_one_uid, $spread_two_uid];
-        }
-        //商城分销是否开启
-        if (!sys_config('brokerage_func_status')) {
-            return [$one_brokerage_up, $two_brokerage_up, $spread_one_uid, $spread_two_uid];
-        }
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
-        if (!$userInfo) {
-            $userInfo = $userServices->getUserInfo($uid);
-        }
-        if (!$userInfo) {
-            return [$one_brokerage_up, $two_brokerage_up, $spread_one_uid, $spread_two_uid];
-        }
-        //获取上级uid ｜｜ 开启自购返回自己uid
-        $spread_one_uid = $userServices->getSpreadUid($uid, $userInfo);
-        $one_agent_level = 0;
-        $two_agent_level = 0;
-        $spread_two_uid = 0;
-        if ($spread_one_uid > 0 && $one_user_info = $userServices->getUserInfo($spread_one_uid)) {
-            $one_agent_level = $one_user_info['agent_level'] ?? 0;
-            $spread_two_uid = $userServices->getSpreadUid($spread_one_uid, $one_user_info, false);
-            if ($spread_two_uid > 0 && $two_user_info = $userServices->getUserInfo($spread_two_uid)) {
-                $two_agent_level = $two_user_info['agent_level'] ?? 0;
+        $one_agent_level = $userServices->value(['uid' => $spread_one_uid], 'agent_level') ?? 0;
+        $two_agent_level = $userServices->value(['uid' => $spread_two_uid], 'agent_level') ?? 0;
+
+        if ($one_agent_level) {
+            $oneLevelInfo = $this->getLevelInfo($one_agent_level);
+            if ($oneLevelInfo && $oneLevelInfo['status'] == 1) {
+                $storeBrokerageRatio = $oneLevelInfo['one_brokerage_percent'];
             }
         }
-        $one_brokerage_up = $one_agent_level ? ($this->getLevelInfo($one_agent_level)['one_brokerage'] ?? 0) : 0;
-        $two_brokerage_up = $two_agent_level ? ($this->getLevelInfo($two_agent_level)['two_brokerage'] ?? 0) : 0;
-        return [$one_brokerage_up, $two_brokerage_up, $spread_one_uid, $spread_two_uid];
+
+        if ($two_agent_level) {
+            $twoLevelInfo = $this->getLevelInfo($two_agent_level);
+            if ($twoLevelInfo && $twoLevelInfo['status'] == 1) {
+                $storeBrokerageTwo = $twoLevelInfo['two_brokerage_percent'];
+            }
+        }
+
+        return [$storeBrokerageRatio, $storeBrokerageTwo];
     }
 
     /**
@@ -253,11 +254,19 @@ class AgentLevelServices extends BaseServices
      */
     public function createForm()
     {
-        $field[] = Form::input('name', '等级名称')->col(24);
+        $field[] = Form::input('name', '等级名称')->maxlength(8)->col(24);
         $field[] = Form::number('grade', '等级', 0)->min(0)->precision(0);
-        $field[] = Form::frameImage('image', '背景图', Url::buildUrl('admin/widget.images/index', array('fodder' => 'image')))->icon('ios-add')->width('950px')->height('505px')->modal(['footer-hide' => true]);
-        $field[] = Form::number('one_brokerage', '一级上浮', 0)->info('在分销一级佣金基础上浮（0-1000之间整数）百分比')->min(0)->max(1000)->precision(0);
-        $field[] = Form::number('two_brokerage', '二级上浮', 0)->info('在分销二级佣金基础上浮（0-1000之间整数）百分比')->min(0)->max(1000)->precision(0);
+        $field[] = Form::frameImage('image', '背景图', Url::buildUrl(config('app.admin_prefix', 'admin') . '/widget.images/index', array('fodder' => 'image')))->icon('el-icon-picture-outline')->width('950px')->height('560px')->props(['footer' => false]);
+        $field[] = Form::number('one_brokerage_percent', '一级佣金比例', 0)->appendRule('suffix', [
+            'type' => 'div',
+            'class' => 'tips-info',
+            'domProps' => ['innerHTML' => '到达该等级之后，一级分佣按照此比例计算佣金']
+        ])->max(100)->precision(2);
+        $field[] = Form::number('two_brokerage_percent', '二级佣金比例', 0)->appendRule('suffix', [
+            'type' => 'div',
+            'class' => 'tips-info',
+            'domProps' => ['innerHTML' => '到达该等级之后，二级分佣按照此比例计算佣金']
+        ])->min(0)->max(100)->precision(2);
         $field[] = Form::radio('status', '是否显示', 1)->options([['value' => 1, 'label' => '显示'], ['value' => 0, 'label' => '隐藏']]);
         return create_form('添加分销员等级', $field, Url::buildUrl('/agent/level'), 'POST');
     }
@@ -275,11 +284,19 @@ class AgentLevelServices extends BaseServices
             throw new AdminException(100026);
         $field = [];
         $field[] = Form::hidden('id', $id);
-        $field[] = Form::input('name', '等级名称', $levelInfo['name'])->col(24);
+        $field[] = Form::input('name', '等级名称', $levelInfo['name'])->maxlength(8)->col(24);
         $field[] = Form::number('grade', '等级', $levelInfo['grade'])->min(0)->precision(0);
-        $field[] = Form::frameImage('image', '背景图', Url::buildUrl('admin/widget.images/index', array('fodder' => 'image')), $levelInfo['image'])->icon('ios-add')->width('950px')->height('505px')->modal(['footer-hide' => true]);
-        $field[] = Form::number('one_brokerage', '一级上浮', $levelInfo['one_brokerage'])->info('在分销一级佣金基础上浮（0-1000之间整数）百分比')->min(0)->max(1000)->precision(0);
-        $field[] = Form::number('two_brokerage', '二级上浮', $levelInfo['two_brokerage'])->info('在分销二级佣金基础上浮（0-1000之间整数）百分比')->min(0)->max(1000)->precision(0);
+        $field[] = Form::frameImage('image', '背景图', Url::buildUrl(config('app.admin_prefix', 'admin') . '/widget.images/index', array('fodder' => 'image')), $levelInfo['image'])->icon('el-icon-picture-outline')->width('950px')->height('560px')->props(['footer' => false]);
+        $field[] = Form::number('one_brokerage_percent', '一级佣金比例', $levelInfo['one_brokerage_percent'])->appendRule('suffix', [
+            'type' => 'div',
+            'class' => 'tips-info',
+            'domProps' => ['innerHTML' => '到达该等级之后，一级分佣按照此比例计算佣金']
+        ])->max(100)->precision(2);
+        $field[] = Form::number('two_brokerage_percent', '二级佣金比例', $levelInfo['two_brokerage_percent'])->appendRule('suffix', [
+            'type' => 'div',
+            'class' => 'tips-info',
+            'domProps' => ['innerHTML' => '到达该等级之后，二级分佣按照此比例计算佣金']
+        ])->min(0)->max(100)->precision(2);
         $field[] = Form::radio('status', '是否显示', $levelInfo['status'])->options([['value' => 1, 'label' => '显示'], ['value' => 0, 'label' => '隐藏']]);
 
         return create_form('编辑分销员等级', $field, Url::buildUrl('/agent/level/' . $id), 'PUT');
@@ -311,8 +328,8 @@ class AgentLevelServices extends BaseServices
             return $menus;
         };
         $field[] = Form::hidden('uid', $uid);
-        $field[] = Form::select('id', '分销等级', $userInfo['agent_level'] ?? 0)->setOptions(Form::setOptions($setOptionLabel))->filterable(true);
-        return create_form('赠送分销等级', $field, Url::buildUrl('/agent/give_level'), 'post');
+        $field[] = Form::select('id', '分销等级', $userInfo['agent_level'] != 0 ? $userInfo['agent_level'] : '')->setOptions(Form::setOptions($setOptionLabel))->filterable(true);
+        return create_form('修改分销等级', $field, Url::buildUrl('/agent/give_level'), 'post');
     }
 
     /**
@@ -328,11 +345,11 @@ class AgentLevelServices extends BaseServices
     {
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
-        $userInfo = $userServices->getUserInfo($uid);
+        $userInfo = $userServices->getUserInfo($uid, 'uid');
         if (!$userInfo) {
             throw new AdminException(400214);
         }
-        $levelInfo = $this->getLevelInfo($id);
+        $levelInfo = $this->getLevelInfo($id, 'id');
         if (!$levelInfo) {
             throw new AdminException(400442);
         }
@@ -340,5 +357,55 @@ class AgentLevelServices extends BaseServices
             throw new AdminException(400219);
         }
         return true;
+    }
+
+    /**
+     * 获取指定分销等级的任务数量表单
+     * @param int $id 分销等级ID
+     * @return array|string
+     */
+    public function getTaskNumForm($id)
+    {
+        // 获取指定分销等级的信息
+        $levelInfo = $this->getLevelInfo($id);
+        // 构建任务数量输入框
+        $field[] = Form::input('task_num', '完成任务数量', $levelInfo['task_num'])->maxlength(8)->col(24)->info('默认全部完成升级，可设置升级任务数量');
+        // 创建表单并返回HTML字符串
+        return create_form('设置完成任务数量', $field, Url::buildUrl('/agent/set_task_num/' . $id), 'post');
+    }
+
+    /**
+     * 设置指定分销等级的任务数量
+     * @param int $id 分销等级ID
+     * @param array $data 包含任务数量的数组
+     * @return bool 返回true表示设置成功
+     * @throws AdminException 如果分销等级不存在或任务数量为空或任务数量大于已有任务数量，则抛出异常
+     */
+    public function setTaskNum($id, $data)
+    {
+        // 判断分销等级是否存在
+        if (!$id) throw new AdminException('分销等级不存在');
+        // 判断任务数量是否为空
+        if (!$data['task_num']) throw new AdminException('请输入任务数量');
+        // 获取当前分销等级已有的任务数量
+        $count = app()->make(AgentLevelTaskServices::class)->count(['level_id' => $id, 'is_del' => 0, 'status' => 1]);
+        // 判断任务数量是否大于已有任务数量
+        if ($data['task_num'] > $count) throw new AdminException('任务数量不能大于已有任务数量');
+        // 更新分销等级的任务数量
+        $this->dao->update($id, ['task_num' => $data['task_num']]);
+        // 返回true表示设置成功
+        return true;
+    }
+
+    /**
+     * 获取分销等级数组
+     * @return array
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2025/6/16
+     */
+    public function getAgentLevelArr()
+    {
+        return $this->dao->getColumn(['status'=>1,'is_del'=>0], 'name', 'grade');
     }
 }

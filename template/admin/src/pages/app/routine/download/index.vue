@@ -1,6 +1,10 @@
 <template>
   <div>
-    <Card :bordered="false" dis-hover class="ivu-mt">
+    <!-- <div class="i-layout-page-header header-title">
+      <span class="ivu-page-header-title">{{ $route.meta.title }}</span>
+    </div> -->
+    <pages-header ref="pageHeader" :title="$route.meta.title"></pages-header>
+    <el-card :bordered="false" shadow="never" class="ivu-mt mt16">
       <div class="flex-wrapper">
         <!-- :src="iframeUrl" -->
         <div>
@@ -14,13 +18,13 @@
               <div class="line"></div>
               <div class="right title">小程序设置</div>
             </div>
-            <Alert v-if="!pageData.appId && !pageData.code">
-              <template slot="desc">
-                您尚未配置小程序信息，请<router-link :to="{ path: '/admin/setting/system_config_retail/3/7' }"
+            <el-alert v-if="!pageData.appId && !pageData.code">
+              <template slot="title">
+                您尚未配置小程序信息，请<router-link :to="{ path: $routeProStr + '/setting/routine_config/2/7' }"
                   >立即设置</router-link
                 ></template
               >
-            </Alert>
+            </el-alert>
             <div class="content-box">
               <div class="left">小程序名称：</div>
               <div class="right">{{ pageData.routine_name || '未命名' }}</div>
@@ -28,17 +32,17 @@
             <div class="content-box">
               <div class="left">小程序码：</div>
               <div class="right">
-                <Button type="primary" @click="downLoadCode(pageData.code)">下载小程序码</Button>
+                <el-button type="primary" v-db-click @click="downLoadCode(pageData.code)">下载小程序码</el-button>
               </div>
             </div>
             <div class="content-box">
               <div class="left">小程序包：</div>
               <div class="right">
                 <span>是否已开通小程序直播</span>
-                <RadioGroup class="rad" size="large" v-model="is_live">
-                  <Radio :label="0">未开通</Radio>
-                  <Radio :label="1">已开通</Radio>
-                </RadioGroup>
+                <el-radio-group class="rad" size="large" v-model="is_live">
+                  <el-radio :label="0">未开通</el-radio>
+                  <el-radio :label="1">已开通</el-radio>
+                </el-radio-group>
               </div>
             </div>
             <div class="content-box last">
@@ -50,13 +54,13 @@
                   查看如何开通直播功能
                 </div>
 
-                <Button class="mt10" type="primary" @click="downLoad()">下载小程序包</Button>
+                <el-button class="mt10" type="primary" v-db-click @click="downLoad()">下载小程序包</el-button>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </Card>
+    </el-card>
   </div>
 </template>
 
@@ -83,7 +87,7 @@ export default {
         sm: 24,
         xs: 24,
       },
-      iframeUrl: `${location.origin}/pages/index/index?type=iframeWindow`,
+      iframeUrl: `${location.origin}/pages/index/index?mdType=iframeWindow`,
       is_live: 1,
       pageData: {
         code: '',
@@ -104,10 +108,10 @@ export default {
   computed: {
     ...mapState('media', ['isMobile']),
     labelWidth() {
-      return this.isMobile ? undefined : 80;
+      return this.isMobile ? undefined : '80px';
     },
     labelPosition() {
-      return this.isMobile ? 'top' : 'left';
+      return this.isMobile ? 'top' : 'right';
     },
   },
   methods: {
@@ -119,11 +123,11 @@ export default {
           window.open(res.data.url);
         })
         .catch((err) => {
-          this.$Message.warning(err.msg);
+          this.$message.warning(err.msg);
         });
     },
     downLoadCode(url) {
-      if (!url) return this.$Message.warning('暂无小程序码');
+      if (!url) return this.$message.warning('暂无小程序码');
       var image = new Image();
       image.src = url;
       // 解决跨域 Canvas 污染问题
@@ -146,83 +150,68 @@ export default {
 };
 </script>
 
-<style scoped lang="stylus">
+<style lang="scss" scoped>
 .template_sp_box {
   padding: 5px 0;
   box-sizing: border-box;
 }
-
 .template_sp {
   display: block;
   padding: 2px 0;
   box-sizing: border-box;
 }
-
 .flex-wrapper {
   display: flex;
   border-radius: 10px;
 }
-
 .iframe-box {
   width: 312px;
   height: 550px;
   border-radius: 10px;
 }
-
 .ivu-mt {
   height: 600px;
 }
-
 .content {
   padding: 0 20px;
 }
-
 .content > .title {
   padding-bottom: 26px;
 }
-
 .content-box {
   display: flex;
   align-items: center;
   margin: 20px 20px 0 20px;
   color: #333;
 }
-
 .content-box.last {
   margin-top: 0;
   color: #999999;
 }
-
 .line {
   width: 3px;
   height: 16px;
-  background-color: #1890FF;
+  background-color: var(--prev-color-primary);
   margin-right: 11px;
 }
-
 .content-box .title {
   font-size: 16px;
   font-weight: bold;
 }
-
 .content-box > span {
-  color: #F5222D;
+  color: #f5222d;
   font-size: 20px;
 }
-
 .content-box .left {
   width: 100px;
   text-align: right;
 }
-
 .content-box .right {
   width: 400px;
 }
-
 .rad {
   margin-left: 20px;
 }
-
 .mask {
   position: absolute;
   left: 0;

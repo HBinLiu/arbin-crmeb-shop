@@ -16,6 +16,7 @@ use app\services\activity\advance\StoreAdvanceServices;
 use app\services\BaseServices;
 use app\dao\order\StoreCartDao;
 use app\services\activity\coupon\StoreCouponIssueServices;
+use app\services\product\shipping\ShippingTemplatesServices;
 use app\services\shipping\ShippingTemplatesNoDeliveryServices;
 use app\services\system\SystemUserLevelServices;
 use app\services\user\member\MemberCardServices;
@@ -82,7 +83,7 @@ class StoreCartServices extends BaseServices
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
      */
-    public function getUserProductCartListV1($uid, $cartIds = '', bool $new, $addr = [], int $shipping_type = 1)
+    public function getUserProductCartListV1($uid, $cartIds = '', bool $new, $addr = [], int $shipping_type = 1, $is_gift = 0)
     {
         if ($new) {
             $cartIds = explode(',', $cartIds);
@@ -98,6 +99,10 @@ class StoreCartServices extends BaseServices
         }
         if (!$cartInfo) {
             throw new ApiException(410233);
+        }
+        if ($is_gift == 1) {
+            $addr = [];
+            $shipping_type = 0;
         }
         [$cartInfo, $valid, $invalid] = $this->handleCartList($uid, $cartInfo, $addr, $shipping_type);
         $seckillIds = array_unique(array_column($cartInfo, 'seckill_id'));
@@ -208,9 +213,6 @@ class StoreCartServices extends BaseServices
             if ($product_stock < $cartNum) {
                 throw new ApiException(410297, ['num' => $cartNum]);
             }
-            if ($type != 5 && !CacheService::checkStock($unique, (int)$cartNum, $type)) {
-                throw new ApiException(410297, ['num' => $cartNum]);
-            }
         }
         return [$attrInfo, $unique, $bargainUserInfo['bargain_price_min'] ?? 0, $cartNum, $productInfo];
     }
@@ -235,8 +237,10 @@ class StoreCartServices extends BaseServices
     public function setCart(int $uid, int $product_id, int $cart_num = 1, string $product_attr_unique = '', int $type = 0, bool $new = true, int $combination_id = 0, int $seckill_id = 0, int $bargain_id = 0, int $advance_id = 0)
     {
         if ($cart_num < 1) $cart_num = 1;
-        //检查限购
-        $this->checkLimit($uid, $product_id, $cart_num, $new);
+        if ($type == 0) {
+            //检查限购
+            $this->checkLimit($uid, $product_id, $cart_num, $new);
+        }
         //检测库存限量
         [$attrInfo, $product_attr_unique, $bargainPriceMin, $cart_num, $productInfo] = $this->checkProductStock($uid, $cart_num, $product_attr_unique, $type, $product_id, $seckill_id, $bargain_id, $combination_id, $advance_id);
         if ($new) {
@@ -279,6 +283,15 @@ class StoreCartServices extends BaseServices
         } else {//加入购物车记录
             ProductLogJob::dispatch(['cart', ['uid' => $uid, 'product_id' => $product_id, 'cart_num' => $cart_num]]);
             $cart = $this->dao->getOne(['type' => $type, 'uid' => $uid, 'product_id' => $product_id, 'product_attr_unique' => $product_attr_unique, 'is_del' => 0, 'is_new' => 0, 'is_pay' => 0, 'status' => 1]);
+
+            //自定义事件-加入购物车
+            event('CustomEventListener', ['user_add_cart', [
+                'product_id' => $product_id,
+                'uid' => $uid,
+                'cart_num' => $cart_num,
+                'add_time' => date('Y-m-d H:i:s'),
+            ]]);
+
             if ($cart) {
                 $cart->cart_num = $cart_num + $cart->cart_num;
                 $cart->add_time = time();
@@ -288,7 +301,6 @@ class StoreCartServices extends BaseServices
                 $add_time = time();
                 return $this->dao->save(compact('uid', 'product_id', 'cart_num', 'product_attr_unique', 'type', 'add_time'))->id;
             }
-
         }
     }
 
@@ -321,9 +333,13 @@ class StoreCartServices extends BaseServices
         //购物车修改数量检查限购
         /** @var StoreProductServices $productServices */
         $productServices = app()->make(StoreProductServices::class);
-        $limitInfo = $productServices->get($carInfo->product_id, ['is_limit', 'limit_type', 'limit_num']);
+        $limitInfo = $productServices->get($carInfo->product_id, ['is_limit', 'limit_type', 'limit_num', 'min_qty']);
+        if ($number < $limitInfo['min_qty']) {
+            throw new ApiException('不能小于起购数量');
+        }
         if ($limitInfo['is_limit']) {
-            if ($limitInfo['limit_type'] == 1 && $number > $limitInfo['limit_num']) {
+            $num = $this->dao->sum([['uid', '=', $uid], ['product_id', '=', $carInfo->product_id], ['id', '<>', $id]], 'cart_num') + $number;
+            if ($limitInfo['limit_type'] == 1 && $num > $limitInfo['limit_num']) {
                 throw new ApiException(410239, ['limit' => $limitInfo['limit_num']]);
             } else if ($limitInfo['limit_type'] == 2) {
                 /** @var StoreOrderCartInfoServices $orderCartServices */
@@ -331,7 +347,7 @@ class StoreCartServices extends BaseServices
                 $orderPayNum = $orderCartServices->sum(['uid' => $uid, 'product_id' => $carInfo->product_id], 'cart_num');
                 $orderRefundNum = $orderCartServices->sum(['uid' => $uid, 'product_id' => $carInfo->product_id], 'refund_num');
                 $orderNum = $orderPayNum - $orderRefundNum;
-                if (($number + $orderNum) > $limitInfo['limit_num']) {
+                if (($num + $orderNum) > $limitInfo['limit_num']) {
                     throw new ApiException(410240, ['limit' => $limitInfo['limit_num'], 'pay_num' => $orderNum]);
                 }
             }
@@ -435,6 +451,11 @@ class StoreCartServices extends BaseServices
      */
     public function setCartNum($uid, $productId, $num, $unique, $type)
     {
+        if ($type == 1) {
+            //检查限购
+            $this->checkLimit($uid, $productId, $num, 0);
+        }
+
         /** @var StoreProductAttrValueServices $attrValueServices */
         $attrValueServices = app()->make(StoreProductAttrValueServices::class);
 
@@ -444,7 +465,7 @@ class StoreCartServices extends BaseServices
         /** @var StoreProductServices $productServices */
         $productServices = app()->make(StoreProductServices::class);
 
-        if (!$productServices->isValidProduct((int)$productId)) {
+        if (!$productServices->isValidProduct((int)$productId, 'id')) {
             throw new ApiException(410295);
         }
         if (!($unique && $attrValueServices->getAttrvalueCount($productId, $unique, 0))) {
@@ -455,11 +476,15 @@ class StoreCartServices extends BaseServices
         }
 
         $cart = $this->dao->getOne(['uid' => $uid, 'product_id' => $productId, 'product_attr_unique' => $unique]);
+        $min_qty = $productServices->value(['id' => $productId], 'min_qty');
         if ($cart) {
             if ($type == -1) {
                 $cart->cart_num = $num;
             } elseif ($type == 0) {
                 $cart->cart_num = $cart->cart_num - $num;
+                if ($cart->cart_num < $min_qty) {
+                    return $this->dao->delete($cart->id);
+                }
             } elseif ($type == 1) {
                 $cart->cart_num = $cart->cart_num + $num;
             }
@@ -471,10 +496,11 @@ class StoreCartServices extends BaseServices
                 return $cart->id;
             }
         } else {
+
             $data = [
                 'uid' => $uid,
                 'product_id' => $productId,
-                'cart_num' => $num,
+                'cart_num' => $num > $min_qty ? $num : $min_qty,
                 'product_attr_unique' => $unique,
                 'type' => 0,
                 'add_time' => time()
@@ -540,18 +566,18 @@ class StoreCartServices extends BaseServices
      * @param int $uid
      * @param array $cartList
      * @param array $addr
+     * @param int $shipping_type
      * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/02/16
      */
     public function handleCartList(int $uid, array $cartList, array $addr = [], int $shipping_type = 1)
     {
-        if (!$cartList) {
-            return [$cartList, [], []];
-        }
-        /** @var StoreProductServices $productServices */
-        $productServices = app()->make(StoreProductServices::class);
-        /** @var MemberCardServices $memberCardService */
-        $memberCardService = app()->make(MemberCardServices::class);
-        $vipStatus = $memberCardService->isOpenMemberCard('vip_price', false);
+        if (!$cartList) return [$cartList, [], []];
         $tempIds = [];
         $userInfo = [];
         $discount = 100;
@@ -566,6 +592,12 @@ class StoreCartServices extends BaseServices
                 $discount = $systemLevel->value(['id' => $userInfo['level'], 'is_del' => 0, 'is_show' => 1], 'discount') ?: 100;
             }
         }
+
+        //付费会员是否开启，用户是否是付费会员，两个都满足，订单计算金额才会按照付费会员计算。
+        /** @var MemberCardServices $memberCardService */
+        $memberCardService = app()->make(MemberCardServices::class);
+        $vipStatus = $memberCardService->isOpenMemberCard('vip_price', false) && $userInfo['is_money_level'] > 0;
+
         //不送达运费模板
         if ($shipping_type == 1 && $addr) {
             $cityId = (int)($addr['city_id'] ?? 0);
@@ -573,14 +605,22 @@ class StoreCartServices extends BaseServices
                 foreach ($cartList as $item) {
                     $tempIds[] = $item['productInfo']['temp_id'];
                 }
-                /** @var ShippingTemplatesNoDeliveryServices $noDeliveryServices */
-                $noDeliveryServices = app()->make(ShippingTemplatesNoDeliveryServices::class);
-                $tempIds = $noDeliveryServices->isNoDelivery(array_unique($tempIds), $cityId);
+                $tempIds = array_unique($tempIds);
+                $shippingService = app()->make(\app\services\shipping\ShippingTemplatesServices::class);
+                $tempIds = $shippingService->getColumn([['id', 'in', $tempIds], ['no_delivery', '=', 1]], 'id');
+                if ($tempIds) {
+                    /** @var ShippingTemplatesNoDeliveryServices $noDeliveryServices */
+                    $noDeliveryServices = app()->make(ShippingTemplatesNoDeliveryServices::class);
+                    $tempIds = $noDeliveryServices->isNoDelivery(array_unique($tempIds), $cityId);
+                }
             }
         }
 
+        /** @var StoreProductServices $productServices */
+        $productServices = app()->make(StoreProductServices::class);
         $valid = $invalid = [];
         foreach ($cartList as &$item) {
+            if ($item['type'] == 0) $item['min_qty'] = $item['productInfo']['min_qty'];
             $item['productInfo']['express_delivery'] = false;
             $item['productInfo']['store_mention'] = false;
             if (isset($item['productInfo']['logistics'])) {
@@ -656,6 +696,10 @@ class StoreCartServices extends BaseServices
                             $valid[] = $item;
                         }
                         break;
+                    default:
+                        $item['is_valid'] = 1;
+                        $valid[] = $item;
+                        break;
                 }
             }
             unset($item['attrInfo']);
@@ -670,6 +714,7 @@ class StoreCartServices extends BaseServices
      * @param $num
      * @param $new
      * @return bool
+     * @throws \ReflectionException
      */
     public function checkLimit($uid, $product_id, $num, $new)
     {
@@ -692,13 +737,29 @@ class StoreCartServices extends BaseServices
             }
         } else if ($limitInfo['limit_type'] == 2) {
             $cartNum = $this->dao->sum(['uid' => $uid, 'product_id' => $product_id], 'cart_num');
-            $orderPayNum = $orderCartServices->sum(['uid' => $uid, 'product_id' => $product_id], 'cart_num');
-            $orderRefundNum = $orderCartServices->sum(['uid' => $uid, 'product_id' => $product_id], 'refund_num');
+            $orderPayNum = $orderCartServices->sum(['uid' => $uid, 'product_id' => $product_id, 'split_status' => 0], 'cart_num');
+            $orderRefundNum = $orderCartServices->sum(['uid' => $uid, 'product_id' => $product_id, 'split_status' => 0], 'refund_num');
             $orderNum = $orderPayNum - $orderRefundNum;
             if (($num + $orderNum + $cartNum) > $limitInfo['limit_num']) {
                 throw new ApiException(410240, ['limit' => $limitInfo['limit_num'], 'pay_num' => $orderNum]);
             }
         }
+        return true;
+    }
+
+    /**
+     * 判断是否非付费会员购买会员专属商品
+     * @param $user
+     * @param $pid
+     * @return bool
+     * @author: 吴汐
+     * @email: 442384644@qq.com
+     * @date: 2023/10/30
+     */
+    public function checkVipGoodsBuy($user, $pid)
+    {
+        $is_vip_product = app()->make(StoreProductServices::class)->value(['id' => $pid], 'vip_product');
+        if ($is_vip_product == 1 && $user['is_money_level'] == 0) throw new ApiException('此商品为付费会员专属，您无权购买');
         return true;
     }
 }

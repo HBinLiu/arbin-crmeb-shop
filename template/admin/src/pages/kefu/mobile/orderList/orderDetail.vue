@@ -15,6 +15,7 @@
         class="line1"
         style="text-align: left"
         v-text="orderInfo.remark ? orderInfo.remark : '订单未备注，点击添加备注信息'"
+        v-db-click
         @click="modify(1)"
       />
     </div>
@@ -59,7 +60,7 @@
         <div>订单编号：</div>
         <div class="conter acea-row row-middle row-right">
           {{ orderInfo.order_id }}
-          <span class="copy copy-data" :data-clipboard-text="orderInfo.order_id">复制</span>
+          <span class="copy copy-data" v-db-click @click="copyText(orderInfo.order_id)">复制</span>
         </div>
       </div>
       <div class="item acea-row row-between">
@@ -116,17 +117,22 @@
         <div v-if="orderInfo.delivery_type === 'send'">送货人电话：</div>
         <div class="conter">
           {{ orderInfo.delivery_id
-          }}<span class="copy copy-data" :data-clipboard-text="orderInfo.delivery_id">复制</span>
+          }}<span class="copy copy-data" v-db-click @click="copyText(orderInfo.delivery_id)">复制</span>
         </div>
       </div>
     </div>
     <div style="height: 1.2rem"></div>
     <div class="footer acea-row row-right row-middle" v-if="$route.params.goname != 'looks'">
       <div class="more"></div>
-      <div class="bnt cancel" @click="modify(0)" v-if="types === 0">一键改价</div>
-      <div class="bnt cancel" @click="modify(0)" v-if="types === -1">立即退款</div>
-      <div class="bnt cancel" @click="modify(1)">订单备注</div>
-      <div class="bnt cancel" v-if="orderInfo.pay_type === 'offline' && orderInfo.paid === 0" @click="offlinePay">
+      <div class="bnt cancel" v-db-click @click="modify(0)" v-if="types === 0">一键改价</div>
+      <div class="bnt cancel" v-db-click @click="modify(0)" v-if="types === -1">立即退款</div>
+      <div class="bnt cancel" v-db-click @click="modify(1)">订单备注</div>
+      <div
+        class="bnt cancel"
+        v-if="orderInfo.pay_type === 'offline' && orderInfo.paid === 0"
+        v-db-click
+        @click="offlinePay"
+      >
         确认付款
       </div>
       <router-link
@@ -147,7 +153,6 @@
 </template>
 <script>
 import PriceChange from '../../components/PriceChange';
-import ClipboardJS from 'clipboard';
 import { orderInfo } from '@/api/kefu';
 import { required, num } from '@/utils/validate';
 import { validatorDefaultCatch } from '@/libs/dialog';
@@ -182,13 +187,6 @@ export default {
   mounted: function () {
     // this.orderId = this.$route.params.id;
     this.getIndex();
-    this.$nextTick(function () {
-      var copybtn = document.getElementsByClassName('copy-data');
-      const clipboard = new ClipboardJS(copybtn);
-      clipboard.on('success', () => {
-        this.$dialog.success('复制成功');
-      });
-    });
   },
   methods: {
     more: function () {
@@ -205,6 +203,15 @@ export default {
     closeChange(msg) {
       this.change = msg;
     },
+    copyText(text) {
+      this.$copyText(text)
+        .then((message) => {
+          this.$message.success('复制成功');
+        })
+        .catch((err) => {
+          this.$message.error('复制失败');
+        });
+    },
     getIndex: function () {
       let that = this;
       orderInfo(this.$route.params.id).then(
@@ -212,13 +219,6 @@ export default {
           that.orderInfo = res.data.orderInfo;
           that.types = res.data.orderInfo._status._type;
           that.title = res.data.orderInfo._status._title;
-          this.$nextTick(function () {
-            let copybtn = document.getElementsByClassName('copy-data');
-            const clipboard = new ClipboardJS(copybtn);
-            clipboard.on('success', () => {
-              this.$dialog.success('复制成功');
-            });
-          });
         },
         (err) => {
           that.$dialog.error(err.msg);
@@ -239,7 +239,7 @@ export default {
   },
 };
 </script>
-<style scoped lang="less">
+<style scoped lang="scss">
 input {
   display: block;
   height: 100%;

@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -194,7 +194,7 @@ export default {
 		 * 
 		 */
 		ctx.fillStyle = '#fff';
-		ctx.fillRect(0, 0, 750, 1150);
+		ctx.fillRect(0, 0, 750, 1250);
 		uni.getImageInfo({
 			src: arr2[0],
 			success: function(res) {
@@ -217,7 +217,7 @@ export default {
 				if (contentRows > 2) {
 					contentRows = 2;
 					let textArray = contentArray.slice(0, 2);
-					textArray[textArray.length - 1] += '……';
+					textArray[textArray.length - 1] += '…';
 					contentArray = textArray;
 				}
 				ctx.setTextAlign('left');
@@ -335,7 +335,7 @@ export default {
 				ctx.drawImage(arr2[2], wd * codex, hg * codey, wd * codew, wd * codew);
 				ctx.save();
 				//标题
-				const CONTENT_ROW_LENGTH = 30;
+				const CONTENT_ROW_LENGTH = 32;
 				let [contentLeng, contentArray, contentRows] = that.textByteLength(title,
 					CONTENT_ROW_LENGTH);
 				if (contentRows > 2) {
@@ -747,6 +747,22 @@ export default {
 
 		return 0
 	},
+	/*
+	 * 获取当前时间
+	 */
+	getNowTime() {
+		let today = new Date();
+		let year = today.getFullYear(); // 获取当前年份
+		let month = today.getMonth() + 1; // 获取当前月份（注意：月份从 0 开始计数，所以需要加 1）
+		let day = today.getDate(); // 获取当前日（几号）
+		let hour = today.getHours(); // 获取当前小时
+		let minute = today.getMinutes(); // 获取当前分钟
+		let second = today.getSeconds(); // 获取当前秒钟
+
+		// 格式化输出当前时间
+		let nowTime = year + '/' + month + '/' + day + ' ' + hour + ':' + minute + ':' + second;
+		return nowTime
+	},
 	/**
 	 * 处理服务器扫码带进来的参数
 	 * @param string param 扫码携带参数
@@ -979,6 +995,74 @@ export default {
 			}
 			return status;
 		},
-	}
-
+	},
+	/**
+	 * 跳转路径封装函数
+	 * @param url 跳转路径
+	 */
+	JumpPath: function(url) {
+		let arr = url.split('@APPID=');
+		if (arr.length > 1) {
+			//#ifdef MP
+			uni.navigateToMiniProgram({
+				appId: arr[arr.length - 1], // 此为生活缴费appid
+				path: arr[0], // 此为生活缴费首页路径
+				envVersion: "release",
+				success: res => {
+					console.log("打开成功", res);
+				},
+				fail: err => {}
+			})
+			//#endif
+			//#ifndef MP
+			this.Tips({
+				title: 'h5与app端不支持跳转外部小程序'
+			});
+			//#endif
+		} else {
+			if (url.indexOf("http") != -1) {
+				uni.navigateTo({
+					url: `/pages/annex/web_view/index?url=${url}`
+				});
+			} else {
+				if (['/pages/goods_cate/goods_cate', '/pages/order_addcart/order_addcart', '/pages/user/index',
+						'/pages/index/index'
+					]
+					.indexOf(url) == -1) {
+					uni.navigateTo({
+						url
+					})
+				} else {
+					uni.switchTab({
+						url
+					})
+				}
+			}
+		}
+	},
+	// 计算头部自定义导航高度；
+	getWXStatusHeight() {
+		// 获取距上
+		const barTop = uni.getSystemInfoSync().statusBarHeight;
+		// #ifdef MP
+		// 获取胶囊按钮位置信息
+		const menuButtonInfo = wx.getMenuButtonBoundingClientRect() || 0
+		// 获取导航栏高度
+		const barHeight = menuButtonInfo.height + (menuButtonInfo.top - barTop) * 2
+		let barWidth = menuButtonInfo.width
+		// #endif
+		// #ifndef MP
+		// 获取导航栏高度
+		const barHeight = parseInt(barTop) + 10;
+		let barWidth = '100%'
+		// #endif
+		return {
+			// #ifdef MP
+			menuButtonInfo,
+			// #endif
+			barHeight,
+			barTop,
+			barWidth
+		}
+	},
 }

@@ -18,7 +18,6 @@ use app\services\order\StoreOrderServices;
 use crmeb\exceptions\AdminException;
 use crmeb\exceptions\ApiException;
 use think\Exception;
-use think\facade\Cache;
 use crmeb\services\CacheService;
 use think\facade\Log;
 
@@ -667,7 +666,7 @@ class UserBillServices extends BaseServices
         //检测会员等级
         try {
             //用户升级事件
-            event('user.userLevel', [$spreadUid]);
+            event('UserLevelListener', [$spreadUid]);
         } catch (\Throwable $e) {
             Log::error('会员等级升级失败,失败原因:' . $e->getMessage());
         }
@@ -692,7 +691,7 @@ class UserBillServices extends BaseServices
         $where = [];
         $where['not_type'] = ['gain', 'system_sub', 'deduction', 'sign'];
         $where['not_category'] = ['exp', 'integral'];
-        return $this->cacheDriver()->remember('user_type_list', function () use ($where) {
+        return CacheService::remember('user_type_list', function () use ($where) {
             return ['list' => $this->getBillType($where)];
         }, 600);
     }
@@ -750,7 +749,7 @@ class UserBillServices extends BaseServices
         $where_data = [];
         $where_data['time'] = $where['time'];
         if (isset($where['nickname']) && $where['nickname']) {
-            $where_data[] = ['u.account|u.nickname|u.uid|u.phone', 'LIKE', "%$where[nickname]%"];
+            $where_data[] = ['u.nickname|u.uid', 'LIKE', "%$where[nickname]%"];
         }
         if (isset($where['price_max']) && isset($where['price_min'])) {
             if ($where['price_max'] != '' && $where['price_min'] != '') {
@@ -774,14 +773,14 @@ class UserBillServices extends BaseServices
         }
         /** @var UserUserBrokerageServices $userUserBrokerage */
         $userUserBrokerage = app()->make(UserUserBrokerageServices::class);
-        [$count, $list] = $userUserBrokerage->getBrokerageList($where_data, 'b.type,b.pm,sum(IF(b.pm = 1, b.number, 0)) as income,sum(IF(b.pm = 0, b.number, 0)) as pay,u.nickname,u.phone,u.uid,u.now_money,u.brokerage_price,b.add_time as time', $order_string, $limit);
+        [$count, $list] = $userUserBrokerage->getBrokerageList($where_data, 'b.type,b.pm,sum(IF(b.pm = 1 AND b.type <> \'extract_fail\', b.number, 0)) as income,sum(IF(b.pm = 0, b.number, 0)) as pay,u.nickname,u.phone,u.uid,u.now_money,u.brokerage_price,b.add_time as time', $order_string, $limit);
         $uids = array_unique(array_column($list, 'uid'));
         /** @var UserExtractServices $userExtract */
         $userExtract = app()->make(UserExtractServices::class);
         $extractSumList = $userExtract->getUsersSumList($uids);
         foreach ($list as &$item) {
             $item['sum_number'] = $item['income'];
-            $item['nickname'] = $item['nickname'] . "|" . ($item['phone'] ? $item['phone'] . "|" : '') . $item['uid'];
+            $item['nickname'] = $item['nickname'] . " | " . ($item['phone'] ? $item['phone'] . " | " : '') . $item['uid'];
             $item['extract_price'] = $extractSumList[$item['uid']] ?? 0;
             $item['time'] = $item['time'] ? date('Y-m-d H:i:s', $item['time']) : '';
         }
@@ -1185,7 +1184,7 @@ class UserBillServices extends BaseServices
     {
         /** @var UserServices $userService */
         $userService = app()->make(UserServices::class);
-        if (!$userService->getUserInfo($uid)) {
+        if (!$userService->getUserInfo($uid, 'uid')) {
             throw new ApiException(100026);
         }
         $result = ['list' => [], 'time' => [], 'count' => 0];
@@ -1193,8 +1192,8 @@ class UserBillServices extends BaseServices
         $storeOrderServices = app()->make(StoreOrderServices::class);
         [$page, $limit] = $this->getPageValue();
         $time = [];
-        $where = ['paid' => 1, 'type' => 6, 'spread_or_uid' => $uid, 'pid' => 0, 'refund_status' => 0];
-        $list = $storeOrderServices->getlist($where, ['id,order_id,uid,add_time,spread_uid,status,spread_two_uid,one_brokerage,two_brokerage,pay_price,pid'], $page, $limit, ['split']);
+        $where = ['paid' => 1, 'type' => 6, 'all_spread' => $uid, 'pid' => 0, 'refund_status' => 0];
+        $list = $storeOrderServices->getlist($where, ['id,order_id,uid,add_time,spread_uid,status,spread_two_uid,one_brokerage,two_brokerage,pay_price,pid,staff_id,agent_id,division_id,staff_brokerage,agent_brokerage,division_brokerage'], $page, $limit, ['split']);
         $result['count'] = $storeOrderServices->count($where);
         $time_data = [];
         if ($list) {
@@ -1203,7 +1202,15 @@ class UserBillServices extends BaseServices
             foreach ($list as &$item) {
                 $item['avatar'] = $userInfos[$item['uid']]['avatar'] ?? '';
                 $item['nickname'] = $userInfos[$item['uid']]['nickname'] ?? '';
-                $item['number'] = $item['spread_uid'] == $uid ? $item['one_brokerage'] : $item['two_brokerage'];
+                if ($item['division_id'] == $uid) {
+                    $item['number'] = $item['division_brokerage'];
+                } elseif ($item['agent_id'] == $uid) {
+                    $item['number'] = $item['agent_brokerage'];
+                } elseif ($item['staff_id'] == $uid) {
+                    $item['number'] = $item['staff_brokerage'];
+                } else {
+                    $item['number'] = $item['spread_uid'] == $uid ? $item['one_brokerage'] : $item['two_brokerage'];
+                }
                 $item['time'] = $item['add_time'] ? date('Y-m-d H:i', $item['add_time']) : '';
                 $item['time_key'] = $item['add_time'] ? date('Y-m', $item['add_time']) : '';
                 $item['type'] = in_array($item['status'], [2, 3]) ? 'brokerage' : 'number';
@@ -1264,9 +1271,9 @@ class UserBillServices extends BaseServices
         [$page, $limit] = $this->getPageValue();
         $where = ['paid' => 1, 'type' => 1, 'pid' => 0];
         if ($division_type == 1) {
-            $where = $where + ['division_id' => $uid];
+            $where = $where + ['division_id' => $uid, 'division_brokerage_greater' => 0];
         } elseif ($division_type == 2) {
-            $where = $where + ['agent_id' => $uid];
+            $where = $where + ['agent_id' => $uid, 'agent_brokerage_greater' => 0];
         }
 
         $list = $storeOrderServices->getlist($where, ['id,order_id,uid,add_time,spread_uid,division_id,agent_id,status,spread_two_uid,one_brokerage,two_brokerage,agent_brokerage,division_brokerage,pay_price,pid'], $page, $limit, ['split']);

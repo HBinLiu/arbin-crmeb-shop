@@ -1,132 +1,143 @@
 <template>
   <div>
-    <Card :bordered="false" dis-hover class="ivu-mt">
-      <Form
-        ref="formValidate"
-        :model="formValidate"
-        :label-width="labelWidth"
-        :label-position="labelPosition"
-        class="tabform"
-        @submit.native.prevent
-      >
-        <Row :gutter="24" type="flex">
-          <Col span="24">
-            <FormItem label="语言分类：">
-              <RadioGroup type="button" v-model="formValidate.is_admin" class="mr15" @on-change="selChange">
-                <Radio :label="item.value" v-for="(item, index) in langType.isAdmin" :key="index"
-                  >{{ item.title }}
-                </Radio>
-              </RadioGroup>
-            </FormItem>
-          </Col>
-          <Col span="24">
-            <FormItem label="语言类型：">
-              <RadioGroup type="button" v-model="formValidate.type_id" class="mr15" @on-change="selChange">
-                <Radio :label="item.value" v-for="(item, index) in langType.langType" :key="index"
-                  >{{ item.title }}
-                </Radio>
-              </RadioGroup>
-            </FormItem>
-          </Col>
-          <Col span="24">
-            <FormItem label="搜索：">
-              <div class="acea-row row-middle">
-                <Input
-                  search
-                  enter-button
-                  @on-search="selChange"
-                  placeholder="请输入语言备注"
-                  element-id="name"
-                  v-model="formValidate.remarks"
-                  style="width: 30%"
-                />
-              </div>
-            </FormItem>
-          </Col>
-        </Row>
-      </Form>
-    </Card>
-    <Alert class="mt10">
-      使用说明
-      <template slot="desc"
-        >添加用户端页面语言，添加完成之后状态码为中文文字，前端页面使用 $t(`xxxx`)，js文件中使用 this.t(`xxxx`) 或者使用
-        that.t(`xxxx`)<br />添加后端接口语言，添加完成之后状态码为6位数字，后台抛错或者控制器返回文字的时候直接填写状态码数字
+    <el-card :bordered="false" shadow="never" class="ivu-mb-16" :body-style="{ padding: 0 }">
+      <div class="padding-add">
+        <el-form :model="formValidate" :label-width="labelWidth" label-position="right" @submit.native.prevent inline>
+          <el-form-item label="语言分类：">
+            <el-select v-model="formValidate.is_admin" clearable @change="selChange" class="form_content_width">
+              <el-option
+                v-for="(item, index) in langType.isAdmin"
+                :key="index"
+                :label="item.title"
+                :value="item.value"
+              ></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="语言类型：">
+            <el-select v-model="formValidate.type_id" clearable @change="selChange" class="form_content_width">
+              <el-option
+                v-for="(item, index) in langType.langType"
+                :key="index"
+                :label="item.title"
+                :value="item.value"
+              ></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="搜索：">
+            <el-input
+              clearable
+              placeholder="请输入语言备注"
+              v-model="formValidate.remarks"
+              class="form_content_width"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" class="userSearch" v-db-click @click="selChange">搜索</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+    </el-card>
+    <el-alert type="warning" :closable="false">
+      <template slot="title">
+        <p class="alert_title">页面语言</p>
+        添加页面语言，添加完成之后状态码为中文文字，移动端页面使用 $t(`xxxx`)，js文件中使用 this.t(`xxxx`) 或者使用
+        that.t(`xxxx`) 实现语言的切换<br />
+        <br />
+        <p class="alert_title">接口语言</p>
+        添加接口语言，添加完成之后状态码为6位数字，接口返回提示信息时，直接返回对应的错误码即可实现语言的切换
       </template>
-    </Alert>
-    <Card :bordered="false" dis-hover>
-      <Row type="flex">
-        <Col>
-          <Button type="primary" icon="md-add" @click="add">添加词汇</Button>
-        </Col>
-      </Row>
-      <Table
-        ref="table"
-        :columns="columns"
-        :data="tabList"
-        class="ivu-mt"
-        :loading="loading"
-        no-data-text="暂无数据"
-        no-filtered-data-text="暂无筛选结果"
-      >
-        <template slot-scope="{ row, index }" slot="action">
-          <a @click="edit(row)">编辑</a>
-          <Divider type="vertical" />
-          <a @click="del(row, '删除语言', index)">删除</a>
-        </template>
-      </Table>
+    </el-alert>
+    <el-card class="mt14" :bordered="false" shadow="never">
+      <el-row class="mb14">
+        <el-col>
+          <el-button type="primary" v-db-click @click="add">添加语句</el-button>
+        </el-col>
+      </el-row>
+      <el-table ref="table" :data="tabList" class="ivu-mt" v-loading="loading" empty-text="暂无数据">
+        <el-table-column label="编号" width="80">
+          <template slot-scope="scope">
+            <span>{{ scope.row.id }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="原语句" min-width="230">
+          <template slot-scope="scope">
+            <span>{{ scope.row.remarks }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="对应语言翻译" min-width="130">
+          <template slot-scope="scope">
+            <span>{{ scope.row.lang_explain }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态码/文字(接口/页面调用参考)" min-width="130">
+          <template slot-scope="scope">
+            <span>{{ scope.row.code }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="语言类型" min-width="130">
+          <template slot-scope="scope">
+            <span>{{ scope.row.language_name }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" fixed="right" width="170">
+          <template slot-scope="scope">
+            <a v-db-click @click="edit(scope.row)">编辑</a>
+            <el-divider direction="vertical"></el-divider>
+            <a v-db-click @click="del(scope.row, '删除语言', scope.$index)">删除</a>
+          </template>
+        </el-table-column>
+      </el-table>
       <div class="acea-row row-right page">
-        <Page
+        <pagination
+          v-if="total"
           :total="total"
-          :current="formValidate.page"
-          show-elevator
-          show-total
-          @on-change="pageChange"
-          :page-size="formValidate.limit"
+          :page.sync="formValidate.page"
+          :limit.sync="formValidate.limit"
+          @pagination="getList"
         />
       </div>
-    </Card>
-    <Modal
-      v-model="addlangModal"
-      width="750"
-      title="添加词汇"
-      :loading="FormLoading"
-      @on-ok="ok"
-      @on-cancel="addlangModal = false"
-      @on-visible-change="modalChange"
-    >
-      <Form ref="langFormData" :model="langFormData" :rules="ruleValidate" :label-width="120">
-        <FormItem label="语言分类：" class="mb20">
-          <RadioGroup type="button" v-model="langFormData.is_admin" class="mr15">
-            <Radio :label="item.value" v-for="(item, index) in langType.isAdmin" :key="index">{{ item.title }}</Radio>
-          </RadioGroup>
-        </FormItem>
-        <Input v-model="langFormData.edit" v-show="false"></Input>
-        <FormItem label="语言说明：" prop="remarks" class="mb20">
-          <Input
+    </el-card>
+    <el-dialog :visible.sync="addlangModal" width="720px" title="添加需要翻译的语句" @closed="modalChange">
+      <el-form ref="langFormData" :model="langFormData" :rules="ruleValidate">
+        <el-form-item label="应用端：" class="mb20" label-width="120px">
+          <el-radio-group type="button" v-model="langFormData.is_admin" class="mr15">
+            <el-radio :label="item.value" v-for="(item, index) in langType.isAdmin" :key="index">{{
+              item.title
+            }}</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-input v-model="langFormData.edit" v-show="false"></el-input>
+        <el-form-item label="需要翻译的语句：" prop="remarks" class="mb20">
+          <el-input
             v-model="langFormData.remarks"
-            placeholder="请输入语言说明"
+            placeholder="请输入需要添加翻译的语句"
             style="width: 330px"
             search
-            enter-button="翻译"
             @on-search="translate"
-          ></Input>
-        </FormItem>
-        <FormItem label="对应语言：" prop="remark" class="mb20">
-          <Table
-            ref="langTable"
-            :loading="traTabLoading"
-            :columns="langColumns"
-            :data="langFormData.list"
-            no-data-text="暂无数据"
-            no-filtered-data-text="暂无筛选结果"
           >
-            <template slot-scope="{ row, index }" slot="lang_explain">
-              <Input v-model="langFormData.list[index].lang_explain" class="priceBox"></Input>
-            </template>
-          </Table>
-        </FormItem>
-      </Form>
-    </Modal>
+            <el-button type="primary" slot="append" v-db-click @click="translate">翻译</el-button>
+          </el-input>
+        </el-form-item>
+        <el-form-item prop="remark" class="mb20">
+          <el-table ref="langTable" v-loading="traTabLoading" :data="langFormData.list" empty-text="暂无数据">
+            <el-table-column label="语言类型" width="140">
+              <template slot-scope="scope">
+                <span> {{ scope.row.language_name }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="对应语言翻译" min-width="250">
+              <template slot-scope="scope">
+                <el-input v-model="scope.row.lang_explain" class="priceBox"></el-input>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button v-db-click @click="addlangModal = false">取消</el-button>
+        <el-button type="primary" v-db-click @click="ok">确定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -153,47 +164,14 @@ export default {
         code: [{ required: true, message: '请输入状态码/文字', trigger: 'blur' }],
         remarks: [{ required: true, message: '请输入文字', trigger: 'blur' }],
       },
-      columns: [
-        {
-          title: '编号',
-          key: 'id',
-          width: 80,
-        },
-        {
-          title: '所属语言',
-          key: 'language_name',
-          minWidth: 180,
-        },
-        {
-          title: '状态码/文字',
-          key: 'code',
-          minWidth: 300,
-        },
-        {
-          title: '备注说明',
-          key: 'remarks',
-          minWidth: 300,
-        },
-        {
-          title: '对应语言',
-          key: 'lang_explain',
-          minWidth: 150,
-        },
-        {
-          title: '操作',
-          slot: 'action',
-          fixed: 'right',
-          width: 100,
-        },
-      ],
       langColumns: [
         {
-          title: '所属语言',
+          title: '语言类型',
           key: 'language_name',
           width: 120,
         },
         {
-          title: '对应语言',
+          title: '对应语言翻译',
           slot: 'lang_explain',
           minWidth: 250,
         },
@@ -215,10 +193,10 @@ export default {
   computed: {
     ...mapState('media', ['isMobile']),
     labelWidth() {
-      return this.isMobile ? undefined : 80;
+      return this.isMobile ? undefined : '80px';
     },
     labelPosition() {
-      return this.isMobile ? 'top' : 'left';
+      return this.isMobile ? 'top' : 'right';
     },
   },
   mounted() {
@@ -227,7 +205,7 @@ export default {
   methods: {
     translate() {
       if (!this.langFormData.remarks.trim()) {
-        return this.$Message.warning('请先输入翻译内容');
+        return this.$message.warning('请先输入翻译内容');
       }
       this.traTabLoading = true;
       langCodeTranslate({
@@ -241,7 +219,7 @@ export default {
         })
         .catch((err) => {
           this.traTabLoading = false;
-          this.$Message.error(err.msg);
+          this.$message.error(err.msg);
         });
     },
     add() {
@@ -261,12 +239,12 @@ export default {
         this.$nextTick(() => {
           this.FormLoading = true;
         });
-        return this.$Message.error('请先输入语言说明');
+        return this.$message.error('请先输入语言说明');
       }
       langCodeSettingSave(this.langFormData)
         .then((res) => {
           this.addlangModal = false;
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.getList();
         })
         .catch((err) => {
@@ -274,7 +252,7 @@ export default {
           this.$nextTick(() => {
             this.FormLoading = true;
           });
-          this.$Message.error(err.msg);
+          this.$message.error(err.msg);
         });
     },
     edit(row) {
@@ -290,7 +268,7 @@ export default {
         })
         .catch((err) => {
           this.loading = false;
-          this.$Message.error(err.msg);
+          this.$message.error(err.msg);
         });
     },
     // 删除
@@ -304,24 +282,22 @@ export default {
       };
       this.$modalSure(delfromData)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.tabList.splice(num, 1);
           // this.getList();
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
-    modalChange(status) {
-      if (!status) {
-        this.langFormData = {
-          is_admin: 0,
-          name: '',
-          code: '',
-          list: [],
-        };
-        this.code = null;
-      }
+    modalChange() {
+      this.langFormData = {
+        is_admin: 0,
+        name: '',
+        code: '',
+        list: [],
+      };
+      this.code = null;
     },
     // 选择
     selChange() {
@@ -340,50 +316,40 @@ export default {
         })
         .catch((res) => {
           this.loading = false;
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
-    },
-    pageChange(index) {
-      this.formValidate.page = index;
-      this.getList();
     },
   },
 };
 </script>
-<style scoped lang="stylus">
+<style lang="scss" scoped>
 .ivu-mt .type .item {
   margin: 3px 0;
 }
-
 .tabform {
   margin-bottom: 10px;
 }
-
 .Refresh {
   font-size: 12px;
-  color: #1890FF;
+  color: var(--prev-color-primary);
   cursor: pointer;
 }
-
 .ivu-form-item {
   margin-bottom: 10px;
 }
-
-.status >>> .item ~ .item {
+.status ::v-deep .item ~ .item {
   margin-left: 6px;
 }
-
-.status >>> .statusVal {
+.status ::v-deep .statusVal {
   margin-bottom: 7px;
 }
 
-/* .ivu-mt >>> .ivu-table-header */
+/* .ivu-mt ::v-deep .ivu-table-header */
 /* border-top:1px dashed #ddd!important */
 .type {
   padding: 3px 0;
   box-sizing: border-box;
 }
-
 .tabBox_img {
   width: 36px;
   height: 36px;
@@ -395,8 +361,7 @@ export default {
     height: 100%;
   }
 }
-
-.mb20 /deep/ .ivu-table-wrapper > .ivu-spin-fix {
+.mb20 ::v-deep .ivu-table-wrapper > .ivu-spin-fix {
   border: none;
 }
 </style>

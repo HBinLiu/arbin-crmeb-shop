@@ -7,7 +7,9 @@
           alt=""
           style="width: 100%; height: 100%; display: block"
         />
-        <div v-show="showRefresh" class="verify-refresh" @click="refresh"><i class="iconfont icon-refresh" /></div>
+        <div v-show="showRefresh" class="verify-refresh" v-db-click @click="refresh">
+          <i class="iconfont icon-refresh" />
+        </div>
         <transition name="tips">
           <span v-if="tipWords" class="verify-tips" :class="passFlag ? 'suc-bg' : 'err-bg'">{{ tipWords }}</span>
         </transition>
@@ -185,7 +187,6 @@ export default {
     this.$el.onselectstart = function () {
       return false;
     };
-    console.log(this.defaultImg);
   },
   methods: {
     init() {

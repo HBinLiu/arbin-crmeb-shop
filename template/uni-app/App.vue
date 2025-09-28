@@ -7,39 +7,33 @@
 	} from './config/app';
 	import {
 		getShopConfig,
-		silenceAuth
+		silenceAuth,
+		getSystemVersion,
+		basicConfig,
+		remoteRegister
 	} from '@/api/public';
 	import Auth from '@/libs/wechat.js';
 	import Routine from './libs/routine.js';
 	import {
 		silenceBindingSpread
-	} from "@/utils";
-	import {
-		getCartCounts,
-	} from '@/api/order.js';
+	} from '@/utils';
 	import {
 		colorChange,
-		getCrmebCopyRight,
-
+		getCrmebCopyRight
 	} from '@/api/api.js';
 	import {
-		getLangJson
-	} from '@/api/user.js'
+		getLangJson,
+		getLangVersion
+	} from '@/api/user.js';
 	import {
 		mapGetters
-	} from "vuex"
+	} from 'vuex';
 	import colors from '@/mixins/color.js';
 	import Cache from '@/utils/cache';
-	let green =
-		'--view-theme: rgba(66,202,77,1);--view-theme-16: #42CA4D;--view-priceColor:#FF7600;--view-minorColor:rgba(108, 198, 94, 0.5);--view-minorColorT:rgba(66, 202, 77, 0.1);--view-bntColor:#FE960F;--view-op-ten: rgba(66,202,77, 0.1);--view-main-start:#70E038; --view-main-over:#42CA4D;--view-op-point-four: rgba(66,202,77, 0.04);'
-	let red =
-		'--view-theme: rgba(233,51,35,1);--view-theme-16: #e93323;--view-priceColor:#e93323;--view-minorColor:rgba(233, 51, 35, 0.5);--view-minorColorT:rgba(233, 51, 35, 0.1);--view-bntColor:#FE960F;--view-op-ten: rgba(233,51,35, 0.1);--view-main-start:#FF6151; --view-main-over:#e93323;--view-op-point-four: rgba(233,51,35, 0.04);'
-	let blue =
-		'--view-theme: rgba(29,176,252,1);--view-theme-16:#1db0fc;--view-priceColor:#FD502F;--view-minorColor:rgba(58, 139, 236, 0.5);--view-minorColorT:rgba(9, 139, 243, 0.1);--view-bntColor:#22CAFD;--view-op-ten: rgba(29,176,252, 0.1);--view-main-start:#40D1F4; --view-main-over:#1DB0FC;--view-op-point-four: rgba(29,176,252, 0.04);'
-	let pink =
-		'--view-theme: rgba(255,68,143,1);--view-theme-16:#ff448f;--view-priceColor:#FF448F;--view-minorColor:rgba(255, 68, 143, 0.5);--view-minorColorT:rgba(255, 68, 143, 0.1);--view-bntColor:#282828;--view-op-ten: rgba(255,68,143, 0.1);--view-main-start:#FF67AD; --view-main-over:#FF448F;--view-op-point-four: rgba(255,68,143, 0.04);'
-	let orange =
-		'--view-theme: rgba(254,92,45,1); --view-theme-16:#FE5C2D;--view-priceColor:#FE5C2D;--view-minorColor:rgba(254, 92, 45, 0.5);--view-minorColorT:rgba(254, 92, 45, 0.1);--view-bntColor:#FDB000;--view-op-ten: rgba(254,92,45, 0.1);--view-main-start:#FF9445; --view-main-over:#FE5C2D;--view-op-point-four: rgba(254,92,45, 0.04);'
+	import themeList from '@/utils/theme';
+	import {
+		debug
+	} from 'util';
 
 	export default {
 		globalData: {
@@ -63,119 +57,136 @@
 					if (newV) {
 						// this.getCartNum()
 					} else {
-						this.$store.commit('indexData/setCartNum', '')
+						this.$store.commit('indexData/setCartNum', '');
 					}
 				}
 			},
 			cartNum(newCart, b) {
-				this.$store.commit('indexData/setCartNum', newCart + '')
+				this.$store.commit('indexData/setCartNum', newCart + '');
 				if (newCart > 0) {
 					uni.setTabBarBadge({
 						index: Number(uni.getStorageSync('FOOTER_ADDCART')) || 2,
 						text: newCart + ''
-					})
+					});
 				} else {
 					uni.hideTabBarRedDot({
 						index: Number(uni.getStorageSync('FOOTER_ADDCART')) || 2
-					})
+					});
 				}
 			}
 		},
 		onShow() {
-			const queryData = uni.getEnterOptionsSync() // uni-app版本 3.5.1+ 支持
+			const queryData = uni.getEnterOptionsSync(); // uni-app版本 3.5.1+ 支持
 			if (queryData.query.spread) {
 				this.$Cache.set('spread', queryData.query.spread);
 				this.globalData.spid = queryData.query.spread;
 				this.globalData.pid = queryData.query.spread;
-				silenceBindingSpread(this.globalData)
+				silenceBindingSpread(this.globalData);
 			}
 			if (queryData.query.spid) {
 				this.$Cache.set('spread', queryData.query.spid);
 				this.globalData.spid = queryData.query.spid;
 				this.globalData.pid = queryData.query.spid;
-				silenceBindingSpread(this.globalData)
+				silenceBindingSpread(this.globalData);
+			}
+			if (queryData.query.agent_id) {
+				this.$Cache.set('agent_id', queryData.query.agent_id);
+				this.globalData.agent_id = queryData.query.agent_id;
+				silenceBindingSpread(this.globalData);
 			}
 			// #ifdef MP
 			if (queryData.query.scene) {
-				switch (queryData.scene) {
-					//扫描小程序码
-					case 1047:
-						this.globalData.code = queryData.query.scene;
-						break;
-						//长按图片识别小程序码
-					case 1048:
-						this.globalData.code = queryData.query.scene;
-						break;
-						//手机相册选取小程序码
-					case 1049:
-						this.globalData.code = queryData.query.scene;
-						break;
-						//直接进入小程序
-					case 1001:
-						this.globalData.spid = queryData.query.scene;
-						break;
+				let param = this.$util.getUrlParams(decodeURIComponent(queryData.query.scene));
+				if (param.pid) {
+					this.$Cache.set('spread', param.pid);
+					this.globalData.spid = param.pid;
+					this.globalData.pid = param.pid;
+				} else {
+					switch (queryData.scene) {
+						//扫描小程序码
+						case 1047:
+							this.globalData.code = queryData.query.scene;
+							break;
+							//长按图片识别小程序码
+						case 1048:
+							this.globalData.code = queryData.query.scene;
+							break;
+							//手机相册选取小程序码
+						case 1049:
+							this.globalData.code = queryData.query.scene;
+							break;
+							//直接进入小程序
+						case 1001:
+							this.globalData.spid = queryData.query.scene;
+							break;
+					}
 				}
-				silenceBindingSpread(this.globalData)
+				silenceBindingSpread(this.globalData);
 			}
 			// #endif
 		},
 		async onLaunch(option) {
-			uni.hideTabBar()
+			uni.hideTabBar();
 			let that = this;
-			colorChange('color_change').then(res => {
-				uni.setStorageSync('is_diy', res.data.is_diy)
-				uni.$emit('is_diy', res.data.is_diy)
-				switch (res.data.status) {
-					case 1:
-						uni.setStorageSync('viewColor', blue)
-						uni.$emit('ok', blue, res.data.status)
-						break;
-					case 2:
-						uni.setStorageSync('viewColor', green)
-						uni.$emit('ok', green, res.data.status)
-						break;
-					case 3:
-						uni.setStorageSync('viewColor', red)
-						uni.$emit('ok', red, res.data.status)
-						break;
-					case 4:
-						uni.setStorageSync('viewColor', pink)
-						uni.$emit('ok', pink, res.data.status)
-						break;
-					case 5:
-						uni.setStorageSync('viewColor', orange)
-						uni.$emit('ok', orange, res.data.status)
-						break;
-					default:
-						uni.setStorageSync('viewColor', red)
-						uni.$emit('ok', red, res.data.status)
-						break
-				}
+			basicConfig().then((res) => {
+				uni.setStorageSync('BASIC_CONFIG', res.data);
 			});
-			if (!Cache.has('localeSet')) {
-				getLangJson().then(res => {
-					Cache.set('locale', Object.keys(res.data)[0])
-					uni.setStorageSync('localeJson', res.data);
-					Cache.set('localeSet', true, 600) // 语言类型缓存时间
-				})
+			// #ifdef H5
+			if (option.query.hasOwnProperty('mdType') && option.query.mdType == 'iframeWindow') {
+				this.globalData.isIframe = true;
+			} else {
+				this.globalData.isIframe = false;
 			}
+			if (!this.isLogin && option.query.hasOwnProperty('remote_token')) {
+				this.remoteRegister(option.query.remote_token);
+			}
+			// #endif
+			colorChange('color_change').then((res) => {
+				uni.setStorageSync('is_diy', res.data.is_diy);
+				uni.$emit('is_diy', res.data.is_diy);
+				const themeMap = {
+					1: 'blue',
+					2: 'green',
+					3: 'red',
+					4: 'pink',
+					5: 'orange'
+				};
+
+				const status = res.data.status;
+				const themeKey = themeMap[status] || 'red'; // 默认使用红色
+				const selectedTheme = themeList[themeKey];
+				uni.setStorageSync('color_status', res.data.status);
+				uni.setStorageSync('viewColor', selectedTheme);
+				uni.$emit('ok', selectedTheme, status);
+			});
+			getLangVersion().then((res) => {
+				let version = res.data.version;
+				if (version != uni.getStorageSync('LANG_VERSION')) {
+					getLangJson().then((res) => {
+						let value = Object.keys(res.data)[0];
+						Cache.set('locale', Object.keys(res.data)[0]);
+						this.$i18n.setLocaleMessage(value, res.data[value]);
+						uni.setStorageSync('localeJson', res.data);
+					});
+				}
+				uni.setStorageSync('LANG_VERSION', version);
+			});
 
 			// #ifdef APP-PLUS || H5
 			uni.getSystemInfo({
 				success: function(res) {
 					// 首页没有title获取的整个页面的高度，里面的页面有原生标题要减掉就是视口的高度
 					// 状态栏是动态的可以拿到 标题栏是固定写死的是44px
-					let height = res.windowHeight - res.statusBarHeight - 44
+					let height = res.windowHeight - res.statusBarHeight - 44;
 					// #ifdef H5 || APP-PLUS
-					that.globalData.windowHeight = res.windowHeight + 'px'
+					that.globalData.windowHeight = res.windowHeight + 'px';
 					// #endif
 					// // #ifdef APP-PLUS
 					// that.globalData.windowHeight = height + 'px'
 					// // #endif
-
 				}
 			});
-			// #endif	
+			// #endif
 			// #ifdef MP
 			if (HTTP_REQUEST_URL == '') {
 				console.error(
@@ -187,10 +198,8 @@
 			const updateManager = wx.getUpdateManager();
 			const startParamObj = wx.getEnterOptionsSync();
 			if (wx.canIUse('getUpdateManager') && startParamObj.scene != 1154) {
-				const updateManager = wx.getUpdateManager()
+				const updateManager = wx.getUpdateManager();
 				updateManager.onCheckForUpdate(function(res) {
-					// 请求完新版本信息的回调
-					// console.log(res.hasUpdate)
 					if (res.hasUpdate) {
 						updateManager.onUpdateFailed(function() {
 							return that.Tips({
@@ -203,19 +212,19 @@
 								content: '新版本已经下载好，是否重启当前应用？',
 								success(res) {
 									if (res.confirm) {
-										updateManager.applyUpdate()
+										updateManager.applyUpdate();
 									}
 								}
-							})
-						})
+							});
+						});
 						updateManager.onUpdateFailed(function() {
 							wx.showModal({
 								title: '发现新版本',
-								content: '请删除当前小程序，重启搜索打开...',
-							})
-						})
+								content: '请删除当前小程序，重启搜索打开...'
+							});
+						});
 					}
-				})
+				});
 			}
 			// #endif
 
@@ -231,29 +240,14 @@
 			// #ifdef MP
 			let menuButtonInfo = uni.getMenuButtonBoundingClientRect();
 			that.globalData.navH = menuButtonInfo.top * 2 + menuButtonInfo.height / 2;
-			const version = uni.getSystemInfoSync().SDKVersion
+			const version = uni.getSystemInfoSync().SDKVersion;
 			if (Routine.compareVersion(version, '2.21.3') >= 0) {
-				that.$Cache.set('MP_VERSION_ISNEW', true)
+				that.$Cache.set('MP_VERSION_ISNEW', true);
 			} else {
-				that.$Cache.set('MP_VERSION_ISNEW', false)
+				that.$Cache.set('MP_VERSION_ISNEW', false);
 			}
 			// #endif
 
-			// #ifdef H5
-			uni.getSystemInfo({
-				success(e) {
-					/* 窗口宽度大于420px且不在PC页面且不在移动设备时跳转至 PC.html 页面 */
-					if (e.windowWidth > 420 && !window.top.isPC && !/iOS|Android/i.test(e.system)) {
-						window.location.pathname = '/static/html/pc.html';
-					}
-				}
-			});
-			if (option.query.hasOwnProperty('type') && option.query.type == "iframeWindow") {
-				this.globalData.isIframe = true;
-			} else {
-				this.globalData.isIframe = false;
-			}
-			// #endif
 			// #ifdef MP
 			// 小程序静默授权
 			// if (!this.$store.getters.isLogin) {
@@ -268,20 +262,88 @@
 			// #endif
 			// #ifdef H5
 			// 添加crmeb chat 统计
-			var __s = document.createElement('script');
-			__s.src = `${HTTP_REQUEST_URL}/api/get_script`;
-			document.head.appendChild(__s);
+			// var __s = document.createElement('script');
+			// __s.src = `${HTTP_REQUEST_URL}/api/get_script`;
+			// document.head.appendChild(__s);
+
+
+			fetch(`${HTTP_REQUEST_URL}/api/get_script`)
+				.then(response => response.text())
+				.then(content => {
+					// 尝试解析是否为HTML（带<script>标签）
+					const isHTML = content.trim().startsWith('<script');
+
+					let externalScripts = [];
+					let inlineScripts = [];
+
+					if (isHTML) {
+						// 情况1：带<script>标签，用DOMParser解析
+						const parser = new DOMParser();
+						const doc = parser.parseFromString(content, 'text/html');
+						const scripts = doc.querySelectorAll('script');
+
+						externalScripts = Array.from(scripts).filter(script => script.src);
+						inlineScripts = Array.from(scripts).filter(script => !script.src);
+					} else {
+						// 情况2：不带<script>标签，直接当作内联脚本处理
+						inlineScripts = [{
+							textContent: content
+						}];
+					}
+
+					// 1. 先加载所有外部脚本（如果有）
+					const loadExternalScripts = externalScripts.map(script => {
+						return new Promise((resolve, reject) => {
+							const newScript = document.createElement('script');
+							newScript.src = script.src;
+							newScript.onload = resolve;
+							newScript.onerror = reject;
+							document.body.appendChild(newScript);
+						});
+					});
+
+					// 2. 等外部脚本加载完成后，再执行内联脚本
+					Promise.all(loadExternalScripts)
+						.then(() => {
+							inlineScripts.forEach(script => {
+								const newScript = document.createElement('script');
+								newScript.textContent = script.textContent;
+								document.body.appendChild(newScript);
+							});
+						})
+						.catch(error => console.error('Failed to load external scripts:', error));
+				})
+				.catch(error => console.error('Error fetching script:', error));
+
+
 			// #endif
-			getCrmebCopyRight().then(res => {
-				uni.setStorageSync('copyRight', res.data)
-			})
+			getCrmebCopyRight().then((res) => {
+				uni.setStorageSync('copyRight', res.data);
+			});
 		},
 		// #ifdef H5
 		onHide() {
-			this.$Cache.clear('snsapiKey')
+			this.$Cache.clear('snsapiKey');
 		},
 		// #endif
 		methods: {
+			remoteRegister(remote_token) {
+				remoteRegister({
+					remote_token
+				}).then((res) => {
+					let data = res.data;
+					if (data.get_remote_login_url) {
+						location.href = data.get_remote_login_url
+					} else {
+						this.$store.commit('LOGIN', {
+							token: data.token,
+							time: data.expires_time - this.$Cache.time()
+						});
+						this.$store.commit('SETUID', data.userInfo.uid);
+						location.reload();
+					}
+				});
+			}
 			// 小程序静默授权
 			// silenceAuth(code) {
 			// 	let that = this;
@@ -305,8 +367,7 @@
 			// 		})
 			// 		.catch(res => {});
 			// },
-		},
-
+		}
 	};
 </script>
 
@@ -317,6 +378,8 @@
 	@import 'static/iconfont/iconfont.css';
 	@import 'static/css/guildford.css';
 	@import 'static/css/style.scss';
+	@import 'static/css/unocss.css';
+	@import 'static/fonts/font.scss';
 
 	view {
 		box-sizing: border-box;

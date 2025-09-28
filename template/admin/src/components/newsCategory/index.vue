@@ -1,36 +1,32 @@
 <template>
   <div :style="{ height: scrollerHeight + 'px' || '' }">
-    <Card :bordered="false" dis-hover class="ivu-mt">
-      <Form ref="formValidate" :model="formValidate" :label-width="80" label-position="left" class="tabform">
-        <Row :gutter="24" type="flex" justify="end">
-          <Col span="24">
-            <Col v-bind="grid" class="mr">
-              <FormItem label="图文搜索：" prop="cate_name" label-for="cate_name">
-                <Input
-                  search
-                  enter-button
-                  placeholder="请输入"
-                  element-id="cate_name"
-                  v-model="formValidate.cate_name"
-                  @on-search="userSearchs"
-                />
-              </FormItem>
-            </Col>
-          </Col>
-        </Row>
-        <Row type="flex" v-show="$route.path === '/admin/app/wechat/news_category/index'">
-          <router-link :to="'/admin/app/wechat/news_category/save/0'">
-            <Button type="primary" class="bnt" icon="md-add">添加图文消息</Button>
+    <div>
+      <el-form
+        ref="formValidate"
+        inline
+        :model="formValidate"
+        label-width="80px"
+        label-position="right"
+        class="tabform"
+      >
+        <el-form-item label="图文搜索：" prop="cate_name" label-for="cate_name">
+          <el-input clearable placeholder="请输入" v-model="formValidate.cate_name" class="form_content_width" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" v-db-click @click="userSearchs">查询</el-button>
+          <router-link :to="routePre + '/app/wechat/news_category/save/0'">
+            <el-button type="primary" class="bnt ml15">添加图文消息</el-button>
           </router-link>
-        </Row>
-      </Form>
-    </Card>
+        </el-form-item>
+      </el-form>
+    </div>
     <div class="contentBox">
       <div id="content" :style="{ top: contentTop + 'px' || '', width: contentWidth }" ref="content">
         <vue-waterfall-easy
           :imgsArr="imgsArr"
           :maxCols="maxCol"
           :width="screenWidth"
+          v-db-click
           @click="clickFn"
           @scrollReachBottom="getData"
           ref="waterfall"
@@ -48,28 +44,28 @@
                   @mouseenter="mouseenterOut(j)"
                   @mouseleave="mouseenterOver(j)"
                 >
-                  <Button
+                  <el-button
                     type="success"
-                    shape="circle"
-                    icon="md-create"
+                    icon="el-icon-edit"
                     v-show="props.value.new[i].isDel && isShow"
+                    v-db-click
                     @click="clkk(props.value)"
-                  ></Button>
-                  <Button
+                  ></el-button>
+                  <el-button
                     type="error"
-                    shape="circle"
-                    icon="md-trash"
+                    icon="el-icon-delete"
                     v-show="props.value.new[i].isDel && isShow"
+                    v-db-click
                     @click="del(props.value, '删除图文', i)"
                     style="margin-top: 5px"
-                  ></Button>
-                  <Button
+                  ></el-button>
+                  <el-button
                     type="primary"
-                    icon="md-paper-plane"
+                    icon="el-icon-s-promotion"
                     v-show="props.value.new[i].isDel && isShowSend"
-                    shape="circle"
+                    v-db-click
                     @click="send(props.value, '发送', i)"
-                    >推送</Button
+                    >推送</el-button
                   >
                 </div>
                 <span class="news_sp">{{ j.title }}</span>
@@ -94,6 +90,7 @@
 import vueWaterfallEasy from 'vue-waterfall-easy';
 import { wechatNewsListApi } from '@/api/app';
 import { mapState } from 'vuex';
+import settings from '@/setting';
 export default {
   name: 'newsCategory',
   props: {
@@ -103,7 +100,7 @@ export default {
     },
     contentTop: {
       type: String,
-      default: '230',
+      default: '0',
     },
     contentWidth: {
       type: String,
@@ -133,6 +130,7 @@ export default {
   },
   data() {
     return {
+      routePre: settings.routePre,
       isDel: false,
       imgsArr: [],
       group: 0, // 当前加载的加载图片的次数
@@ -168,7 +166,6 @@ export default {
     } else {
       this.maxCol = this.maxCols;
     }
-    console.log(this.maxCol);
     this.getData();
   },
   mounted() {},
@@ -188,10 +185,10 @@ export default {
       };
       this.$modalSure(delfromData)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     clickFn(event, { index, value }) {
@@ -211,7 +208,7 @@ export default {
       };
       this.$modalSure(delfromData)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.$nextTick(() => {
             this.imgsArr = [];
           });
@@ -219,7 +216,7 @@ export default {
           this.getData();
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     // 删除成功
@@ -236,7 +233,7 @@ export default {
     // 编辑
     clkk(item) {
       this.$router.push({
-        path: '/admin/app/wechat/news_category/save/' + item.id,
+        path: this.routePre + '/app/wechat/news_category/save/' + item.id,
       });
     },
     // 鼠标移进
@@ -280,20 +277,18 @@ export default {
           }
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
   },
-  computed: {},
 };
 </script>
 
-<style scoped lang="stylus">
+<style lang="scss" scoped>
 .contentBox {
-  height: 100%;
+  height: 600px;
   width: 100%;
-  position: static;
-
+  position: relative;
   #content {
     position: absolute;
     /* top: 280px; */
@@ -302,24 +297,20 @@ export default {
     /* height 1000px; */
   }
 }
-
-.contentBox >>> .vue-waterfall-easy {
+.contentBox ::v-deep .vue-waterfall-easy {
   width: 100% !important;
   left: 0 !important;
   margin-left: 0 !important;
 }
-
-.contentBox >>> .vue-waterfall-easy-scroll::-webkit-scrollbar {
+.contentBox ::v-deep .vue-waterfall-easy-scroll::-webkit-scrollbar {
   display: none;
 }
-
-.contentBox >>> .vue-waterfall-easy-scroll {
+.contentBox ::v-deep .vue-waterfall-easy-scroll {
   scrollbar-width: none; /* firefox */
   -ms-overflow-style: none; /* IE 10+ */
   overflow-x: hidden;
   overflow-y: auto;
 }
-
 .some-info {
   padding: 7px;
   box-sizing: border-box;
@@ -328,22 +319,19 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .Refresh {
   font-size: 12px;
-  color: #1890FF;
+  color: var(--prev-color-primary);
   cursor: pointer;
   line-height: 35px;
   display: inline-block;
 }
-
 .news_pic {
   width: 100%;
   height: 150px;
   overflow: hidden;
   position: relative;
-  background-size: 100%;
-  background-position: center center;
+  background-size: cover;
   border-radius: 5px 5px 0 0;
   padding: 10px;
   box-sizing: border-box;
@@ -351,7 +339,6 @@ export default {
   flex-direction: column;
   align-items: flex-end;
 }
-
 .news_sp {
   font-size: 12px;
   color: #000000;
@@ -363,7 +350,6 @@ export default {
   box-sizing: border-box;
   display: block;
 }
-
 .news_cent {
   width: 100%;
   height: auto;
@@ -373,13 +359,11 @@ export default {
   padding: 10px;
   box-sizing: border-box;
   justify-content: space-between;
-
   .news_sp1 {
     font-size: 12px;
     color: #000000;
     width: 71%;
   }
-
   .news_cent_img {
     width: 81px;
     height: 46px;
@@ -392,22 +376,19 @@ export default {
     }
   }
 }
-
-.news_pic >>> .ivu-btn-error {
+.news_pic ::v-deep .ivu-btn-error {
   width: 24px !important;
   height: 24px !important;
-  background: #FF5D5F !important;
+  background: #ff5d5f !important;
   color: #fff !important;
   border: 1px solid #eee !important;
 }
-
-.news_pic >>>.ivu-btn-error:hover {
-  background: #FF5D5F !important;
+.news_pic ::v-deep .ivu-btn-error:hover {
+  background: #ff5d5f !important;
   border: 1px solid #fff !important;
   color: #fff !important;
 }
-
-.news_pic >>> .ivu-btn-success {
+.news_pic ::v-deep .ivu-btn-success {
   width: 24px !important;
   height: 24px !important;
   border: 1px solid #eee !important;

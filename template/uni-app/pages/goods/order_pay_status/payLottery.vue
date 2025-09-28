@@ -31,7 +31,7 @@
 		<view class="grids" v-show="lotteryShow">
 			<image class="grids-bag" src="../static/pay-lottery-bag.png" mode=""></image>
 			<view class="grids-box">
-				<gridsLottery class="" :prizeData="prize" @get_winingIndex='getWiningIndex'
+				<gridsLottery class="" :lotteryNum="lottery_num" :prizeData="prize" @get_winingIndex='getWiningIndex'
 					@luck_draw_finish='luck_draw_finish'>
 				</gridsLottery>
 			</view>
@@ -78,7 +78,7 @@
 			lotteryAleart,
 			userAddress
 		},
-		mixins:[colors],
+		mixins: [colors],
 		props: {
 			options: {
 				type: Object
@@ -122,12 +122,10 @@
 			},
 			options: {
 				handler: function(newV, oldV) {
-					if (newV) {
-						this.orderId = newV.order_id;
-						this.totalPrice = newV.totalPrice;
-						this.type = newV.type
-						this.getLotteryData(newV.type)
-					}
+					this.orderId = newV.order_id;
+					this.totalPrice = newV.totalPrice;
+					this.type = newV.type
+					this.getLotteryData(newV.type)
 				},
 				deep: true
 			}

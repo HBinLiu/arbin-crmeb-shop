@@ -8,12 +8,14 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
 
-import BasicLayout from '@/components/main';
+import LayoutMain from '@/layout';
+import setting from '@/setting';
+let routePre = setting.routePre;
 
 const pre = 'product_';
 
 export default {
-  path: '/admin/product',
+  path: routePre + '/product',
   name: 'product',
   header: 'product',
   meta: {
@@ -24,7 +26,7 @@ export default {
   redirect: {
     name: `${pre}productList`,
   },
-  component: BasicLayout,
+  component: LayoutMain,
   children: [
     {
       path: 'product_list',
@@ -51,6 +53,7 @@ export default {
       meta: {
         auth: ['admin-store-storeProuduct-index'],
         title: '商品添加',
+        activeMenu: routePre + '/product/product_list',
       },
       component: () => import('@/pages/product/productAdd'),
     },
@@ -71,6 +74,33 @@ export default {
         title: '商品规格',
       },
       component: () => import('@/pages/product/productAttr'),
+    },
+    {
+      path: 'param/list',
+      name: `${pre}paramList`,
+      meta: {
+        auth: ['admin-product-param-list'],
+        title: '商品参数',
+      },
+      component: () => import('@/pages/product/paramList'),
+    },
+    {
+      path: 'label/list',
+      name: `${pre}labelList`,
+      meta: {
+        auth: ['admin-product-label-list'],
+        title: '商品标签',
+      },
+      component: () => import('@/pages/product/labelList'),
+    },
+    {
+      path: 'protection/list',
+      name: `${pre}labelList`,
+      meta: {
+        auth: ['admin-product-protection-list'],
+        title: '商品保障',
+      },
+      component: () => import('@/pages/product/protectionList'),
     },
   ],
 };

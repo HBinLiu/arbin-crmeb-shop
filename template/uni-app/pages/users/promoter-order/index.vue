@@ -4,7 +4,7 @@
 			<view class='promoterHeader bg-color'>
 				<view class='headerCon acea-row row-between-wrapper'>
 					<view>
-						<view class='name'>{{$t(`累积推广订单`)}}</view>
+						<view class='name'>{{$t(`累计推广订单`)}}</view>
 						<view><text class='num'>{{count || 0}}</text>{{$t(`单`)}}</view>
 					</view>
 					<view class='iconfont icon-2'></view>
@@ -34,9 +34,7 @@
 									</view>
 									<view class='bottom'>
 										<view><text class='name'>{{$t(`订单编号`)}}：</text>{{child.order_id}}</view>
-										<view v-if="child.type == 'brokerage'"><text
-												class='name'>{{$t(`返佣时间`)}}：</text>{{child.time}}</view>
-										<view v-else><text class='name'>{{$t(`下单时间`)}}：</text>{{child.time}}</view>
+										<view><text class='name'>{{$t(`下单时间`)}}：</text>{{child.time}}</view>
 										<view class="more" v-if="child.children && child.children.length"
 											@click="open(child)">
 											{{child.open?$t(`收起`):$t(`更多`)}}
@@ -104,7 +102,7 @@
 		data() {
 			return {
 				page: 1,
-				limit: 5,
+				limit: 8,
 				status: false,
 				recordList: [],
 				times: [],
@@ -173,7 +171,7 @@
 						}
 					}
 					that.count = res.data.count || 0;
-					that.status = res.data.list.length < 5;
+					that.status = res.data.list.length < 8;
 					that.page += 1;
 				});
 			}

@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -131,6 +131,13 @@ export function orderDel(uni) {
 }
 
 /**
+ * 礼品订单详情
+ * @param string uni 
+ */
+export function getGiftOrderDetail(id) {
+	return request.get('order/gift_detail/' + id);
+}
+/**
  * 订单详情
  * @param string uni 
  */
@@ -174,6 +181,13 @@ export function orderTake(uni) {
 export function express(uni, type) {
 	return request.get("order/express/" + uni + `${type?'/refund':''}`);
 }
+/**
+ * 订单查询物流信息
+ * @returns {*}
+ */
+export function adminExpress(uni, type) {
+	return request.get("admin/order/express/" + uni + `${type?'/refund':''}`);
+}
 
 /**
  * 获取退款理由
@@ -195,13 +209,8 @@ export function orderRefundVerify(data) {
  * 订单确认获取订单详细信息
  * @param string cartId
  */
-export function orderConfirm(cartId, news, addressId, shipping_type) {
-	return request.post('order/confirm', {
-		cartId,
-		'new': news,
-		addressId,
-		shipping_type
-	});
+export function orderConfirm(data) {
+	return request.post('order/confirm', data);
 }
 
 /**
@@ -366,4 +375,29 @@ export function refundOrderDetail(uni) {
  */
 export function cancelRefundOrder(uni) {
 	return request.post('order/refund/cancel/' + uni);
+}
+
+/**
+ * 收银台订单信息
+ * @param object data
+ */
+export function getCashierOrder(orderId, type) {
+	return request.get(`order/cashier/${orderId}/${type}`);
+}
+
+/**
+ * 发票地址获取
+ * @param object data
+ */
+export function getInvoiceLink(id) {
+	return request.get(`v2/order/down_invoice/${id}`);
+}
+
+/**
+ * 领取礼物
+ * @param orderId
+ * @param data
+ */
+export function orderReceiveGift(orderId, data) {
+	return request.post("order/receive_gift/" + orderId, data);
 }

@@ -1,43 +1,49 @@
 <template>
   <div>
-    <Card :bordered="false" dis-hover class="ivu-mt">
-      <Form
-        ref="formValidate"
-        :model="formValidate"
-        :label-width="labelWidth"
-        :label-position="labelPosition"
-        @submit.native.prevent
-      >
-        <Row type="flex" :gutter="24">
-          <Col v-bind="grid">
-            <FormItem label="是否显示：">
-              <Select v-model="formValidate.status" placeholder="请选择" clearable @on-change="userSearchs">
-                <Option value="1">显示</Option>
-                <Option value="0">不显示</Option>
-              </Select>
-            </FormItem>
-          </Col>
-          <Col v-bind="grid">
-            <FormItem label="分类名称：" label-for="status2">
-              <Input
-                search
-                enter-button
-                placeholder="请输入分类名称"
-                v-model="formValidate.title"
-                @on-search="userSearchs"
-              />
-            </FormItem>
-          </Col>
-        </Row>
-        <Row type="flex">
-          <Col v-bind="grid">
-            <Button type="primary" icon="md-add" @click="classAdd" class="mr20">添加配置分类</Button>
-          </Col>
-        </Row>
-      </Form>
+    <el-card :bordered="false" shadow="never" class="ivu-mb-16" :body-style="{ padding: 0 }">
+      <div class="padding-add">
+        <el-form
+          ref="formValidate"
+          :model="formValidate"
+          :label-width="labelWidth"
+          :label-position="labelPosition"
+          @submit.native.prevent
+          inline
+        >
+          <el-form-item label="是否显示：">
+            <el-select
+              v-model="formValidate.status"
+              placeholder="请选择"
+              clearable
+              @change="userSearchs"
+              class="form_content_width"
+            >
+              <el-option value="1" label="显示"></el-option>
+              <el-option value="0" label="不显示"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="分类名称：" label-for="status2">
+            <el-input clearable placeholder="请输入分类名称" v-model="formValidate.title" class="form_content_width" />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" v-db-click @click="userSearchs">查询分类</el-button>
+          </el-form-item>
+          <div>
+            <el-form-item label="配置名称：" label-for="status2">
+              <el-input clearable placeholder="请输入配置名称" v-model="config_name" class="form_content_width" />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" v-db-click @click="searchConfig">查询配置</el-button>
+            </el-form-item>
+          </div>
+        </el-form>
+      </div>
+    </el-card>
+    <el-card :bordered="false" shadow="never" class="ivu-mt">
+      <el-button type="primary" v-db-click @click="classAdd" class="mr20">添加配置分类</el-button>
       <vxe-table
         :border="false"
-        class="vxeTable mt25"
+        class="vxeTable mt14"
         highlight-hover-row
         highlight-current-row
         :loading="loading"
@@ -46,45 +52,42 @@
         :data="classList"
         row-id="id"
       >
-        <vxe-table-column field="id" title="ID" tooltip min-width="60"></vxe-table-column>
+        <vxe-table-column field="id" title="ID" tooltip width="85"></vxe-table-column>
         <vxe-table-column field="title" tree-node title="分类名称" min-width="150"></vxe-table-column>
         <vxe-table-column field="eng_title" title="分类字段" min-width="150"></vxe-table-column>
-        <vxe-table-column field="statuss" title="状态" min-width="150">
+        <vxe-table-column field="statuss" title="状态" width="250">
           <template v-slot="{ row }">
-            <i-switch
+            <el-switch
+              :active-value="1"
+              :inactive-value="0"
               v-model="row.status"
               :value="row.status"
-              :true-value="1"
-              :false-value="0"
-              @on-change="onchangeIsShow(row)"
+              @change="onchangeIsShow(row)"
               size="large"
             >
-              <span slot="open">显示</span>
-              <span slot="close">隐藏</span>
-            </i-switch>
+            </el-switch>
           </template>
         </vxe-table-column>
-        <vxe-table-column field="action" title="操作" min-width="150" fixed="right">
+        <vxe-table-column field="action" title="操作" width="160" fixed="right">
           <template v-slot="{ row, index }">
-            <a @click="goList(row)">配置列表</a>
-            <Divider type="vertical" />
-            <a @click="edit(row)">编辑</a>
-            <Divider type="vertical" />
-            <a @click="del(row, '删除分类', index)">删除</a>
+            <a v-db-click @click="goList(row)">配置列表</a>
+            <el-divider direction="vertical"></el-divider>
+            <a v-db-click @click="edit(row)">编辑</a>
+            <el-divider direction="vertical"></el-divider>
+            <a v-db-click @click="del(row, '删除分类', index)">删除</a>
           </template>
         </vxe-table-column>
       </vxe-table>
       <div class="acea-row row-right page">
-        <Page
+        <pagination
+          v-if="total"
           :total="total"
-          :current="formValidate.page"
-          show-elevator
-          show-total
-          @on-change="pageChange"
-          :page-size="formValidate.limit"
+          :page.sync="formValidate.page"
+          :limit.sync="formValidate.limit"
+          @pagination="getList"
         />
       </div>
-    </Card>
+    </el-card>
 
     <!-- 新建  编辑表单-->
     <edit-from ref="edits" :update="true" :FromData="FromData" @submitFail="submitFail"></edit-from>
@@ -119,12 +122,13 @@ export default {
       FromData: null,
       classId: 0,
       classList: [],
+      config_name: '',
     };
   },
   computed: {
     ...mapState('media', ['isMobile']),
     labelWidth() {
-      return this.isMobile ? undefined : 75;
+      return this.isMobile ? undefined : '80px';
     },
     labelPosition() {
       return this.isMobile ? 'top' : 'right';
@@ -137,7 +141,7 @@ export default {
     // 跳转到配置列表页面
     goList(row) {
       this.$router.push({
-        path: '/admin/system/config/system_config_tab/list/' + row.id,
+        path: this.$routeProStr + '/system/config/system_config_tab/list/' + row.id,
       });
     },
     // 添加配置分类
@@ -148,7 +152,7 @@ export default {
           this.$refs.edits.modals = true;
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     // 编辑
@@ -162,7 +166,7 @@ export default {
           this.$refs.edits.modals = true;
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     // 删除
@@ -176,12 +180,12 @@ export default {
       };
       this.$modalSure(delfromData)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           // this.classList.splice(num, 1);
           this.getList();
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     // 列表
@@ -197,17 +201,22 @@ export default {
         })
         .catch((res) => {
           this.loading = false;
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
-    },
-    pageChange(index) {
-      this.formValidate.page = index;
-      this.getList();
     },
     // 表格搜索
     userSearchs() {
       this.formValidate.page = 1;
       this.getList();
+    },
+    //搜索配置项
+    searchConfig() {
+      if (this.config_name == '') {
+        return this.$message.error('请输入要搜索的配置名称');
+      }
+      this.$router.push({
+        path: this.$routeProStr + '/system/config/system_config_tab/list/0?config_name=' + this.config_name,
+      });
     },
     // 修改成功
     submitFail() {
@@ -221,10 +230,10 @@ export default {
       };
       setStatusApi(data)
         .then(async (res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
   },

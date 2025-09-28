@@ -1,99 +1,135 @@
 <template>
   <div>
-    <Card :bordered="false" dis-hover class="ivu-mt">
-      <div v-if="isShowList" class="backs" @click="goBack(false)">
-        <Icon type="ios-folder-outline" class="mr5 icon" /><span>返回上级</span>
+    <el-card :bordered="false" shadow="never" class="ivu-mt" v-loading="spinShow">
+      <div v-if="isShowList" class="backs-box">
+        <div class="backs">
+          <span class="back" v-db-click @click="goBack(false)">
+            <i class="el-icon-back icon" />
+          </span>
+          <span class="item" v-for="(item, index) in routeList" :key="index" v-db-click @click="jumpRoute(item)">
+            <span class="key">{{ item.key }}</span>
+            <i class="forward el-icon-arrow-right" v-if="index < routeList.length - 1" />
+          </span>
+        </div>
+        <span class="refresh" v-db-click @click="refreshRoute">
+          <i class="el-icon-refresh-right icon" />
+        </span>
       </div>
-      <Table
+      <el-table
         v-if="isShowList"
         ref="selection"
-        :columns="columns4"
         :data="tabList"
-        :loading="loading"
-        no-data-text="暂无数据"
-        highlight-row
-        class="mt20"
-        @on-current-change="currentChange"
-        no-filtered-data-text="暂无筛选结果"
+        v-loading="loading"
+        empty-text="暂无数据"
+        class="mt14"
       >
-        <template slot-scope="{ row }" slot="filename">
-          <Icon type="ios-folder-outline" v-if="row.isDir" class="mr5" />
-          <Icon type="ios-document-outline" v-else class="mr5" />
-          <span>{{ row.filename }}</span>
-        </template>
-        <template slot-scope="{ row }" slot="isWritable">
-          <span v-text="row.isWritable ? '是' : '否'"></span>
-        </template>
-        <template slot-scope="{ row, index }" slot="action">
-          <a @click="open(row)" v-if="row.isDir">打开</a>
-          <a @click="edit(row)" v-else>编辑</a>
-        </template>
-      </Table>
-    </Card>
-    <Modal
-      :class-name="className"
-      v-model="modals"
-      scrollable
-      footer-hide
-      closable
-      :mask-closable="false"
+        <el-table-column label="文件/文件夹名" min-width="150">
+          <template slot-scope="scope">
+            <div class="file-name" v-db-click @click="currentChange(scope.row)">
+              <i v-if="scope.row.isDir" class="el-icon-folder mr5" />
+              <i v-else class="el-icon-document mr5" />
+              <span>{{ scope.row.filename }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="文件/文件夹大小" min-width="100">
+          <template slot-scope="scope">
+            <span>{{ scope.row.size }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="更新时间" min-width="100">
+          <template slot-scope="scope">
+            <span>{{ scope.row.mtime }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="备注" min-width="120">
+          <template slot-scope="scope">
+            <div class="mark">
+              <div v-if="scope.row.is_edit" class="table-mark" v-db-click @click="isEditMark(scope.row)">
+                {{ scope.row.mark }}
+              </div>
+              <el-input ref="mark" v-else v-model="scope.row.mark" @blur="isEditBlur(scope.row)"></el-input>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" fixed="right" width="60">
+          <template slot-scope="scope">
+            <el-button type="text" v-db-click @click="open(scope.row)" v-if="scope.row.isDir">打开</el-button>
+            <el-button type="text" v-db-click @click="edit(scope.row)" v-else>编辑</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
+    <el-dialog
+      :visible.sync="modals"
+      :custom-class="className"
+      :close-on-click-modal="false"
       width="80%"
-      :before-close="editModalChange"
+      top="5vh"
+      @close="editModalChange"
+      append-to-body
+      :title="editorIndex[indexEditor].title"
     >
       <p slot="header" class="diy-header" ref="diyHeader">
         <span>{{ title }}</span>
-        <Icon
+        <i
+          v-db-click
           @click="winChanges"
           class="diy-header-icon"
-          :type="className ? 'ios-contract' : 'ios-qr-scanner'"
-          size="20"
+          :class="className ? 'el-icon-cpu' : 'el-icon-full-screen'"
+          style="font-size: 20px"
         />
       </p>
       <div style="height: 100%">
-        <Button type="primary" id="savefile" class="diy-button" @click="savefile(indexEditor)">保存</Button>
-        <Button id="refresh" class="diy-button" @click="refreshfile">刷新</Button>
-
+        <div class="top-button">
+          <el-button type="primary" id="savefile" class="diy-button" v-db-click @click="savefile(indexEditor)"
+            >保存</el-button
+          >
+          <el-button id="refresh" class="diy-button" v-db-click @click="refreshfile">刷新</el-button>
+        </div>
         <div class="file-box">
           <div class="show-info">
             <div class="show-text" :title="navItem.pathname">目录: {{ navItem.pathname }}</div>
             <div class="diy-button-list">
-              <Button class="diy-button" @click="goBack(true)">返回上一级</Button>
-              <Button class="diy-button" @click="getList(true, true)">刷新</Button>
+              <el-button class="diy-button" v-db-click @click="goBack(true)">返回上一级</el-button>
+              <el-button class="diy-button" v-db-click @click="getList(true, true)">刷新</el-button>
             </div>
           </div>
           <div class="file-left">
-            <Tree
+            <el-tree
               class="diy-tree-render"
               :data="navList"
-              :render="renderContent"
-              :load-data="loadData"
-              @on-contextmenu="handleContextMenu"
+              :render-content="renderContent"
+              :load="loadData"
+              @node-contextmenu="handleContextMenu"
               expand-node
+              lazy
+              :props="props"
             >
-              <template transfer slot="contextMenu">
-                <DropdownItem v-if="contextData && contextData.isDir" @click.native="handleContextCreateFolder()"
+              <!-- <template transfer slot="contextMenu">
+                <DropdownItem v-if="contextData && contextData.isDir" v-db-click @click.native="handleContextCreateFolder()"
                   >新建文件夹</DropdownItem
                 >
-                <DropdownItem v-if="contextData && contextData.isDir" @click.native="handleContextCreateFile()"
+                <DropdownItem v-if="contextData && contextData.isDir" v-db-click @click.native="handleContextCreateFile()"
                   >新建文件</DropdownItem
                 >
-                <DropdownItem @click.native="handleContextRename()">重命名</DropdownItem>
-                <DropdownItem @click.native="handleContextDelFolder()" style="color: #ed4014">删除</DropdownItem>
-              </template>
-            </Tree>
+                <DropdownItem v-db-click @click.native="handleContextRename()">重命名</DropdownItem>
+                <DropdownItem v-db-click @click.native="handleContextDelFolder()" style="color: #ed4014">删除</DropdownItem>
+              </template> -->
+            </el-tree>
           </div>
           <div class="file-fix"></div>
           <div class="file-content">
-            <Tabs
+            <el-tabs
               type="card"
               v-model="indexEditor"
               style="height: 100%"
-              @on-click="toggleEditor"
+              @tab-click="toggleEditor"
               :animated="false"
               closable
-              @on-tab-remove="handleTabRemove"
+              @tab-remove="handleTabRemove"
             >
-              <TabPane
+              <el-tab-pane
                 v-for="value in editorIndex"
                 :key="value.index"
                 :name="value.index.toString()"
@@ -101,34 +137,37 @@
                 :icon="value.icon"
                 v-if="value.tab"
               >
-                <div ref="container" :id="'container_' + value.index" style="height: 100%; min-height: 560px"></div>
-              </TabPane>
-            </Tabs>
+                <div
+                  ref="container"
+                  :id="'container_' + value.index"
+                  style="height: 100%; min-height: calc(80vh - 100px)"
+                ></div>
+              </el-tab-pane>
+            </el-tabs>
           </div>
-          <Spin size="large" fix v-if="spinShow"></Spin>
         </div>
       </div>
-    </Modal>
+    </el-dialog>
 
     <div v-show="formShow" class="diy-from">
       <div class="diy-from-header">
         {{ formTitle
         }}<span :title="contextData ? contextData.pathname : ''">{{ contextData ? contextData.pathname : '' }}</span>
       </div>
-      <Form ref="formInline" :model="formFile" :rules="ruleInline" inline>
-        <FormItem prop="filename" class="diy-file">
-          <Input type="text" class="diy-file" v-model="formFile.filename" placeholder="请输入名字">
-            <Icon type="ios-folder-open-outline" slot="prepend"></Icon>
-          </Input>
-        </FormItem>
-        <FormItem>
-          <Button class="diy-button" @click="handleSubmit('formInline')">确定</Button>
-        </FormItem>
-        <FormItem>
-          <Button class="diy-button" @click="formExit()">取消</Button>
-        </FormItem>
+      <el-form ref="formInline" :model="formFile" :rules="ruleInline" inline>
+        <el-form-item prop="filename" class="diy-file">
+          <el-input type="text" class="diy-file" v-model="formFile.filename" placeholder="请输入名字">
+            <i class="el-icon-folder-opened" slot="prepend"></i>
+          </el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button class="diy-button" v-db-click @click="handleSubmit('formInline')">确定</el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button class="diy-button" v-db-click @click="formExit()">取消</el-button>
+        </el-form-item>
         <div class="form-mask" v-show="formShow"></div>
-      </Form>
+      </el-form>
     </div>
   </div>
 </template>
@@ -144,11 +183,13 @@ import {
   createFile,
   delFolder,
   rename,
+  fileMark,
+  markSave,
 } from '@/api/system';
 import CodeMirror from 'codemirror/lib/codemirror';
 import loginFrom from './components/loginFrom';
 import { setCookies, getCookies, removeCookies } from '@/libs/util';
-// import Fullscreen from '@/components/main/components/fullscreen';
+// import Fullscreen from '@/layout/components/fullscreen';
 import * as monaco from 'monaco-editor';
 export default {
   name: 'opendir',
@@ -183,39 +224,7 @@ export default {
       spinShow: false,
       loading: false,
       tabList: [],
-      columns4: [
-        {
-          title: '文件/文件夹名',
-          slot: 'filename',
-          minWidth: 150,
-          back: '返回上级',
-        },
-        {
-          title: '文件/文件夹路径',
-          key: 'real_path',
-          minWidth: 150,
-        },
-        {
-          title: '文件/文件夹大小',
-          key: 'size',
-          minWidth: 100,
-        },
-        {
-          title: '是否可写',
-          slot: 'isWritable',
-          minWidth: 100,
-        },
-        {
-          title: '更新时间',
-          key: 'mtime',
-          minWidth: 150,
-        },
-        {
-          title: '操作',
-          slot: 'action',
-          minWidth: 150,
-        },
-      ],
+
       formItem: {
         //记录当前路径信息，获取文件列表时使用
         dir: '',
@@ -238,6 +247,12 @@ export default {
       formShow: false, //表单开关
       formTitle: '', //表单标题
       fileToken: getCookies('file_token'),
+      routeList: [], //  打开文件路径
+      props: {
+        label: 'title',
+        children: 'children',
+        isLeaf: 'isLeaf',
+      },
     };
   },
 
@@ -245,7 +260,7 @@ export default {
     loginFrom,
   },
   mounted() {
-    this.initEditor();
+    // this.initEditor();
   },
   created() {
     this.getList();
@@ -285,6 +300,8 @@ export default {
       opendirListApi(params)
         .then(async (res) => {
           let data = res.data;
+          this.routeList = data.routeList;
+
           if (is_edit) {
             this.navList = data.navList;
           } else {
@@ -332,7 +349,21 @@ export default {
       };
       this.getList(false, false);
     },
-    // 编辑
+    jumpRoute(item) {
+      let data = {
+        path: item.route,
+        filename: '',
+      };
+      this.open(data);
+    },
+    refreshRoute() {
+      let data = {
+        path: this.routeList[this.routeList.length - 1].route,
+        filename: '',
+      };
+      this.open(data);
+    },
+    // 编辑ß
     edit(row) {
       this.navItem = row;
       this.spinShow = true;
@@ -344,9 +375,20 @@ export default {
       this.dir = row.path;
       // 创建代码容器
       if (this.editorList.length <= 0) {
-        this.initEditor();
+        // this.initEditor();
       }
       this.openfile(row.pathname, false);
+    },
+    /**
+     * 备注
+     */
+    mark(row) {
+      this.$modalForm(
+        fileMark({
+          path: row.pathname,
+          fileToken: this.fileToken,
+        }),
+      ).then(() => this.getList(true, false));
     },
     /**
      * 保存
@@ -369,7 +411,7 @@ export default {
             that.editorIndex[index].icon = '';
             that.editorList[index].isSave = true;
           }
-          that.$Message.success(res.msg);
+          that.$message.success(res.msg);
           that.$Modal.remove();
         })
         .catch((res) => {
@@ -389,11 +431,11 @@ export default {
     },
     // 侧边栏异步加载
     loadData(item, callback) {
-      if (item.isDir) {
+      if (!item.data.isLeaf) {
         this.formItem = {
-          dir: item.path,
+          dir: item.data.path,
           superior: 0,
-          filedir: item.title,
+          filedir: item.data.title,
           fileToken: this.fileToken,
         };
         opendirListApi(this.formItem)
@@ -402,7 +444,7 @@ export default {
           })
           .catch((res) => {
             if (res.status == 110008) {
-              this.$Message.error(res.msg);
+              this.$message.error(res.msg);
               this.isShowLogn = true;
               this.isShowList = false;
               this.loading = false;
@@ -413,7 +455,7 @@ export default {
       }
     },
     // 自定义显示
-    renderContent(h, { root, node, data }) {
+    renderContent(h, { node, data, root }) {
       let that = this;
       return h(
         'span',
@@ -440,7 +482,7 @@ export default {
           h('span', [
             h('Icon', {
               props: {
-                type: data.isDir ? 'md-folder' : 'ios-document-outline',
+                type: !data.isLeaf ? 'md-folder' : 'ios-document-outline',
               },
               style: {
                 marginRight: '8px',
@@ -473,8 +515,8 @@ export default {
           return e.pathname === data.pathname;
         });
         if (i > -1) {
-          that.toggleEditor(i);
           that.indexEditor = i.toString();
+          that.toggleEditor();
         } else {
           let index = that.editorIndex.length;
           // 创建tabs
@@ -528,14 +570,14 @@ export default {
             .then(async (res) => {
               that.loopDel(that.navList, that.contextData.nodeKey);
               that.$Modal.remove();
-              that.$Message.success('删除成功');
+              that.$message.success('删除成功');
             })
             .catch((res) => {
               that.catchFun(res);
             });
         },
         onCancel: () => {
-          that.$Message.info('取消删除');
+          that.$message.info('取消删除');
         },
       });
     },
@@ -553,19 +595,25 @@ export default {
         filepath: path,
         fileToken: this.fileToken,
       };
+
       openfileApi(params)
         .then(async (res) => {
-          let data = res.data;
-          that.code = data.content;
-          // 保存相对信息
-          that.editorList[that.indexEditor].path = path;
-          that.editorList[that.indexEditor].oldCode = that.code;
-          //改变属性
-          that.changeModel(data.mode, that.code);
           if (!is_edit) {
             that.modals = true;
             that.spinShow = false;
+            this.initEditor();
           }
+          let data = res.data;
+          that.code = data.content;
+          // 保存相对信息
+
+          that.editorList[that.indexEditor].oldCode = that.code;
+          this.$nextTick((e) => {
+            that.editorList[that.indexEditor || 0].path = path;
+            that.editorList[that.indexEditor || 0].pathname = path;
+          });
+          //改变属性
+          that.changeModel(data.mode, that.code);
         })
         .catch((res) => {
           that.catchFun(res);
@@ -577,7 +625,6 @@ export default {
     initEditor() {
       let that = this;
       that.$nextTick(() => {
-        console.log(monaco);
         // 初始化编辑器，确保dom已经渲染
         that.editor = monaco.editor.create(document.getElementById('container_' + that.indexEditor), {
           value: that.code, //编辑器初始显示文字
@@ -610,7 +657,7 @@ export default {
         that.editorList.push({
           editor: that.editor,
           oldCode: that.code,
-          path: '',
+          path: this.pathname,
           isSave: true,
           index: that.indexEditor,
         });
@@ -661,7 +708,7 @@ export default {
                   };
                   that.getListItem(dataItem);
                   if (that.formShow) that.formShow = false;
-                  that.$Message.success('创建成功');
+                  that.$message.success('创建成功');
                 })
                 .catch((res) => {
                   that.catchFun(res);
@@ -683,7 +730,7 @@ export default {
                   };
                   that.getListItem(dataItem);
                   if (that.formShow) that.formShow = false;
-                  that.$Message.success('创建成功');
+                  that.$message.success('创建成功');
                 })
                 .catch((res) => {
                   that.catchFun(res);
@@ -698,7 +745,7 @@ export default {
               rename(data)
                 .then(async (res) => {
                   that.$set(that.contextData, 'title', that.formFile.filename);
-                  that.$Message.success('修改成功');
+                  that.$message.success('修改成功');
                   if (that.formShow) that.formShow = false;
                 })
                 .catch((res) => {
@@ -707,7 +754,7 @@ export default {
               break;
           }
         } else {
-          this.$Message.error('Fail!');
+          this.$message.error('Fail!');
         }
       });
     },
@@ -724,15 +771,15 @@ export default {
      */
     catchFun(res) {
       if (res.status) {
-        if (res.status == 400) this.$Message.error(res.msg);
+        if (res.status == 400) this.$message.error(res.msg);
         if (res.status == 110008) {
-          // this.$Message.error(res.msg);
+          // this.$message.error(res.msg);
           this.isShowLogn = true;
           this.isShowList = false;
           this.loading = false;
         }
       } else {
-        // this.$Message.error('文件编码不被兼容，无法正确读取文件!');
+        // this.$message.error('文件编码不被兼容，无法正确读取文件!');
       }
       //关闭蒙版层
       if (this.spinShow) this.spinShow = false;
@@ -763,10 +810,34 @@ export default {
      * 切换选项卡
      * @param {Object} index
      */
-    toggleEditor(index) {
-      index = Number(index);
+    toggleEditor() {
+      let index = Number(this.indexEditor);
       this.code = this.editorList[index].oldCode; //设置文件打开时的代码
       this.editor = this.editorList[index].editor; //设置编辑器实例
+    },
+    isEditMark(row) {
+      try {
+        row.is_edit = true;
+        this.$nextTick((e) => {
+          this.$refs.mark.focus();
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    isEditBlur(row) {
+      row.is_edit = false;
+      let data = {
+        full_path: row.real_path,
+        mark: row.mark,
+      };
+      markSave(this.fileToken, data)
+        .then((res) => {
+          // this.$message.success(res.msg);
+        })
+        .catch((err) => {
+          this.$message.error(err.msg);
+        });
     },
     handleTabRemove(index) {
       let that = this;
@@ -784,7 +855,7 @@ export default {
             that.savefile(index);
           },
           onCancel: () => {
-            that.$Message.info('取消保存');
+            that.$message.info('取消保存');
           },
         });
       }
@@ -798,7 +869,7 @@ export default {
             // 保存当前文件
             that.savefile(index, true);
           } else {
-            that.$Message.info(`已取消${that.editorIndex[index].title}文件保存`);
+            that.$message.info(`已取消${that.editorIndex[index].title}文件保存`);
           }
         }
         // 销毁当前编辑器
@@ -828,246 +899,339 @@ export default {
 };
 </script>
 <style scoped>
-.file-left /deep/ .ivu-tree-title {
+.file-left ::v-deep .ivu-tree-title {
   font-weight: 500;
   font-family: SourceHanSansSC-regular, '微软雅黑', Arial, Helvetica, sans-serif;
 }
-.file-content /deep/ .ivu-tabs.ivu-tabs-card > .ivu-tabs-bar .ivu-tabs-tab-active {
+.file-content ::v-deep .ivu-tabs.ivu-tabs-card > .ivu-tabs-bar .ivu-tabs-tab-active {
   border-bottom: 1px solid orange;
 }
 </style>
-<style scoped lang="stylus">
-.file-left
-    padding-left 10px
-    >>>.ivu-icon-ios-arrow-forward
-       font-size 18px !important;
-	   color #cccccc
-    >>>.ivu-icon-ios-folder-outline
-       font-size 14px !important;
-    >>>.ivu-icon-ios-document-outline
-       font-size 18px !important;
-	>>>.ivu-icon-md-folder{
-     	font-size 18px !important;
-	   color #d6ab34 !important;
-	}
-    >>> .ivu-table-row
-       cursor pointer;
-.mr5
-   margin-right 5px
-.backs
-   cursor pointer;
-   display inline-block;
-   .icon
-    margin-bottom 3px
->>>.CodeMirror
- height: 70vh !important;
-
-.file-box
-	display: flex;
-	align-items: flex-start;
-	justify-content: space-between;
-	position: relative;
-	height: 95%;
-	min-height: 600px;
-	overflow: hidden;
-.file-box
-	.file-left
-		position: absolute;
-		top: 53px;
-		left: 0;
-		height: 90%;
-		// height: 100%;
-		// min-height: 600px;
-		width:25%;
-		max-width: 250px;
-		overflow: auto;
-		background-color: #222222;
-		box-shadow: #000000 -6px 0 6px -6px inset;
-	.file-fix
-		flex: 1;
-		max-width: 250px;
-		height: 76vh;
-		min-height: 600px;
-		// bottom: 0px;
-		// overflow: auto;
-		min-height: 600px;
-		background-color: #222222;
-.file-box
-	.file-content
-		// position: absolute;
-		// top: 53px;
-		// left: 25%;
-		flex: 3;
-		overflow: hidden;
-		min-height: 600px;
-		height: 100%;
->>>.ivu-modal-body
-		padding: 0;
->>>.ivu-modal-content
-	background-color: #292929
-.diy-button
-	// float: left;
-	height: 35px;
-	padding: 0 15px;
-	font-size: 13px;
-	text-align: center;
-	color: #fff;
-	border: 0;
-	border-right: 1px solid #4c4c4c;
-	cursor: pointer;
-	border-radius: 0
-	background-color: #565656
-
-.form-mask
-	z-index: -1;
-	width: 100%;
-	height: 100%;
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	margin: auto;
-	background: rgba(0,0,0,0.3);
-.diy-from-header
-	height: 30px
-	line-height: 30px;
-	background-color: #fff;
-	text-align: left;
-	padding-left: 20px
-	font-size: 16px;
-	margin-bottom: 15px;
-	span
-		display: inline-block;
-		float: right;
-		color: #999;
-		text-align: right;
-		font-size: 12px;
-		width: 280px;
-		word-break:keep-all;/* 不换行 */
-		white-space:nowrap;/* 不换行 */
-		overflow:hidden;
-		text-overflow:ellipsis;
-.diy-from
-	z-index: 9999;
-	width: 400px;
-	height: 100px;
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	margin: auto;
-	text-align: center;
-	background-color: #2f2f2f;
-.show-info
-	background-color: #383838;
-	color: #FFF;
-	width: 25%;
-	max-width: 250px;
-	position: absolute;
-	top: 0;
-	left: 0;
-	z-index: 1122;
-	.diy-button
-		width: 50%;
-		height: 25px;
-	.diy-button-list
-		display: flex;
-		align-items: center;
-	.show-text
-		padding-left: 10px;
-		word-break:keep-all;/* 不换行 */
-		white-space:nowrap;/* 不换行 */
-		overflow:hidden;
-		text-overflow:ellipsis;
-		padding: 7px 5px;
-body >>>.ivu-select-dropdown{
-	background: #fff;
+<style lang="scss" scoped>
+.file-left {
+  padding-left: 10px;
+  color: #cccccc;
 }
-.diy-tree-render
-	>>>li
-		overflow: hidden;
-	>>>.ivu-tree-title
-		width: 90%;
-		max-width:250px;
-		padding: 0;
-		padding-left: 5px
->>>.ivu-tree-children
-		.ivu-tree-title:hover
-			background-color:#2f2f2f !important;
-.file-box
-	.file-left::-webkit-scrollbar
-		width: 4px;
-.file-box
-	.file-left::-webkit-scrollbar-thumb
-		border-radius: 10px;
-		-webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-		background: rgba(255, 255, 255, 0.2);
-.file-box
-	.file-left::-webkit-scrollbar-track
-		-webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-		border-radius: 0;
-		background: rgba(0,0,0,0.1);
-.diy-header
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	.diy-header-icon
-		margin-right: 30px;
-		cursor: pointer;
-	.diy-header-icon:hover
-		opacity: 0.8;
-// 自定义方法缩小
->>>.diy-fullscreen
-		overflow: hidden;
-		.ivu-modal
-			top: 0px;
-			left: 0px;
-			right: 0px;
-			bottom: 0px;
-			height: 100%;
-			width: 100% !important;
-			.ivu-modal-content
-				height: 100%;
-				.ivu-modal-body
-					height: 100%;
-			.ivu-tabs
-				.ivu-tabs-content-animated
-					height: 92%;
-					background-color:#2f2f2f !important;
-			.ivu-tabs-content
-				height: 100%
-			.ivu-tabs
-				.ivu-tabs-tabpane
-					height: 92%
->>>.ivu-modal
-		top: 70px;
-	.ivu-modal-content
-		.ivu-modal-body
-			min-height: 632px;
-			height: 80vh;
-			overflow: hidden;
-	.ivu-tabs
-		.ivu-tabs-content-animated
-			min-height:560px;
-			height: 73vh;
-			margin-top: -1px;
-		.ivu-tabs-tabpane
-			min-height:560px;
-			height: 73vh;
-			margin-top: -1px;
-	.ivu-tabs-nav .ivu-tabs-tab .ivu-icon
-		color: #f00;
->>>body .ivu-select-dropdown .ivu-dropdown-transfer
-		background:red !important;
-// 导航栏右键样式 无效
-
-
-.file-left /deep/ .ivu-select-dropdown.ivu-dropdown-transfer .ivu-dropdown-menu .ivu-dropdown-item:hover{
-	background-color: #e5e5e5 !important;
+.mr5 {
+  margin-right: 5px;
 }
-// 选项卡头部
->>>.ivu-tabs.ivu-tabs-card > .ivu-tabs-bar .ivu-tabs-nav-container
-	background-color: #333;
+.backs-box {
+  display: flex;
+  justify-content: space-between;
+  min-width: 800px;
+  max-width: max-content;
+  border: 1px solid #cfcfcf;
+  background: #f6f6f6;
+  .refresh {
+    background: #fff;
+    border-left: 1px solid #cfcfcf;
+    padding: 0 8px 0 10px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  .refresh {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .refresh:hover,
+  .back:hover {
+    background: #2d8cf0;
+    border-color: #38983b;
+    color: #fff;
+  }
+}
+.file-name {
+  cursor: pointer;
+}
+.backs {
+  cursor: pointer;
+  display: inline-block;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  .back {
+    height: 100%;
+    background: #fff;
+    border-right: 1px solid #cfcfcf;
+    padding: 6px 8px 0 10px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  .item:last-child {
+    padding-right: 5px !important;
+  }
+  .item {
+    padding: 0 0 0 8px;
+    font-size: 12px;
+    line-height: 33px;
+    color: #555;
+    display: flex;
+    align-items: center;
+    .key {
+      margin-right: 3px;
+    }
+  }
+  .item:hover {
+    background: #fff;
+  }
+}
+::v-deep .CodeMirror {
+  height: 70vh !important;
+}
+.file-box {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+  min-height: calc(100% - 35px);
+  overflow: hidden;
+}
+.file-box {
+  .file-left {
+    position: absolute;
+    top: 58px;
+    left: 0;
+    height: calc(100% - 58px);
+
+    width: 25%;
+    max-width: 250px;
+    overflow: auto;
+    background-color: #292929;
+  }
+  .file-fix {
+    flex: 1;
+    max-width: 250px;
+    min-height: calc(100% - 35px);
+
+    min-height: calc(100% - 35px);
+    background-color: #292929;
+  }
+}
+.file-box {
+  .file-content {
+    flex: 3;
+    overflow: hidden;
+    min-height: calc(100% - 35px);
+    height: 100%;
+  }
+}
+::v-deep .el-dialog__body {
+  padding: 0 !important;
+  height: 80vh;
+  max-height: 80vh;
+}
+.diy-button {
+  height: 35px;
+  padding: 0 15px;
+  font-size: 13px;
+  text-align: center;
+  color: #fff;
+  border: 0;
+  border-right: 1px solid #4c4c4c;
+  cursor: pointer;
+  border-radius: 0;
+  background-color: #565656;
+}
+.form-mask {
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  background: rgba(0, 0, 0, 0.3);
+}
+.table-mark {
+  cursor: text;
+}
+.table-mark:hover {
+  border: 1px solid #c2c2c2;
+  padding: 3px 5px;
+}
+.mark ::v-deep .el-input__inner {
+  background: #fff;
+  border-radius: 0.39rem;
+}
+.mark ::v-deep .el-input__inner,
+.el-input__inner:hover,
+.el-input__inner:focus {
+  border: transparent;
+  box-shadow: none;
+}
+.diy-from-header {
+  height: 30px;
+  line-height: 30px;
+  background-color: #fff;
+  text-align: left;
+  padding-left: 20px;
+  font-size: 16px;
+  margin-bottom: 15px;
+
+  span {
+    display: inline-block;
+    float: right;
+    color: #999;
+    text-align: right;
+    font-size: 12px;
+    width: 280px;
+    word-break: keep-all; /* 不换行 */
+    white-space: nowrap; /* 不换行 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+.diy-from {
+  z-index: 9999;
+  width: 400px;
+  height: 100px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  text-align: center;
+  background-color: #2f2f2f;
+}
+.top-button {
+  background-color: #292929;
+}
+.show-info {
+  background-color: #292929;
+  color: #fff;
+  width: 25%;
+  max-width: 250px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1122;
+  .diy-button {
+    width: 50%;
+    height: 25px;
+    line-height: 8px;
+  }
+  .diy-button-list {
+    display: flex;
+    align-items: center;
+  }
+  .show-text {
+    padding-left: 10px;
+    word-break: keep-all; /* 不换行 */
+    white-space: nowrap; /* 不换行 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 7px 5px;
+  }
+}
+
+body ::v-deep .ivu-select-dropdown {
+  background: #fff;
+}
+::v-deep .el-tabs__item {
+  background-color: #fff;
+}
+::v-deep .el-tree {
+  background-color: #292929 !important;
+}
+.file-box {
+  .file-left::-webkit-scrollbar {
+    width: 4px;
+  }
+}
+.file-box {
+  .file-left::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+.file-box {
+  .file-left::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    border-radius: 0;
+    background: rgba(0, 0, 0, 0.1);
+  }
+}
+.diy-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .diy-header-icon {
+    margin-right: 30px;
+    cursor: pointer;
+  }
+  .diy-header-icon:hover {
+    opacity: 0.8;
+  }
+}
+::v-deep .diy-fullscreen {
+  overflow: hidden;
+  .ivu-modal {
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    height: 100%;
+    width: 100% !important;
+    .ivu-modal-content {
+      height: 100%;
+      .ivu-modal-body {
+        height: 100%;
+      }
+    }
+    .ivu-tabs {
+      .ivu-tabs-content-animated {
+        height: 92%;
+        background-color: #2f2f2f !important;
+      }
+    }
+    .ivu-tabs-content {
+      height: 100%;
+    }
+    .ivu-tabs {
+      .ivu-tabs-tabpane {
+        height: 92%;
+      }
+    }
+  }
+}
+::v-deep .ivu-modal {
+  top: 70px;
+}
+.ivu-modal-content {
+  .ivu-modal-body {
+    min-height: 632px;
+    height: 80vh;
+    overflow: hidden;
+  }
+}
+.ivu-tabs {
+  .ivu-tabs-content-animated {
+    min-height: 580px;
+    height: 73vh;
+    margin-top: -1px;
+  }
+  .ivu-tabs-tabpane {
+    min-height: 580px;
+    height: 73vh;
+    margin-top: -1px;
+  }
+}
+.ivu-tabs-nav .ivu-tabs-tab .ivu-icon {
+  color: #f00;
+}
+::v-deepbody .ivu-select-dropdown .ivu-dropdown-transfer {
+  background: red !important;
+}
+.file-left ::v-deep .ivu-select-dropdown.ivu-dropdown-transfer .ivu-dropdown-menu .ivu-dropdown-item:hover {
+  background-color: #e5e5e5 !important;
+}
+::v-deep .ivu-tabs.ivu-tabs-card > .ivu-tabs-bar .ivu-tabs-nav-container {
+  background-color: #333;
+}
 </style>

@@ -372,3 +372,70 @@ export function downloadReplyCode(id) {
     method: 'GET',
   });
 }
+
+/**
+ * 城市列表
+ */
+export function cityList() {
+  return request({
+    url: `setting/city/full_list`,
+    method: 'GET',
+  });
+}
+
+/**
+ * @description  客服自动回复 -- 关键字 列表
+ * @param {Object} param data {Object} 传值参数
+ */
+export function kefuAutoReplyListApi(params) {
+  return request({
+    url: `app/kefu/auto_reply/list`,
+    method: 'get',
+    params,
+  });
+}
+
+/**
+ * @description  客服自动回复添加编辑表单
+ * @param {Object} param data {Object} 传值参数
+ */
+export function kefuAutoReplyForm(id) {
+  return request({
+    url: `app/kefu/auto_reply/form/` + id,
+    method: 'get',
+  });
+}
+
+/**
+ * @description 小程序链接 -- 列表
+ * @param {Object} param data {Object} 传值参数
+ */
+export function routineSchemeList(data) {
+  return request({
+    url: 'app/routine/scheme_list',
+    method: 'get',
+    params: data,
+  });
+}
+
+/**
+ * @description 小程序链接 -- 创建修改表单
+ * @param {Number} param id {Number} 标签id
+ */
+export function routineSchemeForm(id) {
+  return request({
+    url: `app/routine/scheme_form/${id}`,
+    method: 'get',
+  });
+}
+
+/**
+ * @description 小程序链接 -- 删除
+ * @param {Number} param id {Number} 标签id
+ */
+export function routineSchemeDel(id) {
+  return request({
+    url: `app/routine/scheme_del/${id}`,
+    method: 'delete',
+  });
+}

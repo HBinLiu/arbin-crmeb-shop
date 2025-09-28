@@ -1,13 +1,17 @@
 <template>
   <div>
     <div class="c_row-item" v-if="configData[this.configNum]">
-      <Col span="8" class="c_label">{{ configData[this.configNum][name].title }}</Col>
-      <Col span="14" class="color-box">
-        <div class="color-item" v-for="(color, key) in configData[this.configNum][name].color" :key="key">
-          <ColorPicker v-model="color.item" @on-change="changeColor($event, color)" alpha></ColorPicker
-          ><span @click="resetBgA(color, index, key)">重置</span>
+      <el-col :span="8" class="c_label">{{ configData[this.configNum][name].title }}</el-col>
+      <el-col :span="14" class="color-box">
+        <div
+          class="color-item acea-row row-middle"
+          v-for="(color, key) in configData[this.configNum][name].color"
+          :key="key"
+        >
+          <el-color-picker v-model="color.item" @change="changeColor($event, color)"></el-color-picker
+          ><span class="white-space-nowrap" v-db-click @click="resetBgA(color, index, key)">重置</span>
         </div>
-      </Col>
+      </el-col>
     </div>
   </div>
 </template>
@@ -57,7 +61,7 @@ export default {
   methods: {
     changeColor(e, color) {
       if (!e) {
-        color.item = 'transparent';
+        // color.item = 'transparent';
       }
       // this.$emit('getConfig', this.defaults)
     },
@@ -69,21 +73,27 @@ export default {
 };
 </script>
 
-<style scoped lang="stylus">
-.c_row-item
-    margin-top 10px
-    margin-bottom 10px
-    >>> .ivu-select-dropdown
-        left -27px !important
-.color-box
-    display flex
-    align-items center
-    justify-content flex-end
-    .color-item
-        margin-left 15px
-        span
-            margin-left 5px
-            color #999
-            font-size 13px
-            cursor pointer
+<style lang="scss" scoped>
+.c_row-item {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  ::v-deep .ivu-select-dropdown {
+    left: -27px !important;
+  }
+}
+.color-box {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  .color-item {
+    margin-left: 15px;
+
+    span {
+      margin-left: 5px;
+      color: #999;
+      font-size: 13px;
+      cursor: pointer;
+    }
+  }
+}
 </style>

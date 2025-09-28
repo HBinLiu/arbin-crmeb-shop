@@ -6,25 +6,21 @@
           class="item"
           v-for="(goods, index) in defaults.goodsList.list"
           :key="index"
-          v-if="defaults.goodsList.list.length"
+          v-show="defaults.goodsList.list.length"
         >
           <img :src="type == 1 ? goods.pic : goods.image" alt="" />
-          <span class="iconfont icondel_1" @click.stop="bindDelete(index)"></span>
+          <span class="iconfont icondel_1" v-db-click @click.stop="bindDelete(index)"></span>
         </div>
-        <div class="add-item item" @click="modals = true"><span class="iconfont iconaddto"></span></div>
+        <div class="add-item item" v-db-click @click="modals = true"><span class="iconfont iconaddto"></span></div>
       </draggable>
     </div>
 
-    <Modal
-      v-model="modals"
-      :loading="loading"
+    <el-dialog
+      :visible.sync="modals"
       :title="titles"
       class="paymentFooter"
       :class="type ? '' : 'middleTop'"
-      scrollable
-      width="900"
-      @on-cancel="cancel"
-      @on-ok="ok"
+      width="900px"
     >
       <sort-list ref="goodslist" @getProductDiy="getProductDiy" v-if="modals && type == 1"></sort-list>
       <goods-list
@@ -36,7 +32,11 @@
         :diy="true"
         v-if="modals && type != 1"
       ></goods-list>
-    </Modal>
+      <span slot="footer" class="dialog-footer">
+        <el-button v-db-click @click="cancel">取 消</el-button>
+        <el-button type="primary" v-db-click @click="ok">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -127,7 +127,7 @@ export default {
     },
     ok() {
       if (!this.tempGoods.length) {
-        return this.$Message.warning('请先选择商品');
+        return this.$message.warning('请先选择商品');
       }
       let list = this.defaults.goodsList.list;
       list.push.apply(list, this.tempGoods);
@@ -135,6 +135,7 @@ export default {
       let picList = this.unique(list);
       this.defaults.goodsList.list = picList;
       // this.defaults.goodsList.list.push(this.tempGoods);
+      this.modals = false;
     },
     bindDelete(index) {
       this.defaults.goodsList.list.splice(index, 1);
@@ -143,46 +144,55 @@ export default {
 };
 </script>
 
-<style scoped lang="stylus">
-.middleTop /deep/.ivu-modal-wrap .ivu-modal{
-    top:50%!important;
-    margin-top:-350px;
+<style lang="scss" scoped>
+.middleTop ::v-deep .ivu-modal-wrap .ivu-modal {
+  top: 50% !important;
+  margin-top: -350px;
 }
-.goods-box
-    padding 16px 0
-    margin-bottom 16px
-    border-top 1px solid rgba(0,0,0,0.05)
-    border-bottom 1px solid rgba(0,0,0,0.05)
-    .wrapper,.list-group
-        display flex
-        flex-wrap wrap
-    .add-item
-        display flex
-        align-items center
-        justify-content center
-        width 80px
-        height 80px
-        margin-bottom 10px
-        background #F7F7F7
-        .iconfont
-            font-size 18px
-            color #D8D8D8
-    .item
-        position relative
-        width 80px
-        height 80px
-        margin-bottom 20px
-        margin-right 12px
-        &:nth-child(4n)
-           margin-right 0
-        img
-            width 100%
-            height 100%
-        .icondel_1
-            position absolute
-            right -10px
-            top -16px
-            color #999999
-            font-size 28px
-            cursor pointer
+.goods-box {
+  padding: 16px 0;
+  margin-bottom: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  .wrapper,
+  .list-group {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .add-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    margin-bottom: 10px;
+    background: #f7f7f7;
+    .iconfont {
+      font-size: 18px;
+      color: #d8d8d8;
+    }
+  }
+  .item {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+    margin-right: 12px;
+    &:nth-child(4n) {
+      margin-right: 0;
+    }
+    img {
+      width: 100%;
+      height: 100%;
+    }
+    .icondel_1 {
+      position: absolute;
+      right: -10px;
+      top: -16px;
+      color: #999999;
+      font-size: 28px;
+      cursor: pointer;
+    }
+  }
+}
 </style>

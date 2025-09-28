@@ -51,7 +51,7 @@ class StoreBargainUserServices extends BaseServices
         $ids = $this->dao->getColumn(['bargain_id' => $bargainId], 'id');
         /** @var StoreBargainUserHelpServices $bargainHelp */
         $bargainHelp = app()->make(StoreBargainUserHelpServices::class);
-        return $bargainHelp->getCount([['bargain_user_id', 'in', $ids], ['bargain_id', '=', $bargainId], ['type', '=', 1]]);
+        return $bargainHelp->getCount([['bargain_user_id', 'in', $ids], ['bargain_id', '=', $bargainId]]);
     }
 
     /**
@@ -187,8 +187,14 @@ class StoreBargainUserServices extends BaseServices
         if (!$bargainUserUid) return [];
         [$page, $limit] = $this->getPageValue();
         $list = $this->dao->userAll($bargainUserUid, $page, $limit);
+        $bargainHelpServices = app()->make(StoreBargainUserHelpServices::class);
         foreach ($list as &$item) {
             $item['residue_price'] = bcsub((string)$item['bargain_price'], (string)$item['price'], 2);
+            if ($item['status'] == 3) {
+                $item['success_time'] = date('Y-m-d H:i:s', (int)$bargainHelpServices->getMax(['bargain_user_id' => $item['id']], 'add_time'));
+            } else {
+                $item['success_time'] = '';
+            }
         }
         return $list;
     }
@@ -214,7 +220,7 @@ class StoreBargainUserServices extends BaseServices
     public function userBargainStatusFail($bargain_id, $is_true)
     {
         if ($is_true) {
-            $this->dao->delete(['bargain_id' => $bargain_id, 'status' => 1]);
+            $this->dao->delete(['bargain_id' => $bargain_id]);
             /** @var StoreBargainUserHelpServices $service */
             $service = app()->make(StoreBargainUserHelpServices::class);
             $service->delete(['bargain_id' => $bargain_id]);
@@ -228,6 +234,9 @@ class StoreBargainUserServices extends BaseServices
      * 砍价列表
      * @param $where
      * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function bargainUserList($where)
     {
@@ -238,7 +247,7 @@ class StoreBargainUserServices extends BaseServices
         $bargainUserHelpService = app()->make(StoreBargainUserHelpServices::class);
         $nums = $bargainUserHelpService->getNums();
         foreach ($list as &$item) {
-            $item['num'] = $item['people_num'] - ($nums[$item['id']] ?? 0);
+            $item['num'] = $item['people_num'] - $nums[$item['id']];
             $item['already_num'] = $nums[$item['id']] ?? 0;
             $item['now_price'] = bcsub((string)$item['bargain_price'], (string)$item['price'], 2);
             $item['add_time'] = $item['add_time'] ? date('Y-m-d H:i:s', (int)$item['add_time']) : '';

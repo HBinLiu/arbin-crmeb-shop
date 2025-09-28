@@ -9,6 +9,7 @@
 // +----------------------------------------------------------------------
 
 import request from '@/libs/request';
+import { getCookies } from '@/libs/util';
 
 /**
  * @description 设置 系统设置 应用设置头部
@@ -522,7 +523,7 @@ export function roleSetStatusApi(data) {
  * @description 设置 身份管理 ==新增 编辑
  * @param {Object} param data {Object} 传值参数
  */
-export function roleCreatApi(data) {
+export function roleCreateApi(data) {
   return request({
     url: `setting/role/${data.id}`,
     method: 'post',
@@ -1107,6 +1108,195 @@ export function langTypeStatus(id, status) {
 export function langCodeTranslate(data) {
   return request({
     url: `setting/lang_code/translate`,
+    method: 'post',
+    data,
+  });
+}
+
+/**
+ * @description 代码生成
+ */
+export function codeCrud(data) {
+  return request({
+    url: `system/crud`,
+    method: 'post',
+    data,
+  });
+}
+/**
+ * @description 扫码上传链接获取
+ */
+export function scanUploadQrcode(pid) {
+  return request({
+    url: `file/scan_upload/qrcode?pid=${pid}`,
+    method: 'get',
+  });
+}
+/**
+ * @description 扫码上传图片获取
+ */
+export function scanUploadGet(scan_token) {
+  return request({
+    url: `file/scan_upload/image/${scan_token}`,
+    method: 'get',
+  });
+}
+/**
+ * @description 图片上传
+ */
+export function fileUpload(data) {
+  return request({
+    url: `file/upload`,
+    method: 'post',
+    headers: {
+      'Authori-zation': 'Bearer ' + getCookies('token'),
+      'content-type': 'multipart/form-data;' + 'Bearer ' + getCookies('token'),
+    },
+    data,
+  });
+}
+/**
+ * @description 扫码图片上传
+ */
+export function scanUpload(data) {
+  return request({
+    url: `image/scan_upload`,
+    method: 'post',
+    headers: {
+      'content-type': 'multipart/form-data;',
+    },
+    data,
+  });
+}
+/**
+ * 菜单搜索
+ */
+export function menusSearch(data) {
+  return request({
+    url: `menusSearch`,
+    method: 'post',
+    data,
+  });
+}
+
+/**
+ * PC端菜单配置
+ * @param {*} data
+ * @returns
+ */
+export function pcHomeMenusSave(data) {
+  return request({
+    url: `setting/group_data/save_all`,
+    method: 'post',
+    data,
+  });
+}
+
+/**
+ * 获取PC端菜单配置
+ * @param {*} data
+ * @returns
+ */
+export function pcHomeMenus(name) {
+  return request({
+    url: `setting/group_data?config_name=${name}`,
+    method: 'get',
+  });
+}
+
+/**
+ * 打印机列表
+ * @param {*} type
+ * @returns
+ */
+export function printList(data) {
+  return request({
+    url: `/system/ticket/list`,
+    method: 'get',
+    params: data,
+  });
+}
+
+/**
+ * 打印机创建
+ * @param {*} type
+ * @returns
+ */
+export function printForm(id) {
+  return request({
+    url: `/system/ticket/form/${id}`,
+    method: 'get',
+  });
+}
+/**
+ * 打印机状态切换
+ * @param {*} type
+ * @returns
+ */
+export function printSetStatus(data) {
+  return request({
+    url: `/system/ticket/set_status/${data.id}/${data.status}`,
+    method: 'post',
+  });
+}
+
+/**
+ * 发票配置保存
+ * @returns
+ */
+export function printSaveContent(id, data) {
+  return request({
+    url: `/system/ticket/save_content/${id}`,
+    method: 'post',
+    data,
+  });
+}
+/**
+ * 获取发票配置
+ */
+export function printContent(id) {
+  return request({
+    url: `/system/ticket/content/${id}`,
+    method: 'get',
+  });
+}
+
+/**
+ * 链接列表分类
+ * @param {*} type
+ * @returns
+ */
+export function diyLinkCategoryListApi() {
+  return request({
+    url: `/diy/link/category`,
+    method: 'get',
+  });
+}
+/**
+ * @description 添加/编辑分类
+ */
+export function linkCategoryFormApi(cate_id, pid) {
+  return request({
+    url: `diy/link/category/form/${cate_id}/${pid}`,
+    method: 'get',
+  });
+}
+/**
+ * @description 列表
+ */
+export function linkListApi(data) {
+  return request({
+    url: `diy/link/list/${data.id}`,
+    method: 'get',
+    params: data,
+  });
+}
+/**
+ * @description 创建/编辑链接
+ */
+export function linkCreateApi(data) {
+  return request({
+    url: `diy/link/save/${data.id}`,
     method: 'post',
     data,
   });

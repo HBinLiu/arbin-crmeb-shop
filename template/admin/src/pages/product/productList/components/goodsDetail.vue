@@ -5,11 +5,11 @@
         <div style="width: 375px">
           <div class="title-box">商品详情</div>
           <div class="swiper-box">
-            <Carousel :autoplay="goodsInfo.productInfo.slider_image.length > 1" v-model="value2" loop arrow="never">
-              <CarouselItem v-for="(item, index) in goodsInfo.productInfo.slider_image" :key="index">
+            <el-carousel :autoplay="goodsInfo.productInfo.slider_image.length > 1" v-model="value2" loop arrow="never">
+              <el-carousel-item v-for="(item, index) in goodsInfo.productInfo.slider_image" :key="index">
                 <div class="demo-carousel"><img :src="item" alt="" /></div>
-              </CarouselItem>
-            </Carousel>
+              </el-carousel-item>
+            </el-carousel>
           </div>
           <div class="goods_info">
             <div class="number-wrapper">
@@ -74,7 +74,7 @@ export default {
 };
 </script>
 
-<style lang="stylus" scoped>
+<style lang="scss" scoped>
 .goods_detail {
   .goods_detail_wrapper {
     background: url('../../../../assets/images/phonebg.png') no-repeat center top !important;
@@ -86,9 +86,8 @@ export default {
     top: 50%;
     transform: translate(-50%, -50%);
     width: 375px;
-    background: #F0F2F5;
+    background: #f0f2f5;
   }
-
   .title-box {
     width: 335px;
     height: 46px;
@@ -98,13 +97,9 @@ export default {
     color: #333;
     font-size: 16px;
   }
-
   .swiper-box {
-    height: 375px;
-
     .demo-carousel {
       width: 333px;
-      height: 375px;
 
       img {
         width: 100%;
@@ -113,55 +108,50 @@ export default {
       }
     }
   }
-
   .goods_info {
     width: 332px;
     padding: 15px;
     background: #fff;
-
     .number-wrapper {
       display: flex;
       align-items: center;
-
       .price {
-        color: #FF3838;
+        color: #ff3838;
         font-size: 25px;
 
         span {
           font-size: 15px;
         }
       }
-
       .old-price {
         font-size: 15px;
         margin-left: 10px;
         color: #333333;
       }
     }
-
     .name {
       font-size: 16px;
       color: #333;
     }
-
     .msg {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-top: 10px;
-
       .item {
         color: #999999;
         font-size: 14px;
       }
     }
   }
-
   .con-box {
     margin-top: 10px;
     padding-bottom: 20px;
     background: #f0f2f5;
     width: 335px;
+    .content ::v-deepvideo {
+      width: 100% !important;
+    }
   }
 }
 </style>

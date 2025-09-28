@@ -69,6 +69,7 @@ class StoreOrderSuccessServices extends BaseServices
     {
         $updata = ['paid' => 1, 'pay_type' => $paytype, 'pay_time' => time()];
         $orderInfo['pay_time'] = $updata['pay_time'];
+        $orderInfo['pay_type'] = $paytype;
         if ($other && isset($other['trade_no'])) {
             $updata['trade_no'] = $other['trade_no'];
         }
@@ -92,13 +93,36 @@ class StoreOrderSuccessServices extends BaseServices
         }
         $orderInfo['send_name'] = $orderInfo['real_name'];
         //订单支付成功后置事件
-        event('order.orderPaySuccess', [$orderInfo]);
+        event('OrderPaySuccessListener', [$orderInfo]);
         //用户推送消息事件
-        event('notice.notice', [$orderInfo, 'order_pay_success']);
+        event('NoticeListener', [$orderInfo, 'order_pay_success']);
         //支付成功给客服发送消息
-        event('notice.notice', [$orderInfo, 'admin_pay_success_code']);
+        event('NoticeListener', [$orderInfo, 'admin_pay_success_code']);
         // 推送订单
-        event('out.outPush', ['order_pay_push', ['order_id' => (int)$orderInfo['id']]]);
+        event('OutPushListener', ['order_pay_push', ['order_id' => (int)$orderInfo['id']]]);
+
+        //自定义消息-订单支付成功
+        $orderInfo['time'] = date('Y-m-d H:i:s');
+        $orderInfo['phone'] = $orderInfo['user_phone'];
+        event('CustomNoticeListener', [$orderInfo['uid'], $orderInfo, 'order_pay_success']);
+
+        //自定义事件-订单支付
+        event('CustomEventListener', ['order_pay', [
+            'uid' => $orderInfo['uid'],
+            'id' => (int)$orderInfo['id'],
+            'order_id' => $orderInfo['order_id'],
+            'real_name' => $orderInfo['real_name'],
+            'user_phone' => $orderInfo['user_phone'],
+            'user_address' => $orderInfo['user_address'],
+            'total_num' => $orderInfo['total_num'],
+            'pay_price' => $orderInfo['pay_price'],
+            'pay_postage' => $orderInfo['pay_postage'],
+            'deduction_price' => $orderInfo['deduction_price'],
+            'coupon_price' => $orderInfo['coupon_price'],
+            'store_name' => $orderInfo['storeName'],
+            'add_time' => date('Y-m-d H:i:s', $orderInfo['add_time']),
+        ]]);
+
         $res = $res1 && $resPink;
         return false !== $res;
     }

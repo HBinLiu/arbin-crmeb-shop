@@ -8,12 +8,14 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
 
-import BasicLayout from '@/components/main';
+import LayoutMain from '@/layout';
+import setting from '@/setting';
+let routePre = setting.routePre;
 
 const pre = 'system_';
 
 export default {
-  path: '/admin/system',
+  path: routePre + '/system',
   name: 'system',
   header: 'system',
   redirect: {
@@ -22,8 +24,56 @@ export default {
   meta: {
     auth: ['admin-system'],
   },
-  component: BasicLayout,
+  component: LayoutMain,
   children: [
+    {
+      path: 'code_generation',
+      name: `${pre}code_generation`,
+      meta: {
+        auth: ['system-config-code-generation'],
+        title: '代码生成',
+        activeMenu: routePre + '/system/code_generation_list',
+      },
+      component: () => import('@/pages/system/codeGeneration/index'),
+    },
+    {
+      path: 'code_data_dictionary',
+      name: `${pre}code_data_dictionary`,
+      meta: {
+        auth: ['system-code-data_dictionary'],
+        title: '数据字典',
+        activeMenu: routePre + '/system/code_data_dictionary',
+      },
+      component: () => import('@/pages/system/codeDataDictionary/index'),
+    },
+    {
+      path: 'code_data_dictionary_datalist',
+      name: `${pre}code_data_dictionary_datalist`,
+      meta: {
+        auth: ['system-code-data_dictionary-dataList'],
+        title: '数据管理页面',
+        activeMenu: routePre + '/system/code_data_dictionary',
+      },
+      component: () => import('@/pages/system/codeDataDictionary/dataList'),
+    },
+    {
+      path: 'code_generation_list',
+      name: `${pre}code_generation_list`,
+      meta: {
+        auth: ['system-config-code-generation-list'],
+        title: '代码生成列表',
+      },
+      component: () => import('@/pages/system/codeGeneration/list'),
+    },
+    {
+      path: 'backend_routing',
+      name: `${pre}backend_routing`,
+      meta: {
+        auth: ['system-config-backend-routing'],
+        title: '接口管理',
+      },
+      component: () => import('@/pages/system/backendRouting/index'),
+    },
     {
       path: 'file',
       name: `${pre}file`,
@@ -93,6 +143,7 @@ export default {
       meta: {
         auth: ['system-maintain-system-file'],
         title: '文件管理入口',
+        activeMenu: routePre + '/system/maintain/system_file/opendir',
       },
       component: () => import('@/pages/system/maintain/systemFile/login'),
     },
@@ -111,6 +162,7 @@ export default {
       meta: {
         auth: ['system-config-system_config_tab-list'],
         title: '配置列表',
+        activeMenu: routePre + '/system/config/system_config_tab/index',
       },
       component: () => import('@/pages/system/configTab/list'),
     },
@@ -129,6 +181,7 @@ export default {
       meta: {
         auth: ['system-config-system_config-list'],
         title: '组合数据列表',
+        activeMenu: routePre + '/system/config/system_group/index',
       },
       component: () => import('@/pages/system/group/list'),
     },
@@ -158,6 +211,24 @@ export default {
         title: '定时任务',
       },
       component: () => import('@/pages/system/crontab/index'),
+    },
+    {
+      path: 'event',
+      name: `${pre}event`,
+      meta: {
+        auth: ['system-event-index'],
+        title: '自定义事件',
+      },
+      component: () => import('@/pages/system/event/index'),
+    },
+    {
+      path: 'system_menus/index',
+      name: `${pre}systemMenus`,
+      meta: {
+        auth: ['system-system-menus'],
+        title: '权限规则',
+      },
+      component: () => import('@/pages/system/systemMenus/index'),
     },
   ],
 };

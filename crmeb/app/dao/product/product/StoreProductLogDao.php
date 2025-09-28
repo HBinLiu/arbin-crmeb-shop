@@ -28,7 +28,7 @@ class StoreProductLogDao extends BaseDao
 
     public function getRanking($where)
     {
-        return $this->search($where)->with('storeName')
+        return $this->search($where, false)->with('storeName')
             ->field([
                 'product_id',
                 'SUM(visit_num) as visit',
@@ -38,7 +38,7 @@ class StoreProductLogDao extends BaseDao
                 'SUM(pay_num) as pay',
                 'SUM(pay_price * pay_num) as price',
                 'SUM(cost_price) as cost',
-                'ROUND((SUM(pay_price)-SUM(cost_price))/SUM(cost_price),2) as profit',
+                'ROUND((SUM(pay_price)-SUM(cost_price))/SUM(pay_price),2) as profit',
                 'SUM(collect_num) as collect',
                 'ROUND((COUNT(distinct(pay_uid))-1)/COUNT(distinct(uid)),2) as changes',
                 'COUNT(distinct(pay_uid))-1 as repeats'
@@ -47,7 +47,7 @@ class StoreProductLogDao extends BaseDao
 
     public function getRepeats($where, $product_id)
     {
-        return count($this->search($where)->where('type', 'pay')->where('product_id', $product_id)->field('count(pay_uid) as p')->group('pay_uid')->having('p>1')->select());
+        return count($this->search($where, false)->where('type', 'pay')->where('product_id', $product_id)->field('count(pay_uid) as p')->group('pay_uid')->having('p>1')->select());
     }
 
     /**
@@ -89,5 +89,21 @@ class StoreProductLogDao extends BaseDao
             })->when($group, function ($query) use ($group) {
                 $query->group($group);
             })->order('add_time desc')->select()->toArray();
+    }
+
+    /**
+     * 获取用户访问商品数量
+     * @param $uid
+     * @return int
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2025/2/17
+     */
+    public function getCountByUser($uid)
+    {
+        return $this->getModel()->where('uid', $uid)
+            ->where('type', 'visit')
+            ->group('product_id')
+            ->count();
     }
 }

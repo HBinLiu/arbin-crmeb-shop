@@ -35,17 +35,17 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="tar">数据库名：</td>
-                        <td><input type="text" name="dbname" id="dbname" value="crmeb" class="input"></td>
-                        <td>
-                            <div id="J_install_tip_dbname"></div>
-                        </td>
-                    </tr>
-                    <tr>
                         <td class="tar">数据库密码：</td>
                         <td><input type="password" name="dbpw" id="dbpw" value="" class="input" autoComplete="off"></td>
                         <td>
                             <div id="J_install_tip_dbpw"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="tar">数据库名：</td>
+                        <td><input type="text" name="dbname" id="dbname" value="crmeb" class="input"></td>
+                        <td>
+                            <div id="J_install_tip_dbname"></div>
                         </td>
                     </tr>
                     <tr>
@@ -190,7 +190,7 @@
                 $('#J_install_tip_manager').html('<span for="dbname" generated="true" class="tips_error" style="">请输入管理账号</span>');
                 return false;
             }
-            if (!(/^[a-zA-Z]{0,}$/.test(manager))) {
+            if (!(/^[a-zA-Z0-9]{0,32}$/.test(manager))) {
                 $('#J_install_tip_manager').html('<span generated="true" class="tips_error" style="">账号必须为英文或者数字</span>');
                 return false;
             } else {
@@ -312,6 +312,13 @@
                             $('#J_install_tip_dbuser').html('');
                             $('#J_install_tip_dbpw').html('');
                             $('#J_install_tip_dbname').html('<span for="dbname" generated="true" class="tips_error" >数据库不为空，请更换一个数据库</span>');
+                            return false;
+                        } else if (res == -5) {
+                            $('#J_install_tip_dbhost').html('');
+                            $('#J_install_tip_dbport').html('');
+                            $('#J_install_tip_dbuser').html('');
+                            $('#J_install_tip_dbpw').html('');
+                            $('#J_install_tip_dbname').html('<span for="dbname" generated="true" class="tips_error" >MySql数据库必须是5.6及以上版本</span>');
                             return false;
                         } else if (res == 1) {
                             $('#J_install_tip_dbhost').html('');

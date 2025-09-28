@@ -81,7 +81,7 @@ class UserExtractDao extends BaseDao
      */
     public function getWhereSumField(array $where, string $field)
     {
-        return $this->search($where)
+        return $this->search($where, false)
             ->when(isset($where['timeKey']), function ($query) use ($where) {
                 $query->whereBetweenTime('add_time', $where['timeKey']['start_time'], $where['timeKey']['end_time']);
             })
@@ -96,7 +96,7 @@ class UserExtractDao extends BaseDao
      */
     public function getGroupField(array $where, string $field, string $group)
     {
-        return $this->search($where)
+        return $this->search($where, false)
             ->when(isset($where['timeKey']), function ($query) use ($where, $field, $group) {
                 $query->whereBetweenTime('add_time', $where['timeKey']['start_time'], $where['timeKey']['end_time']);
                 $timeUinx = "%H";
@@ -125,5 +125,11 @@ class UserExtractDao extends BaseDao
     public function getExtractMoneyByWhere(array $where, string $field)
     {
         return $this->search($where)->sum($field);
+    }
+
+    public function getExtractByOrderId($uid, $order_id)
+    {
+        $info = $this->getModel()->where('uid', $uid)->where('wechat_order_id', $order_id)->find();
+        return $info ? $info->toArray() : [];
     }
 }

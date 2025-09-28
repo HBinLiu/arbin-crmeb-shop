@@ -8,17 +8,20 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
 
-import BasicLayout from '@/components/main';
+import LayoutMain from '@/layout';
+import setting from '@/setting';
+let routePre = setting.routePre;
+
 const pre = 'marketing_';
 
 export default {
-  path: '/admin/marketing',
+  path: routePre + '/marketing',
   name: 'marketing',
   header: 'marketing',
   redirect: {
-    name: `${pre}storeCoupon`,
+    name: `${pre}storeCouponIssue`,
   },
-  component: BasicLayout,
+  component: LayoutMain,
   children: [
     {
       path: 'store_combination/index',
@@ -45,6 +48,7 @@ export default {
       meta: {
         auth: ['marketing-store_combination-create'],
         title: '添加拼团',
+        activeMenu: routePre + '/marketing/store_combination/index',
       },
       component: () => import('@/pages/marketing/storeCombination/create'),
     },
@@ -53,6 +57,7 @@ export default {
       name: `${pre}storeCombinationStatistics`,
       meta: {
         title: '拼团统计',
+        activeMenu: routePre + '/marketing/store_combination/index',
       },
       component: () => import('@/pages/marketing/storeCombination/statistics'),
     },
@@ -76,11 +81,12 @@ export default {
       component: () => import('@/pages/marketing/storeCouponIssue/index'),
     },
     {
-      path: 'store_coupon_issue/create/:id?',
+      path: 'store_coupon_issue/create/:id?/:edit?',
       name: `${pre}storeCouponCreate`,
       meta: {
         auth: ['marketing-store_coupon_issue-create'],
         title: '添加优惠券',
+        activeMenu: routePre + '/marketing/store_coupon_issue/index',
       },
       component: () => import('@/pages/marketing/storeCouponIssue/create'),
     },
@@ -127,6 +133,7 @@ export default {
       meta: {
         auth: ['marketing-store_bargain-create'],
         title: '添加砍价',
+        activeMenu: routePre + '/marketing/store_bargain/index',
       },
       component: () => import('@/pages/marketing/storeBargain/create'),
     },
@@ -135,6 +142,7 @@ export default {
       name: `${pre}storeBargainStatistics`,
       meta: {
         title: '砍价统计',
+        activeMenu: routePre + '/marketing/store_bargain/index',
       },
       component: () => import('@/pages/marketing/storeBargain/statistics'),
     },
@@ -163,14 +171,34 @@ export default {
       meta: {
         auth: ['marketing-store_seckill-create'],
         title: '添加秒杀',
+        activeMenu: routePre + '/marketing/store_seckill/list',
       },
       component: () => import('@/pages/marketing/storeSeckill/create'),
+    },
+    {
+      path: 'store_seckill/create_more/:id?/:copy?',
+      name: `${pre}storeSeckillCreate`,
+      meta: {
+        auth: ['marketing-store_seckill-create-more'],
+        title: '添加秒杀',
+        activeMenu: routePre + '/marketing/store_seckill/list',
+      },
+      component: () => import('@/pages/marketing/storeSeckill/createMore'),
+    },
+    {
+      path: 'store_seckill/list',
+      name: `${pre}marketing-store_seckill-list`,
+      meta: {
+        title: '秒杀列表',
+      },
+      component: () => import('@/pages/marketing/storeSeckill/list'),
     },
     {
       path: 'store_seckill/statistics/:id?',
       name: `${pre}storeSeckillStatistics`,
       meta: {
         title: '秒杀统计',
+        activeMenu: routePre + '/marketing/store_seckill/index',
       },
       component: () => import('@/pages/marketing/storeSeckill/statistics'),
     },
@@ -180,6 +208,15 @@ export default {
       meta: {
         auth: ['marketing-integral-system_config'],
         title: '积分配置',
+      },
+      component: () => import('@/pages/setting/setSystem/index'),
+    },
+    {
+      path: `model/system_config/:type?/:tab_id?`,
+      name: `${pre}model`,
+      meta: {
+        auth: ['system-model-system_config'],
+        title: '模块配置',
       },
       component: () => import('@/pages/setting/setSystem/index'),
     },
@@ -199,17 +236,9 @@ export default {
       meta: {
         auth: ['marketing-store_integral-create'],
         title: '添加积分商品',
+        activeMenu: routePre + '/marketing/store_integral/index',
       },
       component: () => import('@/pages/marketing/storeIntegral/create'),
-    },
-    {
-      path: 'store_integral/add_store_integral',
-      name: `${pre}addStoreIntegral`,
-      meta: {
-        auth: ['marketing-store_integral-create'],
-        title: '批量添加积分商品',
-      },
-      component: () => import('@/pages/marketing/storeIntegral/addStoreIntegral'),
     },
     {
       path: 'store_integral/order_list',
@@ -244,6 +273,7 @@ export default {
       meta: {
         auth: true,
         title: '直播间管理',
+        activeMenu: routePre + '/marketing/live/live_room',
       },
       component: () => import('@/pages/marketing/live/creat_live'),
     },
@@ -262,6 +292,7 @@ export default {
       meta: {
         auth: true,
         title: '直播间商品管理',
+        activeMenu: routePre + '/marketing/live/live_goods',
       },
       component: () => import('@/pages/marketing/live/add_goods'),
     },
@@ -316,6 +347,7 @@ export default {
       meta: {
         auth: true,
         title: '创建抽奖',
+        activeMenu: routePre + '/marketing/lottery/list',
       },
       component: () => import('@/pages/marketing/lottery/create'),
     },
@@ -325,8 +357,27 @@ export default {
       meta: {
         auth: true,
         title: '抽奖记录',
+        activeMenu: routePre + '/marketing/lottery/list',
       },
       component: () => import('@/pages/marketing/lottery/recordingList'),
+    },
+    {
+      path: 'lottery/config',
+      name: `${pre}lottery_config`,
+      meta: {
+        auth: ['admin-marketing-lottery-config'],
+        title: '抽奖配置',
+      },
+      component: () => import('@/pages/marketing/lottery/config'),
+    },
+    {
+      path: 'lottery/list',
+      name: `${pre}list`,
+      meta: {
+        auth: true,
+        title: '抽奖列表',
+      },
+      component: () => import('@/pages/marketing/lottery/lotteryList'),
     },
     {
       path: 'channel_code/channelCodeIndex',
@@ -343,7 +394,8 @@ export default {
       name: `${pre}create_code`,
       meta: {
         auth: ['marketing-channel_code-create'],
-        title: '新建渠道码',
+        title: '渠道码',
+        activeMenu: routePre + '/marketing/channel_code/channelCodeIndex',
       },
       component: () => import('@/pages/marketing/channelCode/createCode'),
     },
@@ -353,6 +405,7 @@ export default {
       meta: {
         auth: ['marketing-channel_code-statistic'],
         title: '二维码统计',
+        activeMenu: routePre + '/marketing/channel_code/channelCodeIndex',
       },
       component: () => import('@/pages/marketing/channelCode/codeStatistic'),
     },
@@ -378,7 +431,6 @@ export default {
       path: 'recharge',
       name: `${pre}recharge`,
       meta: {
-        auth: ['marketing-recharge-index'],
         title: '充值配置',
       },
       component: () => import('@/pages/marketing/recharge/index'),
@@ -387,19 +439,34 @@ export default {
       path: 'sign',
       name: `${pre}sign`,
       meta: {
-        auth: ['marketing-sign-index'],
         title: '签到配置',
       },
       component: () => import('@/pages/marketing/sign/index'),
     },
     {
-      path: `member/system_config/:type?/:tab_id?`,
-      name: `${pre}member`,
+      path: 'sign_rewards',
+      name: `${pre}sign_rewards`,
       meta: {
-        auth: ['marketing-member-system_config'],
+        title: '签到奖励',
+      },
+      component: () => import('@/pages/marketing/sign/rewards'),
+    },
+    {
+      path: `member_config/:type?/:tab_id?`,
+      name: `${pre}member_config`,
+      meta: {
         title: '会员配置',
       },
       component: () => import('@/pages/setting/setSystem/index'),
+    },
+    {
+      path: `newuser/gift`,
+      name: `${pre}gift`,
+      meta: {
+        title: '新人礼',
+        auth: ['admin-marketing-new-user-gift'],
+      },
+      component: () => import('@/pages/marketing/newuser/gift'),
     },
   ],
 };

@@ -17,6 +17,7 @@ use app\services\diy\DiyServices;
 use app\services\product\product\StoreCategoryServices;
 use app\services\product\product\StoreProductServices;
 use app\services\user\UserServices;
+use app\services\user\UserSignServices;
 use app\services\wechat\WechatUserServices;
 
 class PublicController
@@ -85,8 +86,8 @@ class PublicController
     {
         /** @var DiyServices $diyService */
         $diyService = app()->make(DiyServices::class);
-        $version = $diyService->getDiyVersion((int)$id);
-        return app('json')->success(['version' => $version ?: '']);
+        $data = $diyService->getDiyVersion((int)$id);
+        return app('json')->success(['version' => $data['version'] ?: '', 'is_diy' => $data['is_diy']]);
     }
 
     /**
@@ -134,5 +135,11 @@ class PublicController
         $status = (int)$services->getColorChange((string)$name);
         $is_diy = $services->value(['status' => 1, 'is_del' => 0], 'is_diy');
         return app('json')->success(compact('status', 'is_diy'));
+    }
+
+    public function getDiySign(Request $request)
+    {
+        $uid = (int)$request->uid();
+        return app('json')->success(app()->make(UserSignServices::class)->signConfig($uid, 1));
     }
 }

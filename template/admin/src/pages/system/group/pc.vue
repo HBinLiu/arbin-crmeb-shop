@@ -1,42 +1,37 @@
 <template>
   <div>
-    <!-- <div class="i-layout-page-header">
-			<PageHeader
-					class="product_tabs"
-					:title="$route.meta.title"
-					hidden-breadcrumb
-			>
-				<div slot="title">
-					<div style="float: left;">
-						<span v-text="$route.meta.title" class="mr20"></span>
-					</div>
-					<div style="float: right;">
-						<Button class="bnt" type="primary" @click="save">保存</Button>
-					</div><strong></strong>
-				</div>
-			</PageHeader>
-		</div> -->
-    <div class="i-layout-page-header">
+    <!-- <div class="i-layout-page-header header-title">
       <span class="ivu-page-header-title mr20">{{ $route.meta.title }}</span>
       <div>
         <div style="float: right">
-          <Button class="bnt" type="primary" @click="save">保存</Button>
+          <el-button class="bnt" type="primary" v-db-click @click="save">保存</el-button>
         </div>
       </div>
-    </div>
-    <Card :bordered="false" dis-hover class="ivu-mt">
-      <Row class="ivu-mt box-wrapper">
-        <Col :xs="24" :sm="24" :md="6" :lg="3" class="left-wrapper">
+    </div> -->
+    <pages-header ref="pageHeader" :title="$route.meta.title">
+      <el-button class="bnt" type="primary" v-db-click @click="save">保存</el-button>
+    </pages-header>
+    <el-card :bordered="false" shadow="never" class="h100 mt16">
+      <el-row class="box-wrapper">
+        <el-col :xs="24" :sm="24" :md="6" :lg="3">
           <div class="left_box">
-            <div class="left_cont" :class="pageId == 1 ? 'on' : ''" @click="menu(1)">网站LOGO</div>
-            <div class="left_cont" :class="pageId == 'pc_home_banner' ? 'on' : ''" @click="menu('pc_home_banner')">
+            <div class="left_cont" :class="pageId == 1 ? 'on' : ''" v-db-click @click="menu(1)">网站LOGO</div>
+            <div
+              class="left_cont"
+              :class="pageId == 'pc_home_banner' ? 'on' : ''"
+              v-db-click
+              @click="menu('pc_home_banner')"
+            >
               首页轮播图
             </div>
-            <div class="left_cont" :class="pageId == 3 ? 'on' : ''" @click="menu(3)">客服页面广告</div>
+            <div class="left_cont" :class="pageId == 3 ? 'on' : ''" v-db-click @click="menu(3)">客服页面广告</div>
+            <div class="left_cont" :class="pageId == 4 ? 'on' : ''" v-db-click @click="menu(4)">顶部菜单配置</div>
+            <div class="left_cont" :class="pageId == 5 ? 'on' : ''" v-db-click @click="menu(5)">友情链接配置</div>
+            <div class="left_cont" :class="pageId == 6 ? 'on' : ''" v-db-click @click="menu(6)">关于我们</div>
           </div>
-        </Col>
+        </el-col>
         <div style="display: flex; width: 83%">
-          <Col v-if="pageId == 1 || pageId == 'pc_home_banner'" class="pciframe" :bordered="false" dis-hover>
+          <el-col v-if="pageId == 1 || pageId == 'pc_home_banner'" class="pciframe" :bordered="false" shadow="never">
             <img src="../../../assets/images/pcbanner.png" class="pciframe-box" />
             <div v-if="pageId == 1" class="logoimg">
               <img :src="pclogo" />
@@ -49,15 +44,15 @@
                 </swiper-slide>
               </swiper>
             </div>
-          </Col>
-          <Col v-if="pageId == 3" class="pciframe" :bordered="false" dis-hover>
+          </el-col>
+          <el-col v-if="pageId == 3" class="pciframe" :bordered="false" shadow="never">
             <img src="../../../assets/images/kefu.png" class="pciframe-box" />
             <div class="box3_sile">
               <!-- {{formValidate}} -->
               <div v-html="formValidate.content"></div>
             </div>
-          </Col>
-          <Col v-if="pageId == 'pc_home_banner'">
+          </el-col>
+          <el-col v-if="pageId == 'pc_home_banner'">
             <div class="content">
               <div class="right-box">
                 <div class="hot_imgs">
@@ -76,42 +71,43 @@
                         <div class="move-icon">
                           <span class="iconfont icondrag2"></span>
                         </div>
-                        <div class="img-box imgBoxs" @click="modalPicTap('单选', index)">
+                        <div class="img-box imgBoxs" v-db-click @click="modalPicTap('单选', index)">
                           <img :src="item.image" alt="" v-if="item.image" />
                           <div class="upload-box" v-else>
-                            <Icon type="ios-camera-outline" size="36" />
+                            <i class="el-icon-picture-outline" style="font-size: 24px"></i>
                           </div>
-                          <div class="delect-btn" style="line-height: 0px" @click.stop="bindDelete(item, index)">
-                            <Icon type="md-close-circle" size="26" />
+                          <div
+                            class="delect-btn"
+                            style="line-height: 0px"
+                            v-db-click
+                            @click.stop="bindDelete(item, index)"
+                          >
+                            <i class="el-icon-circle-close" style="font-size: 24px" />
                           </div>
                         </div>
                         <div class="info">
                           <div class="info-item">
                             <span>图片名称：</span>
                             <div class="input-box">
-                              <Input v-model="item.title" placeholder="请填写名称" />
+                              <el-input v-model="item.title" placeholder="请填写名称" />
                             </div>
                           </div>
                           <div class="info-item">
                             <span>链接地址：</span>
-                            <!-- @click="link(index) icon="ios-arrow-forward" "-->
+                            <!-- v-db-click @click="link(index)"-->
                             <div class="input-box">
-                              <Input v-model="item.url" placeholder="选择链接" />
+                              <el-input v-model="item.url" placeholder="请填写链接" />
                             </div>
                           </div>
                         </div>
                       </div>
                     </draggable>
                     <div>
-                      <Modal
-                        v-model="modalPic"
+                      <el-dialog
+                        :visible.sync="modalPic"
                         width="950px"
-                        scrollable
-                        footer-hide
-                        closable
                         title="上传商品图"
-                        :mask-closable="false"
-                        :z-index="999"
+                        :close-on-click-modal="false"
                       >
                         <uploadPictures
                           :isChoice="isChoice"
@@ -120,25 +116,26 @@
                           :gridPic="gridPic"
                           v-if="modalPic"
                         ></uploadPictures>
-                      </Modal>
+                      </el-dialog>
                     </div>
                   </div>
                   <template>
                     <div class="add-btn">
-                      <Button
+                      <el-button
                         type="primary"
                         ghost
-                        style="width: 100px; height: 35px; background-color: #1890ff; color: #ffffff"
+                        style="width: 100px; height: 35px; background-color: var(--prev-color-primary); color: #ffffff"
+                        v-db-click
                         @click="addBox"
                         >添加图片
-                      </Button>
+                      </el-button>
                     </div>
                   </template>
                 </div>
               </div>
             </div>
-          </Col>
-          <Col v-if="pageId == 1">
+          </el-col>
+          <el-col v-if="pageId == 1">
             <div class="content">
               <div class="right-box">
                 <div class="hot_imgs">
@@ -146,21 +143,17 @@
                   <div class="title-text">建议尺寸：140px * 60px</div>
                   <div class="title-text">除LOGO图标外，页面其他内容仅供参考</div>
                   <div class="list-box">
-                    <div class="img-boxs" @click="modalPicTap('单选', 0)">
+                    <div class="img-boxs" v-db-click @click="modalPicTap('单选', 0)">
                       <img :src="pclogo" alt="" />
                       <div class="img_font"></div>
                       <div class="img_fonts">更换图片</div>
                     </div>
                     <div>
-                      <Modal
-                        v-model="modalPic"
+                      <el-dialog
+                        :visible.sync="modalPic"
                         width="950px"
-                        scrollable
-                        footer-hide
-                        closable
                         title="上传商品图"
-                        :mask-closable="false"
-                        :z-index="999"
+                        :close-on-click-modal="false"
                       >
                         <uploadPictures
                           :isChoice="isChoice"
@@ -169,43 +162,163 @@
                           :gridPic="gridPic"
                           v-if="modalPic"
                         ></uploadPictures>
-                      </Modal>
+                      </el-dialog>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </Col>
-          <Col v-if="pageId == 3" :xs="24" :sm="24" :md="12" :lg="14" style="margin-left: 40px">
+          </el-col>
+          <el-col v-if="pageId == 3" :xs="24" :sm="24" :md="12" :lg="14" style="margin-left: 40px">
             <div class="table_box">
-              <Row type="flex">
-                <Col v-bind="grid">
-                  <div class="title">隐私权限页面展示：</div>
-                </Col>
-              </Row>
+              <el-row>
+                <el-col v-bind="grid">
+                  <div class="title">客服广告内容：</div>
+                </el-col>
+              </el-row>
               <div>
-                <Form
+                <el-form
                   class="form"
                   ref="formValidate"
                   :model="formValidate"
                   :rules="ruleValidate"
-                  :label-width="labelWidth"
+                  :label-width="0"
                   :label-position="labelPosition"
                   @submit.native.prevent
                 >
-                  <div class="goodsTitle acea-row"></div>
-                  <FormItem label="" prop="content" style="margin: 0px">
-                    <WangEditor :content="formValidate.content" @editorContent="getEditorContent"></WangEditor>
-                  </FormItem>
-                </Form>
+                  <el-form-item label="" prop="content" style="margin: 0px">
+                    <WangEditor class="mt10" :content="content" @editorContent="getEditorContent"></WangEditor>
+                  </el-form-item>
+                </el-form>
               </div>
             </div>
-          </Col>
+          </el-col>
+          <el-col v-if="pageId == 4" :xs="24" :sm="24" :md="12" :lg="14" style="margin-left: 40px">
+            <div class="content">
+              <div class="right-box">
+                <div class="hot_imgs">
+                  <div class="title">顶部菜单设置</div>
+                  <div class="list-box">
+                    <draggable class="dragArea list-group" :list="menuList" group="peoples" handle=".move-icon">
+                      <div class="item" v-for="(item, index) in menuList" :key="index">
+                        <div class="move-icon">
+                          <span class="iconfont icondrag2"></span>
+                        </div>
+                        <div class="delect-btn" style="line-height: 0px" v-db-click @click.stop="menuDelete(index)">
+                          <i class="el-icon-circle-close" style="font-size: 24px" />
+                        </div>
+                        <div class="info">
+                          <div class="info-item">
+                            <span>菜单名称：</span>
+                            <div class="input-box">
+                              <el-input v-model="item.title" placeholder="请填写名称" />
+                            </div>
+                          </div>
+                          <div class="info-item">
+                            <span>链接地址：</span>
+                            <!-- v-db-click @click="link(index)"-->
+                            <div class="input-box">
+                              <el-input v-model="item.url" placeholder="请填写链接" />
+                            </div>
+                          </div>
+                          <!-- <div class="info-item">
+                            <span>是否需要登录：</span>
+                            <div class="input-box">
+                              <el-switch v-model="item.auth" active-value="1" inactive-value="0"> </el-switch>
+                            </div>
+                          </div> -->
+                        </div>
+                      </div>
+                    </draggable>
+                  </div>
+                  <template>
+                    <div class="add-btn">
+                      <el-button
+                        type="primary"
+                        ghost
+                        style="width: 100px; height: 35px; background-color: var(--prev-color-primary); color: #ffffff"
+                        v-db-click
+                        @click="addMenu"
+                        >添加菜单
+                      </el-button>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </el-col>
+          <el-col v-if="pageId == 5" :xs="24" :sm="24" :md="12" :lg="14" style="margin-left: 40px">
+            <div class="content">
+              <div class="right-box">
+                <div class="hot_imgs">
+                  <div class="title">友情链接配置</div>
+                  <div class="list-box">
+                    <draggable class="dragArea list-group" :list="linkList" group="peoples" handle=".move-icon">
+                      <div class="item" v-for="(item, index) in linkList" :key="index">
+                        <div class="move-icon">
+                          <span class="iconfont icondrag2"></span>
+                        </div>
+                        <div
+                          class="delect-btn"
+                          style="line-height: 0px"
+                          v-db-click
+                          @click.stop="linkDelete(item, index)"
+                        >
+                          <i class="el-icon-circle-close" style="font-size: 24px" />
+                        </div>
+                        <div class="info">
+                          <div class="info-item">
+                            <span>链接名称：</span>
+                            <div class="input-box">
+                              <el-input v-model="item.title" placeholder="请填写名称" />
+                            </div>
+                          </div>
+                          <div class="info-item">
+                            <span>链接地址：</span>
+                            <!-- v-db-click @click="link(index)"-->
+                            <div class="input-box">
+                              <el-input v-model="item.url" placeholder="请填写链接" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </draggable>
+                  </div>
+                  <template>
+                    <div class="add-btn">
+                      <el-button
+                        type="primary"
+                        ghost
+                        style="width: 100px; height: 35px; background-color: var(--prev-color-primary); color: #ffffff"
+                        v-db-click
+                        @click="addLink"
+                        >添加链接
+                      </el-button>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </el-col>
+          <el-col v-if="pageId == 6" :xs="24" :sm="24" :md="24" :lg="24" style="margin-left: 40px">
+            <div class="content">
+              <div class="right-box">
+                <div class="hot_imgs">
+                  <div class="title">关于我们-详情</div>
+                  <WangEditor
+                    style="width: 100%"
+                    :content="formValidate.content"
+                    @editorContent="getEditorContent"
+                  ></WangEditor>
+                </div>
+              </div>
+            </div>
+          </el-col>
         </div>
-      </Row>
-    </Card>
+      </el-row>
+    </el-card>
     <!-- <div class="save">
-			<Button type="primary" @click="save" >保存</Button>
+			<el-button type="primary" v-db-click @click="save" >保存</el-button>
 		</div> -->
     <linkaddress ref="linkaddres" @linkUrl="linkUrl"></linkaddress>
   </div>
@@ -225,9 +338,12 @@ import {
   getKfAdv,
   setKfAdv,
 } from '@/api/system';
+import { pcHomeMenusSave, pcHomeMenus } from '@/api/setting';
 import draggable from 'vuedraggable';
 import uploadPictures from '@/components/uploadPictures';
 import linkaddress from '@/components/linkaddress';
+import { getAgreements, setAgreements } from '@/api/system';
+
 export default {
   name: 'list',
   components: {
@@ -243,6 +359,7 @@ export default {
       formValidate: {
         content: '',
       },
+      content: '',
       pclogo: '',
       grid: {
         xl: 7,
@@ -272,6 +389,8 @@ export default {
       },
       pageId: 1,
       tabList: [],
+      menuList: [],
+      linkList: [],
       lastObj: {
         add_time: '',
         config_name: '',
@@ -303,7 +422,7 @@ export default {
         autoHeightEnabled: false, // 编辑器不自动被内容撑高
         initialFrameHeight: 500, // 初始容器高度
         initialFrameWidth: '100%', // 初始容器宽度
-        UEDITOR_HOME_URL: '/admin/UEditor/',
+        UEDITOR_HOME_URL: '/UEditor/',
         serverUrl: '',
       },
       activeIndexs: 0,
@@ -312,7 +431,7 @@ export default {
   computed: {
     ...mapState('admin/layout', ['isMobile']),
     labelWidth() {
-      return this.isMobile ? undefined : 120;
+      return this.isMobile ? undefined : '120px';
     },
     labelPosition() {
       return this.isMobile ? 'top' : 'right';
@@ -330,19 +449,16 @@ export default {
       this.tabList.list[this.activeIndexs].url = e;
       // item.url = e
     },
-    getContent(val) {
-      this.formValidate.content = val;
-    },
     // 提交数据
     onsubmit(name) {
       this.$refs[name].validate((valid) => {
         if (valid) {
           setKfAdv(this.formValidate)
             .then(async (res) => {
-              this.$Message.success(res.msg);
+              this.$message.success(res.msg);
             })
             .catch((res) => {
-              this.$Message.error(res.msg);
+              this.$message.error(res.msg);
             });
         } else {
           return false;
@@ -357,11 +473,31 @@ export default {
           this.formValidate = {
             content: data.content,
           };
+          this.content = data.content;
         })
         .catch((res) => {
           this.loading = false;
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
+    },
+    getAboutUs(id) {
+      this.formValidate.content = '';
+      getAgreements(id).then((res) => {
+        this.formValidate.content = res.data.content;
+      });
+    },
+    setAboutUs(id) {
+      if (this.formValidate.content == '') return this.$message.warning('请输入内容');
+      let data = {
+        id: id,
+        content: this.formValidate.content,
+        type: id,
+        title: '关于我们',
+      };
+
+      setAgreements(data).then((res) => {
+        this.$message.success(res.msg);
+      });
     },
     // 添加表单
     groupAdd() {
@@ -381,16 +517,20 @@ export default {
             });
           })
           .catch((res) => {
-            this.$Message.error(res.msg);
+            this.$message.error(res.msg);
           });
-      }
-      if (this.pageId == 1) {
+      } else if (this.pageId == 1) {
         pcLogoApi('pc_logo').then((res) => {
           this.pclogo = res.data.value;
         });
-      }
-      if (this.pageId == 3) {
+      } else if (this.pageId == 3) {
         this.getKfAdv();
+      } else if (this.pageId == 4) {
+        this.getMenuList();
+      } else if (this.pageId == 5) {
+        this.getLinkList();
+      } else if (this.pageId == 6) {
+        this.getAboutUs(7);
       }
     },
     menu(id) {
@@ -412,12 +552,30 @@ export default {
         };
       } else {
         if (this.tabList.list.length == 5) {
-          this.$Message.warning('最多添加五张呦');
+          this.$message.warning('最多添加5张');
         } else {
           let obj = JSON.parse(JSON.stringify(this.lastObj));
           this.tabList.list.push(obj);
         }
       }
+    },
+    addMenu() {
+      if (this.menuList.length >= 6) {
+        return this.$message.warning('最多添加6个菜单');
+      }
+      this.menuList.push({
+        title: '',
+        url: '',
+      });
+    },
+    addLink() {
+      if (this.linkList.length >= 20) {
+        return this.$message.warning('最多添加20个链接');
+      }
+      this.linkList.push({
+        title: '',
+        url: '',
+      });
     },
     // 删除
     bindDelete(item, index) {
@@ -425,6 +583,14 @@ export default {
         this.lastObj = this.tabList.list[0];
       }
       this.tabList.list.splice(index, 1);
+    },
+    menuDelete(index) {
+      console.log(index);
+      this.menuList.splice(index, 1);
+    },
+    // 友情链接
+    linkDelete(index) {
+      this.linkList.splice(index, 1);
     },
     // 点击图文封面
     modalPicTap(title, index) {
@@ -446,24 +612,60 @@ export default {
       if (this.pageId == 'pc_home_banner') {
         groupSaveApi({ config_name: this.pageId, data: this.tabList.list })
           .then((res) => {
-            this.$Message.success(res.msg);
+            this.$message.success(res.msg);
           })
           .catch((err) => {
-            this.$Message.error(err.msg);
+            this.$message.error(err.msg);
           });
-      }
-      if (this.pageId == 1) {
+      } else if (this.pageId == 1) {
         pcLogoSave({ pc_logo: this.pclogo })
           .then((res) => {
-            this.$Message.success(res.msg);
+            this.$message.success(res.msg);
           })
           .catch((err) => {
-            this.$Message.error(err.msg);
+            this.$message.error(err.msg);
           });
-      }
-      if (this.pageId == 3) {
+      } else if (this.pageId == 3) {
         this.onsubmit('formValidate');
+      } else if (this.pageId == 4) {
+        this.saveMenu('pc_home_menus');
+      } else if (this.pageId == 5) {
+        this.saveMenu('pc_home_links');
+      } else if (this.pageId == 6) {
+        this.setAboutUs(7);
       }
+    },
+    getMenuList() {
+      pcHomeMenus('pc_home_menus')
+        .then((res) => {
+          this.menuList = res.data.list;
+        })
+        .catch((err) => {
+          this.$message.error(err.msg);
+        });
+    },
+    getLinkList() {
+      pcHomeMenus('pc_home_links')
+        .then((res) => {
+          this.linkList = res.data.list;
+        })
+        .catch((err) => {
+          this.$message.error(err.msg);
+        });
+    },
+    // 菜单保存
+    saveMenu(config_name) {
+      let data = {
+        config_name: config_name,
+        data: this.pageId == 5 ? this.linkList : this.menuList,
+      };
+      pcHomeMenusSave(data)
+        .then((res) => {
+          this.$message.success(res.msg);
+        })
+        .catch((err) => {
+          this.$message.error(err.msg);
+        });
     },
     link(index) {
       this.activeIndexs = index;
@@ -472,7 +674,7 @@ export default {
   },
 };
 </script>
-<style type="text/css">
+<style>
 .box3_sile::-webkit-scrollbar {
   display: none;
 }
@@ -485,15 +687,17 @@ export default {
   width: 92px;
 }
 </style>
-<style scoped lang="stylus">
-/deep/ .ivu-menu-vertical .ivu-menu-item-group-title {
+<style scoped lang="scss">
+::v-deep .ivu-menu-vertical .ivu-menu-item-group-title {
   display: none;
 }
 
-/deep/ .ivu-menu-vertical.ivu-menu-light:after {
+::v-deep .ivu-menu-vertical.ivu-menu-light:after {
   display: none;
 }
-
+.ivu-mt {
+  min-height: calc(100vh - 280px);
+}
 .nofonts {
   text-align: center;
   line-height: 137px;
@@ -503,14 +707,14 @@ export default {
   width: 100%;
   margin: 0 auto;
   text-align: center;
-  background-color: #FFF;
+  background-color: #fff;
   bottom: 0;
   padding: 16px;
   border-top: 3px solid #f5f7f9;
 }
 
 .imgBoxs {
-  background-color: #CCCCCC;
+  background-color: #cccccc;
   line-height: 80px;
   text-align: center;
 }
@@ -548,8 +752,8 @@ export default {
   width: 100%;
 
   .save {
-    background-color: #1890FF;
-    color: #FFFFFF;
+    background-color: var(--prev-color-primary);
+    color: #ffffff;
     width: 71px;
     height: 30px;
     margin: 0 auto;
@@ -579,7 +783,7 @@ export default {
       }
 
       .goodsTitle .title {
-        border-bottom: 2px solid #1890ff;
+        border-bottom: 2px solid var(--prev-color-primary);
         // padding: 0 8px 12px 5px;
         color: #000;
         font-size: 14px;
@@ -593,7 +797,7 @@ export default {
 
       .add {
         font-size: 12px;
-        color: #1890ff;
+        color: var(--prev-color-primary);
         padding: 0 12px;
         cursor: pointer;
       }
@@ -635,27 +839,22 @@ export default {
     margin-bottom: 12px;
     cursor: pointer;
     padding: 14px 24px;
+    white-space: nowrap;
   }
 }
 
-.left-wrapper {
-  // height 904px
-  background: #fff;
-  border-right: 1px solid #dcdee2;
-}
-
 .on {
-  color: #1890ff;
-  background-color: #f0faff;
-  border-right: 2px solid #1890ff;
+  background-color: var(--prev-bg-main-color);
+  color: var(--prev-color-primary);
+  border-right: 2px solid var(--prev-color-primary);
 }
 
 .pciframe {
   margin-left: 20px;
   width: 430px;
   height: 280px;
-  background: #FFFFFF;
-  border: 1px solid #EEEEEE;
+  background: #ffffff;
+  border: 1px solid #eeeeee;
   border-radius: 16px;
   position: relative;
 
@@ -680,6 +879,7 @@ export default {
     width: 92px;
     height: 201px;
     background-color: #fff;
+    word-break: break-word;
   }
 
   .pcmoddile_goods {
@@ -731,16 +931,16 @@ export default {
     .item {
       position: relative;
       display: flex;
-      margin-top: 20px;
+      margin-top: 14px;
 
       .move-icon {
         display: flex;
         align-items: center;
         justify-content: center;
         width: 30px;
-        height: 80px;
+        // height: 80px;
         cursor: move;
-        color: #D8D8D8;
+        color: #d8d8d8;
       }
 
       .img-box {
@@ -778,23 +978,24 @@ export default {
         position: absolute;
         right: -12px;
         top: -12px;
-        color: #999999;
-
+        color: #f56c6c;
+        background-color: #fff;
+        cursor: pointer;
+        border-radius: 50%;
         .iconfont {
           font-size: 28px;
-          color: #999;
         }
       }
     }
   }
 
   .add-btn {
-    margin-top: 20px;
+    margin-top: 14px;
   }
 }
 
 .iconfont {
-  color: #DDDDDD;
+  color: #dddddd;
   font-size: 28px;
 }
 
@@ -845,32 +1046,30 @@ export default {
     width: 100%;
     height: 24px;
     border-radius: 0px 0px 6px 6px;
-    color: #FFFFFF;
+    color: #ffffff;
     text-align: center;
     line-height: 24px;
   }
 }
 
 .item {
-  border: 1px dashed #CCC;
+  border: 1px dashed #ccc;
+  border-radius: 6px;
   padding: 15px 15px 10px 0px;
 }
 
 .title {
-  border-left: 2px solid #1890FF;
+  border-left: 2px solid var(--prev-color-primary);
   padding-left: 10px;
   font-weight: bold;
   margin-bottom: 10px;
 }
 
-/deep/.ivu-form-item-content {
+::v-deep .ivu-form-item-content {
   margin-left: 0px !important;
 }
 
-/deep/.i-layout-page-header {
-  height: 66px;
-  background-color: #fff;
-  border-bottom: 1px solid #e8eaec;
+::v-deep .i-layout-page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;

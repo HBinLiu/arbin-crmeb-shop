@@ -11,14 +11,22 @@
 				<view class='pictrue'>
 					<easy-loadimage mode="widthFix" :image-src="item.image"></easy-loadimage>
 					<span class="pictrue_log_big pictrue_log_class"
-						v-if="item.activity && item.activity.type === '1'">{{$t(`秒杀`)}}</span>
+						v-if="item.activity && item.activity.type === '1' && $permission('seckill')">{{$t(`秒杀`)}}</span>
 					<span class="pictrue_log_big pictrue_log_class"
-						v-if="item.activity && item.activity.type === '2'">{{$t(`砍价`)}}</span>
+						v-if="item.activity && item.activity.type === '2' && $permission('bargain')">{{$t(`砍价`)}}</span>
 					<span class="pictrue_log_big pictrue_log_class"
-						v-if="item.activity && item.activity.type === '3'">{{$t(`拼团`)}}</span>
+						v-if="item.activity && item.activity.type === '3' && $permission('combination')">{{$t(`拼团`)}}</span>
 				</view>
-				<view class='name line1'>{{item.store_name}}</view>
+				<view class='name line2'>{{item.store_name}}</view>
 				<view class='money font-color'>{{$t(`￥`)}}<text class='num'>{{item.price}}</text></view>
+				<!-- <view class='vip-money' v-if="item.vip_price && item.vip_price > 0 && item.base">
+					{{$t(`￥`)}}{{item.vip_price}}
+					<image src='/static/images/jvip.png' class="jvip"></image>
+				</view>
+				<view class='vip-money' v-if="item.vip_price && item.vip_price > 0 && item.is_vip">
+					{{$t(`￥`)}}{{item.vip_price}}
+					<image src='/static/images/vip.png'></image>
+				</view> -->
 			</view>
 		</view>
 	</view>
@@ -93,7 +101,7 @@
 		margin-bottom: 30rpx;
 		border-radius: 20rpx 20rpx 0 0;
 		box-shadow: 0rpx 3rpx 10rpx 2rpx rgba(0, 0, 0, 0.03);
-		;
+		padding-bottom: 10rpx;
 	}
 
 	.recommend .recommendList .item .pictrue {
@@ -121,12 +129,29 @@
 		color: #282828;
 		margin-top: 20rpx;
 		padding: 0 10rpx;
+		line-height: 34rpx;
+		height: 68rpx;
 	}
 
 	.recommend .recommendList .item .money {
 		font-size: 20rpx;
 		margin-top: 8rpx;
-		padding: 0 10rpx 10rpx 10rpx;
+		padding: 0 10rpx 0rpx 10rpx;
+	}
+
+	.recommend .vip-money {
+		font-size: 24rpx;
+		color: #282828;
+		font-weight: bold;
+		display: flex;
+		align-items: center;
+		padding: 0rpx 0 0 10rpx;
+
+		image {
+			width: 46rpx;
+			height: 21rpx;
+			margin-left: 4rpx;
+		}
 	}
 
 	.recommend .recommendList .item .money .num {

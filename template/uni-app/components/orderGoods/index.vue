@@ -1,6 +1,11 @@
 <template>
 	<view class="orderGoods">
-		<view class='total' v-if="is_behalf"><text>
+		<view class='total' v-if="is_gift"><text>
+				<text class="iconfont icon-ic_gift1 mr-8"></text>
+				<text>{{ is_gift== 1 ? '送给好友' : '我的礼物'}}</text>
+			</text>
+		</view>
+		<view class='total' v-else-if="is_behalf"><text>
 				{{$t(`代付金额`)}}：
 				<text class="pay-price">￥{{pay_price || 0}}</text>
 			</text>
@@ -19,9 +24,9 @@
 			</view>
 		</view>
 
-		<view class='goodWrapper'>
+		<view class='goodWrapper pt-24'>
 			<view class='' :class="{op:!item.is_valid}" v-for="(item,index) in cartInfo" :key="index"
-				@click="jumpCon(item.product_id)">
+				@click="jumpCon(item)">
 				<view class="item acea-row row-between-wrapper">
 					<view class='pictrue' :class="{gray:!item.is_valid}">
 						<image :src='item.productInfo.attrInfo.image' v-if="item.productInfo.attrInfo"></image>
@@ -29,13 +34,13 @@
 					</view>
 					<view class='text'>
 						<view class='acea-row row-between-wrapper'>
-							<view class='name line1'>{{item.productInfo.store_name}}</view>
+							<view class='name line2'>{{item.productInfo.store_name}}</view>
 							<view class='num'>x {{item.cart_num}}</view>
 						</view>
 						<view class='attr line1' v-if="item.productInfo.attrInfo">{{item.productInfo.attrInfo.suk}}
 						</view>
 						<view class='money font-color pic' v-if="item.productInfo.attrInfo">
-							<text :class="{gray:!item.is_valid}">
+							<text v-show="is_gift != 2" :class="{gray:!item.is_valid}">
 								{{$t(`￥`)}}{{item.productInfo.attrInfo.price}}
 							</text>
 							<view class="refund" v-if="item.refund_num && statusType !=-2">{{item.refund_num}}{{$t(`件退款中`)}}
@@ -50,13 +55,15 @@
 						</view>
 						<view class='evaluate' v-else-if="item.is_reply==1">{{$t(`已评价`)}}</view>
 					</view>
+
 				</view>
+
 				<view class="botton-btn">
 					<view class='logistics' v-if="item.is_reply==0 && evaluate==3 && pid != -1 && isShow"
 						@click.stop="evaluateTap(item.unique,orderId)">
 						{{$t(`评价`)}}</view>
 					<view class='logistics'
-						v-if="paid === 1 && refund_status === 0 && item.refund_num !=item.cart_num && !is_confirm && isShow && virtualType == 0"
+						v-if="paid === 1 && refund_status === 0 && item.refund_num !=item.cart_num && !is_confirm && is_refund_available && isShow && (virtualType == 0 || (virtualType > 0 && statusType == 1)) && (is_gift != 2) && gift_uid == 0"
 						@click.stop="openSubcribe(item)">
 						{{$t(`申请退款`)}}</view>
 					<view class="rig-btn" v-if="status_type === 2 && index === cartInfo.length - 1 || !split">
@@ -73,7 +80,9 @@
 </template>
 
 <script>
+	import { mapGetters } from 'vuex'
 	export default {
+		computed: mapGetters(['uid']),
 		props: {
 			// 订单状态
 			statusType: {
@@ -148,6 +157,14 @@
 				type: Number,
 				default: 0,
 			},
+			is_gift: {
+				type: Number | String,
+				default: 0,
+			},
+			gift_uid: {
+				type: Number,
+				default: 0,
+			},
 			refund_status: {
 				type: Number,
 				default: 0,
@@ -157,6 +174,10 @@
 				default: 0,
 			},
 			isShow: {
+				type: Boolean,
+				default: true,
+			},
+			is_refund_available: {
 				type: Boolean,
 				default: true,
 			},
@@ -193,10 +214,20 @@
 					url: "/pages/goods/goods_comment_con/index?unique=" + unique + "&uni=" + orderId
 				})
 			},
-			jumpCon(id) {
+			jumpCon(item) {
 				if (this.jump) {
+					let url = '';
+					if (item.type == 0) {
+						url = `/pages/goods_details/index?id=${item.product_id}`
+					} else if (item.type == 1) {
+						url = `/pages/activity/goods_seckill_details/index?id=${item.seckill_id}&time_id=${item.productInfo.time_id}`
+					} else if (item.type == 2) {
+						url = `/pages/activity/goods_bargain_details/index?id=${item.bargain_id}&bargain=${this.uid}`
+					} else if (item.type == 3) {
+						url = `/pages/activity/goods_combination_details/index?id=${item.combination_id}`
+					}
 					uni.navigateTo({
-						url: `/pages/goods_details/index?id=${id}`
+						url
 					})
 				} else if (this.jumpDetail) {
 					uni.navigateTo({
@@ -247,18 +278,15 @@
 		padding: 0 30rpx;
 		border-bottom: 2rpx solid #f0f0f0;
 		font-size: 30rpx;
-		color: #282828;
+		color: #333;
 		line-height: 86rpx;
 		box-sizing: border-box;
-
-
 	}
-
 	.botton-btn {
 		display: flex;
 		align-items: right;
 		justify-content: flex-end;
-		padding: 0rpx 20rpx 20rpx 20rpx;
+		padding: 0rpx 20rpx 24rpx 20rpx;
 	}
 
 	.rig-btn {
@@ -322,9 +350,9 @@
 
 	.op {
 		opacity: 0.5;
-		
+
 	}
-	
+
 	.gray {
 		filter: grayscale(100%);
 		filter: gray;

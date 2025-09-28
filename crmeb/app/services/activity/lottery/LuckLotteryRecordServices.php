@@ -23,6 +23,7 @@ use app\services\user\UserServices;
 use app\services\wechat\WechatUserServices;
 use crmeb\exceptions\ApiException;
 use crmeb\services\app\WechatService;
+use crmeb\services\pay\Pay;
 use think\facade\Log;
 
 /**
@@ -46,19 +47,13 @@ class LuckLotteryRecordServices extends BaseServices
      * 获取抽奖记录列表
      * @param array $where
      * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function getList(array $where)
     {
         [$page, $limit] = $this->getPageValue();
-        /** @var LuckLotteryServices $luckServices */
-        $luckServices = app()->make(LuckLotteryServices::class);
-        $where['lottery_id'] = $luckServices->value(['factor' => $where['factor']], 'id');
-        if (!$where['lottery_id']) {
-            $list = [];
-            $count = 0;
-            return compact('list', 'count');
-        }
-        unset($where['factor']);
         $list = $this->dao->getList($where, '*', ['lottery', 'prize', 'user'], $page, $limit);
         foreach ($list as &$item) {
             $item['add_time'] = $item['add_time'] ? date('Y-m-d H:i:s', $item['add_time']) : '';
@@ -108,9 +103,13 @@ class LuckLotteryRecordServices extends BaseServices
      * 写入中奖纪录
      * @param int $uid
      * @param array $prize
+     * @param array $userInfo
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
-    public function insertPrizeRecord(int $uid, array $prize, array $userInfo = [])
+    public function insertPrizeRecord(int $uid, array $prize, array $userInfo = [], $channel_type)
     {
         if (!$userInfo) {
             /** @var UserServices $userServices */
@@ -128,6 +127,8 @@ class LuckLotteryRecordServices extends BaseServices
         $data['lottery_id'] = $prize['lottery_id'];
         $data['prize_id'] = $prize['id'];
         $data['type'] = $prize['type'];
+        $data['num'] = $prize['num'];
+        $data['channel_type'] = $channel_type;
         $data['add_time'] = time();
         if (!$res = $this->dao->save($data)) {
             throw new ApiException(400439);
@@ -162,7 +163,7 @@ class LuckLotteryRecordServices extends BaseServices
         }
         $data = ['is_receive' => 1, 'receive_time' => time(), 'receive_info' => $receive_info];
         $prize = $lotteryRecord['prize'];
-        $this->transaction(function () use ($uid, $userInfo, $lottery_record_id, $data, $prize, $userServices, $receive_info) {
+        $this->transaction(function () use ($uid, $userInfo, $lottery_record_id, $data, $prize, $userServices, $receive_info, $lotteryRecord) {
             //奖品类型1：未中奖2：积分3:余额4：红包5:优惠券6：站内商品7：等级经验8：用户等级 9：svip天数
             switch ($prize['type']) {
                 case 1:
@@ -183,11 +184,19 @@ class LuckLotteryRecordServices extends BaseServices
                 case 4:
                     /** @var WechatUserServices $wechatServices */
                     $wechatServices = app()->make(WechatUserServices::class);
-                    $openid = $wechatServices->getWechatOpenid($uid, 'wechat');
+                    $type = '';
+                    $openid = $wechatServices->uidToOpenid((int)$uid, $lotteryRecord['channel_type']);
+                    if ($lotteryRecord['channel_type'] == 'wechat') {
+                        $type = 'JSAPI';
+                    } elseif ($lotteryRecord['channel_type'] == 'routine') {
+                        $type = 'mini';
+                    } elseif ($lotteryRecord['channel_type'] == 'app') {
+                        $type = 'APP';
+                    }
                     if ($openid) {
                         /** @var StoreOrderCreateServices $services */
                         $services = app()->make(StoreOrderCreateServices::class);
-                        $wechat_order_id = $services->getNewOrderId();
+                        $wechat_order_id = $services->getNewOrderId('hb');
                         /** @var CapitalFlowServices $capitalFlowServices */
                         $capitalFlowServices = app()->make(CapitalFlowServices::class);
                         $capitalFlowServices->setFlow([
@@ -198,14 +207,49 @@ class LuckLotteryRecordServices extends BaseServices
                             'nickname' => $userInfo['nickname'],
                             'phone' => $userInfo['phone']
                         ], 'luck');
-                        WechatService::merchantPay($openid, $wechat_order_id, $prize['num'], '抽奖中奖红包');
+
+                        if (sys_config('pay_wechat_type')) {
+                            $pay = new Pay('v3_wechat_pay');
+                            $res = $pay->merchantPayNew(
+                                $type,
+                                $wechat_order_id,
+                                sys_config('v3_transfer_scene_id', '1000'),
+                                $openid,
+                                '',
+                                bcmul($prize['num'], '100', 0),
+                                '抽奖活动红包中奖',
+                                sys_config('site_url') . '/api/transfer/notify/' . $type,
+                                '劳务报酬',
+                                [
+                                    [
+                                        'info_type' => '岗位类型',
+                                        'info_content' => '抽奖'
+                                    ],
+                                    [
+                                        'info_type' => '报酬说明',
+                                        'info_content' => '抽奖活动红包中奖'
+                                    ],
+                                ]
+                            );
+                            $this->dao->update($lottery_record_id, [
+                                'wechat_order_id' => $wechat_order_id,
+                                'out_bill_no' => $res['out_bill_no'] ?? '',
+                                'package_info' => $res['package_info'] ?? '',
+                                'state' => $res['state'] ?? '',
+                                'transfer_bill_no' => $res['transfer_bill_no'] ?? '',
+                                'fail_reason' => $res['fail_reason'] ?? ''
+                            ]);
+                            event('NoticeListener', [['uid' => $uid, 'order_id' => $wechat_order_id, 'extractNumber' => $prize['num'], 'type' => 2], 'revenue_received']);
+                        } else {
+                            WechatService::merchantPay($openid, $wechat_order_id, (string)$prize['num'], '抽奖中奖红包');
+                        }
                     }
                     break;
                 case 5:
                     /** @var StoreCouponIssueServices $couponIssueService */
                     $couponIssueService = app()->make(StoreCouponIssueServices::class);
                     try {
-                        $couponIssueService->issueUserCoupon($prize['coupon_id'], $userInfo, true);
+                        $couponIssueService->issueUserCoupon($prize['coupon_id'], $userInfo);
                     } catch (\Throwable $e) {
                         Log::error('抽奖领取优惠券失败，原因：' . $e->getMessage());
                     }
@@ -217,13 +261,6 @@ class LuckLotteryRecordServices extends BaseServices
                     if (!check_phone($receive_info['phone'])) {
                         throw new ApiException(410053);
                     }
-                    break;
-                case 7:
-                    //TODO 未完善
-                    break;
-                case 8:
-                    break;
-                case 9:
                     break;
             }
             $this->dao->update($lottery_record_id, $data, 'id');
@@ -249,7 +286,7 @@ class LuckLotteryRecordServices extends BaseServices
         $deliver_info = $lotteryRecord['deliver_info'];
         $edit = [];
         //备注
-        if($data['deliver_name'] && $data['deliver_number']) {
+        if ($data['deliver_name'] && $data['deliver_number']) {
             if ($lotteryRecord['type'] != 6 && ($data['deliver_name'] || $data['deliver_number'])) {
                 throw new ApiException(410055);
             }
@@ -272,7 +309,11 @@ class LuckLotteryRecordServices extends BaseServices
     /**
      * 获取中奖记录
      * @param int $uid
+     * @param array $where
      * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function getRecord(int $uid, $where = [])
     {

@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -11,7 +11,8 @@
 import {
 	HTTP_REQUEST_URL,
 	HEADER,
-	TOKENNAME
+	TOKENNAME,
+	TIMEOUT
 } from '@/config/app';
 import {
 	toLogin,
@@ -50,6 +51,7 @@ function baseRequest(url, method, data, {
 			method: method || 'GET',
 			header: header,
 			data: data || {},
+			timeout: TIMEOUT,
 			success: (res) => {
 				if (noVerify)
 					reslove(res.data, res);

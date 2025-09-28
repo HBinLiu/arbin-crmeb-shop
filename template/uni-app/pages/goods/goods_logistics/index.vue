@@ -1,6 +1,6 @@
 <template>
 	<view :style="colorStyle">
-		<view class='logistics'>
+		<view class='logistics' v-if="product.length">
 			<view class='header acea-row row-between row-top' v-for="(item,index) in product" :key="index">
 				<view class='pictrue'>
 					<image :src='item.productInfo.image'></image>
@@ -8,7 +8,9 @@
 				<view class='text acea-row row-between'>
 					<view class='name line2'>{{item.productInfo.store_name}}</view>
 					<view class='money'>
-						<view>{{$t(`￥`)}}{{item.truePrice}}</view>
+						<view>
+							{{$t(`￥`)}}{{(parseFloat(item.truePrice)+parseFloat(item.postage_price/item.cart_num)).toFixed(2)}}
+						</view>
 						<view>x{{item.cart_num}}</view>
 					</view>
 				</view>
@@ -19,7 +21,9 @@
 						<view class='iconfont icon-wuliu'></view>
 						<view class='text'>
 							<view><text class='name line1'>{{$t(`快递公司`)}}：</text> {{orderInfo.delivery_name}}</view>
-							<view class='express line1'><text class='name'>{{$t(`快递单号`)}}：</text> {{orderInfo.delivery_id}}</view>
+							<view class='express line1'><text class='name'>{{$t(`快递单号`)}}：</text>
+								{{orderInfo.delivery_id}}
+							</view>
 						</view>
 					</view>
 					<!-- #ifndef H5 -->
@@ -47,7 +51,8 @@
 
 <script>
 	import {
-		express
+		express,
+		adminExpress
 	} from '@/api/order.js';
 	import {
 		getProductHot
@@ -78,7 +83,8 @@
 				product: [],
 				orderInfo: {},
 				expressList: [],
-				hostProduct: []
+				hostProduct: [],
+				is_admin: 0
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -99,6 +105,7 @@
 			});
 			this.orderId = options.orderId;
 			this.type = options.type;
+			this.is_admin = options.is_admin || 0;
 			if (this.isLogin) {
 				this.getExpress();
 				this.get_host_product();
@@ -138,7 +145,8 @@
 			},
 			getExpress: function() {
 				let that = this;
-				express(that.orderId,that.type).then(function(res) {
+				let met = this.is_admin ? adminExpress : express
+				met(that.orderId, that.type).then(function(res) {
 					let result = res.data.express.result || {};
 					that.$set(that, 'product', res.data.order.cartInfo || []);
 					that.$set(that, 'orderInfo', res.data.order);

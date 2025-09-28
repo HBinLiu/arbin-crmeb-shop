@@ -13,6 +13,7 @@ namespace app\services\message\notice;
 
 use app\jobs\TemplateJob;
 use app\services\message\NoticeService;
+use app\services\user\UserServices;
 use app\services\wechat\WechatUserServices;
 use think\facade\Log;
 
@@ -24,25 +25,6 @@ use think\facade\Log;
  */
 class RoutineTemplateListService extends NoticeService
 {
-
-    /**
-     * 判断是否开启权限
-     * @var bool
-     */
-    private $isOpen = true;
-
-    /**
-     * 是否开启权限
-     * @param string $mark
-     * @return $this
-     */
-    public function isOpen(string $mark)
-    {
-        $this->isOpen = $this->noticeInfo['is_routine'] === 1;
-        return $this;
-
-    }
-
     /**
      * 根据UID获取openid
      * @param int $uid
@@ -50,9 +32,13 @@ class RoutineTemplateListService extends NoticeService
      */
     public function getOpenidByUid(int $uid)
     {
-        /** @var WechatUserServices $wechatServices */
-        $wechatServices = app()->make(WechatUserServices::class);
-        return $wechatServices->uidToOpenid($uid, 'routine');
+        $isDel = app()->make(UserServices::class)->value(['uid' => $uid], 'is_del');
+        if ($isDel) {
+            $openid = '';
+        } else {
+            $openid = app()->make(WechatUserServices::class)->uidToOpenid($uid, 'routine');
+        }
+        return $openid;
     }
 
     /**
@@ -66,11 +52,10 @@ class RoutineTemplateListService extends NoticeService
     public function sendTemplate(int $uid, array $data, string $link = null, string $color = null)
     {
         try {
-            $this->isOpen = $this->noticeInfo['is_routine'] === 1;
-            if ($this->isOpen) {
+            if ($this->noticeInfo['is_routine'] == 1) {
                 $openid = $this->getOpenidByUid($uid);
                 //放入队列执行
-                TemplateJob::dispatch('doJob', ['subscribe', $openid, $this->noticeInfo['mark'], $data, $link, $color]);
+                TemplateJob::dispatch('doJob', ['subscribe', $openid, $this->noticeInfo['routine_tempid'], $data, $link, $color]);
             }
         } catch (\Exception $e) {
             Log::error($e->getMessage());
@@ -153,7 +138,7 @@ class RoutineTemplateListService extends NoticeService
             'thing2' => $storeTitle,
             'amount3' => $order['pay_price'],
             'character_string6' => $data['order_id']
-        ], '/pages/goods/order_details/index?order_id=' . $data['order_id'] . '&isReturen=1');
+        ], '/pages/goods/order_details/index?order_id=' . $data['order_id'] . '&isReturn=1');
     }
 
     /**
@@ -170,7 +155,7 @@ class RoutineTemplateListService extends NoticeService
             'thing2' => $storeTitle,
             'amount3' => $order['pay_price'],
             'character_string6' => $order['order_id']
-        ], '/pages/goods/order_details/index?order_id=' . $order['order_id'] . '&isReturen=1');
+        ], '/pages/goods/order_details/index?order_id=' . $order['order_id'] . '&isReturn=1');
     }
 
     /**
@@ -266,10 +251,28 @@ class RoutineTemplateListService extends NoticeService
     {
         return $this->sendTemplate((int)$uid, [
             'thing1' => '提现成功',
-            'amount2' => $extract_number . '元',
+            'amount2' => $extract_number,
             'thing3' => $nickname,
             'date4' => date('Y-m-d H:i:s', time())
         ], '/pages/users/user_spread_money/index?type=1');
+    }
+
+    /**
+     * 用户发起提现，后台同意之后给用户发送
+     * @param $uid
+     * @param $extract_number
+     * @param $order_id
+     * @param $type
+     * @return bool|void
+     */
+    public function sendRevenueReceived($uid, $extract_number, $order_id, $type)
+    {
+        return $this->sendTemplate((int)$uid, [
+            'character_string1' => $order_id,
+            'thing7' => '平台发放佣金',
+            'amount3' => $extract_number,
+            'time10' => date('Y-m-d H:i:s', time())
+        ], '/pages/users/user_spread_money/receiving?id=' . $order_id . '&type=' . $type);
     }
 
     /**

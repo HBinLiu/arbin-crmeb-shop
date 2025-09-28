@@ -41,8 +41,9 @@ class StoreCouponIssue extends AuthController
         $where = $this->request->getMore([
             ['status', 1],
             ['coupon_title', ''],
-            ['receive_type', ''],
+            ['receive_type', '', '', 'receive_types'],
             ['type', ''],
+            ['coupon_type', ''],
         ]);
         $list = $this->services->getCouponIssueList($where);
         return app('json')->success($list);
@@ -55,6 +56,7 @@ class StoreCouponIssue extends AuthController
     public function saveCoupon()
     {
         $data = $this->request->postMore([
+            ['id', 0],
             ['coupon_title', ''],
             ['coupon_price', 0.00],
             ['use_min_price', 0.00],
@@ -72,6 +74,7 @@ class StoreCouponIssue extends AuthController
             ['sort', 0],
             ['status', 0],
             ['receive_limit', 1],
+            ['user_type', 1],
         ]);
         $res = $this->services->saveCoupon($data);
         if ($res) return app('json')->success(100000);
@@ -99,6 +102,13 @@ class StoreCouponIssue extends AuthController
         if (!$id) return app('json')->fail(100100);
         $info = $this->services->get($id);
         if ($info) $info = $info->toArray();
+        if ($info['receive_type'] == 1 || $info['receive_type'] == 3) {
+            $info['user_type'] = 1;
+        }
+        if ($info['receive_type'] == 4) {
+            $info['user_type'] = 2;
+            $info['receive_type'] = 1;
+        }
         if ($info['product_id'] != '') {
             $productIds = explode(',', $info['product_id']);
             /** @var StoreProductServices $product */

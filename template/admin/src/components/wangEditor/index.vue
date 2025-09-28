@@ -4,34 +4,16 @@
       <div ref="wang-editor" class="wang-editor" />
     </div>
     <div v-if="monacoBox">
-      <Button type="primary" class="bottom" @click="getHtmlint">可视化界面</Button>
-      <monaco @change="changeValue" :value="newHtml" />
+      <el-button type="primary" class="bottom" v-db-click @click="getHtmlint">可视化界面</el-button>
+      <monaco class="monaco-box" @change="changeValue" :value="newHtml" />
     </div>
 
-    <Modal
-      v-model="modalPic"
-      width="1024px"
-      scrollable
-      footer-hide
-      closable
-      title="上传图片"
-      :mask-closable="false"
-      :z-index="9"
-    >
-      <uploadPictures v-if="modalPic" :isChoice="isChoice" @getPic="getPic" @getPicD="getPicD"></uploadPictures>
-    </Modal>
-    <Modal
-      v-model="modalVideo"
-      width="800px"
-      scrollable
-      footer-hide
-      closable
-      title="上传视频"
-      :mask-closable="false"
-      :z-index="9"
-    >
+    <el-dialog :visible.sync="modalPic" width="1024px" title="上传图片" :close-on-click-modal="false">
+      <uploadPictures v-if="modalPic" :isChoice="isChoice" @getPic="getPic"></uploadPictures>
+    </el-dialog>
+    <el-dialog :visible.sync="modalVideo" width="1024px" title="上传视频" :close-on-click-modal="false">
       <uploadVideo v-if="modalVideo" @getVideo="getvideo"></uploadVideo>
-    </Modal>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -77,8 +59,17 @@ export default {
     };
   },
   watch: {
-    content(val) {
-      this.editor.txt.html(val);
+    initEditor(val) {
+      if (val) {
+        this.editor.txt.html(this.content);
+      } else {
+        this.editor.txt.html('');
+      }
+    },
+  },
+  computed: {
+    initEditor() {
+      return this.content && this.editor;
     },
   },
   created() {
@@ -105,16 +96,27 @@ export default {
     // 获取多张图信息
     getPic(pc) {
       let _this = this;
-      _this.img = pc.att_dir;
+      _this.img = pc;
       _this.modalPic = false;
-      this.editor.cmd.do('insertHTML', `<img src="${_this.img}" style="max-width:100%;"/>`);
+      _this.img.map((d) => {
+        this.editor.cmd.do('insertHTML', `<img src="${d.att_dir}" style="max-width:100%;"/>`);
+      });
     },
     getimg() {
       this.modalPic = true;
       this.isChoice = '多选';
     },
     getvideoint() {
-      this.modalVideo = true;
+      // this.modalVideo = true;
+      this.$videoModal((e) => {
+        console.log(e);
+        let _this = this;
+        _this.modalVideo = false;
+        this.video = e;
+        let videoHTML =
+          '<video src="' + this.video + '" controls style="max-width:100%;min-height:500rpx"></video><p><br></p>';
+        this.editor.cmd.do('insertHTML', videoHTML);
+      });
     },
     getHtmlint() {
       this.monacoBox = !this.monacoBox;
@@ -122,14 +124,6 @@ export default {
       if (!this.monacoBox) {
         this.editor.txt.html(this.newHtml);
       }
-    },
-    getPicD(data) {
-      let _this = this;
-      _this.modalPic = false;
-
-      data.map((d) => {
-        this.editor.cmd.do('insertHTML', `<img src="${d.att_dir}" style="max-width:100%;"/>`);
-      });
     },
     getvideo(data) {
       let _this = this;
@@ -150,6 +144,7 @@ export default {
       this.editor.menus.extend(html, HtmlMenu);
       this.editor.config.menus = this.editor.config.menus.concat(html);
       this.editor.config.menus = this.editor.config.menus.concat(menuKey);
+      this.editor.config.showLinkImg = false;
       this.editor.config.uploadImgFromMedia = function () {
         _this.getimg();
       };
@@ -182,7 +177,7 @@ export default {
       ];
       // 配置全屏功能按钮是否展示
       //   this.editor.config.showFullScreen = false
-      this.editor.config.uploadImgShowBase64 = false;
+      this.editor.config.uploadImgShowBase64 = true;
       //   this.editor.config.uploadImgAccept = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
       this.editor.config.zIndex = 0;
       //   this.editor.config.uploadImgMaxSize = this.uploadSize * 1024 * 1024
@@ -202,9 +197,15 @@ export default {
 };
 </script>
 
-<style lang="stylus" scoped>
+<style lang="scss" scoped>
 .bottom {
   margin-bottom: 10px;
   cursor: pointer;
+}
+.monaco-box ::v-deep .el-textarea__inner {
+  height: 600px;
+}
+::v-deep .w-e-toolbar {
+  z-index: 2 !important;
 }
 </style>

@@ -10,7 +10,7 @@
 		                  <view class='name line1'>{{$t(itemn.title)}}</view>
 		                  <view>{{itemn.add_time}}</view>
 		               </view>
-		               <view class='num font-color'>+{{itemn.number}}</view>
+		               <view class='num'>+{{itemn.number}}</view>
 		            </view>
 		         </view>
 		      </view>
@@ -113,4 +113,7 @@
 </script>
 
 <style>
+.sign-record .num{
+	color: #fe5c2d!important;
+}
 </style>

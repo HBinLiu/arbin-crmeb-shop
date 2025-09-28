@@ -141,7 +141,7 @@ class QrcodeServices extends BaseServices
         /** @var SystemAttachmentServices $systemAttchment */
         $systemAttchment = app()->make(SystemAttachmentServices::class);
         try {
-            $imageInfo = $systemAttchment->getInfo(['name'=>$name]);
+            $imageInfo = $systemAttchment->getInfo(['name' => $name]);
             $siteUrl = sys_config('site_url');
             if (!$imageInfo) {
                 $codeUrl = PosterServices::setHttpType($siteUrl . $link, request()->isSsl() ? 0 : 1);//二维码链接
@@ -165,6 +165,7 @@ class QrcodeServices extends BaseServices
                 return '';
         }
     }
+
     /**
      * 获取二维码完整路径，不存在则自动生成
      * @param string $name
@@ -245,6 +246,7 @@ class QrcodeServices extends BaseServices
                 $namePath = 'combination_' . $id . '_' . $uid . '.jpg';
                 break;
             case 2:
+                $data = $data . '&time_id=' . $param['time_id'];
                 $page = 'pages/activity/goods_seckill_details/index';
                 $namePath = 'seckill_' . $id . '_' . $uid . '.jpg';
                 break;
@@ -263,6 +265,10 @@ class QrcodeServices extends BaseServices
             case 6:
                 $page = 'pages/annex/special/index';
                 $namePath = $id . 'routine_index_code.jpg';
+                break;
+            case 7:
+                $page = 'pages/goods/receive_gift/index';
+                $namePath = 'gift_order_' . $id . '.jpg';
                 break;
         }
         if (!$page || !$namePath) {

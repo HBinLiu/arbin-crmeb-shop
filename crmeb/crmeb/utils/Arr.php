@@ -59,11 +59,14 @@ class Arr
         $newData = [];
         foreach ($data as $k => $v) {
             $temp = [];
+            $temp['id'] = $v['id'];
+            $temp['pid'] = $v['pid'];
             $temp['path'] = $v['menu_path'];
             $temp['title'] = $v['menu_name'];
             $temp['icon'] = $v['icon'];
             $temp['header'] = $v['header'];
             $temp['is_header'] = $v['is_header'];
+            $temp['is_show'] = $v['is_show_path'];
             if ($v['is_show_path']) {
                 $temp['auth'] = ['hidden'];
             }

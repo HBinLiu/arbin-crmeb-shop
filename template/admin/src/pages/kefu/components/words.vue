@@ -9,28 +9,30 @@
               class="tan-item"
               :class="{ on: item.key == wordsTabCur }"
               v-for="(item, index) in wordsTab"
+              v-db-click
               @click.stop="bindTab(item)"
             >
               {{ item.title }}
             </div>
             <div class="right-icon">
-              <span class="iconfont iconbianji2" @click.stop="isWordShow = true"></span>
-              <span class="iconfont iconcha" @click.stop="closeBox"></span>
+              <span class="iconfont iconbianji2" v-db-click @click.stop="isWordShow = true"></span>
+              <span class="iconfont iconcha" v-db-click @click.stop="closeBox"></span>
             </div>
           </div>
           <div class="input-box">
-            <Input v-model="wordsData.searchTxt" placeholder="搜索快捷回复" :search="true" @on-search="bindSearch" />
+            <el-input v-model="wordsData.searchTxt" placeholder="搜索快捷回复" :search="true" @on-search="bindSearch" />
           </div>
         </div>
         <div class="scroll-box">
           <div class="scroll-left">
-            <div class="left-item add_cate" @click.stop="openCate(0)" v-if="wordsTabCur">
+            <div class="left-item add_cate" v-db-click @click.stop="openCate(0)" v-if="wordsTabCur">
               <span class="iconfont iconjiahao"></span> 分组
             </div>
             <div
               class="left-item"
               :class="{ active: wordsData.cateId == item.id }"
               v-for="item in wordsData.cate"
+              v-db-click
               @click.stop="changeCate(item)"
             >
               {{ item.name }}
@@ -41,10 +43,16 @@
               <div class="slot-load" slot="load-deactive"></div>
               <div class="slot-load" slot="load-beforeDeactive"></div>
               <div class="slot-load" slot="load-active">下滑加载更多</div>
-              <div class="msg-item add-mg" v-show="wordsTabCur" @click.stop="addMsg">
+              <div class="msg-item add-mg" v-show="wordsTabCur" v-db-click @click.stop="addMsg">
                 <span class="iconfont icontianjia11"></span>添加话术
               </div>
-              <div class="msg-item" v-for="(item, index) in wordsList" :key="index" @click.stop="selectWords(item)">
+              <div
+                class="msg-item"
+                v-for="(item, index) in wordsList"
+                :key="index"
+                v-db-click
+                @click.stop="selectWords(item)"
+              >
                 <span class="title">{{ item.title }}</span
                 >{{ item.message }}
               </div>
@@ -54,79 +62,82 @@
       </div>
     </div>
     <!-- 添加分组  -->
-    <Modal
-      v-model="cateData.isCate"
-      width="300"
-      :footer-hide="true"
-      :closable="false"
-      class-name="vertical-center-modal"
+    <el-dialog
+      :visible.sync="cateData.isCate"
+      width="470px"
+      :show-close="true"
+      custom-class="vertical-center-modal"
       class="words-box"
     >
       <div class="mask-title">
         {{ cateData.status ? '编辑分组' : '新增分组' }}
-        <span class="iconfont iconcha" @click.stop="closeCate"></span>
+        <span class="iconfont iconcha" v-db-click @click.stop="closeCate"></span>
       </div>
       <div class="input-box">
-        <Input class="noinput" v-model="cateData.name" placeholder="请输入分组名称" />
+        <el-input class="noinput" v-model="cateData.name" placeholder="请输入分组名称" />
       </div>
       <div class="input-box">
-        <Input class="noinput" v-model="cateData.sort" placeholder="请输入分组排序" />
+        <el-input class="noinput" v-model="cateData.sort" placeholder="请输入分组排序" />
       </div>
-      <Button @click.stop="cateConfirm" class="subBtn" type="primary" :disabled="cateStatus">确定</Button>
-    </Modal>
+      <el-button v-db-click @click.stop="cateConfirm" class="subBtn" type="primary" :disabled="cateStatus"
+        >确定</el-button
+      >
+    </el-dialog>
     <!-- 添加话术  -->
-    <Modal
-      v-model="msgData.isCateMeg"
-      width="300"
-      :footer-hide="true"
-      :closable="false"
-      class-name="vertical-center-modal"
+    <el-dialog
+      :visible.sync="msgData.isCateMeg"
+      width="470px"
+      :show-close="true"
+      custom-class="vertical-center-modal"
       class="words-box"
     >
       <div class="mask-title">
         {{ msgData.status ? '修改话术' : '添加话术' }}
-        <span class="iconfont iconcha" @click.stop="closeMsgBox"></span>
+        <span class="iconfont iconcha" v-db-click @click.stop="closeMsgBox"></span>
       </div>
       <div class="input-box">
-        <Input class="noinput" v-model="msgData.title" placeholder="请输入标题名称 (选填)" />
+        <el-input class="noinput" v-model="msgData.title" placeholder="请输入标题名称 (选填)" />
       </div>
       <div class="input-box text-area">
-        <Input class="noinput" :rows="4" type="textarea" v-model="msgData.message" placeholder="请输入您的话术" />
+        <el-input class="noinput" :rows="4" type="textarea" v-model="msgData.message" placeholder="请输入您的话术" />
       </div>
       <div class="input-box">
-        <Select v-model="msgData.msgCateId">
-          <Option v-for="item in selectData" :value="item.id" :key="item.value">{{ item.name }}</Option>
-        </Select>
+        <el-select v-model="msgData.msgCateId">
+          <el-option v-for="item in selectData" :value="item.id" :key="item.value" :label="item.name"></el-option>
+        </el-select>
       </div>
-      <Button @click.stop="msgConfirm" class="subBtn" type="primary" :disabled="msgStatus">确定</Button>
-    </Modal>
+      <el-button v-db-click @click.stop="msgConfirm" class="subBtn" type="primary" :disabled="msgStatus"
+        >确定</el-button
+      >
+    </el-dialog>
     <!-- 编辑弹窗  -->
     <div class="edit-box" v-if="isWordShow">
       <div class="head">
         <div class="tit-bar">
-          {{ wordsTabCur ? '个人库' : '公共库' }}<span @click.stop="isWordShow = false">完成</span>
+          {{ wordsTabCur ? '个人库' : '公共库' }}<span v-db-click @click.stop="isWordShow = false">完成</span>
         </div>
         <div class="input-box noinput">
-          <Input v-model="wordsData.searchTxt" placeholder="搜索快捷回复" :search="true" @on-search="bindSearch" />
+          <el-input v-model="wordsData.searchTxt" placeholder="搜索快捷回复" :search="true" @on-search="bindSearch" />
         </div>
       </div>
       <div class="scroll-box">
         <div class="scroll-left">
           <div class="top">
-            <div class="left-item add_cate" @click.stop="openCate(0)" v-if="wordsTabCur">
+            <div class="left-item add_cate" v-db-click @click.stop="openCate(0)" v-if="wordsTabCur">
               <span class="iconfont iconjiahao"></span> 分组
             </div>
             <div
               class="left-item"
               :class="{ active: wordsData.cateId == item.id }"
               v-for="item in wordsData.cate"
+              v-db-click
               @click.stop="changeCate(item)"
             >
               {{ item.name }}
             </div>
           </div>
           <div class="bom" v-if="wordsTabCur">
-            <div class="left-item edits-box" @click.stop="editList.status = true">编辑分组</div>
+            <div class="left-item edits-box" v-db-click @click.stop="editList.status = true">编辑分组</div>
           </div>
         </div>
         <div class="right-box">
@@ -138,8 +149,8 @@
               <span class="title">{{ item.title }}</span
               >{{ item.message }}
               <div class="edit-bar" v-if="wordsTabCur">
-                <span class="iconfont iconbianji1" @click.stop="bindEdit(item)"></span>
-                <span class="iconfont iconshanchu1" @click.stop="delMsg(item, '删除话术', index)"></span>
+                <span class="iconfont iconbianji1" v-db-click @click.stop="bindEdit(item)"></span>
+                <span class="iconfont iconshanchu1" v-db-click @click.stop="delMsg(item, '删除话术', index)"></span>
               </div>
             </div>
           </vue-scroll>
@@ -147,28 +158,32 @@
       </div>
     </div>
     <!-- 编辑分组列表 -->
-    <Modal
-      v-model="editList.status"
-      width="300"
-      :footer-hide="true"
-      :closable="false"
-      class-name="vertical-center-modal"
+    <el-dialog
+      :visible.sync="editList.status"
+      width="470px"
+      :show-close="true"
+      custom-class="vertical-center-modal"
       class="words-box cate-list"
     >
       <div class="mask-title">
         编辑分组
-        <span class="iconfont iconcha" @click.stop="editList.status = false"></span>
+        <span class="iconfont iconcha" v-db-click @click.stop="editList.status = false"></span>
       </div>
       <div class="list-box">
         <div class="item" v-for="(item, index) in wordsData.cate" :index="index">
           <span>{{ item.name }}</span>
           <div class="right-box">
-            <span class="iconfont iconbianji1" v-if="index > 0" @click.stop="openCate(1, item)"></span>
-            <span class="iconfont iconshanchu1" v-if="index > 0" @click.stop="delCate(item, '删除分组', index)"></span>
+            <span class="iconfont iconbianji1" v-if="index > 0" v-db-click @click.stop="openCate(1, item)"></span>
+            <span
+              class="iconfont iconshanchu1"
+              v-if="index > 0"
+              v-db-click
+              @click.stop="delCate(item, '删除分组', index)"
+            ></span>
           </div>
         </div>
       </div>
-    </Modal>
+    </el-dialog>
   </div>
 </template>
 
@@ -250,7 +265,7 @@ export default {
           },
         },
         page: 1,
-        limit: 10,
+        limit: 15,
         searchTxt: '',
         cate: [], // 分类
         cateId: '', // 分类id
@@ -304,6 +319,7 @@ export default {
     },
     // 顶部切换
     bindTab(item) {
+      console.log('111');
       this.wordsTabCur = item.key;
       this.wordsData.isScroll = true;
       this.wordsData.page = 1;
@@ -381,11 +397,11 @@ export default {
             this.page = 1;
             this.wordsData.isScroll = true;
             this.wordsList = [];
-            this.$Message.success(res.msg);
+            this.$message.success(res.msg);
             this.getServiceCate();
           })
           .catch((error) => {
-            this.$Message.error(error.msg);
+            this.$message.error(error.msg);
           });
       } else {
         editServiceCate(this.cateData.id, {
@@ -399,7 +415,7 @@ export default {
           this.page = 1;
           this.wordsData.isScroll = true;
           this.wordsList = [];
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.getServiceCate();
         });
       }
@@ -422,14 +438,14 @@ export default {
             this.msgData.title = '';
             this.msgData.message = '';
             this.msgData.msgCateId = this.wordsData.cateId;
-            this.$Message.success(res.msg);
+            this.$message.success(res.msg);
             this.wordsData.isScroll = true;
             this.wordsData.page = 1;
             this.wordsList = [];
             this.getWordsList();
           })
           .catch((error) => {
-            this.$Message.error(error.msg);
+            this.$message.error(error.msg);
           });
       } else {
         serviceCateUpdate(this.msgData.editId, {
@@ -441,7 +457,7 @@ export default {
           this.msgData.title = '';
           this.msgData.message = '';
           this.msgData.msgCateId = this.wordsData.cateId;
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.wordsData.isScroll = true;
           this.wordsData.page = 1;
           this.wordsList = [];
@@ -470,10 +486,10 @@ export default {
       this.$modalSure(delfromData)
         .then((res) => {
           this.wordsList.splice(num, 1);
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     delCate(row, tit, num) {
@@ -491,353 +507,349 @@ export default {
           this.page = 1;
           this.wordsData.isScroll = true;
           this.wordsList = [];
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.getServiceCate();
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
   },
 };
 </script>
 
-<style lang="stylus" scoped>
+<style lang="scss" scoped>
 .words-mask {
-    z-index: 50;
-    position: fixed;
+  z-index: 50;
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  .content {
+    position: absolute;
     left: 0;
-    top: 0;
     right: 0;
+    top: 1.14rem;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-
-    .content {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 1.14rem;
-        bottom: 0;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 0.06rem 0.06rem 0px 0px;
+    .title-box {
+      padding: 0 0.3rem 0.3rem;
+      position: relative;
+      border-bottom: 1px solid #f5f6f9;
+      .tab-box {
+        position: relative;
         display: flex;
-        flex-direction: column;
-        background: #fff;
-        border-radius: 0.06rem 0.06rem 0px 0px;
-
-        .title-box {
-            padding: 0 .3rem .3rem;
-            position: relative;
-            border-bottom 1px solid #F5F6F9
-            .tab-box{
-                position relative
-                display flex
-                justify-content space-between
-                padding .4rem 2.2rem .3rem
-                font-size .32rem
-                color #9F9F9F
-                .on{
-                    color #3875EA
-                    font-weight bold
-                }
-                .right-icon{
-                    position absolute
-                    right 0
-                    top 50%
-                    transform translateY(-50%)
-                    .iconfont{
-                        margin-left .2rem
-                        font-size .48rem
-                        color #C8CAD0
-                    }
-                }
-            }
-            .input-box{
-                display: flex;
-                align-items: center;
-                width: 6.9rem;
-                height: .64rem;
-                padding-right: 0.05rem;
-                margin-left: .18rem;
-                border-radius: .32rem;
-                overflow hidden
-
-                >>> .ivu-input{
-                    background #F5F6F9
-                }
-                >>> .ivu-input, .ivu-input:hover, .ivu-input:focus {
-                    border transparent
-                    box-shadow: none;
-                }
-            }
-            .icon-cha1 {
-                position: absolute;
-                right: 0;
-                top: 50%;
-                transform: translateY(-50%);
-            }
+        justify-content: space-between;
+        padding: 0.4rem 2.2rem 0.3rem;
+        font-size: 0.32rem;
+        color: #9f9f9f;
+        .on {
+          color: #3875ea;
+          font-weight: bold;
         }
-
-        .scroll-box {
-            flex: 1;
-            display flex
-            overflow: hidden;
-            .scroll-left{
-                width 1.76rem
-                height 100%
-                overflow-y scroll
-                -webkit-overflow-scrolling touch
-                background #F5F6F9
-                .left-item{
-                    position relative
-                    display flex
-                    align-items center
-                    justify-content center
-                    width 100%
-                    height 1.09rem
-                    color #282828
-                    font-size .26rem
-                    &.active{
-                        color #3875EA
-                        background #fff
-                        &:after{
-                            content ' '
-                            position: absolute;
-                            left 0
-                            top 50%
-                            transform translateY(-50%)
-                            width 0.06rem
-                            height .46rem
-                            background #3875EA
-                        }
-                    }
-                    &.add_cate{
-                        color #9F9F9F
-                        font-size .26rem
-                        .iconfont{
-                            margin-right 0.1rem
-                            font-size .24rem
-                        }
-                    }
-                }
-            }
-            .right-box{
-                flex 1
-                overflow scroll
-                -webkit-overflow-scrolling touch
-            }
-            .msg-item {
-                padding: .25rem .3rem;
-                color #888888
-                font-size .28rem
-                .title{
-                    margin-right .2rem
-                    color #282828
-                }
-                &.add-mg{
-                    display flex
-                    align-items center
-                    justify-content flex-end
-                    font-size .28rem
-                    padding .15rem .3rem
-                    .iconfont{
-                        font-size .36rem
-                        margin-right .1rem
-                    }
-                }
-            }
+        .right-icon {
+          position: absolute;
+          right: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          .iconfont {
+            margin-left: 0.2rem;
+            font-size: 0.48rem;
+            color: #c8cad0;
+          }
         }
-    }
-}
-
-.words-box{
-    .mask-title{
-        position relative
-        text-align center
-        margin-bottom .5rem
-        color #282828
-        font-size .32rem
-        font-weight bold
-        .iconfont{
-            position absolute
-            right 0
-            top 50%
-            transform translateY(-50%)
-            color #C8CAD0
-            font-size .44rem
-            font-weight normal
+      }
+      .input-box {
+        display: flex;
+        align-items: center;
+        width: 6.9rem;
+        height: 0.64rem;
+        padding-right: 0.05rem;
+        margin-left: 0.18rem;
+        border-radius: 0.32rem;
+        overflow: hidden;
+        ::v-deep .el-input__inner {
+          background: #f5f6f9;
         }
-    }
-    .input-box{
-        height .68rem
-        margin-top .32rem
-        background #F5F5F5
-        border-radius: .14rem;
-        &.text-area{
-            height 1.92rem
-            textarea{
-                display block
-                height 100%
-            }
+        ::v-deep .el-input__inner,
+        .el-input__inner:hover,
+        .el-input__inner:focus {
+          border: transparent;
+          box-shadow: none;
         }
-    }
-    .subBtn{
-        width 100%
-        height .86rem
-        margin-top .6rem
-        margin-bottom .3rem
-        font-size .3rem !important
-        border-radius: .43rem;
-        &[disabled]{
-            background #C8CAD0
-            color #fff
-            font-size .3rem !important
-        }
-    }
-}
-.edit-box{
-    z-index 99
-    position fixed
-    left 0
-    right 0
-    top 0
-    bottom 0
-    display flex
-    flex-direction column
-    background #fff
-    .head{
-        padding .4rem .3rem .3rem
-        .tit-bar{
-            position relative
-            text-align center
-            font-size .32rem
-            color #282828
-            font-weight bold
-            span{
-                position absolute
-                right 0
-                top 50%
-                transform translateY(-50%)
-                color #3875EA
-                font-size .28rem
-                font-weight normal
-            }
-        }
-        .input-box{
-            margin-top .3rem
-            background #F5F6F9
-            border-radius: .39rem;
-        }
+      }
+      .icon-cha1 {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+      }
     }
     .scroll-box {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      .scroll-left {
+        width: 1.76rem;
+        height: 100%;
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+        background: #f5f6f9;
+        .left-item {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          height: 1.09rem;
+          color: #282828;
+          font-size: 0.26rem;
+          &.active {
+            color: #3875ea;
+            background: #fff;
+            &:after {
+              content: ' ';
+              position: absolute;
+              left: 0;
+              top: 50%;
+              transform: translateY(-50%);
+              width: 0.06rem;
+              height: 0.46rem;
+              background: #3875ea;
+            }
+          }
+          &.add_cate {
+            color: #9f9f9f;
+            font-size: 0.26rem;
+            .iconfont {
+              margin-right: 0.1rem;
+              font-size: 0.24rem;
+            }
+          }
+        }
+      }
+      .right-box {
         flex: 1;
-        display flex
-        overflow: hidden;
-        .scroll-left{
-            display flex
-            flex-direction column
-            position relative
-            width 1.76rem
-            height 100%
-            background #F5F6F9
-            .top{
-                flex 1
-                overflow-y scroll
-                -webkit-overflow-scrolling touch
-            }
-
-            .left-item{
-                position relative
-                display flex
-                align-items center
-                justify-content center
-                width 100%
-                height 1.09rem
-                color #282828
-                font-size .26rem
-                &.active{
-                    color #3875EA
-                    background #fff
-                    &:after{
-                        content ' '
-                        position: absolute;
-                        left 0
-                        top 50%
-                        transform translateY(-50%)
-                        width 0.06rem
-                        height .46rem
-                        background #3875EA
-                    }
-                }
-                &.add_cate{
-                    color #9F9F9F
-                    font-size .26rem
-                    .iconfont{
-                        margin-right 0.1rem
-                        font-size .24rem
-                    }
-                }
-                &.edits-box{
-                    color #3875ea
-                }
-            }
+        overflow: scroll;
+        -webkit-overflow-scrolling: touch;
+      }
+      .msg-item {
+        padding: 0.25rem 0.3rem;
+        color: #888888;
+        font-size: 0.28rem;
+        .title {
+          margin-right: 0.2rem;
+          color: #282828;
         }
-        .right-box{
-            flex 1
-            padding-left .3rem
+        &.add-mg {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          font-size: 0.28rem;
+          padding: 0.15rem 0.3rem;
+          .iconfont {
+            font-size: 0.36rem;
+            margin-right: 0.1rem;
+          }
         }
-        .msg-item {
-            padding: .25rem .3rem .25rem 0;
-            color #888888
-            font-size .28rem
-            .title{
-                margin-right .2rem
-                color #282828
-            }
-            &.add-mg{
-                display flex
-                align-items center
-                justify-content flex-end
-                font-size .28rem
-                padding .15rem .3rem
-                .iconfont{
-                    font-size .36rem
-                    margin-right .1rem
-                }
-            }
-            .edit-bar{
-                display flex
-                align-items center
-                justify-content flex-end
-                margin-top .25rem
-                padding-bottom .1rem
-                border-bottom 1px solid #F0F2F7
-                .iconfont{
-                    margin-left .3rem
-                    font-size .32rem
-                }
-            }
-        }
+      }
     }
+  }
 }
-.cate-list{
-    .list-box{
-        max-height 7.5rem
-        overflow-y scroll
-        -webkit-overflow-scrolling touch
-        .item{
-            display flex
-            align-items center
-            justify-content space-between
-            height 1rem
-            border-bottom 1px solid #F0F2F7
-            color #282828
-            font-size .28rem
-            .iconfont{
-                color #9F9F9F
-                font-size .32rem
-                margin-left .4rem
-            }
-        }
+.words-box {
+  .mask-title {
+    position: relative;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    color: #282828;
+    font-size: 0.32rem;
+    font-weight: bold;
+    .iconfont {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #c8cad0;
+      font-size: 0.44rem;
+      font-weight: normal;
     }
+  }
+  .input-box {
+    height: 0.68rem;
+    margin-top: 0.32rem;
+    background: #f5f5f5;
+    border-radius: 0.14rem;
+    &.text-area {
+      height: 1.92rem;
+      textarea {
+        display: block;
+        height: 100%;
+      }
+    }
+  }
+  .subBtn {
+    width: 100%;
+    height: 0.86rem;
+    margin-top: 0.6rem;
+    margin-bottom: 0.3rem;
+    font-size: 0.3rem !important;
+    border-radius: 0.43rem;
+    &[disabled] {
+      background: #c8cad0;
+      color: #fff;
+      font-size: 0.3rem !important;
+    }
+  }
+}
+.edit-box {
+  z-index: 99;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  .head {
+    padding: 0.4rem 0.3rem 0.3rem;
+    .tit-bar {
+      position: relative;
+      text-align: center;
+      font-size: 0.32rem;
+      color: #282828;
+      font-weight: bold;
+      span {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #3875ea;
+        font-size: 0.28rem;
+        font-weight: normal;
+      }
+    }
+    .input-box {
+      margin-top: 0.3rem;
+      background: #f5f6f9;
+      border-radius: 0.39rem;
+    }
+  }
+  .scroll-box {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    .scroll-left {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      width: 1.76rem;
+      height: 100%;
+      background: #f5f6f9;
+      .top {
+        flex: 1;
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+      }
+      .left-item {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 1.09rem;
+        color: #282828;
+        font-size: 0.26rem;
+        &.active {
+          color: #3875ea;
+          background: #fff;
+          &:after {
+            content: ' ';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0.06rem;
+            height: 0.46rem;
+            background: #3875ea;
+          }
+        }
+        &.add_cate {
+          color: #9f9f9f;
+          font-size: 0.26rem;
+          .iconfont {
+            margin-right: 0.1rem;
+            font-size: 0.24rem;
+          }
+        }
+        &.edits-box {
+          color: #3875ea;
+        }
+      }
+    }
+    .right-box {
+      flex: 1;
+      padding-left: 0.3rem;
+    }
+    .msg-item {
+      padding: 0.25rem 0.3rem 0.25rem 0;
+      color: #888888;
+      font-size: 0.28rem;
+      .title {
+        margin-right: 0.2rem;
+        color: #282828;
+      }
+      &.add-mg {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        font-size: 0.28rem;
+        padding: 0.15rem 0.3rem;
+        .iconfont {
+          font-size: 0.36rem;
+          margin-right: 0.1rem;
+        }
+      }
+      .edit-bar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        margin-top: 0.25rem;
+        padding-bottom: 0.1rem;
+        border-bottom: 1px solid #f0f2f7;
+        .iconfont {
+          margin-left: 0.3rem;
+          font-size: 0.32rem;
+        }
+      }
+    }
+  }
+}
+.cate-list {
+  .list-box {
+    max-height: 7.5rem;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    .item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 1rem;
+      border-bottom: 1px solid #f0f2f7;
+      color: #282828;
+      font-size: 0.28rem;
+      .iconfont {
+        color: #9f9f9f;
+        font-size: 0.32rem;
+        margin-left: 0.4rem;
+      }
+    }
+  }
 }
 </style>
 <style>

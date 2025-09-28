@@ -126,8 +126,19 @@ class SystemAdminServices extends BaseServices
         [$menus, $uniqueAuth] = $services->getMenusList($adminInfo->roles, (int)$adminInfo['level']);
         $remind = Config::get('app.console_remind', false);
         if ($remind) {
-            [$queue, $timer] = Event::until('admin.login', [$key]);
+            [$queue, $timer] = Event::until('AdminLoginListener', [$key]);
         }
+
+        //自定义事件-管理员登录
+        event('CustomEventListener', ['admin_login', [
+            'id' => $adminInfo->getData('id'),
+            'account' => $adminInfo->getData('account'),
+            'head_pic' => get_file_link($adminInfo->getData('head_pic')),
+            'level' => $adminInfo->getData('level'),
+            'real_name' => $adminInfo->getData('real_name'),
+            'login_time' => date('Y-m-d H:i:s'),
+        ]]);
+
         return [
             'token' => $tokenInfo['token'],
             'expires_time' => $tokenInfo['params']['exp'],
@@ -136,15 +147,18 @@ class SystemAdminServices extends BaseServices
             'user_info' => [
                 'id' => $adminInfo->getData('id'),
                 'account' => $adminInfo->getData('account'),
-                'head_pic' => $adminInfo->getData('head_pic'),
+                'head_pic' => get_file_link($adminInfo->getData('head_pic')),
                 'level' => $adminInfo->getData('level'),
+                'real_name' => $adminInfo->getData('real_name'),
             ],
             'logo' => sys_config('site_logo'),
             'logo_square' => sys_config('site_logo_square'),
             'version' => get_crmeb_version(),
             'newOrderAudioLink' => get_file_link(sys_config('new_order_audio_link', '')),
             'queue' => $queue ?? true,
-            'timer' => $timer ?? true
+            'timer' => $timer ?? true,
+            'site_name' => sys_config('site_name'),
+            'site_func' => sys_config('model_checkbox', ['seckill', 'bargain', 'combination']),
         ];
     }
 
@@ -215,8 +229,13 @@ class SystemAdminServices extends BaseServices
     public function createAdminForm(int $level, array $formData = [])
     {
         $f[] = $this->builder->input('account', '管理员账号', $formData['account'] ?? '')->required('请填写管理员账号');
-        $f[] = $this->builder->input('pwd', '管理员密码')->type('password')->required('请填写管理员密码');
-        $f[] = $this->builder->input('conf_pwd', '确认密码')->type('password')->required('请输入确认密码');
+        if (empty($formData)) {
+            $f[] = $this->builder->input('pwd', '管理员密码')->type('password')->required('请填写管理员密码');
+            $f[] = $this->builder->input('conf_pwd', '确认密码')->type('password')->required('请输入确认密码');
+        } else {
+            $f[] = $this->builder->input('pwd', '管理员密码')->type('password');
+            $f[] = $this->builder->input('conf_pwd', '确认密码')->type('password');
+        }
         $f[] = $this->builder->input('real_name', '管理员姓名', $formData['real_name'] ?? '')->required('请输入管理员姓名');
 
         /** @var SystemRoleServices $service */
@@ -227,7 +246,7 @@ class SystemAdminServices extends BaseServices
                 $item = intval($item);
             }
         }
-        $f[] = $this->builder->select('roles', '管理员身份', $formData['roles'] ?? [])->setOptions(FormBuilder::setOptions($options))->multiple(true)->required('请选择管理员身份');
+        $f[] = $this->builder->select('roles', '管理员角色', $formData['roles'] ?? [])->setOptions(FormBuilder::setOptions($options))->multiple(true)->required('请选择管理员角色');
         $f[] = $this->builder->radio('status', '状态', $formData['status'] ?? 1)->options([['label' => '开启', 'value' => 1], ['label' => '关闭', 'value' => 0]]);
         return $f;
     }
@@ -255,6 +274,10 @@ class SystemAdminServices extends BaseServices
         }
         unset($data['conf_pwd']);
 
+        if (strlen(trim($data['pwd'])) < 6 || strlen(trim($data['pwd'])) > 32) {
+            throw new AdminException(400762);
+        }
+
         if ($this->dao->count(['account' => $data['account'], 'is_del' => 0])) {
             throw new AdminException(400596);
         }
@@ -262,10 +285,10 @@ class SystemAdminServices extends BaseServices
         $data['pwd'] = $this->passwordHash($data['pwd']);
         $data['add_time'] = time();
         $data['roles'] = implode(',', $data['roles']);
+        $data['head_pic'] = '/statics/system_images/admin_head_pic.png';
 
         return $this->transaction(function () use ($data) {
             if ($this->dao->save($data)) {
-                CacheService::clear();
                 return true;
             } else {
                 throw new AdminException(100022);
@@ -316,6 +339,11 @@ class SystemAdminServices extends BaseServices
             if ($data['conf_pwd'] != $data['pwd']) {
                 throw new AdminException(400264);
             }
+
+            if (strlen(trim($data['pwd'])) < 6 || strlen(trim($data['pwd'])) > 32) {
+                throw new AdminException(400762);
+            }
+
             $adminInfo->pwd = $this->passwordHash($data['pwd']);
         }
         //修改账号
@@ -329,7 +357,6 @@ class SystemAdminServices extends BaseServices
         $adminInfo->account = $data['account'] ?? $adminInfo->account;
         $adminInfo->status = $data['status'];
         if ($adminInfo->save()) {
-            CacheService::clear();
             return true;
         } else {
             return false;
@@ -366,10 +393,12 @@ class SystemAdminServices extends BaseServices
 
         $adminInfo->real_name = $data['real_name'];
         $adminInfo->head_pic = $data['head_pic'];
-        if ($adminInfo->save())
+        if ($adminInfo->save()) {
+            CacheService::clear();
             return true;
-        else
+        } else {
             return false;
+        }
     }
 
     /**

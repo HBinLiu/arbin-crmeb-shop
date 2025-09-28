@@ -24,6 +24,7 @@
             :class="active === index ? 'on' : ''"
             v-for="(item, index) in types"
             :key="index"
+            v-db-click
             @click="changeType(item, index)"
           >
             {{ item.title }}<span class="iconfontYI icon-xuanzhong2"></span>
@@ -38,6 +39,7 @@
             :class="activeExpTpe === index ? 'on' : ''"
             v-for="(item, index) in expressType"
             :key="index"
+            v-db-click
             @click="changeExpTpe(item, index)"
           >
             {{ item.title }}<span class="iconfontYI icon-xuanzhong2"></span>
@@ -47,7 +49,7 @@
       <div class="list" v-if="active === 0">
         <div class="item acea-row row-between-wrapper">
           <div>快递公司</div>
-          <span class="checkName" v-text="expFrom.delivery_name" @click="show"></span>
+          <span class="checkName" v-text="expFrom.delivery_name" v-db-click @click="show"></span>
           <vue-pickers
             :data="pickData"
             :showToolbar="true"
@@ -71,7 +73,7 @@
         <div class="item acea-row row-between-wrapper">
           <div>电子面单</div>
           <div class="acea-row">
-            <span class="checkName" v-text="expFrom.delivery_name" @click="showExpTemp"></span>
+            <span class="checkName" v-text="expFrom.delivery_name" v-db-click @click="showExpTemp"></span>
             <vue-pickers
               :data="expTempData"
               :showToolbar="true"
@@ -106,7 +108,7 @@
       <div class="list" v-if="active === 1">
         <div class="item acea-row row-between-wrapper">
           <div>送货人</div>
-          <span class="checkName" v-text="expFrom.sh_delivery_name" @click="showName"></span>
+          <span class="checkName" v-text="expFrom.sh_delivery_name" v-db-click @click="showName"></span>
           <vue-pickers
             :data="deliveryList"
             :showToolbar="true"
@@ -130,7 +132,7 @@
       ></textarea>
     </div>
     <div style="height: 1.2rem"></div>
-    <div class="confirm" @click="saveInfo">确认提交</div>
+    <div class="confirm" v-db-click @click="saveInfo">确认提交</div>
   </div>
 </template>
 <script>
@@ -392,7 +394,7 @@ export default {
   },
 };
 </script>
-<style scoped lang="less">
+<style scoped lang="scss">
 .textarea {
   display: block;
   min-height: 1.92rem;
@@ -417,7 +419,7 @@ export default {
   }
 }
 .look {
-  color: #1890ff;
+  color: var(--prev-color-primary);
   margin-left: 0.2rem;
   position: relative;
 }

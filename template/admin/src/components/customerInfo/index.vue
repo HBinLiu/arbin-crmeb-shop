@@ -1,85 +1,81 @@
 <template>
   <div class="customer">
-    <Form ref="formValidate" :model="formValidate" :label-width="100" @submit.native.prevent>
-      <Row :gutter="24" type="flex">
-        <Col span="24" class="ivu-text-left">
-          <FormItem label="搜索日期：">
-            <RadioGroup
-              v-model="formValidate.data"
-              type="button"
-              @on-change="selectChange(formValidate.data)"
-              class="mr"
-            >
-              <Radio :label="item.val" v-for="(item, i) in fromList.fromTxt" :key="i">{{ item.text }}</Radio>
-            </RadioGroup>
-            <DatePicker
-              :editable="false"
-              @on-change="onchangeTime"
-              :value="timeVal"
-              format="yyyy/MM/dd"
-              type="daterange"
-              placement="bottom-end"
-              placeholder="请选择时间"
-              style="width: 200px"
-            ></DatePicker>
-          </FormItem>
-        </Col>
-        <Col span="12" class="ivu-text-left">
-          <FormItem label="用户名称：">
-            <Input
-              search
-              enter-button
-              placeholder="请输入用户名称"
-              v-model="formValidate.nickname"
-              style="width: 90%"
-              @on-search="userSearchs"
-            ></Input>
-          </FormItem>
-        </Col>
-      </Row>
-    </Form>
-    <Table
-      :loading="loading2"
-      highlight-row
+    <el-form ref="formValidate" :model="formValidate" label-width="80px" inline @submit.native.prevent>
+      <el-form-item label="搜索用户：">
+        <el-input
+          clearable
+          placeholder="请输入用户UID、昵称或手机号"
+          v-model="formValidate.nickname"
+          class="form_content_width"
+        ></el-input>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" v-db-click @click="userSearchs">查询</el-button>
+      </el-form-item>
+    </el-form>
+    <el-table
+      class="mt15"
+      v-loading="loading2"
+      highlight-current-row
       no-userFrom-text="暂无数据"
       no-filtered-userFrom-text="暂无筛选结果"
       ref="selection"
-      :columns="columns4"
       :data="tableList2"
+      height="450"
     >
-      <template slot-scope="{ row, index }" slot="nickname">
-        <div>{{ row.nickname }}</div>
-        <div style="color: red">{{ row.is_del ? '用户已注销' : '' }}</div>
-      </template>
-      <template slot-scope="{ row, index }" slot="headimgurl">
-        <div class="tabBox_img" v-viewer>
-          <img v-lazy="row.headimgurl" />
-        </div>
-      </template>
-      <template slot-scope="{ row, index }" slot="user_type">
-        <span v-if="row.user_type === 'wechat'">公众号</span>
-        <span v-else-if="row.user_type === 'routine'">小程序</span>
-        <span v-else-if="row.user_type === 'h5'">H5</span>
-        <span v-else-if="row.user_type === 'pc'">PC</span>
-        <span v-else>--</span>
-
-      </template>
-      <template slot-scope="{ row, index }" slot="sex">
-        <span v-show="row.sex === 1">男</span>
-        <span v-show="row.sex === 2">女</span>
-        <span v-show="row.sex === 0">保密</span>
-        <span v-show="row.sex === null">--</span>
-      </template>
-      <template slot-scope="{ row, index }" slot="country">
-        <span v-if="row.country || row.province || row.city">{{ row.country + row.province + row.city }}</span>
-        <span v-else>--</span>
-      </template>
-      <template slot-scope="{ row, index }" slot="subscribe">
-        <span v-text="row.subscribe === 1 ? '关注' : '未关注'"></span>
-      </template>
-    </Table>
+      <el-table-column width="50">
+        <template slot-scope="scope">
+          <el-radio
+            v-model="currentid"
+            :disabled="!!scope.row.is_del"
+            :label="scope.row.uid"
+            @input="() => currentidRadio(scope.row)"
+            >&nbsp;</el-radio
+          >
+        </template>
+      </el-table-column>
+      <el-table-column label="UID" width="80">
+        <template slot-scope="scope">
+          <span>{{ scope.row.uid }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="用户头像" min-width="90">
+        <template slot-scope="scope">
+          <div class="tabBox_img" v-viewer>
+            <img v-lazy="scope.row.headimgurl" />
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column label="用户昵称" min-width="180">
+        <template slot-scope="scope">
+          <div>{{ scope.row.nickname }}</div>
+          <div style="color: red">{{ scope.row.is_del ? '用户已注销' : '' }}</div>
+        </template>
+      </el-table-column>
+      <el-table-column label="手机号" min-width="180">
+        <template slot-scope="scope">
+          <div>{{ scope.row.phone }}</div>
+        </template>
+      </el-table-column>
+      <el-table-column label="是否关注公众号" min-width="130">
+        <template slot-scope="scope">
+          <span v-text="scope.row.subscribe === 1 ? '关注' : '未关注'"></span>
+        </template>
+      </el-table-column>
+      <el-table-column label="注册时间" min-width="180">
+        <template slot-scope="scope">
+          <div>{{ scope.row.add_time }}</div>
+        </template>
+      </el-table-column>
+    </el-table>
     <div class="acea-row row-right page">
-      <Page :total="total2" show-elevator show-total @on-change="pageChange2" :page-size="formValidate.limit" />
+      <pagination
+        v-if="total2"
+        :total="total2"
+        :page.sync="formValidate.page"
+        :limit.sync="formValidate.limit"
+        @pagination="getListService"
+      />
     </div>
   </div>
 </template>
@@ -112,91 +108,6 @@ export default {
       },
       currentid: 0,
       productRow: {},
-      columns4: [
-        {
-          title: '选择',
-          key: 'chose',
-          width: 60,
-          align: 'center',
-          render: (h, params) => {
-            let uid = params.row.uid;
-            let flag = false;
-            if (this.currentid === uid) {
-              flag = true;
-            } else {
-              flag = false;
-            }
-            let self = this;
-            return h('div', [
-              h('Radio', {
-                props: {
-                  value: flag,
-                  disabled: !!params.row.is_del,
-                },
-                on: {
-                  'on-change': () => {
-                    self.currentid = uid;
-                    this.productRow = params.row;
-                    if (this.productRow.uid) {
-                      if (this.$route.query.fodder === 'image') {
-                        /* eslint-disable */
-                        let imageObject = {
-                          image: this.productRow.headimgurl,
-                          uid: this.productRow.uid,
-                        };
-                        form_create_helper.set('image', imageObject);
-                        form_create_helper.close('image');
-                      } else {
-                        this.$emit('imageObject', {
-                          image: this.productRow.headimgurl,
-                          uid: this.productRow.uid,
-                        });
-                      }
-                    } else {
-                      this.$Message.warning('请先选择商品');
-                    }
-                  },
-                },
-              }),
-            ]);
-          },
-        },
-        {
-          title: 'ID',
-          key: 'uid',
-          width: 80,
-        },
-        {
-          title: '微信用户名称',
-          slot: 'nickname',
-          minWidth: 180,
-        },
-        {
-          title: '客服头像',
-          slot: 'headimgurl',
-          minWidth: 60,
-        },
-        {
-          title: '用户类型',
-          slot: 'user_type',
-          minWidth: 100,
-        },
-        {
-          title: '性别',
-          slot: 'sex',
-          minWidth: 60,
-        },
-        {
-          title: '地区',
-          slot: 'country',
-          minWidth: 120,
-        },
-        {
-          title: '是否关注公众号',
-          slot: 'subscribe',
-          minWidth: 120,
-        },
-      ],
       loading2: false,
       total2: 0,
     };
@@ -209,7 +120,7 @@ export default {
     // 具体日期
     onchangeTime(e) {
       this.timeVal = e;
-      this.formValidate.data = this.timeVal.join('-');
+      this.formValidate.data = this.timeVal ? this.timeVal.join('-') : '';
       this.getListService();
     },
     // 选择时间
@@ -233,52 +144,79 @@ export default {
         })
         .catch((res) => {
           this.loading2 = false;
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
-    },
-    pageChange2(pageIndex) {
-      this.formValidate.page = pageIndex;
-      this.getListService();
     },
     // 搜索
     userSearchs() {
       this.formValidate.page = 1;
       this.getListService();
     },
+    currentidRadio(row) {
+      self.currentid = row.uid;
+      this.productRow = row;
+      if (this.productRow.uid) {
+        if (this.$route.query.fodder === 'image') {
+          /* eslint-disable */
+          let imageObject = {
+            image: this.productRow.headimgurl,
+            uid: this.productRow.uid,
+          };
+          form_create_helper.set('image', imageObject);
+          form_create_helper.close('image');
+        } else {
+          this.$emit('imageObject', {
+            image: this.productRow.headimgurl,
+            uid: this.productRow.uid,
+          });
+        }
+      } else {
+        this.$message.warning('请先选择商品');
+      }
+    },
   },
 };
 </script>
 
-<style scoped lang="stylus">
-.customer
-  overflow-y auto
-  overflow-x hidden
-  height 500px
-.tabBox_img
-    width 36px
-    height 36px
-    border-radius:4px;
-    cursor pointer
-    img
-        width 100%
-        height 100%
-.modelBox
-    >>>
-    .ivu-table-header
-        width 100% !important
-.trees-coadd
-    width: 100%;
-    height: 385px;
-    .scollhide
-        width: 100%;
-        height: 100%;
-        overflow-x: hidden;
-        overflow-y: scroll;
-.scollhide::-webkit-scrollbar {
-    display: none;
+<style lang="scss" scoped>
+.customer {
+  height: 100%;
+  background-color: #fff;
 }
-.footer{
-    margin: 15px 0;
-    padding-right: 20px;
+.tabBox_img {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  cursor: pointer;
+  img {
+    width: 100%;
+    height: 100%;
+  }
+}
+.modelBox {
+  ::v-deep,
+  .ivu-table-header {
+    width: 100% !important;
+  }
+}
+.trees-coadd {
+  width: 100%;
+  height: 385px;
+  .scollhide {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: scroll;
+  }
+}
+.scollhide::-webkit-scrollbar {
+  display: none;
+}
+.footer {
+  margin: 15px 0;
+  padding-right: 20px;
+}
+::v-deep .el-form--inline .el-form-item {
+  margin-bottom: 0;
 }
 </style>

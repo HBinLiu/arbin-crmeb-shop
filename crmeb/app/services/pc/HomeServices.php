@@ -12,6 +12,7 @@ declare (strict_types=1);
 
 namespace app\services\pc;
 
+use app\services\activity\coupon\StoreCouponIssueServices;
 use app\services\BaseServices;
 use app\services\product\product\StoreCategoryServices;
 use app\services\product\product\StoreProductServices;
@@ -40,8 +41,9 @@ class HomeServices extends BaseServices
                 if (count($item['star'])) {
                     $item['star'] = bcdiv((string)array_sum(array_column($item['star'], 'product_score')), (string)count($item['star']), 1);
                 } else {
-                    $item['star'] = '3.0';
+                    $item['star'] = '5.0';
                 }
+                $item['checkCoupon'] = app()->make(StoreCouponIssueServices::class)->checkProductCoupon($item['id']);
             }
             $info['productList'] = get_thumb_water($productList, 'big');
         }

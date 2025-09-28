@@ -8,7 +8,9 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
 
-import BasicLayout from '@/components/main';
+import LayoutMain from '@/layout';
+import setting from '@/setting';
+let routePre = setting.routePre;
 
 const meta = {
   auth: true,
@@ -17,13 +19,13 @@ const meta = {
 const pre = 'setting_';
 
 export default {
-  path: '/admin/setting',
+  path: routePre + '/setting',
   name: 'setting',
   header: 'setting',
   redirect: {
-    name: `${pre}systemRole`,
+    name: `${pre}setSystem`,
   },
-  component: BasicLayout,
+  component: LayoutMain,
   children: [
     {
       path: 'system_role/index',
@@ -65,15 +67,7 @@ export default {
       path: 'system_config/:type?/:tab_id?',
       name: `${pre}setApp`,
       meta: {
-        title: '应用设置',
-      },
-      component: () => import('@/pages/setting/setSystem/index'),
-    },
-    {
-      path: 'system_config/payment/:type?/:tab_id?',
-      name: `${pre}payment`,
-      meta: {
-        title: '支付配置',
+        title: '系统设置',
       },
       component: () => import('@/pages/setting/setSystem/index'),
     },
@@ -82,7 +76,7 @@ export default {
       name: `${pre}distributionSet`,
       meta: {
         ...meta,
-        title: '分销设置',
+        title: '分销配置',
       },
       component: () => import('@/pages/setting/setSystem/index'),
     },
@@ -119,6 +113,7 @@ export default {
       meta: {
         auth: ['setting-notification'],
         title: '消息编辑',
+        activeMenu: routePre + '/setting/notification/index',
       },
       component: () => import('@/pages/setting/notification/notificationEdit'),
     },
@@ -136,9 +131,18 @@ export default {
       name: `${pre}config`,
       meta: {
         auth: ['setting-sms-sms-config'],
-        title: '短信账户',
+        title: '一号通账户',
       },
       component: () => import('@/pages/notify/smsConfig/index'),
+    },
+    {
+      path: 'elec_invoice',
+      name: `${pre}elec_invoice`,
+      meta: {
+        auth: ['setting-elec_invoice'],
+        title: '电子发票配置',
+      },
+      component: () => import('@/pages/notify/smsConfig/elecInvoice'),
     },
     {
       path: 'sms/sms_template_apply/index',
@@ -384,11 +388,46 @@ export default {
       component: () => import('@/pages/setting/themeStyle/index'),
     },
     {
-      path: 'pages/devise',
+      path: 'pages',
+      name: `${pre}page`,
+      header: 'setting',
+      redirect: {
+        name: `${pre}devise`,
+      },
+    },
+    {
+      path: 'pages/devise/:type',
       name: `${pre}devise`,
       meta: {
         auth: ['admin-setting-pages-devise'],
         title: '店铺装修',
+      },
+      component: () => import('@/pages/setting/devise/list'),
+    },
+    {
+      path: 'pages/user_page/:type',
+      name: `${pre}user`,
+      meta: {
+        auth: ['admin-setting-pages-user'],
+        title: '个人中心',
+      },
+      component: () => import('@/pages/setting/devise/list'),
+    },
+    {
+      path: 'pages/link',
+      name: `${pre}link`,
+      meta: {
+        auth: ['admin-setting-pages-link'],
+        title: '链接管理',
+      },
+      component: () => import('@/pages/setting/link'),
+    },
+    {
+      path: 'pages/cate_page/:type',
+      name: `${pre}cate`,
+      meta: {
+        auth: ['admin-setting-pages-cate'],
+        title: '商品分类',
       },
       component: () => import('@/pages/setting/devise/list'),
     },
@@ -398,6 +437,7 @@ export default {
       meta: {
         auth: ['admin-setting-pages-diy'],
         title: '页面设计',
+        activeMenu: routePre + '/setting/pages/devise',
       },
       component: () => import('@/pages/setting/devisePage/index'),
     },
@@ -421,15 +461,6 @@ export default {
       component: () => import('@/pages/setting/devise/links'),
     },
     {
-      path: 'system_group_data',
-      name: `${pre}systemGroupData`,
-      meta: {
-        auth: ['admin-setting-pages-links'],
-        title: '数据配置',
-      },
-      component: () => import('@/pages/system/group/list'),
-    },
-    {
       path: 'store_service/speechcraft',
       name: `${pre}speechcraft`,
       meta: {
@@ -446,6 +477,15 @@ export default {
         title: '用户留言',
       },
       component: () => import('@/pages/setting/storeService/feedback'),
+    },
+    {
+      path: 'store_service/auto_reply',
+      name: `${pre}auto_reply`,
+      meta: {
+        auth: ['admin-setting-store_service-auto_reply'],
+        title: '自动回复',
+      },
+      component: () => import('@/pages/setting/storeService/autoReply'),
     },
     {
       path: 'system_group_data/pc/:id',
@@ -476,7 +516,7 @@ export default {
     },
     {
       path: 'pc_group_data',
-      name: `${pre}systemGroupData`,
+      name: `${pre}systemPcGroupData`,
       meta: {
         auth: ['setting-system-pc_data'],
         title: 'PC商城',
@@ -653,6 +693,99 @@ export default {
         title: '地区关联语言',
       },
       component: () => import('@/pages/setting/multiLanguage/country'),
+    },
+    {
+      path: 'yihaotong_config/:type?/:tab_id?',
+      name: `${pre}yihaotong_config`,
+      meta: {
+        ...meta,
+        title: '一号通配置',
+      },
+      component: () => import('@/pages/setting/setSystem/index'),
+    },
+    {
+      path: 'lang_config/:type?/:tab_id?',
+      name: `${pre}lang_config`,
+      meta: {
+        ...meta,
+        title: '翻译配置',
+      },
+      component: () => import('@/pages/setting/setSystem/index'),
+    },
+    {
+      path: 'kefu_config/:type?/:tab_id?',
+      name: `${pre}kefu_config`,
+      meta: {
+        ...meta,
+        title: '客服配置',
+      },
+      component: () => import('@/pages/setting/setSystem/index'),
+    },
+    {
+      path: 'recharge_config/:type?/:tab_id?',
+      name: `${pre}recharge_config`,
+      meta: {
+        ...meta,
+        title: '充值配置',
+      },
+      component: () => import('@/pages/setting/setSystem/index'),
+    },
+    {
+      path: 'member_config/:type?/:tab_id?',
+      name: `${pre}member_config`,
+      meta: {
+        ...meta,
+        title: '付费会员配置',
+      },
+      component: () => import('@/pages/setting/setSystem/index'),
+    },
+    {
+      path: 'user_config/:type?/:tab_id?',
+      name: `${pre}user_config`,
+      meta: {
+        ...meta,
+        title: '用户配置',
+      },
+      component: () => import('@/pages/setting/setSystem/index'),
+    },
+    {
+      path: 'order_config/:type?/:tab_id?',
+      name: `${pre}order_config`,
+      meta: {
+        ...meta,
+        title: '订单配置',
+      },
+      component: () => import('@/pages/setting/setSystem/index'),
+    },
+    {
+      path: 'sign_config/:type?/:tab_id?',
+      name: `${pre}sign_config`,
+      meta: {
+        ...meta,
+        title: '签到配置',
+      },
+      component: () => import('@/pages/setting/setSystem/index'),
+    },
+    {
+      path: 'ticket',
+      name: `${pre}document`,
+      meta: {
+        ...meta,
+        auth: ['admin-setting-ticket'],
+        title: '打印机设置',
+      },
+      component: () => import('@/pages/setting/ticket'),
+    },
+    {
+      path: 'ticket/content',
+      name: `${pre}content`,
+      meta: {
+        ...meta,
+        auth: ['admin-setting-ticket-content'],
+        title: '小票配置',
+        activeMenu: routePre + '/setting/ticket',
+      },
+      component: () => import('@/pages/setting/ticket/content'),
     },
   ],
 };

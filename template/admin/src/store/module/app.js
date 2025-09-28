@@ -42,6 +42,7 @@ export default {
     homeRoute: {},
     local: localRead('local'),
     errorList: [],
+    adminTitle: '',
     hasReadErrorPage: false,
   },
   getters: {
@@ -52,6 +53,9 @@ export default {
     setBreadCrumb(state, route) {
       state.breadCrumbList = getBreadCrumbList(route, state.homeRoute);
     },
+    setAdminTitle(state, title) {
+      state.adminTitle = title;
+    },
     setHomeRoute(state, routes) {
       state.homeRoute = getHomeRoute(routes, homeName);
     },
@@ -60,12 +64,12 @@ export default {
       if (list) {
         tagList = [...list];
       } else tagList = getTagNavListFromLocalstorage() || [];
-      if (tagList[0] && tagList[0].name !== homeName) tagList.shift();
-      let homeTagIndex = tagList.findIndex((item) => item.name === homeName);
-      if (homeTagIndex > 0) {
-        let homeTag = tagList.splice(homeTagIndex, 1)[0];
-        tagList.unshift(homeTag);
-      }
+      // if (tagList[0] && tagList[0].name !== homeName) tagList.shift();
+      // let homeTagIndex = tagList.findIndex((item) => item.name === homeName);
+      // if (homeTagIndex > 0) {
+      //   let homeTag = tagList.splice(homeTagIndex, 1)[0];
+      //   tagList.unshift(homeTag);
+      // }
       state.tagNavList = tagList;
       setTagNavListInLocalstorage([...tagList]);
     },
@@ -77,12 +81,16 @@ export default {
     },
     addTag(state, { route, type = 'unshift' }) {
       let router = getRouteTitleHandled(route);
+      let i = state.tagNavList.findIndex((item) => item.path === route.path);
+
       if (!routeHasExist(state.tagNavList, router)) {
-        if (type === 'push') state.tagNavList.push(router);
-        else {
-          if (router.name === homeName) state.tagNavList.unshift(router);
-          else state.tagNavList.splice(1, 0, router);
-        }
+        if (type === 'push')
+          if (i < 1) state.tagNavList.push(router);
+          else {
+            return;
+            // if (router.name === homeName) state.tagNavList.unshift(router);
+            // else state.tagNavList.splice(1, 0, router);
+          }
         setTagNavListInLocalstorage([...state.tagNavList]);
       }
     },
@@ -95,6 +103,9 @@ export default {
     },
     setHasReadErrorLoggerStatus(state, status = true) {
       state.hasReadErrorPage = status;
+    },
+    clearAll(state) {
+      state.tagNavList = [];
     },
   },
   actions: {

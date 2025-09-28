@@ -10,14 +10,15 @@
 // +----------------------------------------------------------------------
 
 return [
-    //默认上传模式,后台配置优先,添加类型一定索引要和驱动名一致 用小些字母
+    //默认上传模式,后台配置优先,添加类型一定索引要和驱动名一致 用小写字母
     'default' => 'local',
     //上传文件大小
     'filesize' => 2097152,
     //上传文件后缀类型
-    'fileExt' => ['jpg', 'jpeg', 'png', 'gif', 'pem', 'mp3', 'wma', 'wav', 'amr', 'mp4', 'key', 'xlsx', 'xls', 'txt', 'ico'],
+    'fileExt' => ['jpg', 'jpeg', 'png', 'gif', 'pem', 'mp3', 'wma', 'wav', 'amr', 'mp4', 'key', 'xlsx', 'xls', 'txt', 'ico', 'crt', 'webp'],
     //上传文件类型
     'fileMime' => [
+        'image/jpg',
         'image/jpeg',
         'image/gif',
         'image/png',
@@ -35,6 +36,7 @@ return [
         'image/x-icon',
         'image/vnd.microsoft.icon',
         'application/x-x509-ca-cert',
+        'image/webp',
     ],
     //驱动模式，此配置优先与后台配置，后台添加配置请加前缀，例如添加七牛云配置：accessKey 后台添加变量名 qiniu_accessKey
     'stores' => [
@@ -55,6 +57,21 @@ return [
             'AccessKeyId' => '', //sys_config('tengxun_accessKey')
             'AccessKeySecret' => '', //sys_config('tengxun_secretKey')
             'APPID' => '', //sys_config('tengxun_appid')
+        ],
+        //oss 京东云
+        'jdoss' => [
+            'AccessKeyId' => '', // sys_config('accessKey')
+            'AccessKeySecret' => '', // sys_config('secretKey')
+        ],
+        //oss 华为云
+        'obs' => [
+            'AccessKeyId' => '', // sys_config('accessKey')
+            'AccessKeySecret' => '', // sys_config('secretKey')
+        ],
+        //oss 天翼云
+        'tyoss' => [
+            'AccessKeyId' => '', // sys_config('accessKey')
+            'AccessKeySecret' => '', // sys_config('secretKey')
         ],
     ]
 ];

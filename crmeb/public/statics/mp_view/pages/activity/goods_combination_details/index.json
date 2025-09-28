@@ -10,6 +10,7 @@
     "cus-preview-img": "/components/cusPreviewImg/index",
     "parser": "/components/jyf-parser/jyf-parser",
     "menu-icon": "/components/menuIcon",
-    "home-list": "/components/homeList/index"
+    "home-list": "/components/homeList/index",
+    "swiper-previe": "/components/cusPreviewImg/swiperPrevie"
   }
 }

@@ -15,6 +15,8 @@ namespace crmeb\services\easywechat\v3pay;
 
 
 use crmeb\exceptions\PayException;
+use crmeb\services\wechat\Payment;
+use EasyWeChat\Payment\Order;
 
 /**
  * v3支付
@@ -25,18 +27,48 @@ class PayClient extends BaseClient
 {
     //app支付
     const API_APP_APY_URL = 'v3/pay/transactions/app';
-    //二维码支付截图
+    //app支付-服务商模式
+    const API_APP_APY_PARTNER_URL = 'v3/pay/partner/transactions/app';
+    //Native下单API
     const API_NATIVE_URL = 'v3/pay/transactions/native';
+    //Native下单API-服务商模式
+    const API_NATIVE_PARTNER_URL = 'v3/pay/partner/transactions/native';
     //h5支付接口
     const API_H5_URL = 'v3/pay/transactions/h5';
+    //h5支付接口-服务商模式
+    const API_H5_PARTNER_URL = 'v3/pay/partner/transactions/h5';
     //jsapi支付接口
     const API_JSAPI_URL = 'v3/pay/transactions/jsapi';
+    //jsapi支付接口-服务商模式
+    const API_JSAPI_PARTNER_URL = 'v3/pay/partner/transactions/jsapi';
     //发起商家转账API
     const API_BATCHES_URL = 'v3/transfer/batches';
     //退款
     const API_REFUND_URL = 'v3/refund/domestic/refunds';
     //退款查询接口
     const API_REFUND_QUERY_URL = 'v3/refund/domestic/refunds/{out_refund_no}';
+    //发起转账
+    const API_TRANSFER_BILLS_URL = 'v3/fund-app/mch-transfer/transfer-bills';
+    //查询转账
+    const API_TRANSFER_QUERY_URL = 'v3/fund-app/mch-transfer/transfer-bills/out-bill-no/{out_bill_no}';
+
+    /**
+     * @var string
+     */
+    protected $type = Order::JSAPI;
+
+    /**
+     * @param string $type
+     * @return $this
+     * @author 等风来
+     * @email 136327134@qq.com
+     * @date 2023/2/10
+     */
+    public function setType(string $type)
+    {
+        $this->type = $type;
+        return $this;
+    }
 
     /**
      * 公众号jsapi支付下单
@@ -140,27 +172,66 @@ class PayClient extends BaseClient
             $data['payer'] = $payer;
         }
 
-        $url = '';
-        switch ($type) {
-            case 'h5':
-                $url = self::API_H5_URL;
-                $data['scene_info'] = [
-                    'payer_client_ip' => request()->ip(),
-                    'h5_info' => [
-                        'type' => 'Wap'
-                    ]
-                ];
-                break;
-            case 'native':
-                $url = self::API_NATIVE_URL;
-                break;
-            case 'app':
-                $url = self::API_APP_APY_URL;
-                break;
-            case 'jsapi':
-                $url = self::API_JSAPI_URL;
-                break;
+        //服务商支付模式
+        if ($this->app['config']['v3_payment']['mer_type']) {
+
+            $mchid = $data['mchid'];
+            $appid = $data['appid'];
+            unset($data['mchid'], $data['appid'], $data['payer']);
+            $data['sp_appid'] = $this->app['config']['v3_payment']['sp_appid'];
+            $data['sp_mchid'] = $mchid;
+            $data['sub_mchid'] = $this->app['config']['v3_payment']['sub_mch_id'];
+            if (!empty($payer['openid'])) {
+                $data['payer']['sub_openid'] = $payer['openid'];
+                $data['sub_appid'] = $appid;
+            }
+
+            $url = '';
+            switch ($type) {
+                case 'h5':
+                    $url = self::API_H5_PARTNER_URL;
+                    $data['scene_info'] = [
+                        'payer_client_ip' => request()->ip(),
+                        'h5_info' => [
+                            'type' => 'Wap'
+                        ]
+                    ];
+                    break;
+                case 'native':
+                    $url = self::API_NATIVE_PARTNER_URL;
+                    break;
+                case 'app':
+                    $url = self::API_APP_APY_PARTNER_URL;
+                    break;
+                case 'jsapi':
+                    $url = self::API_JSAPI_PARTNER_URL;
+                    break;
+            }
+
+        } else {
+            $url = '';
+            switch ($type) {
+                case 'h5':
+                    $url = self::API_H5_URL;
+                    $data['scene_info'] = [
+                        'payer_client_ip' => request()->ip(),
+                        'h5_info' => [
+                            'type' => 'Wap'
+                        ]
+                    ];
+                    break;
+                case 'native':
+                    $url = self::API_NATIVE_URL;
+                    break;
+                case 'app':
+                    $url = self::API_APP_APY_URL;
+                    break;
+                case 'jsapi':
+                    $url = self::API_JSAPI_URL;
+                    break;
+            }
         }
+
 
         if (!$url) {
             throw new PayException('缺少请求地址');
@@ -192,7 +263,7 @@ class PayClient extends BaseClient
         $totalFee = '0';
         $amount = bcadd($amount, '0', 2);
         foreach ($transferDetailList as &$item) {
-            if ($item['transfer_amount'] >= 2000 && !empty($item['user_name'])) {
+            if ($item['transfer_amount'] >= 2000 && empty($item['user_name'])) {
                 throw new PayException('明细金额大于等于2000时,收款人姓名必须填写');
             }
             $totalFee = bcadd($totalFee, $item['transfer_amount'], 2);
@@ -208,8 +279,21 @@ class PayClient extends BaseClient
 
         $amount = (int)bcmul($amount, 100, 0);
 
+        $appid = null;
+        if ($this->type === Order::JSAPI) {
+            $appid = $this->app['config']['wechat']['appid'];
+        } else if ($this->type === 'mini') {
+            $appid = $this->app['config']['miniprog']['appid'];
+        } else if ($this->type === Order::APP) {
+            $appid = $this->app['config']['app']['appid'];
+        }
+
+        if (!$appid) {
+            throw new PayException('暂时只支持微信用户、小程序用户、APP微信登录用户提现');
+        }
+
         $data = [
-            'appid' => $this->app['config']['wechat']['appid'],
+            'appid' => $appid,
             'out_batch_no' => $outBatchNo,
             'batch_name' => $batchName,
             'batch_remark' => $remark,
@@ -230,6 +314,56 @@ class PayClient extends BaseClient
 
         return $res;
 
+    }
+
+    public function transferBills($order_id, $transfer_scene_id, $openid, $user_name, $transfer_amount, $transfer_remark, $notify_url, $user_recv_perception, $transfer_scene_report_infos)
+    {
+        $appid = '';
+        if ($this->type === Order::JSAPI) {
+            $appid = $this->app['config']['wechat']['appid'];
+        } else if ($this->type === 'mini') {
+            $appid = $this->app['config']['miniprog']['appid'];
+        } else if ($this->type === Order::APP) {
+            $appid = $this->app['config']['app']['appid'];
+        }
+        if ($appid === '') {
+            throw new PayException('暂时只支持微信用户、小程序用户、APP微信登录用户提现');
+        }
+        if ($transfer_amount > 200000) {
+            if ($user_name === '') {
+                throw new PayException('金额大于等于2000时，收款人姓名必须填写');
+            }
+            $user_name = $this->encryptor($user_name);
+        } else {
+            $user_name = '';
+        }
+        $data = [];
+        $data['appid'] = $appid;
+        $data['out_bill_no'] = $order_id;
+        $data['transfer_scene_id'] = $transfer_scene_id;
+        $data['openid'] = $openid;
+        $data['user_name'] = $user_name;
+        $data['transfer_amount'] = (int)$transfer_amount;
+        $data['transfer_remark'] = $transfer_remark;
+        $data['notify_url'] = $notify_url;
+        $data['user_recv_perception'] = $user_recv_perception;
+        $data['transfer_scene_report_infos'] = $transfer_scene_report_infos;
+        $res = $this->request(self::API_TRANSFER_BILLS_URL, 'POST', ['json' => $data]);
+        if (!$res || isset($res['code'], $res['message'])) {
+            throw new PayException($res['message'] ?? '微信支付:发起商家转账失败');
+        }
+        return $res;
+    }
+
+    public function queryTransferBills(string $outBillNo)
+    {
+        $res = $this->request($this->getApiUrl(self::API_TRANSFER_QUERY_URL, ['out_bill_no'], [$outBillNo]), 'GET');
+
+        if (!$res) {
+            throw new PayException(500000);
+        }
+
+        return $res;
     }
 
     /**
@@ -266,6 +400,12 @@ class PayClient extends BaseClient
 
         if ($refundReason) {
             $data['reason'] = $refundReason;
+        }
+
+        //服务商支付退款
+        $merType = $this->app['config']['v3_payment']['mer_type'];
+        if ($merType) {
+            $data['sub_mchid'] = $this->app['config']['v3_payment']['sub_mch_id'];
         }
 
         $res = $this->request(self::API_REFUND_URL, 'POST', ['json' => $data]);
@@ -380,6 +520,28 @@ class PayClient extends BaseClient
     {
         $request = request();
         $success = $request->post('event_type') === 'TRANSACTION.SUCCESS';
+        $data = $this->decrypt($request->post('resource', []));
+
+        $handleResult = call_user_func_array($callback, [json_decode($data), $success]);
+        if (is_bool($handleResult) && $handleResult) {
+            $response = [
+                'code' => 'SUCCESS',
+                'message' => 'OK',
+            ];
+        } else {
+            $response = [
+                'code' => 'FAIL',
+                'message' => $handleResult,
+            ];
+        }
+
+        return response($response, 200, [], 'json');
+    }
+
+    public function handleTransferNotify($callback)
+    {
+        $request = request();
+        $success = $request->post('event_type') === 'MCHTRANSFER.BILL.FINISHED';
         $data = $this->decrypt($request->post('resource', []));
 
         $handleResult = call_user_func_array($callback, [json_decode($data), $success]);

@@ -405,6 +405,21 @@ export function delFolder(params) {
 }
 
 /**
+ * 文件备注
+ * @param {*} id
+ * @param {*} params
+ * @returns
+ */
+export function fileMark(params) {
+  return request({
+    url: `system/file/mark`,
+    method: 'get',
+    params,
+    file_edit: true,
+  });
+}
+
+/**
  * @description 安全维护 -- 更换域名
  */
 export function replaceSiteUrlApi(data) {
@@ -723,7 +738,7 @@ export function upgradeableListApi(params) {
  */
 export function timerIndex(params) {
   return request({
-    url: `system/timer/list`,
+    url: `system/crontab/list`,
     params,
   });
 }
@@ -735,7 +750,7 @@ export function timerIndex(params) {
  */
 export function showTimer(id, is_open) {
   return request({
-    url: `system/timer/set_open/${id}/${is_open}`,
+    url: `system/crontab/set_open/${id}/${is_open}`,
   });
 }
 
@@ -746,7 +761,7 @@ export function showTimer(id, is_open) {
  */
 export function timerInfo(id) {
   return request({
-    url: `system/timer/info/${id}`,
+    url: `system/crontab/info/${id}`,
   });
 }
 
@@ -757,7 +772,7 @@ export function timerInfo(id) {
  */
 export function saveTimer(data) {
   return request({
-    url: `system/timer/save`,
+    url: `system/crontab/save`,
     method: 'post',
     data,
   });
@@ -771,7 +786,31 @@ export function saveTimer(data) {
  */
 export function updateTimer(id, data) {
   return request({
-    url: `system/timer/update/${id}`,
+    url: `system/crontab/update/${id}`,
+    method: 'post',
+    data,
+  });
+}
+/**
+ * 更新备注
+ * @param {*} data
+ * @returns
+ */
+export function updateMark(data) {
+  return request({
+    url: `system/database/update_mark`,
+    method: 'post',
+    data,
+  });
+}
+/**
+ * 文件管理 更新备注
+ * @param {*} data
+ * @returns
+ */
+export function markSave(fileToken, data) {
+  return request({
+    url: `system/file/mark/save?fileToken=${fileToken}`,
     method: 'post',
     data,
   });
@@ -783,6 +822,74 @@ export function updateTimer(id, data) {
  */
 export function timerTask() {
   return request({
-    url: `/system/timer/mark`,
+    url: `system/crontab/mark`,
+  });
+}
+
+// ----自定义事件
+
+/**
+ * 自定义事件列表
+ * @param {*} params
+ * @returns
+ */
+export function eventIndex(params) {
+  return request({
+    url: `system/event/list`,
+    params,
+  });
+}
+
+/**
+ * 自定义事件修改状态
+ * @param {*} params
+ * @returns
+ */
+export function eventShowTimer(id, is_open) {
+  return request({
+    url: `system/event/set_open/${id}/${is_open}`,
+  });
+}
+
+/**
+ * 自定义事件信息
+ * @param {*} params
+ * @returns
+ */
+export function eventInfo(id) {
+  return request({
+    url: `system/event/info/${id}`,
+  });
+}
+
+/**
+ * 自定义事件保存
+ * @param {*} data
+ * @returns
+ */
+export function eventSave(data) {
+  return request({
+    url: `system/event/save`,
+    method: 'post',
+    data,
+  });
+}
+/**
+ * 自定义事件更新
+ * @returns
+ */
+export function eventTask() {
+  return request({
+    url: `system/event/mark`,
+  });
+}
+
+/**
+ * 版权模块列表信息
+ * @returns
+ */
+export function copyrightList() {
+  return request({
+    url: `system/info`,
   });
 }

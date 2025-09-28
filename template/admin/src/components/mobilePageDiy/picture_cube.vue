@@ -80,7 +80,7 @@ export default {
   name: 'picture_cube',
   cname: '图片魔方',
   configName: 'c_picture_cube',
-  icon: 'iconcuxiaoliebiao1',
+  icon: 'iconshangpinfenlei1',
   type: 0, // 0 基础组件 1 营销组件 2工具组件
   defaultName: 'pictureCube', // 外面匹配名称
   props: {
@@ -260,203 +260,203 @@ export default {
   },
 };
 </script>
-<style scoped lang="stylus">
-.pageOn{
-    border-radius 12px!important
-    .advertItem01{
-        img{
-            border-radius 10px
-        }
+<style lang="scss" scoped>
+.pageOn {
+  border-radius: 12px !important;
+  .advertItem01 {
+    img {
+      border-radius: 10px;
     }
-    .advertItem02{
-        .item{
-            &:nth-child(1){
-                img{
-                    border-radius 10px 0 0 10px
-                }
-            }
-            &:nth-child(2){
-                img{
-                    border-radius 0 10px 10px 0
-                }
-            }
+  }
+  .advertItem02 {
+    .item {
+      &:nth-child(1) {
+        img {
+          border-radius: 10px 0 0 10px;
         }
-    }
-    .advertItem03{
-        .item{
-            &:nth-child(1){
-                img{
-                    border-radius 10px 0 0 10px
-                }
-            }
-            &:nth-child(2){
-                img{
-                    border-radius 0
-                }
-            }
-            &:nth-child(3){
-                img{
-                    border-radius 0 10px 10px 0
-                }
-            }
+      }
+      &:nth-child(2) {
+        img {
+          border-radius: 0 10px 10px 0;
         }
+      }
     }
-    .advertItem04{
-        .item{
-            &:nth-child(1){
-                img{
-                    border-radius 10px 0 0 10px
-                }
-            }
-            &:nth-child(2){
-                .pic{
-                    &:nth-child(1){
-                        img{
-                            border-radius 0 10px 0 0
-                        }
-                    }
-                    &:nth-child(2){
-                        img{
-                            border-radius 0 0 10px 0
-                        }
-                    }
-                }
-            }
+  }
+  .advertItem03 {
+    .item {
+      &:nth-child(1) {
+        img {
+          border-radius: 10px 0 0 10px;
         }
-    }
-    .advertItem05{
-        .item{
-            &:nth-child(1){
-                img{
-                    border-radius 10px 0 0 10px
-                }
-            }
-            &:nth-child(2){
-                img{
-                    border-radius 0
-                }
-            }
-            &:nth-child(4){
-                img{
-                    border-radius 0 10px 10px 0
-                }
-            }
+      }
+      &:nth-child(2) {
+        img {
+          border-radius: 0;
         }
-    }
-    .advertItem06{
-        .item{
-            &:nth-child(1){
-                img{
-                    border-radius 10px 0 0 0
-                }
-            }
-            &:nth-child(2){
-                img{
-                    border-radius 0 10px 0 0
-                }
-            }
-            &:nth-child(3){
-                img{
-                    border-radius 0 0 0 10px
-                }
-            }
-            &:nth-child(4){
-                img{
-                    border-radius 0 0 10px 0
-                }
-            }
+      }
+      &:nth-child(3) {
+        img {
+          border-radius: 0 10px 10px 0;
         }
+      }
     }
+  }
+  .advertItem04 {
+    .item {
+      &:nth-child(1) {
+        img {
+          border-radius: 10px 0 0 10px;
+        }
+      }
+      &:nth-child(2) {
+        .pic {
+          &:nth-child(1) {
+            img {
+              border-radius: 0 10px 0 0;
+            }
+          }
+          &:nth-child(2) {
+            img {
+              border-radius: 0 0 10px 0;
+            }
+          }
+        }
+      }
+    }
+  }
+  .advertItem05 {
+    .item {
+      &:nth-child(1) {
+        img {
+          border-radius: 10px 0 0 10px;
+        }
+      }
+      &:nth-child(2) {
+        img {
+          border-radius: 0;
+        }
+      }
+      &:nth-child(4) {
+        img {
+          border-radius: 0 10px 10px 0;
+        }
+      }
+    }
+  }
+  .advertItem06 {
+    .item {
+      &:nth-child(1) {
+        img {
+          border-radius: 10px 0 0 0;
+        }
+      }
+      &:nth-child(2) {
+        img {
+          border-radius: 0 10px 0 0;
+        }
+      }
+      &:nth-child(3) {
+        img {
+          border-radius: 0 0 0 10px;
+        }
+      }
+      &:nth-child(4) {
+        img {
+          border-radius: 0 0 10px 0;
+        }
+      }
+    }
+  }
 }
-.mobile-page{
-    .advert{
-        .advertItem01{
-            width 100%;
-            height 100%;
-            .empty-box{
-                width 100%;
-                height 379px;
-                border-radius 0;
-                .icontupian{
-                    font-size 50px;
-                    color #999;
-                }
-            }
-            img{
-                width 100%;
-                height 100%
-            }
+.mobile-page {
+  .advert {
+    .advertItem01 {
+      width: 100%;
+      height: 100%;
+      .empty-box {
+        width: 100%;
+        height: 379px;
+        border-radius: 0;
+        .icontupian {
+          font-size: 50px;
+          color: #999;
         }
-        .advertItem02{
-            width 100%
-            .item{
-                width 50%;
-                height auto;
-                img{
-                    width 100%;
-                    height 100%;
-                }
-                .empty-box{
-                    width 100%;
-                    height 189.5px;
-                    border-radius 0;
-                }
-            }
-        }
-        .advertItem03{
-            .item{
-                width 33.3333%;
-                .empty-box{
-                    width 100%;
-                    height 126.4px;
-                    border-radius 0;
-                }
-            }
-        }
-        .advertItem04{
-            .item{
-                width 50%;
-                height 189.5px;
-                .empty-box{
-                    width 100%;
-                    height 100%;
-                    border-radius 0;
-                }
-                img{
-                    width 100%;
-                    height 100%;
-                }
-                .pic{
-                    width 100%;
-                    height 94.75px;
-                }
-            }
-        }
-        .advertItem05{
-            .item{
-                width 25%;
-                .empty-box{
-                    width 100%;
-                    height 94.75px;
-                    border-radius 0;
-                }
-            }
-        }
-        .advertItem06{
-            .item{
-                width 50%;
-                height 95px;
-                img{
-                    width 100%;
-                    height 100%;
-                }
-                .empty-box{
-                    width 100%;
-                    height 100%;
-                    border-radius 0;
-                }
-            }
-        }
+      }
+      img {
+        width: 100%;
+        height: 100%;
+      }
     }
+    .advertItem02 {
+      width: 100%;
+      .item {
+        width: 50%;
+        height: auto;
+        img {
+          width: 100%;
+          height: 100%;
+        }
+        .empty-box {
+          width: 100%;
+          height: 189.5px;
+          border-radius: 0;
+        }
+      }
+    }
+    .advertItem03 {
+      .item {
+        width: 33.3333%;
+        .empty-box {
+          width: 100%;
+          height: 126.4px;
+          border-radius: 0;
+        }
+      }
+    }
+    .advertItem04 {
+      .item {
+        width: 50%;
+        height: 189.5px;
+        .empty-box {
+          width: 100%;
+          height: 100%;
+          border-radius: 0;
+        }
+        img {
+          width: 100%;
+          height: 100%;
+        }
+        .pic {
+          width: 100%;
+          height: 94.75px;
+        }
+      }
+    }
+    .advertItem05 {
+      .item {
+        width: 25%;
+        .empty-box {
+          width: 100%;
+          height: 94.75px;
+          border-radius: 0;
+        }
+      }
+    }
+    .advertItem06 {
+      .item {
+        width: 50%;
+        height: 95px;
+        img {
+          width: 100%;
+          height: 100%;
+        }
+        .empty-box {
+          width: 100%;
+          height: 100%;
+          border-radius: 0;
+        }
+      }
+    }
+  }
 }
 </style>

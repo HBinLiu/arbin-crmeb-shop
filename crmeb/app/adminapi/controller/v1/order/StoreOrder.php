@@ -12,7 +12,10 @@ namespace app\adminapi\controller\v1\order;
 
 use app\adminapi\controller\AuthController;
 use app\adminapi\validate\order\StoreOrderValidate;
+use app\jobs\OrderExpressJob;
 use app\services\serve\ServeServices;
+use app\services\wechat\WechatUserServices;
+use crmeb\services\FileService;
 use app\services\order\{StoreOrderCartInfoServices,
     StoreOrderDeliveryServices,
     StoreOrderRefundServices,
@@ -54,7 +57,10 @@ class StoreOrder extends AuthController
     {
         $where = $this->request->getMore([
             ['data', '', '', 'time'],
-            [['type', 'd'], 0],
+            ['type', ''],
+            ['pay_type', ''],
+            ['field_key', 'all'],
+            ['real_name', ''],
         ]);
         $data = $this->services->orderCount($where);
         return app('json')->success($data);
@@ -185,6 +191,7 @@ class StoreOrder extends AuthController
             ['status', ''],
         ], true);
         if ($status != '') $data['status'] = $status;
+        if ($status == 'undefined') $data['status'] = 1;
         $data['is_show'] = 1;
         return app('json')->success($services->express($data));
     }
@@ -242,7 +249,7 @@ class StoreOrder extends AuthController
             ['delivery_id', ''],//快递单号
             ['delivery_code', ''],//快递公司编码
 
-            ['express_record_type', 2],//发货记录类型
+            ['express_record_type', 2],//发货记录类型:2=电子面单；3=商家寄件
             ['express_temp_id', ""],//电子面单模板
             ['to_name', ''],//寄件人姓名
             ['to_tel', ''],//寄件人电话
@@ -252,10 +259,12 @@ class StoreOrder extends AuthController
             ['sh_delivery_id', ''],//送货人电话
             ['sh_delivery_uid', ''],//送货人ID
 
-            ['fictitious_content', '']//虚拟发货内容
+            ['fictitious_content', ''],//虚拟发货内容
+
+            ['day_type', 0], //顺丰传 0今天，1明天，2后台
+            ['pickup_time', []],//开始时间 9:00，结束时间 10:00  开始时间和结束时间之间不能小于一个小时
         ]);
-        $services->delivery((int)$id, $data);
-        return app('json')->success(100010);
+        return app('json')->success(100010, $services->delivery((int)$id, $data));
     }
 
     /**
@@ -263,6 +272,9 @@ class StoreOrder extends AuthController
      * @param $id
      * @param StoreOrderDeliveryServices $services
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function split_delivery($id, StoreOrderDeliveryServices $services)
     {
@@ -284,7 +296,11 @@ class StoreOrder extends AuthController
 
             ['fictitious_content', ''],//虚拟发货内容
 
-            ['cart_ids', []]
+            ['cart_ids', []],
+
+            ['day_type', 0], //顺丰传 0今天，1明天，2后台
+            ['pickup_time', []],//开始时间 9:00，结束时间 10:00  开始时间和结束时间之间不能小于一个小时
+            ['service_type', ''],//快递业务类型
         ]);
         if (!$id) {
             return app('json')->fail(100100);
@@ -299,6 +315,58 @@ class StoreOrder extends AuthController
         }
         $services->splitDelivery((int)$id, $data);
         return app('json')->success(100010);
+    }
+
+    /**
+     * 获取寄件预扣金额
+     * @param ServeServices $services
+     * @return \think\Response
+     * @author 等风来
+     * @email 136327134@qq.com
+     * @date 2023/6/16
+     */
+    public function getPrice(ServeServices $services)
+    {
+        $data = $this->request->postMore([
+            ['kuaidicom', ''],
+            ['send_address', ''],
+            ['orderId', ''],
+            ['service_type', ''],
+            ['cart_ids', []],
+        ]);
+
+        $orderInfo = $this->services->get($data['orderId'], ['user_address', 'cart_id']);
+        if (!$orderInfo) {
+            return app('json')->fail('订单没有查询到');
+        }
+        $weight = '0';
+        if ($data['cart_ids']) {
+            $cartIds = array_column($data['cart_ids'], 'cart_id');
+            $cartList = app()->make(StoreOrderCartInfoServices::class)->getColumn([
+                ['cart_id', 'in', $cartIds]
+            ], 'cart_info', 'cart_id');
+            foreach ($data['cart_ids'] as $cart) {
+                if (!isset($cart['cart_id']) || !$cart['cart_id'] || !isset($cart['cart_num']) || !$cart['cart_num']) {
+                    return app('json')->fail(400159);
+                }
+                if (isset($cartList[$cart['cart_id']])) {
+                    $value = is_string($cartList[$cart['cart_id']]) ? json_decode($cartList[$cart['cart_id']], true) : $cartList[$cart['cart_id']];
+                    $weightnew = bcmul($value['attrInfo']['weight'], (string)$cart['cart_num'], 2);
+                    $weight = bcadd($weightnew, $weight, 2);
+                }
+            }
+        } else {
+            $orderCartInfoList = app()->make(StoreOrderCartInfoServices::class)->getCartInfoPrintProduct($data['orderId']);
+            foreach ($orderCartInfoList as $item) {
+                $weightnew = bcmul($item['attrInfo']['weight'], (string)$item['cart_num'], 2);
+                $weight = bcadd($weightnew, $weight, 2);
+            }
+        }
+        $data['address'] = $orderInfo['user_address'];
+        if ($weight > 0) {
+            $data['weight'] = $weight;
+        }
+        return app('json')->success($services->express()->getPrice($data));
     }
 
     /**
@@ -317,7 +385,11 @@ class StoreOrder extends AuthController
 
     /**
      * 获取订单拆分子订单列表
+     * @param $id
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function split_order($id)
     {
@@ -385,7 +457,7 @@ class StoreOrder extends AuthController
         if (!$id) {
             return app('json')->fail(100100);
         }
-        return app('json')->success($services->refundOrderForm((int)$id));
+        return app('json')->success($services->refundOrderForm((int)$id, 'order'));
     }
 
     /**
@@ -400,7 +472,7 @@ class StoreOrder extends AuthController
     {
         $data = $this->request->postMore([
             ['refund_price', 0],
-            ['type', 1]
+            ['cart_ids', []]
         ]);
         if (!$id) {
             return app('json')->fail(100100);
@@ -409,44 +481,64 @@ class StoreOrder extends AuthController
         if (!$order) {
             return app('json')->fail(400118);
         }
+
+        $refundData = [
+            'refund_reason' => '后台主动退款',
+            'refund_explain' => '后台主动退款',
+            'refund_img' => json_encode([]),
+        ];
+
+        $res = $services->applyRefund((int)$id, $order['uid'], $order, $data['cart_ids'], 1, (float)$data['refund_price'], $refundData);
+
+        if (!$res) {
+            return app('json')->fail('退款单生成失败');
+        }
+
+        $orderRefund = $services->getOrderOne(['store_order_id' => $id]);
+
+
+        $data['refund_status'] = 2;
+        $data['refund_type'] = 6;
+        $data['refunded_time'] = time();
+
         //0元退款
-        if ($order['pay_price'] == 0 && in_array($order['refund_status'], [0, 1])) {
+        if ($orderRefund['refund_price'] == 0 && in_array($orderRefund['refund_type'], [1, 5])) {
             $refund_price = 0;
         } else {
-            if ($order['pay_price'] == $order['refund_price']) {
-                return app('json')->fail(400147);
-            }
             if (!$data['refund_price']) {
                 return app('json')->fail(400146);
             }
-            $refund_price = $data['refund_price'];
-            $data['refund_price'] = bcadd($data['refund_price'], $order['refund_price'], 2);
-            $bj = bccomp((string)$order['pay_price'], (string)$data['refund_price'], 2);
-            if ($bj < 0) {
-                return app('json')->fail(400148);
+            if ($orderRefund['refund_price'] == $orderRefund['refunded_price']) {
+                return app('json')->fail(400147);
             }
+            $refund_price = $data['refund_price'];
         }
-        if ($data['type'] == 1) {
-            $data['refund_status'] = 2;
-        } else if ($data['type'] == 2) {
-            $data['refund_status'] = 0;
+
+        $data['refunded_price'] = bcadd($data['refund_price'], $orderRefund['refunded_price'], 2);
+        $bj = bccomp((string)$orderRefund['refund_price'], (string)$data['refunded_price'], 2);
+        if ($bj < 0) {
+            return app('json')->fail(400148);
         }
-        $data['refund_type'] = 6;
-        $type = $data['type'];
-        unset($data['type']);
+
         $refund_data['pay_price'] = $order['pay_price'];
         $refund_data['refund_price'] = $refund_price;
         if ($order['refund_price'] > 0) {
+            mt_srand();
             $refund_data['refund_id'] = $order['order_id'] . rand(100, 999);
         }
-        //退款处理
-        $services->payOrderRefund($type, $order, $refund_data);
+        ($order['pid'] > 0) ? $refund_data['order_id'] = $this->services->value(['id' => (int)$order['pid']], 'order_id') : $refund_data['order_id'] = $order['order_id'];
+        /** @var WechatUserServices $wechatUserServices */
+        $wechatUserServices = app()->make(WechatUserServices::class);
+        $refund_data['open_id'] = $wechatUserServices->uidToOpenid((int)$order['uid'], 'routine') ?? '';
+        $refund_data['refund_no'] = $orderRefund['order_id'];
+        $refund_data['order_id'] = $orderRefund['order_id'];
         //修改订单退款状态
-        if ($this->services->update($id, $data)) {
-            $services->storeProductOrderRefundY($data, $order, $refund_price);
+        unset($data['refund_price']);
+        if ($services->agreeRefund($orderRefund['id'], $refund_data)) {
+            $services->update($orderRefund['id'], $data);
             return app('json')->success(400149);
         } else {
-            $services->storeProductOrderRefundYFasle((int)$id, $refund_price);
+            $services->storeProductOrderRefundYFasle((int)$orderRefund['id'], $refund_price);
             return app('json')->fail(400150);
         }
     }
@@ -455,10 +547,11 @@ class StoreOrder extends AuthController
      * 订单详情
      * @param $id 订单id
      * @return mixed
+     * @throws \ReflectionException
      */
     public function order_info($id)
     {
-        if (!$id || !($orderInfo = $this->services->get($id))) {
+        if (!$id || !($orderInfo = $this->services->get($id, [], ['refund', 'invoice']))) {
             return app('json')->fail(400118);
         }
         /** @var UserServices $services */
@@ -497,6 +590,13 @@ class StoreOrder extends AuthController
         } else
             $orderInfo['_store_name'] = '';
         $orderInfo['spread_name'] = $services->value(['uid' => $orderInfo['spread_uid']], 'nickname') ?? '无';
+        $orderInfo['_info'] = app()->make(StoreOrderCartInfoServices::class)->getOrderCartInfo((int)$orderInfo['id']);
+        $cart_num = 0;
+        $refund_num = array_sum(array_column($orderInfo['refund'], 'refund_num'));
+        foreach ($orderInfo['_info'] as $items) {
+            $cart_num += $items['cart_info']['cart_num'];
+        }
+        $orderInfo['is_all_refund'] = $refund_num == $cart_num;
         $userInfo = $userInfo->toArray();
         return app('json')->success(compact('orderInfo', 'userInfo'));
     }
@@ -551,6 +651,7 @@ class StoreOrder extends AuthController
 
     /**
      * 不退款表单结构
+     * @param StoreOrderRefundServices $services
      * @param $id
      * @return mixed
      * @throws \FormBuilder\Exception\FormBuilderException
@@ -591,7 +692,13 @@ class StoreOrder extends AuthController
         }
         $services->storeProductOrderRefundNo((int)$id, $refund_reason);
         //提醒推送
-        event('notice.notice', [['orderInfo' => $orderInfo], 'send_order_refund_no_status']);
+        event('NoticeListener', [['orderInfo' => $orderInfo], 'send_order_refund_no_status']);
+
+        //自定义消息-订单拒绝退款
+        $orderInfo['time'] = date('Y-m-d H:i:s');
+        $orderInfo['phone'] = $orderInfo['user_phone'];
+        event('CustomNoticeListener', [$orderInfo['uid'], $orderInfo, 'order_refund_fail']);
+
         return app('json')->success(100010);
     }
 
@@ -747,8 +854,89 @@ class StoreOrder extends AuthController
      */
     public function order_dump($order_id, StoreOrderDeliveryServices $storeOrderDeliveryServices)
     {
-        return app('json')->success($storeOrderDeliveryServices->orderDump($order_id));
-
+        $storeOrderDeliveryServices->orderDump($order_id);
+        return app('json')->success(400121);
     }
 
+    /**
+     * 获取快递信息
+     * @param ServeServices $services
+     * @return \think\Response
+     * @author 等风来
+     * @email 136327134@qq.com
+     * @date 2023/5/15
+     */
+    public function getKuaidiComs(ServeServices $services)
+    {
+        return app('json')->success($services->express()->getKuaidiComs());
+    }
+
+    /**
+     * 取消商家寄件
+     * @param $id
+     * @return \think\Response
+     * @author 等风来
+     * @email 136327134@qq.com
+     * @date 2023/5/15
+     */
+    public function shipmentCancelOrder($id)
+    {
+        if (!$id) {
+            return app('json')->fail('缺少参数');
+        }
+
+        $msg = $this->request->post('msg', '');
+        if (!$msg) {
+            return app('json')->fail('请填写取消寄件原因');
+        }
+        if ($this->services->shipmentCancelOrder((int)$id, $msg)) {
+            return app('json')->success('取消成功');
+        } else {
+            return app('json')->fail('取消失败');
+        }
+    }
+
+    /**
+     * 导入批量发货
+     * @return \think\Response|void
+     * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
+     */
+    public function importExpress()
+    {
+        [$file] = $this->request->getMore([
+            ['file', '']
+        ], true);
+        if (!$file) return app('json')->fail(400168);
+        $file = public_path() . substr($file, 1);
+        // 获取文件后缀
+        $suffix = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        if (!in_array($suffix, ['xls', 'xlsx'])) {
+            return app('json')->fail('文件格式不正确，请上传xls或xlsx格式的文件！');
+        }
+        $expressData = app()->make(FileService::class)->readExcel($file, 'express', 2, ucfirst($suffix));
+        foreach ($expressData as $item) {
+            OrderExpressJob::dispatch([$item]);
+        }
+        return app('json')->success('批量发货成功');
+    }
+
+    /**
+     * 配货单
+     * @param $order_id
+     * @return \think\Response
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author: 吴汐
+     * @email: 442384644@qq.com
+     * @date: 2023/10/11
+     */
+    public function printShipping($order_id)
+    {
+        if (!$order_id) {
+            return app('json')->fail('参数错误');
+        }
+        $data = $this->services->printShippingData($order_id);
+        return app('json')->success($data);
+    }
 }

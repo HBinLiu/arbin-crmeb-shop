@@ -13,7 +13,7 @@
 			"style": {
 				"navigationBarTitleText": "",
 				"navigationStyle": "custom",
-				"navigationBarTextStyle": "white",
+				"navigationBarTextStyle": "black",
 				"app-plus": {
 					"scrollIndicator": "none"
 				}
@@ -63,24 +63,22 @@
 		}
 
 	],
-	"subPackages": [{  // 模块分包
+	"subPackages": [{ // 模块分包
 			"root": "pages/extension",
 			"name": "extension",
 			"pages": [{
 					"path": "customer_list/chat",
 					"style": {
 						"navigationBarTitleText": "对话详情",
-						"navigationStyle": "custom",
+						"navigationBarBackgroundColor": "#3875EA",
+						"navigationBarTextStyle": "white",
 						"app-plus": {
-							"scrollIndicator": false //禁用原生导航栏
-								// #ifdef APP-PLUS
-								,
+							// #ifdef APP-PLUS
 							"titleNView": {
 								"type": "default"
 							}
 							// #endif
-						},
-						"disableScroll": true
+						}
 					}
 				},
 				{
@@ -318,6 +316,46 @@
 							// #endif
 						}
 					}
+				},{
+					"path": "receive_gifts_status/index",
+					"style": {
+						"navigationBarTitleText": "领取结果",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				}, {
+					"path": "receive_gift/index",
+					"style": {
+						"navigationBarTitleText": "领取礼物",
+						"navigationBarBackgroundColor": "#e93323",
+						// #ifdef MP
+						"navigationBarTextStyle": "#fff",
+						// #endif
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				},{
+					"path": "cashier/index",
+					"style": {
+						"navigationBarTitleText": "收银台",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
 				}
 			]
 		}, {
@@ -352,7 +390,7 @@
 				{
 					"path": "user_cancellation/index",
 					"style": {
-						"navigationBarTitleText": "注销说明",
+						"navigationBarTitleText": "注销协议",
 						"app-plus": {
 							// #ifdef APP-PLUS
 							"titleNView": {
@@ -392,7 +430,7 @@
 				{
 					"path": "user_invoice_order/index",
 					"style": {
-						"navigationBarTitleText": "订单详情",
+						"navigationBarTitleText": "发票详情",
 						"app-plus": {
 							// #ifdef APP-PLUS
 							"titleNView": {
@@ -445,10 +483,20 @@
 				{
 					"path": "wechat_login/index",
 					"style": {
-						"navigationBarTitleText": "账户登录",
+						"navigationBarTitleText": "",
 						"navigationStyle": "custom",
 						"app-plus": {
-							"scrollIndicator": false //禁用原生导航栏
+							"scrollIndicator": "none"
+						}
+					}
+				}, 
+				{
+					"path": "binding_phone/index",
+					"style": {
+						"navigationBarTitleText": "",
+						"navigationStyle": "custom",
+						"app-plus": {
+							"scrollIndicator": "none"
 						}
 					}
 				},
@@ -468,7 +516,7 @@
 				{
 					"path": "user_info/index",
 					"style": {
-						"navigationBarTitleText": "个人资料",
+						"navigationBarTitleText": "设置",
 						"app-plus": {
 							// #ifdef APP-PLUS
 							"titleNView": {
@@ -498,7 +546,7 @@
 						"app-plus": {
 							// #ifdef APP-PLUS
 							"titleNView": {
-				  		"type": "default"
+								"type": "default"
 							}
 							// #endif
 						}
@@ -644,6 +692,24 @@
 					"style": {
 						"navigationBarTitleText": "佣金记录"
 
+							// #ifdef MP
+							,
+						"navigationBarTextStyle": "black",
+						"navigationBarBackgroundColor": "#FFFFFF"
+							// #endif
+							,
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				},{
+					"path": "user_spread_money/receiving",
+					"style": {
+						"navigationBarTitleText": "收款"
 							// #ifdef MP
 							,
 						"navigationBarTextStyle": "black",
@@ -1371,21 +1437,18 @@
 				{
 					"path": "special/index",
 					"style": {
-						"navigationBarTitleText": "专题页",
+					"navigationBarTextStyle": "white",
+					"navigationBarBackgroundColor": "#333333",
+					"navigationBarTitleText": "专题页",
 						"app-plus": {
-							// #ifdef APP-PLUS
-							"titleNView": {
-								"type": "default"
-							}
-							// #endif
+							"scrollIndicator": "none"
 						}
-
 					}
 				},
 				{
 					"path": "settled/index",
 					"style": {
-						"navigationBarTitleText": "代理商申请",
+						"navigationBarTitleText": "分销申请",
 						"app-plus": {
 							// #ifdef APP-PLUS
 							"titleNView": {
@@ -1527,7 +1590,7 @@
 			]
 		}
 	],
-	"tabBar": {  // 底部菜单
+	"tabBar": { // 底部菜单
 		"color": "#282828",
 		"selectedColor": "#ff3366",
 		"borderStyle": "white",
@@ -1563,7 +1626,8 @@
 		"navigationBarTitleText": "加载中",
 		"navigationBarBackgroundColor": "#fff",
 		"backgroundColor": "#F8F8F8",
-		"titleNView": false
+		"titleNView": false,
+		"pageOrientation": "portrait" // 全局设置为竖屏
 	},
 	"condition": { //模式配置，仅开发期间生效
 		"current": 0, //当前激活的模式(list 的索引项)
@@ -1572,5 +1636,6 @@
 			"path": "", //启动页面，必选
 			"query": "" //启动参数，在页面的onLoad函数里面得到
 		}]
-	}
+	},
+	"embeddedAppIdList": ["wxef277996acc166c3"] //通联支付appid
 }

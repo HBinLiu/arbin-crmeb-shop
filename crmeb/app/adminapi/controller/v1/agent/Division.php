@@ -99,8 +99,9 @@ class Division extends AuthController
             ['account', ''],
             ['pwd', ''],
             ['conf_pwd', ''],
-            ['real_name', ''],
-            ['roles', []]
+            ['division_name', ''],
+            ['roles', []],
+            ['image', []]
         ]);
         $this->services->divisionSave($data);
         return app('json')->success(100000);
@@ -121,19 +122,32 @@ class Division extends AuthController
      * 保存代理商
      * @param UserServices $userServices
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function divisionAgentSave(UserServices $userServices)
     {
         $data = $this->request->postMore([
+            ['division_id', 0],
             ['uid', 0],
             ['division_percent', 0],
             ['division_end_time', ''],
             ['division_status', 1],
+            ['division_name', ''],
             ['edit', 0],
+            ['image', []],
         ]);
-        $userInfo = $userServices->get((int)$data['uid']);
+        if ((int)$data['uid'] == 0) $data['uid'] = $data['image']['uid'];
+        $userInfo = $userServices->getUserInfo($data['uid'], 'is_division,is_agent,is_staff');
         if (!$userInfo) throw new AdminException(100100);
-        $data['division_id'] = $this->adminInfo['division_id'];
+        if ($data['edit'] == 0) {
+            if ($userInfo['is_division']) throw new AdminException('此用户是事业部，请勿添加为代理商');
+            if ($userInfo['is_agent']) throw new AdminException('此用户是代理商，无法重复添加');
+            if ($userInfo['is_staff']) throw new AdminException('此用户是下级员工，无法添加为代理商');
+            $divisionUserInfo = $userServices->count(['uid' => (int)$data['division_id'], 'is_division' => 1, 'division_id' => $data['division_id']]);
+            if (!$divisionUserInfo) throw new AdminException(100100);
+        }
         $this->services->divisionAgentSave($data);
         return app('json')->success(100000);
     }
@@ -235,5 +249,64 @@ class Division extends AuthController
         $applyServices = app()->make(DivisionAgentApplyServices::class);
         $applyServices->delApply($id);
         return app('json')->success(100002);
+    }
+
+    /**
+     * 添加员工表单
+     * @param $uid
+     * @return \think\Response
+     * @throws \FormBuilder\Exception\FormBuilderException
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2024/1/22
+     */
+    public function divisionStaffCreate($uid)
+    {
+        return app('json')->success($this->services->getDivisionStaffForm((int)$uid));
+    }
+
+    /**
+     * 保存员工
+     * @return \think\Response
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2024/1/22
+     */
+    public function divisionStaffSave()
+    {
+        $data = $this->request->getMore([
+            ['uid', 0],
+            ['division_percent', 0],
+            ['agent_id', 0],
+            ['image', []],
+        ]);
+        $this->services->divisionStaffSave($data);
+        return app('json')->success(100000);
+    }
+
+    /**
+     * 分销统计
+     * @return \think\Response
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2025/4/8
+     */
+    public function divisionStatistics()
+    {
+        [$type, $time, $page, $limit, $sort, $order] = $this->request->getMore([
+            ['type', 0],
+            ['time', ''],
+            ['page', 1],
+            ['limit', 15],
+            ['sort', 'order_sum'],
+            ['order', 'desc'],
+        ], true);
+        $time = $time != '' ? explode('-', $time) : [];
+        $data = $this->services->divisionStatistics($type, $time, $page, $limit, $sort, $order);
+        return app('json')->success($data);
+
     }
 }

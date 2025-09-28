@@ -1,14 +1,19 @@
 <template>
 	<view :style="colorStyle">
 		<view class='newsDetail'>
-			<view class='title'>{{articleInfo.title}}</view>
+			<view class='title'>{{articleInfo.title || ''}}</view>
 			<view class='list acea-row row-middle'>
-				<view class='label'>{{articleInfo.catename}}</view>
-				<view class='item'></text>{{articleInfo.add_time}}</view>
-				<view class='item'><text class='iconfont icon-liulan'></text>{{articleInfo.visit}}</view>
+				<view class='label'>{{articleInfo.catename || ''}}</view>
+				<view class='item'></text>{{articleInfo.add_time || ''}}</view>
+				<view class='item'><text class='iconfont icon-liulan'></text>{{articleInfo.visit || ''}}</view>
 			</view>
-			<view class='conters'>
-				<jyf-parser :html="content" ref="article" :tag-style="tagStyle"></jyf-parser>
+			<view class='conters' v-if="description">
+				<!-- #ifndef APP-PLUS -->
+				<parser :html="description" ref="article" :tag-style="tagStyle"></parser>
+				<!-- #endif -->
+				<!-- #ifdef APP-PLUS -->
+				<view v-html="description"></view>
+				<!-- #endif -->
 			</view>
 			<navigator class="picTxt acea-row row-between-wrapper" v-if="store_info.id"
 				:url="'/pages/goods_details/index?id='+store_info.id" hover-class="none">
@@ -16,11 +21,11 @@
 					<image :src="store_info.image"></image>
 				</view>
 				<view class="text">
-					<view class="name line1">{{store_info.store_name}}</view>
+					<view class="name line1">{{store_info.store_name || ''}}</view>
 					<view class="money font-color">
-						{{$t(`￥`)}}<text class="num">{{store_info.price}}</text>
+						{{$t(`￥`)}}<text class="num">{{store_info.price || 0}}</text>
 					</view>
-					<view class="y_money">{{$t(`￥`)}}{{store_info.ot_price}}</view>
+					<view class="y_money">{{$t(`￥`)}}{{store_info.ot_price || 0}}</view>
 				</view>
 				<navigator class="label"><text class="span">{{$t(`查看商品`)}}</text></navigator>
 			</navigator>
@@ -47,11 +52,14 @@
 	import home from '@/components/home';
 	import parser from "@/components/jyf-parser/jyf-parser";
 	import colors from "@/mixins/color";
+	import {
+		userShare
+	} from "@/api/user.js";
 	export default {
 		components: {
 			shareInfo,
 			home,
-			"jyf-parser": parser
+			parser
 		},
 		mixins: [colors],
 		data() {
@@ -59,7 +67,7 @@
 				id: 0,
 				articleInfo: [],
 				store_info: {},
-				content: '',
+				description: '',
 				shareInfoStatus: false,
 				tagStyle: {
 					img: 'width:100%;display:block;',
@@ -88,6 +96,28 @@
 		onShow: function() {
 			this.getArticleOne();
 		},
+		onShareAppMessage: function() {
+			let that = this;
+			that.$set(that, "actionSheetHidden", !that.actionSheetHidden);
+			userShare();
+			return {
+				title: this.articleInfo.title || "",
+				imageUrl: this.articleInfo.image_input.length ? this.articleInfo.image_input[0] : "",
+				path: "/pages/extension/news_details/index?id=" + that.id + "&spid=" + this.$store.state.app.uid,
+			};
+		},
+		onShareTimeline() {
+			let that = this;
+			userShare();
+			return {
+				title: this.articleInfo.title,
+				query: {
+					id: that.id,
+					spid: this.$store.state.app.uid || 0,
+				},
+				imageUrl: this.articleInfo.image_input.length ? this.articleInfo.image_input[0] : "",
+			};
+		},
 		methods: {
 			getArticleOne: function() {
 				let that = this;
@@ -97,7 +127,11 @@
 					});
 					that.$set(that, 'articleInfo', res.data);
 					that.$set(that, 'store_info', res.data.store_info ? res.data.store_info : {});
-					that.content = res.data.content;
+					that.$set(that,'description', res.data.content);
+					if (this.description) {
+						this.description = this.description.replace(/<img/gi, '<img style="max-width:100%;height:auto;float:left;display:block" ');
+						this.description = this.description.replace(/<video/gi, '<video style="width:100%;height:300px;display:block" ');
+					}
 					// #ifdef H5
 					if (this.$wechat.isWeixin()) {
 						this.setShareInfo();
@@ -132,7 +166,9 @@
 	page {
 		background-color: #fff !important;
 	}
-
+	.newsDetail{
+		padding-bottom: 40rpx;
+	}
 	.newsDetail .title {
 		padding: 0 30rpx;
 		font-size: 34rpx;
@@ -149,7 +185,7 @@
 	}
 
 	.newsDetail .list .label {
-		font-size: 30rpx;
+		font-size: 24rpx;
 		color: #B1B2B3;
 		// height: 38rpx;
 		// border-radius: 3rpx;
@@ -160,7 +196,7 @@
 
 	.newsDetail .list .item {
 		margin-left: 27rpx;
-		font-size: 30rpx;
+		font-size: 24rpx;
 		color: #B1B2B3;
 	}
 
@@ -174,10 +210,19 @@
 	}
 
 	.newsDetail .conters {
+		position: relative;
+		margin-top: 20rpx;
+		width: 100%;
+		// padding-bottom: 100rpx;
+		overflow: hidden;
 		padding: 0 30rpx;
-		font-size: 32rpx;
+		font-size: 28rpx;
 		color: #8A8B8C;
 		line-height: 1.7;
+		display: block;
+		img {
+			display: block;
+		}
 	}
 
 	.newsDetail .picTxt {

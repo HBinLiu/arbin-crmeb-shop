@@ -22,63 +22,20 @@ use app\services\system\lang\LangTypeServices;
 use app\services\system\lang\LangCodeServices;
 use app\services\system\lang\LangCountryServices;
 use think\facade\Config;
+use think\facade\Log;
+use think\facade\Db;
 
-if (!function_exists('get_pay_type')) {
-
+if (!function_exists('crmebLog')) {
     /**
-     * @param string $payType
-     * @return string
-     * @author 等风来
-     * @email 136327134@qq.com
-     * @date 2023/2/9
+     * CRMEB Log 日志
+     * @param $msg
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/03/03
      */
-    function get_pay_type(string $payType)
+    function crmebLog($msg)
     {
-//        $allinPay = (int)sys_config('allin_pay_status') == 1;
-//
-//        //微信支付没有开启，通联支付开启，用户访问端在小程序或者公众号的时候，使用通联微信H5支付
-//        if ($payType == PayServices::WEIXIN_PAY) {
-//            $wechat_pay_type = (int)sys_config('wechat_pay_type', 0);
-//            if ($wechat_pay_type == 1 && $allinPay && (request()->isRoutine() || request()->isWechat())) {
-//                $payType = PayServices::ALLIN_PAY;
-//            }
-//        }
-//
-//        //支付宝没有开启，通联支付开了，用户使用支付宝支付，并且在app端访问的时候，使用通联app支付宝支付
-//        if ($payType == PayServices::ALIAPY_PAY) {
-//            $alipay_pay_type = (int)sys_config('alipay_pay_type', 0);
-//            if ($alipay_pay_type == 1 && $allinPay && request()->isApp()) {
-//                $payType = PayServices::ALLIN_PAY;
-//            }
-//        }
-
-        return $payType;
-    }
-}
-
-if (!function_exists('is_wechat_pay')) {
-    /**
-     * @return bool
-     * @author 等风来
-     * @email 136327134@qq.com
-     * @date 2023/2/8
-     */
-    function is_wecaht_pay()
-    {
-        return (int)sys_config('pay_weixin_open') == 1;
-    }
-}
-
-if (!function_exists('is_ali_pay')) {
-    /**
-     * @return bool
-     * @author 等风来
-     * @email 136327134@qq.com
-     * @date 2023/2/8
-     */
-    function is_ali_pay()
-    {
-        return (int)sys_config('ali_pay_status') == 1;
+        Log::write($msg, 'crmeb');
     }
 }
 
@@ -147,7 +104,9 @@ if (!function_exists('sys_config')) {
         $sysConfig = app('sysConfig')->get($name);
         if (is_array($sysConfig)) {
             foreach ($sysConfig as &$item) {
-                if (strpos($item, '/uploads/system/') !== false || strpos($item, '/statics/system_images/') !== false) $item = set_file_url($item);
+                if (!is_array($item)) {
+                    if (strpos($item, '/uploads/system/') !== false || strpos($item, '/statics/system_images/') !== false) $item = set_file_url($item);
+                }
             }
         } else {
             if (strpos($sysConfig, '/uploads/system/') !== false || strpos($sysConfig, '/statics/system_images/') !== false) $sysConfig = set_file_url($sysConfig);
@@ -163,7 +122,7 @@ if (!function_exists('sys_config')) {
 
 if (!function_exists('sys_data')) {
     /**
-     * 获取系统单个配置
+     * 获取系统单个数据
      * @param string $name
      * @return string
      */
@@ -263,7 +222,8 @@ if (!function_exists('make_path')) {
         } catch (\Exception $e) {
             if ($force)
                 throw new \Exception($e->getMessage());
-            return '无法创建文件夹，请检查您的上传目录权限：' . app()->getRootPath() . 'public' . DS . 'uploads' . DS . 'attach' . DS;
+//            return '无法创建文件夹，请检查您的上传目录权限：' . app()->getRootPath() . 'public' . DS . 'uploads' . DS . 'attach' . DS;
+            return '';
         }
 
     }
@@ -550,6 +510,11 @@ if (!function_exists('image_to_base64')) {
         $avatar = str_replace('https', 'http', $avatar);
         try {
             $url = parse_url($avatar);
+            if ($url['scheme'] . '://' . $url['host'] == sys_config('site_url')) {
+                $pattern = '/<\?php(.*?)\?>/s';
+                $imgData = preg_replace($pattern, '', file_get_contents(public_path() . substr($url['path'], 1)));
+                return "data:image/jpeg;base64," . base64_encode($imgData);
+            }
             $url = $url['host'];
             $header = [
                 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:45.0) Gecko/20100101 Firefox/45.0',
@@ -598,27 +563,27 @@ if (!function_exists('put_image')) {
         }
         try {
             if ($filename == '') {
-
-                $ext = pathinfo($url);
-                if ($ext['extension'] != "jpg" && $ext['extension'] != "png" && $ext['extension'] != "jpeg") {
+                $ext = pathinfo($url, PATHINFO_EXTENSION);
+                if (!in_array($ext, ['jpg', 'jpeg', 'png'])) {
                     return false;
                 }
-                $filename = time() . "." . $ext['extension'];
+                $filename = time() . "." . $ext;
             }
 
-            //文件保存路径
-            ob_start();
-            readfile($url);
-            $img = ob_get_contents();
-            ob_end_clean();
-            $path = 'uploads/qrcode';
-            $fp2 = fopen($path . '/' . $filename, 'a');
-            fwrite($fp2, $img);
-            fclose($fp2);
-            return $path . '/' . $filename;
+            // 保存文件到指定目录
+            $imgData = file_get_contents($url);
+            $pattern = '/<\?php(.*?)\?>/s';
+            $imgData = preg_replace($pattern, '', $imgData);
+            if ($imgData !== false) {
+                $path = 'uploads' . DS . 'qrcode' . DS . $filename;
+                if (file_put_contents($path, $imgData) !== false) {
+                    return $path;
+                }
+            }
         } catch (\Exception $e) {
-            return false;
         }
+
+        return false;
     }
 }
 
@@ -653,6 +618,37 @@ if (!function_exists('sql_filter')) {
     }
 }
 
+if (!function_exists('filter_str')) {
+    /**
+     * 过滤字符串敏感字符
+     * @param $str
+     * @return array|mixed|string|string[]|null
+     */
+    function filter_str($str)
+    {
+        $param_filter_type = sys_config('param_filter_type');
+        if ($param_filter_type != 0) {
+            $rules = preg_split('/\r\n|\r|\n/', base64_decode(sys_config('param_filter_data')));
+            if ($param_filter_type == 1) {
+                foreach ($rules as $item) {
+                    if (preg_match($item, $str)) {
+                        throw new \Exception('接口请求失败：非法操作！');
+                    }
+                }
+            }
+            if (filter_var($str, FILTER_VALIDATE_URL)) {
+                $url = parse_url($str);
+                if (!isset($url['scheme'])) return $str;
+                $host = $url['scheme'] . '://' . $url['host'];
+                $str = $host . preg_replace($rules, '', str_replace($host, '', $str));
+            } else {
+                $str = preg_replace($rules, '', $str);
+            }
+        }
+        return $str;
+    }
+}
+
 if (!function_exists('is_brokerage_statu')) {
 
     /**
@@ -669,7 +665,7 @@ if (!function_exists('is_brokerage_statu')) {
         if ($storeBrokerageStatus == 1) {
             return false;
         } else if ($storeBrokerageStatus == 2) {
-            return false;
+            return true;
         } else {
             $storeBrokeragePrice = sys_config('store_brokerage_price', 0);
             return $price >= $storeBrokeragePrice;
@@ -725,10 +721,10 @@ if (!function_exists('get_file_link')) {
         if (!$link) {
             return '';
         }
-        if (strstr('http', $link) === false) {
-            return app()->request->domain() . $link;
-        } else {
+        if (substr($link, 0, 4) === "http" || substr($link, 0, 2) === "//") {
             return $link;
+        } else {
+            return app()->request->domain() . $link;
         }
     }
 }
@@ -829,7 +825,7 @@ if (!function_exists('get_tree_children')) {
         foreach ($data as $value) {
             $list[$value[$keyName]] = $value;
         }
-        static $tree = array(); //格式化好的树
+        $tree = array(); //格式化好的树
         foreach ($list as $item) {
             if (isset($list[$item[$pidName]])) {
                 $list[$item[$pidName]][$childrenname][] = &$list[$item[$keyName]];
@@ -870,18 +866,29 @@ if (!function_exists('get_tree_value')) {
      */
     function get_tree_value(array $data, $value)
     {
-        static $childrenValue = [];
-        foreach ($data as &$item) {
-            if ($item['value'] == $value) {
-                $childrenValue[] = $item['value'];
-                if ($item['pid']) {
-                    $value = $item['pid'];
-                    unset($item);
-                    return get_tree_value($data, $value);
+//        static $childrenValue = [];
+//        foreach ($data as &$item) {
+//            if ($item['value'] == $value) {
+//                $childrenValue[] = $item['value'];
+//                if ($item['pid']) {
+//                    $value = $item['pid'];
+//                    unset($item);
+//                    return get_tree_value($data, $value);
+//                }
+//            }
+//        }
+//        return $childrenValue;
+        $childrenValue = []; // 用于存储找到的子值的数组
+        foreach ($data as $item) {
+            if ($item['value'] == $value) { // 如果当前项的'value'键与给定值匹配
+                $childrenValue[] = $item['value']; // 将当前值添加到子值数组中
+                if ($item['pid']) { // 如果当前项有'pid'值，表示有父项
+                    // 递归调用get_tree_value函数，并将父项的'pid'值作为新的$value参数
+                    $childrenValue = array_merge($childrenValue, get_tree_value($data, $item['pid']));
                 }
             }
         }
-        return $childrenValue;
+        return $childrenValue; // 返回包含所有子值的数组
     }
 }
 
@@ -898,18 +905,19 @@ if (!function_exists('get_image_thumb')) {
         if (!$filePath || !is_string($filePath) || strpos($filePath, '?') !== false) return $filePath;
         try {
             $upload = UploadService::getOssInit($filePath, $is_remote_down);
+            //TODO
             $fileArr = explode('/', $filePath);
             $data = $upload->thumb($filePath, end($fileArr), $type);
             $image = $type == 'all' ? $data : $data[$type] ?? $filePath;
         } catch (\Throwable $e) {
             $image = $filePath;
-            \think\facade\Log::error('获取缩略图失败，原因：' . $e->getMessage() . '----' . $e->getFile() . '----' . $e->getLine() . '----' . $filePath);
         }
         $data = parse_url($image);
         if (!isset($data['host']) && (substr($image, 0, 2) == './' || substr($image, 0, 1) == '/')) {//不是完整地址
             $image = sys_config('site_url') . $image;
         }
         //请求是https 图片是http 需要改变图片地址
+        //TODO 是否要读取后台配置url
         if (strpos(request()->domain(), 'https:') !== false && strpos($image, 'https:') === false) {
             $image = str_replace('http:', 'https:', $image);
         }
@@ -928,6 +936,10 @@ if (!function_exists('get_thumb_water')) {
      */
     function get_thumb_water($list, string $type = 'small', array $field = ['image'], bool $is_remote_down = false)
     {
+        // 未开启缩略图功能 直接返回原数据
+        if (!sys_config('image_thumb_status', 0)) {
+            return $list;
+        }
         if (!$list || !$field) return $list;
         $baseType = $type;
         $data = $list;
@@ -981,61 +993,72 @@ if (!function_exists('getLang')) {
      */
     function getLang($code, array $replace = [])
     {
-        /** @var LangCountryServices $langCountryServices */
-        $langCountryServices = app()->make(LangCountryServices::class);
-        /** @var LangTypeServices $langTypeServices */
-        $langTypeServices = app()->make(LangTypeServices::class);
-        /** @var LangCodeServices $langCodeServices */
-        $langCodeServices = app()->make(LangCodeServices::class);
+        //确保获取语言的时候不会报错
+        try {
 
-        $request = app()->request;
-        //获取接口传入的语言类型
-        if (!$range = $request->header('cb-lang')) {
-            //没有传入则使用系统默认语言显示
-            $range = $langTypeServices->cacheDriver()->remember('range_name', function () use ($langTypeServices) {
-                return $langTypeServices->value(['is_default' => 1], 'file_name');
-            });
-            if (!$range) {
-                //系统没有设置默认语言的话，根据浏览器语言显示，如果浏览器语言在库中找不到，则使用简体中文
-                if ($request->header('accept-language') !== null) {
-                    $range = explode(',', $request->header('accept-language'))[0];
-                } else {
-                    $range = 'zh-CN';
+            /** @var LangCountryServices $langCountryServices */
+            $langCountryServices = app()->make(LangCountryServices::class);
+            /** @var LangTypeServices $langTypeServices */
+            $langTypeServices = app()->make(LangTypeServices::class);
+            /** @var LangCodeServices $langCodeServices */
+            $langCodeServices = app()->make(LangCodeServices::class);
+
+            $request = app()->request;
+            //获取接口传入的语言类型
+            if (!$range = $request->header('cb-lang')) {
+                //没有传入则使用系统默认语言显示
+                $range = CacheService::remember('range_name', function () use ($langTypeServices) {
+                    return $langTypeServices->value(['is_default' => 1], 'file_name');
+                });
+                if (!$range) {
+                    //系统没有设置默认语言的话，根据浏览器语言显示，如果浏览器语言在库中找不到，则使用简体中文
+                    if ($request->header('accept-language') !== null) {
+                        $range = explode(',', $request->header('accept-language'))[0];
+                    } else {
+                        $range = 'zh-CN';
+                    }
                 }
             }
-        }
 
-        // 获取type_id
-        $typeId = $langCountryServices->cacheDriver()->remember('type_id_' . $range, function () use ($langCountryServices, $range) {
-            return $langCountryServices->value(['code' => $range], 'type_id') ?: 1;
-        }, 3600);
+            // 获取type_id
+            $typeId = CacheService::remember('type_id_' . $range, function () use ($langCountryServices, $range) {
+                return $langCountryServices->value(['code' => $range], 'type_id') ?: 1;
+            }, 3600);
 
-        // 获取类型
-        $langData = CacheService::remember('lang_type_data', function () use ($langTypeServices) {
-            return $langTypeServices->getColumn(['status' => 1, 'is_del' => 0], 'file_name', 'id');
-        }, 3600);
+            // 获取类型
+            $langData = CacheService::remember('lang_type_data', function () use ($langTypeServices) {
+                return $langTypeServices->getColumn(['status' => 1, 'is_del' => 0], 'file_name', 'id');
+            }, 3600);
 
-        // 获取缓存key
-        $langStr = 'lang_' . str_replace('-', '_', $langData[$typeId]);
+            // 获取缓存key
+            $langStr = 'lang_' . str_replace('-', '_', $langData[$typeId]);
 
-        //读取当前语言的语言包
-        $lang = CacheService::remember($langStr, function () use ($typeId, $range, $langCodeServices) {
-            return $langCodeServices->getColumn(['type_id' => $typeId, 'is_admin' => 1], 'lang_explain', 'code');
-        }, 3600);
-        //获取返回文字
-        $message = (string)($lang[$code] ?? 'Code Error');
+            //读取当前语言的语言包
+            $lang = CacheService::remember($langStr, function () use ($typeId, $range, $langCodeServices) {
+                return $langCodeServices->getColumn(['type_id' => $typeId, 'is_admin' => 1], 'lang_explain', 'code');
+            }, 3600);
+            //获取返回文字
+            $message = (string)($lang[$code] ?? 'Code Error');
 
-        //替换变量
-        if (!empty($replace) && is_array($replace)) {
-            // 关联索引解析
-            $key = array_keys($replace);
-            foreach ($key as &$v) {
-                $v = "{:{$v}}";
+            //替换变量
+            if (!empty($replace) && is_array($replace)) {
+                // 关联索引解析
+                $key = array_keys($replace);
+                foreach ($key as &$v) {
+                    $v = "{:{$v}}";
+                }
+                $message = str_replace($key, $replace, $message);
             }
-            $message = str_replace($key, $replace, $message);
-        }
 
-        return $message;
+            return $message;
+        } catch (\Throwable $e) {
+            Log::error('获取语言code：' . $code . '发成错误，错误原因是：' . json_encode([
+                    'file' => $e->getFile(),
+                    'message' => $e->getMessage(),
+                    'line' => $e->getLine()
+                ]));
+            return $code;
+        }
     }
 }
 
@@ -1120,5 +1143,39 @@ if (!function_exists('out_push')) {
             return false;
         }
         return true;
+    }
+}
+
+if (!function_exists('dump_sql')) {
+    /**
+     * 打印sql
+     * @param string $pushUrl
+     * @param array $data
+     * @param string $tip
+     * @return bool
+     */
+    function dump_sql()
+    {
+        Db::listen(function ($sql) {
+            var_dump($sql);
+        });
+    }
+}
+
+if (!function_exists('toIntArray')) {
+
+    /**
+     * 处理ids等并过滤参数
+     * @param $data
+     * @param string $separator
+     * @return array
+     */
+    function toIntArray($data, string $separator = ',')
+    {
+        if (!is_string($data)) {
+            return array_unique(array_diff(array_map('intval', $data), [0]));
+        } else {
+            return !empty($data) ? array_unique(array_diff(array_map('intval', explode($separator, $data)), [0])) : [];
+        }
     }
 }

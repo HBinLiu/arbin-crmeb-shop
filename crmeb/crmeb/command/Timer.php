@@ -10,6 +10,7 @@
 // +----------------------------------------------------------------------
 namespace crmeb\command;
 
+use app\services\system\crontab\SystemCrontabServices;
 use think\console\Command;
 use think\console\Input;
 use think\console\input\Argument;
@@ -57,12 +58,12 @@ class Timer extends Command
     protected function execute(Input $input, Output $output)
     {
         $this->init($input, $output);
-        Worker::$pidFile = app()->getRootPath().'runtime/timer.pid';
+        Worker::$pidFile = app()->getRootPath() . 'runtime/timer.pid';
         $task = new Worker();
         date_default_timezone_set('PRC');
         $task->count = 1;
-        $task->onWorkerStart = function () {
-            event('SystemTimer');
+        $task->onWorkerStart = function () use ($task) {
+            app()->make(SystemCrontabServices::class)->crontabCommandRun($task);
         };
         $task->runAll();
     }

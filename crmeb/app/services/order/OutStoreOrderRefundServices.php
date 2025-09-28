@@ -113,10 +113,6 @@ class OutStoreOrderRefundServices extends BaseServices
             $cart['sum_true_price'] = sprintf("%.2f", $cart['sum_true_price'] ?? bcmul((string)$cart['truePrice'], (string)$cart['cart_num'], 2));
             $cart['vip_sum_truePrice'] = bcmul($cart['vip_truePrice'], $cart['cart_num'] ?: 1, 2);
             $vipTruePrice = bcadd((string)$vipTruePrice, $cart['vip_sum_truePrice'], 2);
-            if (isset($order['split']) && $order['split']) {
-                $refund['cart_info'][$key]['cart_num'] = $cart['surplus_num'];
-                if (!$cart['surplus_num']) unset($refund['cart_info'][$key]);
-            }
             $totalPrice = bcadd($totalPrice, $cart['sum_true_price'], 2);
         }
         $refund['vip_true_price'] = $vipTruePrice;
@@ -220,6 +216,7 @@ class OutStoreOrderRefundServices extends BaseServices
             mt_srand();
             $refundData['refund_id'] = $order['order_id'] . rand(100, 999);
         }
+        $refundData['order_id'] = $orderId;
         //修改订单退款状态
         if ($refundServices->agreeRefund((int)$orderRefund['id'], $refundData)) {
             $refundServices->update((int)$orderRefund['id'], $data);

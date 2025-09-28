@@ -8,11 +8,13 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
 
-import BasicLayout from '@/components/main';
+import LayoutMain from '@/layout';
+import setting from '@/setting';
+let routePre = setting.routePre;
 
 const pre = 'finance_';
 export default {
-  path: '/admin/finance',
+  path: routePre + '/finance',
   name: 'finance',
   header: 'finance',
   meta: {
@@ -22,7 +24,7 @@ export default {
   redirect: {
     name: `${pre}cashApply`,
   },
-  component: BasicLayout,
+  component: LayoutMain,
   children: [
     {
       path: 'billing_records/index',

@@ -8,14 +8,13 @@
           :class="{ on: item.key == tabCur }"
           v-for="(item, index) in tabList"
           :key="index"
+          v-db-click
           @click="bindTab(item)"
           >{{ item.title }}</a
         >
       </div>
       <div class="search-box">
-        <Input placeholder="搜索快捷回复" style="width: 100%" v-model="searchTxt" @on-enter="bindSearch">
-          <Icon type="ios-search" slot="suffix" />
-        </Input>
+        <el-input placeholder="搜索快捷回复" style="width: 100%" v-model="searchTxt" />
       </div>
     </div>
     <div class="main">
@@ -23,33 +22,40 @@
         <vue-scroll :ops="ops">
           <div class="left-item" v-if="tabCur">
             <p>分组</p>
-            <span class="iconfont iconaddto" @click="openAddSort"></span>
+            <span class="iconfont iconaddto" v-db-click @click="openAddSort"></span>
           </div>
           <div
             class="left-item"
             v-for="(item, index) in sortList"
             :key="index"
             :class="{ on: cateId == item.id }"
+            v-db-click
             @click="selectSort(item)"
           >
             <p>{{ item.name }}</p>
             <template v-if="tabCur">
-              <span class="iconfont iconDot" @click.top="bindEdit(item, index)"></span>
+              <span class="iconfont iconDot" v-db-click @click.top="bindEdit(item, scope.$index)"></span>
 
               <div class="edit-wrapper" v-show="item.isEdit">
-                <div class="edit-item" @click="editSort(item)">编辑</div>
-                <div class="edit-item" @click="delSort(item, '删除分类', index)">删除</div>
+                <div class="edit-item" v-db-click @click="editSort(item)">编辑</div>
+                <div class="edit-item" v-db-click @click="delSort(item, '删除分类', scope.$index)">删除</div>
               </div>
-              <div class="edit-bg" v-show="item.isEdit" @click.stop="item.isEdit = false"></div>
+              <div class="edit-bg" v-show="item.isEdit" v-db-click @click.stop="item.isEdit = false"></div>
             </template>
           </div>
         </vue-scroll>
       </div>
       <div class="right-box">
-        <Scroll :on-reach-bottom="handleReachBottom" class="right-scroll" height="360">
+        <div
+          v-infinite-scroll="handleReachBottom"
+          class="right-scroll"
+          :infinite-scroll-immediate="false"
+          :infinite-scroll-delay="500"
+          style="overflow: auto"
+        >
           <div class="msg-item add-box" v-if="tabCur" style="margin-top: 0">
             <div class="box2">
-              <Input
+              <el-input
                 class="input-box"
                 v-model="addMsg.title"
                 placeholder="输入标题（选填）"
@@ -58,17 +64,17 @@
               />
               <div class="conBox" :class="{ active: addMsg.isEdit }">
                 <div class="content">
-                  <Input v-model="addMsg.message" type="textarea" :rows="4" placeholder="请输入内容" />
+                  <el-input v-model="addMsg.message" type="textarea" :rows="4" placeholder="请输入内容" />
                 </div>
                 <div class="bom">
                   <div class="select">
-                    <Select v-model="addMsg.cateId" style="width: 100px" size="small">
-                      <Option v-for="item in sortList" :value="item.id" :key="item.id">{{ item.name }} </Option>
-                    </Select>
+                    <el-select v-model="addMsg.cateId" style="width: 100px" size="small">
+                      <el-option v-for="item in sortList" :value="item.id" :key="item.id">{{ item.name }} </el-option>
+                    </el-select>
                   </div>
                   <div class="btns-box">
-                    <Button @click.stop="addMsg.isEdit = false">取消</Button>
-                    <Button type="primary" @click.stop="bindAdd">保存</Button>
+                    <el-button v-db-click @click.stop="addMsg.isEdit = false">取消</el-button>
+                    <el-button type="primary" v-db-click @click.stop="bindAdd">保存</el-button>
                   </div>
                 </div>
               </div>
@@ -76,49 +82,50 @@
           </div>
           <div class="msg-item" v-for="(item, index) in list" :key="index" v-if="item.id">
             <div class="box1" v-if="!item.isEdit">
-              <div class="txt-box" @click="bindRadio(item)">
+              <div class="txt-box" v-db-click @click="bindRadio(item)">
                 <span class="title" v-if="item.title">{{ item.title | filtersTitle }}</span>
                 <span v-if="item.message">{{ item.message | filtersCon }}</span>
               </div>
               <div class="edit-box" v-if="tabCur">
-                <span class="iconfont iconbianji" @click.stop="editMsg(item)"></span>
-                <span class="iconfont iconshanchu" @click.stop="delMsg(item, '删除话术', index)"></span>
+                <span class="iconfont iconbianji" v-db-click @click.stop="editMsg(item)"></span>
+                <span class="iconfont iconshanchu" v-db-click @click.stop="delMsg(item, '删除话术', index)"></span>
               </div>
             </div>
             <div class="box2" v-else>
-              <Input class="input-box" v-model="item.title" placeholder="输入标题（选填）" style="width: 100%" />
+              <el-input class="input-box" v-model="item.title" placeholder="输入标题（选填）" style="width: 100%" />
               <div class="content">
-                <Input v-model="item.message" type="textarea" :rows="4" placeholder="请输入内容" />
+                <el-input v-model="item.message" type="textarea" :rows="4" placeholder="请输入内容" />
               </div>
               <div class="bom">
                 <div class="select">
-                  <Select v-model="cateId" style="width: 100px" size="small">
-                    <Option v-for="item in sortList" :value="item.id" :key="item.id">{{ item.name }} </Option>
-                  </Select>
+                  <el-select v-model="cateId" style="width: 100px" size="small">
+                    <el-option v-for="item in sortList" :value="item.id" :key="item.id" :label="item.name"></el-option>
+                  </el-select>
                 </div>
                 <div class="btns-box">
-                  <Button @click.stop="item.isEdit = false">取消</Button>
-                  <Button type="primary" @click.stop="updataMsg(item)">保存</Button>
+                  <el-button v-db-click @click.stop="item.isEdit = false">取消</el-button>
+                  <el-button type="primary" v-db-click @click.stop="updataMsg(item)">保存</el-button>
                 </div>
               </div>
             </div>
           </div>
-        </Scroll>
+        </div>
       </div>
     </div>
-    <Modal v-model="isAddSort" :title="maskTitle" width="304" :mask="false" class="class-box" :footer-hide="true">
+    <el-dialog :visible.sync="isAddSort" append-to-body :title="maskTitle" width="304px" class="class-box">
       <div class="item">
         <span>分组名称：</span>
-        <Input v-model="classTitle" placeholder="分组名称" />
+        <el-input v-model="classTitle" placeholder="分组名称" />
       </div>
       <div class="item">
         <span>分组排序：</span>
-        <Input v-model="classSort" placeholder="输入排序" />
+        <el-input v-model="classSort" placeholder="输入排序" />
       </div>
-      <div class="btn">
-        <Button type="primary" style="background: #1890ff; width: 100%" @click="addServiceCate">确定</Button>
-      </div>
-    </Modal>
+      <div class="btn"></div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" v-db-click @click="addServiceCate">确定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -164,7 +171,7 @@ export default {
       },
       isScroll: true,
       page: 1,
-      limit: 10,
+      limit: 15,
       tabCur: 1,
       tabList: [
         {
@@ -223,16 +230,16 @@ export default {
     let self = this;
     this.serviceCate();
     this.$nextTick(() => {
-      this.scroll = new BScroll(this.$refs.wrapper, {
-        mouseWheel: {
-          speed: 20,
-          invert: false,
-          easeTime: 300,
-        },
-        scrollbar: true,
-        disableMouse: true,
-        // and so on
-      });
+      // this.scroll = new BScroll(this.$refs.wrapper, {
+      //   mouseWheel: {
+      //     speed: 20,
+      //     invert: false,
+      //     easeTime: 300,
+      //   },
+      //   scrollbar: true,
+      //   disableMouse: true,
+      //   // and so on
+      // });
     });
   },
   methods: {
@@ -251,6 +258,8 @@ export default {
     },
     // 头部选择
     bindTab(item) {
+      console.log('1122');
+      debugger;
       this.tabCur = item.key;
       this.cateId = '';
       this.sortList = [];
@@ -294,7 +303,7 @@ export default {
       };
       this.$modalSure(delfromData)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.isScroll = true;
           this.page = 1;
           this.list = [];
@@ -302,7 +311,7 @@ export default {
           this.serviceCate();
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     // 获取分类
@@ -351,11 +360,11 @@ export default {
         message: item.message,
       })
         .then((res) => {
-          this.$Message.success('修改成功');
+          this.$message.success('修改成功');
           item.isEdit = false;
         })
         .catch((error) => {
-          this.$Message.error(error.msg);
+          this.$message.error(error.msg);
           item.isEdit = true;
         });
     },
@@ -384,7 +393,7 @@ export default {
           this.addMsg.message = '';
           this.addMsg.cateId = '';
           this.addMsg.isEdit = false;
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           res.data.isEdit = false;
           this.page = 1;
           this.list = [];
@@ -392,7 +401,7 @@ export default {
           this.serviceCate();
         })
         .catch((error) => {
-          this.$Message.error(error.msg);
+          this.$message.error(error.msg);
         });
     },
     // 删除
@@ -407,11 +416,11 @@ export default {
       };
       this.$modalSure(delfromData)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.list.splice(num, 1);
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     // 添加分类
@@ -424,7 +433,7 @@ export default {
           .then((res) => {
             this.classTitle = '';
             this.classSort = '';
-            this.$Message.success(res.msg);
+            this.$message.success(res.msg);
             this.isAddSort = false;
             this.page = 1;
             this.list = [];
@@ -434,7 +443,7 @@ export default {
           .catch((error) => {
             this.classTitle = '';
             this.classSort = '';
-            this.$Message.error(res.msg);
+            this.$message.error(error.msg);
           });
       } else {
         addServiceCate({
@@ -444,7 +453,7 @@ export default {
           .then((res) => {
             this.classTitle = '';
             this.classSort = '';
-            this.$Message.success(res.msg);
+            this.$message.success(res.msg);
             this.isAddSort = false;
             this.page = 1;
             this.list = [];
@@ -454,7 +463,7 @@ export default {
           .catch((error) => {
             this.classTitle = '';
             this.classSort = '';
-            this.$Message.error(res.msg);
+            this.$message.error(error.msg);
           });
       }
     },
@@ -476,41 +485,33 @@ export default {
 };
 </script>
 
-<style lang="stylus" scoped>
+<style lang="scss" scoped>
 .head {
-  padding: 15px 14px 0;
-
   .tab-bar {
     display: flex;
-
     .tab-item {
       margin-right: 24px;
       color: #999;
       font-size: 14px;
       font-weight: 500;
-
       &.on {
         color: #333333;
       }
     }
   }
-
   .search-box {
     margin-top: 15px;
   }
 }
-
 .main {
   display: flex;
   margin-top: 15px;
   height: 365px;
-
   .left-box {
     width: 106px;
     height: 100%;
-    border-right: 1px solid #ECECEC;
+    border-right: 1px solid #ececec;
     overflow: hidden;
-
     .left-item {
       position: relative;
       display: flex;
@@ -520,33 +521,28 @@ export default {
       padding: 0 10px 0 14px;
       font-size: 13px;
       cursor: pointer;
-
       &.on {
-        background: #F0FAFE;
-        color: #1890FF;
-        border-right: 2px solid #1890FF;
-
+        background: var(--prev-color-primary-light-9);
+        color: var(--prev-color-primary);
+        border-right: 2px solid var(--prev-color-primary);
         .iconDot {
           z-index: 1;
           opacity: 1;
         }
       }
-
-      &:nth-child(1).on, &:nth-child(2).on {
+      &:nth-child(1).on,
+      &:nth-child(2).on {
         .iconDot {
           display: none;
         }
       }
-
       .iconaddto {
         font-size: 12px;
       }
-
       .iconDot {
         z-index: -1;
         opacity: 0;
       }
-
       .edit-wrapper {
         z-index: 50;
         position: absolute;
@@ -556,14 +552,12 @@ export default {
         width: 80px;
         box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
         border-radius: 4px;
-
         .edit-item {
           padding: 8px 16px;
           color: #666 !important;
           cursor: pointer;
         }
       }
-
       .edit-bg {
         z-index: 40;
         position: fixed;
@@ -575,26 +569,21 @@ export default {
       }
     }
   }
-
   .right-box {
     flex: 1;
     padding: 0 12px;
     overflow-x: hidden;
-
     .msg-item {
       margin-top: 12px;
       transition: all 0.3s ease;
       cursor: pointer;
-
       .box1 {
         position: relative;
         display: flex;
-
         .txt-box {
           flex: 1;
           font-size: 12px;
           color: #999999;
-
           .title {
             max-width: 370px;
             margin-right: 5px;
@@ -602,7 +591,6 @@ export default {
             font-weight: 700;
           }
         }
-
         .edit-box {
           z-index: -1;
           opacity: 0;
@@ -612,7 +600,6 @@ export default {
           width: 60px;
           height: 30px;
           background: #fff;
-
           .iconfont {
             margin: 0 8px;
             color: #000000;
@@ -621,28 +608,23 @@ export default {
           }
         }
       }
-
       .box2 {
         padding-bottom: 15px;
         border-radius: 5px;
-        background: #F5F5F5;
-
+        background: #f5f5f5;
         .input-box {
-          border-bottom: 1px solid #EEEEEE;
-
-          >>> .ivu-input {
+          border-bottom: 1px solid #eeeeee;
+          ::v-deep .ivu-input {
             background: transparent;
             border: 0;
             border-radius: 0;
           }
         }
-
         .content {
           font-size: 12px;
           padding: 12px 11px 0;
           color: #333333;
         }
-
         .bom {
           display: flex;
           align-items: center;
@@ -656,10 +638,8 @@ export default {
           }
         }
       }
-
       &:hover {
         transition: all 0.3s ease;
-
         .box1 .edit-box {
           z-index: 1;
           opacity: 1;
@@ -667,19 +647,15 @@ export default {
         }
       }
     }
-
     .add-box {
       border-radius: 0;
       margin-bottom: 10px;
-
       .box2 {
         padding-bottom: 0;
         border-radius: 0;
-
         .conBox {
           height: 0;
           overflow: hidden;
-
           &.active {
             animation: mymove 0.4s ease;
             animation-iteration-count: 1;
@@ -690,19 +666,14 @@ export default {
     }
   }
 }
-
 .right-scroll {
-  >>> .ivu-scroll-container .ivu-scroll-loader:nth-child(1) {
-    display: none;
-  }
+  height: 345px;
 }
-
 .class-box {
   .item {
     display: flex;
     align-items: center;
     margin-bottom: 20px;
-
     &:last-child {
       margin-bottom: 0;
     }

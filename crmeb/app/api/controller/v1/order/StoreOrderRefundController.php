@@ -5,6 +5,9 @@ namespace app\api\controller\v1\order;
 use app\Request;
 use app\services\order\StoreOrderRefundServices;
 use app\services\order\StoreOrderServices;
+use think\db\exception\DataNotFoundException;
+use think\db\exception\DbException;
+use think\db\exception\ModelNotFoundException;
 
 class StoreOrderRefundController
 {
@@ -56,9 +59,9 @@ class StoreOrderRefundController
      * @param Request $request
      * @param $uni
      * @return mixed
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function cancelApply(Request $request, $uni)
     {
@@ -72,6 +75,18 @@ class StoreOrderRefundController
         }
         $this->services->update($orderRefund['id'], ['is_cancel' => 1]);
         $this->services->cancelOrderRefundCartInfo((int)$orderRefund['id'], (int)$orderRefund['store_order_id'], $orderRefund);
+
+        //自定义事件-用户取消退款
+        event('CustomEventListener', ['order_refund_cancel', [
+            'uid' => $orderRefund['uid'],
+            'id' => $orderRefund['id'],
+            'store_order_id' => $orderRefund['store_order_id'],
+            'order_id' => $orderRefund['order_id'],
+            'refund_num' => $orderRefund['refund_num'],
+            'refund_price' => $orderRefund['refund_price'],
+            'cancel_time' => date('Y-m-d H:i:s'),
+        ]]);
+
         return app('json')->success(100019);
     }
 

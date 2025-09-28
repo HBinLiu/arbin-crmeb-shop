@@ -1,41 +1,80 @@
 <template>
   <div>
-    <Card :bordered="false" dis-hover class="ivu-mt">
-      <Button type="primary" @click="addType">添加类型</Button>
-      <Table
-        class="mt25"
-        :columns="thead"
+    <el-card :bordered="false" shadow="never" class="ivu-mt">
+      <!-- <el-button type="primary" v-db-click @click="addType">添加类型</el-button> -->
+      <el-table
+        class="mt14"
         :data="tbody"
-        :loading="loading"
-        highlight-row
+        v-loading="loading"
+        highlight-current-row
         no-userFrom-text="暂无数据"
         no-filtered-userFrom-text="暂无筛选结果"
       >
-        <template slot-scope="{ row, index }" slot="is_del">
-          <i-switch
-            v-model="row.is_del"
-            :value="row.is_del"
-            :true-value="0"
-            :false-value="1"
-            @on-change="onchangeIsShow(row)"
-            size="large"
-          >
-            <span slot="open">启用</span>
-            <span slot="close">禁用</span>
-          </i-switch>
-        </template>
-        <template slot-scope="{ row, index }" slot="action">
-          <a href="javascript:" @click="editType(row)">编辑</a>
-          <Divider type="vertical" v-if="row.type !== 'free' && row.type !== 'ever'" />
-          <a v-if="row.type !== 'free' && row.type !== 'ever'" href="javascript:" @click="del(row, '删除类型', index)"
-            >删除</a
-          >
-        </template>
-      </Table>
-    </Card>
-    <Modal v-model="modal" :title="`${rowModelType}${rowEdit && rowEdit.title}会员`" footer-hide @on-cancel="cancel">
-      <form-create v-model="fapi" :rule="rule" @submit="onSubmit"></form-create>
-    </Modal>
+        <el-table-column label="ID" width="80">
+          <template slot-scope="scope">
+            <span>{{ scope.row.id }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="会员名" min-width="130">
+          <template slot-scope="scope">
+            <span>{{ scope.row.title }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="有限期（天）" min-width="130">
+          <template slot-scope="scope">
+            <span>{{ scope.row.vip_day === -1 ? '永久' : scope.row.vip_day }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="原价" min-width="90">
+          <template slot-scope="scope">
+            <span>{{ scope.row.price }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="优惠价" min-width="90">
+          <template slot-scope="scope">
+            <span>{{ scope.row.pre_price }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="是否开启" min-width="100">
+          <template slot-scope="scope">
+            <el-switch
+              :active-value="0"
+              :inactive-value="1"
+              v-model="scope.row.is_del"
+              :value="scope.row.is_del"
+              @change="onchangeIsShow(scope.row)"
+              size="large"
+            >
+            </el-switch>
+          </template>
+        </el-table-column>
+        <el-table-column label="排序" min-width="90">
+          <template slot-scope="scope">
+            <span>{{ scope.row.sort }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" fixed="right" width="170">
+          <template slot-scope="scope">
+            <a href="javascript:" v-db-click @click="editType(scope.row)">编辑</a>
+            <!-- <el-divider direction="vertical" v-if="scope.row.type !== 'free' && scope.row.type !== 'ever'" />
+            <a
+              v-if="scope.row.type !== 'free' && scope.row.type !== 'ever'"
+              href="javascript:"
+              v-db-click @click="del(scope.row, '删除类型', scope.$index)"
+              >删除</a
+            > -->
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
+    <el-dialog
+      :visible.sync="modal"
+      :title="`${rowModelType}${rowEdit && rowEdit.title}会员`"
+      width="540px"
+      @closed="cancel"
+    >
+      <form-create v-if="modal" v-model="fapi" :rule="rule" :option="options" @submit="onSubmit"></form-create>
+    </el-dialog>
   </div>
 </template>
 
@@ -46,48 +85,16 @@ export default {
   name: 'list',
   data() {
     return {
-      thead: [
-        {
-          title: 'ID',
-          key: 'id',
-        },
-        {
-          title: '会员名',
-          key: 'title',
-        },
-        {
-          title: '有限期（天）',
-          key: 'vip_day',
-          render: (h, params) => {
-            return h('span', params.row.vip_day === -1 ? '永久' : params.row.vip_day);
-          },
-        },
-        {
-          title: '原价',
-          key: 'price',
-        },
-        {
-          title: '优惠价',
-          key: 'pre_price',
-        },
-        {
-          title: '排序',
-          key: 'sort',
-        },
-        {
-          title: '是否开启',
-          slot: 'is_del',
-        },
-        {
-          title: '操作',
-          slot: 'action',
-        },
-      ],
       tbody: [],
       loading: false,
       modal: false,
       rowEdit: {},
       rowModelType: '编辑',
+      options: {
+        form: {
+          labelWidth: '100px',
+        },
+      },
       rule: [
         {
           type: 'hidden',
@@ -128,6 +135,10 @@ export default {
             disabled: false,
             type: 'text',
             placeholder: '输入有限期',
+            controls: false,
+          },
+          style: {
+            width: '100%',
           },
           validate: [
             {
@@ -148,6 +159,10 @@ export default {
             min: 0,
             disabled: false,
             placeholder: '输入原价',
+            controls: false,
+          },
+          style: {
+            width: '100%',
           },
           validate: [
             {
@@ -168,6 +183,10 @@ export default {
             min: 0,
             disabled: false,
             placeholder: '输入优惠价',
+            controls: false,
+          },
+          style: {
+            width: '100%',
           },
           validate: [
             {
@@ -189,6 +208,10 @@ export default {
             max: 1000000,
             disabled: false,
             placeholder: '请输入排序',
+            controls: false,
+          },
+          style: {
+            width: '100%',
           },
           validate: [
             {
@@ -224,15 +247,26 @@ export default {
       };
       memberCard(data)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.getMemberShip();
         })
         .catch((err) => {
-          this.$Message.error(err.msg);
+          this.$message.error(err.msg);
         });
     },
     cancel() {
-      this.fapi.resetFields();
+      this.fapi = {
+        id: '',
+        pre_price: null,
+        price: null,
+        sort: null,
+        title: '',
+        type: 'owner',
+        vip_day: null,
+      };
+      this.rule.forEach((e) => {
+        e.value = null;
+      });
     },
     getMemberShip() {
       this.loading = true;
@@ -245,7 +279,7 @@ export default {
         })
         .catch((err) => {
           this.loading = false;
-          this.$Message.error(err.msg);
+          this.$message.error(err.msg);
         });
     },
     addType() {
@@ -255,7 +289,6 @@ export default {
       this.rule[3].props.disabled = false;
       this.rule[5].props.disabled = false;
       this.rowEdit.title = '';
-      // this.cancel();
       this.modal = true;
     },
     del(row, tit, num) {
@@ -268,11 +301,11 @@ export default {
       };
       this.$modalSure(delfromData)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.getMemberShip();
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     editType(row) {
@@ -289,15 +322,7 @@ export default {
                 } else {
                   item.props.disabled = false;
                   item.props.min = 1;
-                  item.validate = [
-                    {
-                      type: 'number',
-                      max: 1000000,
-                      min: 0,
-                      message: '最大只能输入1000000,最小为0',
-                      requred: true,
-                    },
-                  ];
+
                 }
               }
               if (['price'].includes(key)) {
@@ -324,23 +349,15 @@ export default {
       memberShipSave(this.rowEdit.id, formData)
         .then((res) => {
           this.modal = false;
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.getMemberShip();
           this.cancel();
         })
         .catch((err) => {
-          this.$Message.error(err.msg);
+          this.$message.error(err.msg);
         });
     },
   },
 };
 </script>
-<style scoped>
-/deep/ .ivu-modal {
-  top: 20% !important;
-}
-
-/deep/ .ivu-input {
-  width: 80px;
-}
-</style>
+<style lang="scss" scoped></style>

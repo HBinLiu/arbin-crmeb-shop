@@ -37,9 +37,13 @@ class UserLabel extends AuthController
 
     /**
      * 标签列表
+     * @param int $label_cate
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
-    public function index($label_cate = 0)
+    public function index($label_cate = '')
     {
         return app('json')->success($this->services->getList(['label_cate' => $label_cate]));
     }
@@ -60,8 +64,10 @@ class UserLabel extends AuthController
 
     /**
      * 保存标签表单数据
-     * @param int $id
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function save()
     {

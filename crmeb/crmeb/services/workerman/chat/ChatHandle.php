@@ -18,6 +18,8 @@ use app\services\kefu\service\StoreServiceServices;
 use app\services\order\StoreOrderServices;
 use app\services\product\product\StoreProductServices;
 use app\services\user\UserServices;
+use app\services\wechat\WechatKeyServices;
+use app\services\wechat\WechatReplyServices;
 use app\services\wechat\WechatUserServices;
 use app\services\user\UserAuthServices;
 use crmeb\exceptions\AuthException;
@@ -275,7 +277,12 @@ class ChatHandle
             //用户在线，可是没有和当前用户进行聊天，给当前用户发送未读条数
             if (isset($connections[$to_uid])) {
                 $data['recored']['nickname'] = $_userInfo['nickname'];
-                $data['recored']['avatar'] = $_userInfo['avatar'];
+                if (!preg_match('/^https?:\/\//i', $_userInfo['avatar'])) {
+                    // 若不以http/https开头，则拼接站点域名
+                    $data['recored']['avatar'] = sys_config('site_url') . $_userInfo['avatar'];
+                } else {
+                    $data['recored']['avatar'] = $_userInfo['avatar'];
+                }
                 $response->connection($this->service->user()[$to_uid])->send('mssage_num', [
                     'uid' => $uid,
                     'num' => $unMessagesCount,
@@ -306,6 +313,33 @@ class ChatHandle
 
                     Log::error($userInfo['nickname'] . '发送失败' . $e->getMessage());
                 }
+            }
+        }
+        if (!isset($this->service->kefuUser()[$uid])) {
+            //判断是否有自动回复
+            $wechatKeyServices = app()->make(WechatKeyServices::class);
+            $replyId = $wechatKeyServices->value(['keys' => $msn, 'key_type' => 1], 'reply_id');
+            if(!$replyId) $replyId = $wechatKeyServices->value(['keys_like' => $msn, 'key_type' => 1], 'reply_id');
+            if ($replyId) {
+                //查询回复内容
+                $autoReplyData = app()->make(WechatReplyServices::class)->get($replyId)->toArray();
+                $msgData = json_decode($autoReplyData['data'], true);
+                $autoReplyMsn = $autoReplyData['type'] == 'text' ? $msgData['content'] : $msgData['src'];
+                $autoReply['to_uid'] = $uid;
+                $autoReply['msn_type'] = $autoReplyData['type'] == 'text' ? 1 : 3;
+                $autoReply['msn'] = $autoReplyMsn;
+                $autoReply['uid'] = $to_uid;
+                $autoReply['add_time'] = time();
+                $autoReply['is_tourist'] = 0;
+                $autoReply['type'] = 1;
+                $autoReply = $logServices->save($autoReply);
+                $autoReply = $autoReply->toArray();
+                $autoReply['_add_time'] = $autoReply['add_time'];
+                $autoReply['add_time'] = strtotime($autoReply['add_time']);
+                $kefuInfo = app()->make(StoreServiceServices::class)->get(['uid' => $to_uid], ['nickname', 'avatar']);
+                $replyMessagesCount = $logServices->getMessageNum(['uid' => $to_uid, 'to_uid' => $uid, 'type' => 0, 'is_tourist' => $isTourist ? 1 : 0]);
+                $autoReply['recored'] = $serviceRecored->saveRecord($to_uid, $uid, $autoReplyMsn, $formType ?? 0, $autoReplyData['type'] == 'text' ? 1 : 3, $replyMessagesCount, $isTourist, $kefuInfo['nickname'], $kefuInfo['avatar']);
+                $response->connection($this->service->user()[$uid])->send('reply', $autoReply);
             }
         }
     }

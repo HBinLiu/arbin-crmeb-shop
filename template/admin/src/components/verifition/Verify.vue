@@ -3,7 +3,7 @@
     <div :class="mode == 'pop' ? 'verifybox' : ''" :style="{ 'max-width': parseInt(imgSize.width) + 30 + 'px' }">
       <div v-if="mode == 'pop'" class="verifybox-top">
         请完成安全验证
-        <span class="verifybox-close" @click="closeBox">
+        <span class="verifybox-close" v-db-click @click="closeBox">
           <i class="iconfont icon-close" />
         </span>
       </div>
@@ -153,7 +153,6 @@ export default {
       var slider = 'slider' + '-' + s.join('');
       var point = 'point' + '-' + s.join('');
       // 判断下是否存在 slider
-      console.log(localStorage.getItem('slider'));
       if (!localStorage.getItem('slider')) {
         localStorage.setItem('slider', slider);
       }

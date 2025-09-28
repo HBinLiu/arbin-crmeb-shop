@@ -2,9 +2,10 @@
     "name" : "CRMEB标准版",
     "appid" : "__UNI__A3F1ED4",
     "description" : "CRMEB标准版",
-    "versionName" : "4.6.0",
-    "versionCode" : 461,
+    "versionName" : "5.6.2",
+    "versionCode" : 562,
     "transformPx" : false,
+    "sassImplementationName" : "node-sass",
     /* 5+App特有相关 */
     "app-plus" : {
         "usingComponents" : true,
@@ -15,12 +16,20 @@
             "autoclose" : true,
             "delay" : 0
         },
+        "screenOrientation" : [
+            "portrait-primary",
+            "portrait-secondary",
+            "landscape-primary",
+            "landscape-secondary"
+        ],
         /* 模块配置 */
         "modules" : {
             "Payment" : {},
             "Share" : {},
             "VideoPlayer" : {},
-            "OAuth" : {}
+            "OAuth" : {},
+            "Barcode" : {},
+            "Camera" : {}
         },
         "safearea" : {
             "bottom" : {
@@ -173,7 +182,7 @@
     "quickapp" : {},
     /* 小程序特有相关 */
     "mp-weixin" : {
-        "appid" : "wx1234567890",
+        "appid" : "wx3b82801238ca1b57",
         "setting" : {
             "urlCheck" : false,
             "minified" : true,
@@ -182,7 +191,7 @@
         },
         "permission" : {
             "scope.userLocation" : {
-                "desc" : "你的位置信息将用于和门店的距离长度"
+                "desc" : "你的位置信息将用于查看与门店的距离"
             }
         },
         "optimization" : {
@@ -194,7 +203,8 @@
             "onLocationChange",
             "startLocationUpdateBackground",
             "chooseAddress"
-        ]
+        ],
+        "__usePrivacyCheck__" : true
     },
     "mp-alipay" : {
         "usingComponents" : true

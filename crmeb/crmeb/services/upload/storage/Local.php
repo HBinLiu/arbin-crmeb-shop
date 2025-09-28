@@ -42,7 +42,7 @@ class Local extends BaseUpload
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->defaultPath = Config::get('filesystem.disks.' . Config::get('filesystem.default') . '.url');
+//        $this->defaultPath = Config::get('filesystem.disks.' . Config::get('filesystem.default') . '.url');
         $this->waterConfig['watermark_text_font'] = app()->getRootPath() . 'public' . '/statics/font/simsunb.ttf';
     }
 
@@ -113,27 +113,50 @@ class Local extends BaseUpload
     {
         $fileHandle = app()->request->file($file);
         if (!$fileHandle) {
-            return $this->setError('Upload file does not exist');
+            return $this->setError('上传的文件不存在');
         }
         if ($this->validate) {
-            if (!in_array(pathinfo($fileHandle->getOriginalName(), PATHINFO_EXTENSION), $this->validate['fileExt'])) {
-                return $this->setError('Upload fileExt error');
+            if (!in_array(strtolower(pathinfo($fileHandle->getOriginalName(), PATHINFO_EXTENSION)), $this->validate['fileExt'])) {
+                return $this->setError('不合法的文件后缀');
             }
             if (filesize($fileHandle) > $this->validate['filesize']) {
-                return $this->setError('Upload filesize error');
+                return $this->setError('文件过大');
             }
             if (!in_array($fileHandle->getOriginalMime(), $this->validate['fileMime'])) {
-                return $this->setError('Upload fileMine error');
+                return $this->setError('不合法的文件类型');
+            }
+            if (in_array($fileHandle->getOriginalMime(), ['image/x-icon', 'image/png', 'image/gif', 'image/jpeg', 'image/jpg', 'image/webp'])) {
+                $stream = fopen($fileHandle->getPathname(), 'r');
+                $content = (fread($stream, filesize($fileHandle->getPathname())));
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
+                $image = @imagecreatefromstring($content);
+                if ($image === false) {
+                    return $this->setError('文件内容不合法');
+                }
             }
         }
-        if ($realName) {
-            $fileName = Filesystem::putFileAs($this->path, $fileHandle, $fileHandle->getOriginalName());
-        } else {
-            $fileName = Filesystem::putFile($this->path, $fileHandle);
+        $disk = 'public';
+        $path = $this->path;
+        $rule = null;
+        if (in_array($fileHandle->getOriginalMime(), ['application/x-x509-ca-cert', 'application/octet-stream'])) {
+            $disk = 'pem';
+            $path = '';
+            $rule = function () {
+                return md5(microtime(true));
+            };
         }
-        if (!$fileName)
+        $this->defaultPath = Config::get('filesystem.disks.' . $disk . '.url');
+        if ($realName) {
+            $fileName = Filesystem::disk($disk)->putFileAs($path, $fileHandle, $fileHandle->getOriginalName());
+        } else {
+            $fileName = Filesystem::disk($disk)->putFile($path, $fileHandle, $rule);
+        }
+        if (!$fileName) {
             return $this->setError('Upload failure');
-        $filePath = Filesystem::path($fileName);
+        }
+        $filePath = Filesystem::disk($disk)->path($fileName);
         $this->fileInfo->uploadInfo = new File($filePath);
         $this->fileInfo->realName = $fileHandle->getOriginalName();
         $this->fileInfo->fileName = $this->fileInfo->uploadInfo->getFilename();
@@ -150,11 +173,11 @@ class Local extends BaseUpload
 
     /**
      * 文件流上传
-     * @param string $fileContent
+     * @param $fileContent
      * @param string|null $key
      * @return array|bool|mixed|\StdClass
      */
-    public function stream(string $fileContent, string $key = null)
+    public function stream($fileContent, string $key = null)
     {
         if (!$key) {
             $key = $this->saveFileName();
@@ -168,6 +191,7 @@ class Local extends BaseUpload
         $this->fileInfo->uploadInfo = new File($fileName);
         $this->fileInfo->realName = $key;
         $this->fileInfo->fileName = $key;
+        $this->defaultPath = Config::get('filesystem.disks.' . Config::get('filesystem.default') . '.url');
         $this->fileInfo->filePath = $this->defaultPath . '/' . $this->path . '/' . $key;
         if ($this->checkImage(public_path() . $this->fileInfo->filePath) && $this->authThumb) {
             try {
@@ -199,6 +223,7 @@ class Local extends BaseUpload
         $this->downFileInfo->downloadInfo = new File($fileName);
         $this->downFileInfo->downloadRealName = $key;
         $this->downFileInfo->downloadFileName = $key;
+        $this->defaultPath = Config::get('filesystem.disks.' . Config::get('filesystem.default') . '.url');
         $this->downFileInfo->downloadFilePath = $this->defaultPath . '/' . $this->path . '/' . $key;
         return $this->downFileInfo;
     }
@@ -292,6 +317,7 @@ class Local extends BaseUpload
             if ($pathName == $watermark_image) {//不再本地  继续下载
                 [$p, $e] = $this->getFileName($watermark_image);
                 $name = 'water_image_' . md5($watermark_image) . '.' . $e;
+                $this->defaultPath = Config::get('filesystem.disks.' . Config::get('filesystem.default') . '.url');
                 $watermark_image = '.' . $this->defaultPath . '/' . $this->thumbWaterPath . '/' . $name;
                 if (!file_exists($watermark_image)) {
                     try {
@@ -313,7 +339,7 @@ class Local extends BaseUpload
         $savePath = public_path() . $filePath;
         try {
             $Image = Image::open(app()->getRootPath() . 'public' . $filePath);
-            $Image->water($watermark_image, $waterConfig['watermark_position'] ?: 1, $waterConfig['watermark_opacity'])->save($savePath);
+            $Image->water($watermark_image, $waterConfig['watermark_position'] ?: 1, (int)$waterConfig['watermark_opacity'])->save($savePath);
         } catch (\Throwable $e) {
             throw new AdminException($e->getMessage());
         }
@@ -344,7 +370,7 @@ class Local extends BaseUpload
             if (strlen($waterConfig['watermark_text_color']) > 7) {
                 $waterConfig['watermark_text_color'] = substr($waterConfig['watermark_text_color'], 0, 7);
             }
-            $Image->text($waterConfig['watermark_text'], $waterConfig['watermark_text_font'], $waterConfig['watermark_text_size'], $waterConfig['watermark_text_color'], $waterConfig['watermark_position'], [$waterConfig['watermark_x'], $waterConfig['watermark_y'], $waterConfig['watermark_text_angle']])->save($savePath);
+            $Image->text($waterConfig['watermark_text'], $waterConfig['watermark_text_font'], (float)$waterConfig['watermark_text_size'], $waterConfig['watermark_text_color'], $waterConfig['watermark_position'], [$waterConfig['watermark_x'], $waterConfig['watermark_y'], $waterConfig['watermark_text_angle']])->save($savePath);
         } catch (\Throwable $e) {
             throw new AdminException($e->getMessage() . $e->getLine());
         }

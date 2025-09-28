@@ -22,7 +22,7 @@
 								<view class='name line1'>{{cartInfo.store_name}}</view>
 								<view class='num'>x {{cartInfo.total_num}}</view>
 							</view>
-							<view class='attr line1' v-if="cartInfo.attrInfo">{{cartInfo.attrInfo.suk}}
+							<view class='attr line1'>{{cartInfo.suk}}
 							</view>
 							<view class='money font-num'>
 								{{cartInfo.price}}{{$t(`积分`)}}
@@ -55,8 +55,12 @@
 					<view>{{$t(`支付积分`)}}：</view>
 					<view class='conter'>{{cartInfo.total_price}}</view>
 				</view>
+				<view class='item acea-row row-between' v-if="cartInfo.mark">
+					<view>{{$t(`订单备注`)}}：</view>
+					<view class='conter'>{{cartInfo.mark}}</view>
+				</view>
 				<view class='item acea-row row-between' v-if="cartInfo.remark">
-					<view>{{$t(`备注`)}}：</view>
+					<view>{{$t(`商家备注`)}}：</view>
 					<view class='conter'>{{cartInfo.remark}}</view>
 				</view>
 				<view class='item acea-row row-between' v-if="cartInfo.delivery_type === 'express'">
@@ -215,6 +219,11 @@
 			// #endif
 		},
 		methods: {
+			jumpCon(id) {
+				uni.navigateTo({
+					url: `/pages/points_mall/integral_goods_details?id=${id}`
+				})
+			},
 			goGoodCall() {
 				let self = this
 				uni.navigateTo({
@@ -409,15 +418,15 @@
 				uni.showModal({
 					title: this.$t(`确认收货`),
 					content: this.$t(`为保障权益，请收到货确认无误后，再确认收货`),
-					success: function(res) {
+					success: (res) => {
 						if (res.confirm) {
 							orderTake({
 								order_id: that.order_id
 							}).then(res => {
 								return that.$util.Tips({
-									title: this.$t(`操作成功`),
+									title: that.$t(`操作成功`),
 									icon: 'success'
-								}, function() {
+								}, () => {
 									that.getOrderInfo();
 								});
 							}).catch(err => {
@@ -622,7 +631,7 @@
 		text-align: right;
 		display: flex;
 		flex-wrap: wrap;
-		white-space:normal;
+		white-space: normal;
 	}
 
 	.order-details .wrapper .item .conter .copy {

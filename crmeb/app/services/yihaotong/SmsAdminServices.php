@@ -70,7 +70,6 @@ class SmsAdminServices extends BaseServices
             throw new AdminException(400462, ['msg' => $status['msg']]);
         }
         $this->updateSmsConfig($account, $password);
-        CacheService::clear();
         return $status;
     }
 
@@ -120,7 +119,6 @@ class SmsAdminServices extends BaseServices
                         $sms->use($v['id'], $v['templateid']);
                 }
             }
-            CacheService::clear();
             CacheService::set('sms_account', $account);
             return true;
         } else {

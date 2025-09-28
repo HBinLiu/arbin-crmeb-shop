@@ -14,8 +14,6 @@ namespace app\api\controller\v1;
 use app\Request;
 use app\services\message\notice\SmsService;
 use app\services\wechat\WechatServices;
-use think\facade\Cache;
-use app\jobs\TaskJob;
 use think\facade\Config;
 use crmeb\services\CacheService;
 use app\services\user\LoginServices;
@@ -50,14 +48,16 @@ class LoginController
      */
     public function login(Request $request)
     {
-        [$account, $password, $spread] = $request->postMore([
-            'account', 'password', 'spread'
+        [$account, $password, $spread, $agent_id] = $request->postMore([
+            'account', 'password', 'spread', ['agent_id', 0]
         ], true);
-        TaskJob::dispatch('emptyYesterdayAttachment');
         if (!$account || !$password) {
             return app('json')->fail(410000);
         }
-        return app('json')->success(410001, $this->services->login($account, $password, $spread));
+        if (strlen(trim($password)) < 6 || strlen(trim($password)) > 32) {
+            return app('json')->fail(400762);
+        }
+        return app('json')->success(410001, $this->services->login($account, $password, $spread, $agent_id));
     }
 
     /**
@@ -79,7 +79,7 @@ class LoginController
     public function verifyCode()
     {
         $unique = password_hash(uniqid(true), PASSWORD_BCRYPT);
-        Cache::set('sms.key.' . $unique, 0, 300);
+        CacheService::set('sms.key.' . $unique, 0, 300);
         $time = sys_config('verify_expire_time', 1);
         return app('json')->success(['key' => $unique, 'expire_time' => $time]);
     }
@@ -96,7 +96,7 @@ class LoginController
         $key = app('session')->get('captcha.key');
         $uni = $request->get('key');
         if ($uni) {
-            Cache::set('sms.key.cap.' . $uni, $key, 300);
+            CacheService::set('sms.key.cap.' . $uni, $key, 300);
         }
         return $rep;
     }
@@ -111,14 +111,14 @@ class LoginController
     protected function checkCaptcha($uni, string $code): bool
     {
         $cacheName = 'sms.key.cap.' . $uni;
-        if (!Cache::has($cacheName)) {
+        if (!CacheService::has($cacheName)) {
             return false;
         }
-        $key = Cache::get($cacheName);
+        $key = CacheService::get($cacheName);
         $code = mb_strtolower($code, 'UTF-8');
         $res = password_verify($code, $key);
         if ($res) {
-            Cache::delete($cacheName);
+            CacheService::delete($cacheName);
         }
         return $res;
     }
@@ -140,17 +140,37 @@ class LoginController
         ], true);
 
         $keyName = 'sms.key.' . $key;
-        $nowKey = 'sms.' . date('YmdHi');
+        if (!CacheService::has($keyName)) return app('json')->fail(410003);
 
-        if (!Cache::has($keyName)) {
-            return app('json')->fail(410003);
+        // 验证限制
+        // 验证码每分钟发送上限
+        $maxMinuteCountKey = 'sms.minute.' . $phone . date('YmdHi');
+        $minuteCount = 0;
+        if (CacheService::has($maxMinuteCountKey)) {
+            $minuteCount = CacheService::get($maxMinuteCountKey) ?? 0;
+            $maxMinuteCount = Config::get('sms.maxMinuteCount', 5);
+            if ($minuteCount > $maxMinuteCount) return app('json')->fail('同一手机号每分钟最多发送' . $maxMinuteCount . '条');
+
         }
 
-        $total = 1;
-        if (Cache::has($nowKey)) {
-            $total = Cache::get($nowKey);
-            if ($total > Config::get('sms.maxMinuteCount', 20))
-                return app('json')->success(410006);
+        // 验证码单个手机每日发送上限
+        $maxPhoneCountKey = 'sms.phone.' . $phone . '.' . date('Ymd');
+        $phoneCount = 0;
+        if (CacheService::has($maxPhoneCountKey)) {
+            $phoneCount = CacheService::get($maxPhoneCountKey) ?? 0;
+            $maxPhoneCount = Config::get('sms.maxPhoneCount', 20);
+            if ($phoneCount > $maxPhoneCount) return app('json')->fail('同一手机号每天最多发送' . $maxPhoneCount . '条');
+
+        }
+
+        // 验证码单个手机每日发送上限
+        $maxIpCountKey = 'sms.ip.' . app()->request->ip() . '.' . date('Ymd');
+        $ipCount = 0;
+        if (CacheService::has($maxIpCountKey)) {
+            $ipCount = CacheService::get($maxPhoneCountKey) ?? 0;
+            $maxIpCount = Config::get('sms.maxIpCount', 50);
+            if ($ipCount > $maxIpCount) return app('json')->fail('同一IP每天最多发送' . $maxIpCount . '条');
+
         }
 
         //二次验证
@@ -166,10 +186,12 @@ class LoginController
             return app('json')->fail($e->getError());
         }
         $time = sys_config('verify_expire_time', 1);
-        $smsCode = $this->services->verify($services, $phone, $type, $time, app()->request->ip());
+        $smsCode = $this->services->verify($services, $phone, $type, $time);
         if ($smsCode) {
             CacheService::set('code_' . $phone, $smsCode, $time * 60);
-            Cache::set($nowKey, $total, 61);
+            CacheService::set($maxMinuteCountKey, (int)$minuteCount + 1, 61);
+            CacheService::set($maxPhoneCountKey, (int)$phoneCount + 1, 86401);
+            CacheService::set($maxIpCountKey, (int)$ipCount + 1, 86401);
             return app('json')->success(410007);
         } else {
             return app('json')->fail(410008);
@@ -193,14 +215,15 @@ class LoginController
         } catch (ValidateException $e) {
             return app('json')->fail($e->getError());
         }
+        if (strlen(trim($password)) < 6 || strlen(trim($password)) > 32) {
+            return app('json')->fail(400762);
+        }
         $verifyCode = CacheService::get('code_' . $account);
         if (!$verifyCode)
             return app('json')->fail(410009);
         $verifyCode = substr($verifyCode, 0, 6);
         if ($verifyCode != $captcha)
             return app('json')->fail(410010);
-        if (strlen(trim($password)) < 6 || strlen(trim($password)) > 16)
-            return app('json')->fail(410011);
         if (md5($password) == md5('123456')) return app('json')->fail(410012);
 
         $registerStatus = $this->services->register($account, $password, $spread, 'h5');
@@ -226,6 +249,9 @@ class LoginController
         } catch (ValidateException $e) {
             return app('json')->fail($e->getError());
         }
+        if (strlen(trim($password)) < 6 || strlen(trim($password)) > 32) {
+            return app('json')->fail(400762);
+        }
         $verifyCode = CacheService::get('code_' . $account);
         if (!$verifyCode)
             return app('json')->fail(410009);
@@ -233,8 +259,6 @@ class LoginController
         if ($verifyCode != $captcha) {
             return app('json')->fail(410010);
         }
-        if (strlen(trim($password)) < 6 || strlen(trim($password)) > 16)
-            return app('json')->fail(410011);
         if ($password == '123456') return app('json')->fail(410012);
         $resetStatus = $this->services->reset($account, $password);
         if ($resetStatus) return app('json')->success(100001);
@@ -251,7 +275,7 @@ class LoginController
      */
     public function mobile(Request $request)
     {
-        [$phone, $captcha, $spread] = $request->postMore([['phone', ''], ['captcha', ''], ['spread', 0]], true);
+        [$phone, $captcha, $spread, $agent_id] = $request->postMore([['phone', ''], ['captcha', ''], ['spread', 0], ['agent_id', 0]], true);
 
         //验证手机号
         try {
@@ -269,7 +293,7 @@ class LoginController
             return app('json')->fail(410010);
         }
         $user_type = $request->getFromType() ? $request->getFromType() : 'h5';
-        $token = $this->services->mobile($phone, $spread, $user_type);
+        $token = $this->services->mobile($phone, $spread, $user_type, $agent_id);
         if ($token) {
             CacheService::delete('code_' . $phone);
             return app('json')->success(410001, $token);
@@ -504,5 +528,26 @@ class LoginController
         } catch (\Throwable $e) {
             return app('json')->fail(400336);
         }
+    }
+
+    /**
+     * 远程登录接口
+     * @param Request $request
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2024/5/21
+     */
+    public function remoteRegister(Request $request)
+    {
+        [$remote_token] = $request->getMore([
+            ['remote_token', ''],
+        ], true);
+        if ($remote_token == '') return app('json')->success('登录失败', ['get_remote_login_url' => sys_config('get_remote_login_url')]);
+        return app('json')->success('登录成功', $this->services->remoteRegister($remote_token));
     }
 }

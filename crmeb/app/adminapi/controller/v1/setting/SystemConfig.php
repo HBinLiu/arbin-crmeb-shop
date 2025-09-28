@@ -12,9 +12,11 @@ namespace app\adminapi\controller\v1\setting;
 
 use app\adminapi\controller\AuthController;
 use app\Request;
-use app\services\order\StoreOrderServices;
 use app\services\system\config\SystemConfigServices;
 use app\services\system\config\SystemConfigTabServices;
+use app\services\system\SystemPemServices;
+use crmeb\services\CacheService;
+use crmeb\services\easywechat\orderShipping\MiniOrderService;
 use think\facade\App;
 
 /**
@@ -38,16 +40,19 @@ class SystemConfig extends AuthController
 
     /**
      * 显示资源列表
-     *
      * @return \think\Response
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function index()
     {
         $where = $this->request->getMore([
             ['tab_id', 0],
+            ['config_name', ''],
             ['status', -1]
         ]);
-        if (!$where['tab_id']) {
+        if (!$where['tab_id'] && $where['config_name'] == '') {
             return app('json')->fail(100100);
         }
         if ($where['status'] == -1) {
@@ -58,8 +63,11 @@ class SystemConfig extends AuthController
 
     /**
      * 显示创建资源表单页.
-     * @param $type
      * @return \think\Response
+     * @throws \FormBuilder\Exception\FormBuilderException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function create()
     {
@@ -72,7 +80,6 @@ class SystemConfig extends AuthController
 
     /**
      * 保存新建的资源
-     *
      * @return \think\Response
      */
     public function save()
@@ -91,8 +98,11 @@ class SystemConfig extends AuthController
             ['info', ''],
             ['desc', ''],
             ['sort', 0],
+            ['level', 0],
+            ['link_data', []],
             ['status', 0]
         ]);
+        if (is_array($data['config_tab_id'])) $data['config_tab_id'] = end($data['config_tab_id']);
         if (!$data['info']) return app('json')->fail(400274);
         if (!$data['menu_name']) return app('json')->fail(400275);
         if (!$data['desc']) return app('json')->fail(400276);
@@ -113,6 +123,11 @@ class SystemConfig extends AuthController
             if (!$data['parameter']) return app('json')->fail(400283);
             $this->services->valiDateRadioAndCheckbox($data);
         }
+        if ($data['level'] == 1) {
+            if (!$data['link_data']) return app('json')->fail('请选择关联顶级选项');
+            $data['link_id'] = $data['link_data'][0];
+            $data['link_value'] = $data['link_data'][1];
+        }
         $data['value'] = json_encode($data['value']);
         $config = $this->services->getOne(['menu_name' => $data['menu_name']]);
         if ($config) {
@@ -120,7 +135,7 @@ class SystemConfig extends AuthController
         } else {
             $this->services->save($data);
         }
-        \crmeb\services\CacheService::clear();
+        CacheService::clear();
         return app('json')->success(400284);
     }
 
@@ -179,20 +194,27 @@ class SystemConfig extends AuthController
             ['info', ''],
             ['desc', ''],
             ['sort', 0],
+            ['level', 0],
+            ['link_data', []],
             ['status', 0]
         ]);
+        if (is_array($data['config_tab_id'])) $data['config_tab_id'] = end($data['config_tab_id']);
         if (!$this->services->get($id)) {
             return app('json')->fail(100026);
         }
+        if ($data['level'] == 1) {
+            if (!$data['link_data']) return app('json')->fail('请选择关联顶级选项');
+            $data['link_id'] = $data['link_data'][0];
+            $data['link_value'] = $data['link_data'][1];
+        }
         $data['value'] = json_encode($data['value']);
         $this->services->update($id, $data);
-        \crmeb\services\CacheService::clear();
+        CacheService::clear();
         return app('json')->success(100001);
     }
 
     /**
      * 删除指定资源
-     *
      * @param int $id
      * @return \think\Response
      */
@@ -201,7 +223,7 @@ class SystemConfig extends AuthController
         if (!$this->services->delete($id))
             return app('json')->fail(100008);
         else {
-            \crmeb\services\CacheService::clear();
+            CacheService::clear();
             return app('json')->success(100002);
         }
     }
@@ -218,7 +240,7 @@ class SystemConfig extends AuthController
             return app('json')->fail(100100);
         }
         $this->services->update($id, ['status' => $status]);
-        \crmeb\services\CacheService::clear();
+        CacheService::clear();
         return app('json')->success(100014);
     }
 
@@ -307,15 +329,9 @@ class SystemConfig extends AuthController
                 return app('json')->fail(400763);
             }
         }
-
-        //支付接口类型选择，如果有订单就不能再进行切换
-//        if (isset($post['pay_wechat_type'])) {
-//            /** @var StoreOrderServices $orderServices */
-//            $orderServices = app()->make(StoreOrderServices::class);
-//            if ($post['pay_wechat_type'] != -1 && $orderServices->count()) {
-//                return app('json')->fail('支付接口类型已经选择，不能再次进行切换，切换后会导致无法退款等问题。');
-//            }
-//        }
+        if (isset($post['uni_brokerage_price']) && preg_match('/\.[0-9]{2,}[1-9][0-9]*$/', (string)$post['uni_brokerage_price']) > 0) {
+            return app('json')->fail(500029);
+        }
 
         if (isset($post['weixin_ckeck_file'])) {
             $from = public_path() . $post['weixin_ckeck_file'];
@@ -331,9 +347,112 @@ class SystemConfig extends AuthController
             @copy($from, $toHome);
             @copy($from, $toPublic);
         }
-        if(isset($post['reward_integral']) || isset($post['reward_money'])) {
-            if($post['reward_integral'] < 0 || $post['reward_money'] < 0) return app('json')->fail(400558);
+        if (isset($post['reward_integral']) || isset($post['reward_money'])) {
+            if ($post['reward_money'] < 0) return app('json')->fail('赠送余额不能小于0元');
+            if ($post['reward_integral'] < 0) return app('json')->fail('赠送积分不能小于0');
         }
+
+        if (isset($post['sign_give_point'])) {
+            if (!is_int($post['sign_give_point']) || $post['sign_give_point'] < 0) {
+                return app('json')->fail('签到赠送积分请填写大于等于0的整数');
+            }
+        }
+        if (isset($post['sign_give_exp'])) {
+            if ((int)$post['sign_give_exp'] < 0) {
+                return app('json')->fail('签到赠送经验请填写大于等于0的整数');
+            }
+        }
+        if (isset($post['integral_frozen'])) {
+            if (!ctype_digit($post['integral_frozen']) || $post['integral_frozen'] < 0) {
+                return app('json')->fail('积分冻结天数请填写大于等于0的整数');
+            }
+        }
+        if (isset($post['store_free_postage'])) {
+            if (!is_int($post['store_free_postage']) || $post['store_free_postage'] < 0) {
+                return app('json')->fail('满额包邮请填写大于等于0的整数');
+            }
+        }
+        if (isset($post['withdrawal_fee'])) {
+            if ($post['withdrawal_fee'] < 0 || $post['withdrawal_fee'] > 100) {
+                return app('json')->fail('提现手续费范围在0-100之间');
+            }
+        }
+        if (isset($post['routine_auth_type']) && count($post['routine_auth_type']) == 0) {
+            return app('json')->fail('微信和手机号登录开关至少开启一个');
+        }
+        if (isset($post['integral_max_num'])) {
+            if (!ctype_digit($post['integral_max_num']) || $post['integral_max_num'] < 0) {
+                return app('json')->fail('积分抵扣上限请填写大于等于0的整数');
+            }
+        }
+        if (isset($post['customer_phone'])) {
+            if (!ctype_digit($post['customer_phone']) || strlen($post['customer_phone']) > 11) {
+                return app('json')->fail('客服手机号为11位数字');
+            }
+        }
+        if (isset($post['refund_time_available'])) {
+            if (!ctype_digit($post['refund_time_available'])) {
+                return app('json')->fail('售后期限必须为大于0的整数');
+            }
+        }
+        if (isset($post['sms_save_type']) && sys_config('sms_account', '') != '') {
+            return app('json')->success(100001);
+        }
+        if (isset($post['param_filter_data'])) {
+            $post['param_filter_data'] = base64_encode($post['param_filter_data']);
+        }
+        if (isset($post['product_type_config'])) {
+            if (count($post['product_type_config']) == 0) {
+                return app('json')->fail('商品类型至少选择一项');
+            }
+        }
+        if (isset($post['yue_pay_status']) && $post['yue_pay_status'] == 1) {
+            $post['balance_func_status'] = 1;
+        }
+        if (isset($post['pay_weixin_client_cert'])) {
+            $certData = [
+                'type' => 'wechat',
+                'name' => 'pay_weixin_client_cert',
+                'path' => 'cert' . time() . rand(1000, 9999),
+                'content' => $post['pay_weixin_client_cert'] != '' ? file_get_contents($this->getPemPath($post['pay_weixin_client_cert'])) : '',
+            ];
+            $keyData = [
+                'type' => 'wechat',
+                'name' => 'pay_weixin_client_key',
+                'path' => 'key' . time() . rand(1000, 9999),
+                'content' => $post['pay_weixin_client_key'] != '' ? file_get_contents($this->getPemPath($post['pay_weixin_client_key'])) : '',
+            ];
+            $systemPemServices = app()->make(SystemPemServices::class);
+            $systemPemServices->savePem($certData);
+            $systemPemServices->savePem($keyData);
+        }
+
+        if (isset($post['merchant_cert_path'])) {
+            $merchantCertData = [
+                'type' => 'alipay',
+                'name' => 'merchant_cert_path',
+                'path' => 'merchant_cert' . time() . rand(1000, 9999),
+                'content' => $post['merchant_cert_path'] != '' ? file_get_contents($this->getPemPath($post['merchant_cert_path'])) : '',
+            ];
+            $alipayCertData = [
+                'type' => 'alipay',
+                'name' => 'alipay_cert_path',
+                'path' => 'alipay_cert' . time() . rand(1000, 9999),
+                'content' => $post['alipay_cert_path'] != '' ? file_get_contents($this->getPemPath($post['alipay_cert_path'])) : '',
+            ];
+            $alipayRootCertData = [
+                'type' => 'alipay',
+                'name' => 'alipay_root_cert_path',
+                'path' => 'alipay_root_cert' . time() . rand(1000, 9999),
+                'content' => $post['alipay_root_cert_path'] != '' ? file_get_contents($this->getPemPath($post['alipay_root_cert_path'])) : '',
+            ];
+            $systemPemServices = app()->make(SystemPemServices::class);
+            $systemPemServices->savePem($merchantCertData);
+            $systemPemServices->savePem($alipayCertData);
+            $systemPemServices->savePem($alipayRootCertData);
+        }
+
+
         foreach ($post as $k => $v) {
             $config_one = $this->services->getOne(['menu_name' => $k]);
             if ($config_one) {
@@ -342,9 +461,28 @@ class SystemConfig extends AuthController
                 $this->services->update($k, ['value' => json_encode($v)], 'menu_name');
             }
         }
-        \crmeb\services\CacheService::clear();
+        CacheService::clear();
         return app('json')->success(100001);
+    }
 
+    /**
+     * 获取证书文件路径
+     * @param string $path
+     * @return string
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2024/10/21
+     */
+    public function getPemPath(string $path)
+    {
+        if (strstr($path, 'http://') || strstr($path, 'https://')) {
+            $path = parse_url($path)['path'] ?? '';
+        }
+        $path = root_path('runtime/pem') . ltrim($path, '/');
+        if (!file_exists($path)) {
+            $path = public_path('uploads') . ltrim($path, '/');
+        }
+        return $path;
     }
 
     /**
@@ -365,6 +503,7 @@ class SystemConfig extends AuthController
             $config_tab = [];
         } else {
             $config_tab = $services->getConfigTab($pid);
+            if (empty($config_tab)) $config_tab[] = $services->get($pid, ['id', 'id as value', 'title as label', 'pid', 'icon', 'type']);
         }
         return app('json')->success(compact('config_tab'));
     }

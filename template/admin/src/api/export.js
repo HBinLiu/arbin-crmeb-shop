@@ -33,6 +33,17 @@ export function exportOrderList(data) {
 }
 
 /**
+ * 发货订单列表导出
+ */
+export function exportOrderDeliveryList(data) {
+  return request({
+    url: '/export/order_delivery_list',
+    method: 'get',
+    params: data,
+  });
+}
+
+/**
  * 商品列表导出
  */
 export function exportProductList(data) {
@@ -40,6 +51,26 @@ export function exportProductList(data) {
     url: '/export/product_list',
     method: 'get',
     params: data,
+  });
+}
+/**
+ * 商品迁移导出
+ */
+export function exportProductExport(data) {
+  return request({
+    url: '/product/product_export',
+    method: 'get',
+    params: data,
+  });
+}
+/**
+ * 商品迁移导入
+ */
+export function importProductImport(data) {
+  return request({
+    url: '/product/product_import',
+    method: 'post',
+    data,
   });
 }
 

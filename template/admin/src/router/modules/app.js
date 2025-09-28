@@ -8,12 +8,15 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
 
-import BasicLayout from '@/components/main';
+import LayoutMain from '@/layout';
+import setting from '@/setting';
+import { active } from 'sortablejs';
+let routePre = setting.routePre;
 
 const pre = 'app_';
 
 export default {
-  path: '/admin/app',
+  path: routePre + '/app',
   name: 'app',
   header: 'app',
   redirect: {
@@ -22,7 +25,7 @@ export default {
   meta: {
     auth: ['admin-app'],
   },
-  component: BasicLayout,
+  component: LayoutMain,
   children: [
     {
       path: 'wechat/setting/menus/index',
@@ -32,24 +35,6 @@ export default {
         title: '微信菜单',
       },
       component: () => import('@/pages/app/wechat/menus/index'),
-    },
-    // {
-    //   path: 'wechat/setting/template/index',
-    //   name: `${pre}wechatTemplate`,
-    //   meta: {
-    //     auth: ['application-wechat-template'],
-    //     title: '微信模板消息'
-    //   },
-    //   component: () => import('@/pages/app/routine/routineTemplate/index')
-    // },
-    {
-      path: 'wechat/wechat_user/user/index',
-      name: `${pre}wechatUser`,
-      meta: {
-        auth: ['wechat-wechat-user-user'],
-        title: '微信用户',
-      },
-      component: () => import('@/pages/app/wechat/user/user'),
     },
     {
       path: 'wechat/wechat_user/user/tag',
@@ -93,6 +78,7 @@ export default {
       meta: {
         auth: ['wechat-wechat-news-category-save'],
         title: '图文添加',
+        activeMenu: routePre + '/app/wechat/news_category/index',
       },
       component: () => import('@/pages/app/wechat/newsCategory/save'),
     },
@@ -120,6 +106,7 @@ export default {
       meta: {
         auth: ['wechat-wechat-reply-save'],
         title: '关键字添加',
+        activeMenu: routePre + '/app/wechat/reply/keyword',
       },
       component: () => import('@/pages/app/wechat/reply/follow'),
     },
@@ -140,6 +127,15 @@ export default {
         title: '小程序下载',
       },
       component: () => import('@/pages/app/routine/download/index'),
+    },
+    {
+      path: 'routine/link',
+      name: `${pre}routineLink`,
+      meta: {
+        auth: ['routine-link'],
+        title: '小程序链接',
+      },
+      component: () => import('@/pages/app/routine/link/index'),
     },
     {
       path: 'app/version',

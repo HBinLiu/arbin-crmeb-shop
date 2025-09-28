@@ -16,6 +16,7 @@ use app\dao\system\config\SystemConfigDao;
 use app\services\agent\AgentManageServices;
 use app\services\BaseServices;
 use crmeb\exceptions\AdminException;
+use crmeb\services\CacheService;
 use crmeb\services\FileService;
 use crmeb\services\FormBuilder;
 use think\facade\Log;
@@ -77,6 +78,21 @@ class SystemConfigServices extends BaseServices
      * @var array[]
      */
     protected $relatedRule = [
+        'sign_status' => [
+            'son_type' => [
+                'sign_mode' => '',
+                'sign_remind' => [
+                    'son_type' => [
+                        'sign_remind_time' => '',
+                        'sign_remind_type' => '',
+                    ],
+                    'show_value' => 1
+                ],
+                'sign_give_point' => '',
+                'sign_give_exp' => '',
+            ],
+            'show_value' => 1
+        ],
         'brokerage_func_status' => [
             'son_type' => [
                 'store_brokerage_statu' => [
@@ -91,7 +107,8 @@ class SystemConfigServices extends BaseServices
                 'spread_banner' => '',
                 'brokerage_level' => '',
                 'division_status' => '',
-                'member_brokerage' => '',
+                'agent_apply_open' => '',
+                'brokerage_window_switch' => '',
             ],
             'show_value' => 1
         ],
@@ -111,7 +128,6 @@ class SystemConfigServices extends BaseServices
         'member_func_status' => [
             'son_type' => [
                 'order_give_exp' => '',
-                'sign_give_exp' => '',
                 'invite_user_exp' => ''
             ],
             'show_value' => 1
@@ -124,14 +140,6 @@ class SystemConfigServices extends BaseServices
             ],
             'show_value' => 1
         ],
-        'allin_pay_status' => [
-            'son_type' => [
-                'allin_appid' => '',
-                'allin_cusid' => '',
-                'allin_private_key' => '',
-            ],
-            'show_value' => 1
-        ],
         'pay_wechat_type' => [
             'son_type' => [
                 'pay_weixin_key' => '',
@@ -141,7 +149,10 @@ class SystemConfigServices extends BaseServices
         'pay_wechat_type@' => [
             'son_type' => [
                 'pay_weixin_serial_no' => '',
-                'pay_weixin_key_v3' => ''
+                'v3_transfer_scene_id' => '',
+                'pay_weixin_key_v3' => '',
+                'v3_pay_public_key' => '',
+                'v3_pay_public_pem' => '',
             ],
             'show_value' => 1
         ],
@@ -172,6 +183,12 @@ class SystemConfigServices extends BaseServices
         ],
         'customer_type' => [
             'son_type' => [
+                'service_feedback' => '',
+            ],
+            'show_value' => 0
+        ],
+        'customer_type#' => [
+            'son_type' => [
                 'customer_phone' => '',
             ],
             'show_value' => 1
@@ -188,12 +205,26 @@ class SystemConfigServices extends BaseServices
                 'pay_new_weixin_mchid' => ''
             ],
             'show_value' => 1
-        ]
+        ],
+        'mer_type' => [
+            'son_type' => [
+                'pay_sub_merchant_id' => '',
+                'sp_appid' => ''
+            ],
+            'show_value' => 1
+        ],
+        'member_card_status' => [
+            'son_type' => [
+                'member_price_status' => '',
+            ],
+            'show_value' => 1
+        ],
     ];
 
     /**
      * SystemConfigServices constructor.
      * @param SystemConfigDao $dao
+     * @param FormBuilder $builder
      */
     public function __construct(SystemConfigDao $dao, FormBuilder $builder)
     {
@@ -201,6 +232,12 @@ class SystemConfigServices extends BaseServices
         $this->builder = $builder;
     }
 
+    /**
+     * @return array|int[]|string[]
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/04/12
+     */
     public function getSonConfig()
     {
         $sonConfig = [];
@@ -223,6 +260,7 @@ class SystemConfigServices extends BaseServices
      * @param string $configName
      * @param null $default
      * @return mixed|null
+     * @throws \ReflectionException
      */
     public function getConfigValue(string $configName, $default = null)
     {
@@ -234,6 +272,7 @@ class SystemConfigServices extends BaseServices
      * 获取全部配置
      * @param array $configName
      * @return array
+     * @throws \ReflectionException
      */
     public function getConfigAll(array $configName = [])
     {
@@ -256,8 +295,9 @@ class SystemConfigServices extends BaseServices
         $list = $this->dao->getConfigList($where, $page, $limit);
         $count = $this->dao->count($where);
         $tidy_srr = [];
+        $configTabList = app()->make(SystemConfigTabServices::class)->getColumn([], 'title', 'id');
         foreach ($list as &$item) {
-            $item['value'] = $item['value'] ? json_decode($item['value'], true) ?: '' : '';
+            $item['value'] = $item['value'] ? (json_decode($item['value'], true) ?: '') : '';
             if ($item['type'] == 'radio' || $item['type'] == 'checkbox') {
                 $item['value'] = $this->getRadioOrCheckboxValueInfo($item['menu_name'], $item['value']);
             }
@@ -273,8 +313,37 @@ class SystemConfigServices extends BaseServices
                 }
                 $item['value'] = $tidy_srr;
             }
+            if ($item['level'] == 1) {
+                $item['link_data'] = $this->getLinkData($item['link_id'], $item['link_value']);
+            }
+            $item['config_tab_name'] = $configTabList[$item['config_tab_id']] ?? '';
         }
         return compact('count', 'list');
+    }
+
+    /**
+     * 获取关联的值
+     * @param $id
+     * @param $value
+     * @return string
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2024/5/31
+     */
+    public function getLinkData($id, $value)
+    {
+        $info = $this->dao->get($id);
+        if (!$info) return '';
+        $parameter = explode("\n", $info['parameter']);
+        $result = [];
+        foreach ($parameter as $item) {
+            $parts = explode('=>', $item);
+            $result[$parts[0]] = $parts[1];
+        }
+        return $info['info'] . '/' . $result[$value];
     }
 
     /**
@@ -344,7 +413,7 @@ class SystemConfigServices extends BaseServices
         switch ($type) {
             case 'number':
                 $data['value'] = isset($data['value']) ? json_decode($data['value'], true) : 0;
-                $formbuider[] = $this->builder->number($data['menu_name'], $data['info'], (float)$data['value'])->appendRule('suffix', [
+                $formbuider[] = $this->builder->number($data['menu_name'], $data['info'], (float)$data['value'])->controls(false)->appendRule('suffix', [
                     'type' => 'div',
                     'class' => 'tips-info',
                     'domProps' => ['innerHTML' => $data['desc']]
@@ -352,6 +421,22 @@ class SystemConfigServices extends BaseServices
                 break;
             case 'dateTime':
                 $formbuider[] = $this->builder->dateTime($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
+                    'type' => 'div',
+                    'class' => 'tips-info',
+                    'domProps' => ['innerHTML' => $data['desc']]
+                ]);
+                break;
+            case 'date':
+                $data['value'] = json_decode($data['value'], true) ?: '';
+                $formbuider[] = $this->builder->date($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
+                    'type' => 'div',
+                    'class' => 'tips-info',
+                    'domProps' => ['innerHTML' => $data['desc']]
+                ]);
+                break;
+            case 'time':
+                $data['value'] = json_decode($data['value'], true) ?: '';
+                $formbuider[] = $this->builder->time($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
                     'type' => 'div',
                     'class' => 'tips-info',
                     'domProps' => ['innerHTML' => $data['desc']]
@@ -367,11 +452,19 @@ class SystemConfigServices extends BaseServices
                 break;
             default:
                 $data['value'] = isset($data['value']) ? json_decode($data['value'], true) : '';
-                $formbuider[] = $this->builder->input($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
-                    'type' => 'div',
-                    'class' => 'tips-info',
-                    'domProps' => ['innerHTML' => $data['desc']]
-                ])->col(13);
+                if ($data['menu_name'] == 'api' || $data['menu_name'] == 'routine_api') {
+                    $formbuider[] = $this->builder->input($data['menu_name'], $data['info'], strpos($data['value'], 'http') === false ? sys_config('site_url') . $data['value'] : $data['value'])->appendRule('suffix', [
+                        'type' => 'div',
+                        'class' => 'tips-info',
+                        'domProps' => ['innerHTML' => $data['desc']]
+                    ])->col(13)->readonly(true);
+                } else {
+                    $formbuider[] = $this->builder->input($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
+                        'type' => 'div',
+                        'class' => 'tips-info',
+                        'domProps' => ['innerHTML' => $data['desc']]
+                    ])->col(13);
+                }
                 break;
         }
         return $formbuider;
@@ -385,6 +478,7 @@ class SystemConfigServices extends BaseServices
     public function createTextareaForm(array $data)
     {
         $data['value'] = json_decode($data['value'], true) ?: '';
+        if ($data['menu_name'] == 'param_filter_data') $data['value'] = base64_decode($data['value']);
         $formbuider[] = $this->builder->textarea($data['menu_name'], $data['info'], $data['value'])->placeholder($data['desc'])->appendRule('suffix', [
             'type' => 'div',
             'class' => 'tips-info',
@@ -400,7 +494,7 @@ class SystemConfigServices extends BaseServices
      * @param array $control_two
      * @return array
      */
-    public function createRadioForm(array $data, $control = [], $control_two = [])
+    public function createRadioForm(array $data, $control = [], $control_two = [], $control_three = [])
     {
         $formbuider = [];
         $data['value'] = json_decode($data['value'], true) ?: '0';
@@ -410,10 +504,12 @@ class SystemConfigServices extends BaseServices
             foreach ($parameter as $v) {
                 if (strstr($v, $this->cuttingStr) !== false) {
                     $pdata = explode($this->cuttingStr, $v);
-                    $options[] = ['label' => $pdata[1], 'value' => (int)$pdata[0]];
+                    $res = preg_match('/^[0-9]$/', $pdata[0]);
+                    $options[] = ['label' => $pdata[1], 'value' => $res ? (int)$pdata[0] : $pdata[0]];
                 }
             }
-            $formbuider[] = $radio = $this->builder->radio($data['menu_name'], $data['info'], (int)$data['value'])->options($options)->appendRule('suffix', [
+            $res = preg_match('/^[0-9]$/', $data['value']);
+            $formbuider[] = $radio = $this->builder->radio($data['menu_name'], $data['info'], $res ? (int)$data['value'] : $data['value'])->options($options)->appendRule('suffix', [
                 'type' => 'div',
                 'class' => 'tips-info',
                 'domProps' => ['innerHTML' => $data['desc']]
@@ -423,6 +519,9 @@ class SystemConfigServices extends BaseServices
             }
             if ($control_two && isset($data['show_value2'])) {
                 $radio->appendControl($data['show_value2'] ?? 2, is_array($control_two) ? $control_two : [$control_two]);
+            }
+            if ($control_three && isset($data['show_value3'])) {
+                $radio->appendControl($data['show_value3'] ?? 3, is_array($control_three) ? $control_three : [$control_three]);
             }
             return $formbuider;
         }
@@ -441,8 +540,8 @@ class SystemConfigServices extends BaseServices
             case 1:
                 $data['value'] = json_decode($data['value'], true) ?: '';
                 if ($data['value'] != '') $data['value'] = set_file_url($data['value']);
-                $formbuider[] = $this->builder->frameImage($data['menu_name'], $data['info'], $this->url('admin/widget.images/index', ['fodder' => $data['menu_name']], true), $data['value'])
-                    ->icon('ios-image')->width('950px')->height('505px')->modal(['footer-hide' => true])->appendRule('suffix', [
+                $formbuider[] = $this->builder->frameImage($data['menu_name'], $data['info'], $this->url(config('app.admin_prefix', 'admin') . '/widget.images/index', ['fodder' => $data['menu_name']], true), $data['value'])
+                    ->icon('el-icon-picture-outline')->width('950px')->height('560px')->Props(['footer' => false, 'modalTitle' => '预览'])->appendRule('suffix', [
                         'type' => 'div',
                         'class' => 'tips-info',
                         'domProps' => ['innerHTML' => $data['desc']]
@@ -452,8 +551,8 @@ class SystemConfigServices extends BaseServices
                 $data['value'] = json_decode($data['value'], true) ?: [];
                 if ($data['value'])
                     $data['value'] = set_file_url($data['value']);
-                $formbuider[] = $this->builder->frameImages($data['menu_name'], $data['info'], $this->url('admin/widget.images/index', ['fodder' => $data['menu_name'], 'type' => 'many', 'maxLength' => 5], true), $data['value'])
-                    ->maxLength(5)->icon('ios-images')->width('950px')->height('505px')->modal(['footer-hide' => true])
+                $formbuider[] = $this->builder->frameImages($data['menu_name'], $data['info'], $this->url(config('app.admin_prefix', 'admin') . '/widget.images/index', ['fodder' => $data['menu_name'], 'type' => 'many', 'maxLength' => 5], true), $data['value'])
+                    ->maxLength(5)->icon('el-icon-picture-outline')->width('950px')->height('560px')->Props(['footer' => false, 'modalTitle' => '预览'])
                     ->appendRule('suffix', [
                         'type' => 'div',
                         'class' => 'tips-info',
@@ -533,6 +632,25 @@ class SystemConfigServices extends BaseServices
     }
 
     /**
+     * 开关选择
+     * @param $data
+     * @return array
+     * @author: 吴汐
+     * @email: 442384644@qq.com
+     * @date: 2023/9/6
+     */
+    public function createSwitchForm($data)
+    {
+        $data['value'] = json_decode($data['value'], true) ?: '';
+        $formbuider[] = $this->builder->switches($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
+            'type' => 'div',
+            'class' => 'tips-info',
+            'domProps' => ['innerHTML' => $data['desc']]
+        ])->col(13);
+        return $formbuider;
+    }
+
+    /**
      * 创建颜色选择器
      * @param array $data
      * @return mixed
@@ -574,22 +692,20 @@ class SystemConfigServices extends BaseServices
 
     /**
      * 获取系统配置表单
-     * @param int $id
-     * @param array $formData
+     * @param $data
+     * @param bool $control
+     * @param array $controle_two
      * @return array
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \FormBuilder\Exception\FormBuilderException
      */
-
-    public function formTypeShine($data, $control = false, $controle_two = [])
+    public function formTypeShine($data, $control = false, $controle_two = [], $controle_three = [])
     {
 
         switch ($data['type']) {
             case 'text'://文本框
                 return $this->createTextForm($data['input_type'], $data);
             case 'radio'://单选框
-                return $this->createRadioForm($data, $control, $controle_two);
+                return $this->createRadioForm($data, $control, $controle_two, $controle_three);
             case 'textarea'://多行文本框
                 return $this->createTextareaForm($data);
             case 'upload'://文件上传
@@ -600,6 +716,8 @@ class SystemConfigServices extends BaseServices
                 return $this->createSelectForm($data);
             case 'color':
                 return $this->createColorForm($data);
+            case 'switch'://开关
+                return $this->createSwitchForm($data);
         }
     }
 
@@ -637,8 +755,8 @@ class SystemConfigServices extends BaseServices
         if (!$list) return [];
         $list = array_combine(array_column($list, 'menu_name'), $list);
         $formbuider = [];
-        $relateRule = $this->relatedRule;
         $sonConfig = $this->getSonConfig();
+        $sonConfig = array_merge($sonConfig, $this->dao->getColumn(['level' => 1], 'menu_name'));
         foreach ($list as $key => $data) {
             if (in_array($key, $sonConfig)) {
                 continue;
@@ -648,7 +766,48 @@ class SystemConfigServices extends BaseServices
                     $formbuider = array_merge($formbuider, $this->createTextForm($data['input_type'], $data));
                     break;
                 case 'radio'://单选框
+                    $relateRule = $this->relatedRule;
                     $builder = [];
+                    if (!isset($relateRule[$key])) {
+                        $relateRule = [];
+                        $sonData = $this->dao->getColumn(['level' => 1, 'link_id' => $data['id']], 'menu_name,link_value');
+                        $sonValue = [];
+                        foreach ($sonData as $sv) {
+                            $sonValue[$sv['link_value']][] = $sv['menu_name'];
+                        }
+                        $i = 0;
+                        foreach ($sonValue as $pk => $pv) {
+                            $label = $data['menu_name'];
+                            if ($i == 1) $label = $data['menu_name'] . '@';
+                            if ($i == 2) $label = $data['menu_name'] . '#';
+                            $relateRule[$label]['show_value'] = (int)$pk;
+                            foreach ($pv as $pvv) {
+                                $relateRule[$label]['son_type'][$pvv] = '';
+                            }
+                            $i++;
+                        }
+                    } else {
+                        $sonData = $this->dao->getColumn(['level' => 1, 'link_id' => $data['id']], 'menu_name,link_value');
+                        if ($sonData) {
+                            $sonValue = [];
+                            foreach ($sonData as $sv) {
+                                $sonValue[$sv['link_value']][] = $sv['menu_name'];
+                            }
+                            $i = 0;
+                            foreach ($sonValue as $pk => $pv) {
+                                $label = $data['menu_name'];
+                                if ($i == 1) $label = $data['menu_name'] . '@';
+                                if ($i == 2) $label = $data['menu_name'] . '#';
+                                if (!isset($relateRule[$label])) {
+                                    $relateRule[$label]['show_value'] = (int)$pk;
+                                }
+                                foreach ($pv as $pvv) {
+                                    $relateRule[$label]['son_type'][$pvv] = '';
+                                }
+                                $i++;
+                            }
+                        }
+                    }
                     if (isset($relateRule[$key])) {
                         $role = $relateRule[$key];
                         $data['show_value'] = $role['show_value'];
@@ -676,7 +835,19 @@ class SystemConfigServices extends BaseServices
                                         }
                                     }
                                 }
-                                $builder[] = $this->formTypeShine($son_data, $son_build, $son_build_two)[0];
+                                $son_build_three = [];
+                                if (isset($role['son_type'][$sk . '#'])) {
+                                    $son_type_three = $role['son_type'][$sk . '#'];
+                                    $son_data['show_value3'] = $son_type_three['show_value'];
+                                    if (isset($son_type_three['son_type'])) {
+                                        foreach ($son_type_three['son_type'] as $ssk => $ssv) {
+                                            if (isset($list[$ssk]['menu_name']) && $list[$ssk]['menu_name'] == 'watermark_text_color') $list[$ssk]['type'] = 'color';
+                                            $son_build_three[] = $this->formTypeShine($list[$ssk])[0];
+                                            unset($list[$ssk]);
+                                        }
+                                    }
+                                }
+                                $builder[] = $this->formTypeShine($son_data, $son_build, $son_build_two, $son_build_three)[0];
                                 unset($list[$sk]);
                             }
                         }
@@ -692,7 +863,17 @@ class SystemConfigServices extends BaseServices
                             $builder_two[] = $this->formTypeShine($son_data)[0];
                         }
                     }
-                    $formbuider = array_merge($formbuider, $this->createRadioForm($data, $builder, $builder_two));
+                    $builder_three = [];
+                    if (isset($relateRule[$key . '#'])) {
+                        $role = $relateRule[$key . '#'];
+                        $data['show_value3'] = $role['show_value'];
+                        foreach ($role['son_type'] as $sk => $sv) {
+                            $son_data = $list[$sk];
+                            $son_data['show_value'] = $role['show_value'];
+                            $builder_three[] = $this->formTypeShine($son_data)[0];
+                        }
+                    }
+                    $formbuider = array_merge($formbuider, $this->createRadioForm($data, $builder, $builder_two, $builder_three));
                     break;
                 case 'textarea'://多行文本框
                     $formbuider = array_merge($formbuider, $this->createTextareaForm($data));
@@ -705,6 +886,9 @@ class SystemConfigServices extends BaseServices
                     break;
                 case 'select'://多选框
                     $formbuider = array_merge($formbuider, $this->createSelectForm($data));
+                    break;
+                case 'switch'://开关
+                    $formbuider = array_merge($formbuider, $this->createSwitchForm($data));
                     break;
             }
         }
@@ -743,6 +927,9 @@ class SystemConfigServices extends BaseServices
                     break;
                 case 'select'://多选框
                     $formbuider = array_merge($formbuider, $this->createSelectForm($data));
+                    break;
+                case 'switch'://开关
+                    $formbuider = array_merge($formbuider, $this->createSwitchForm($data));
                     break;
             }
         }
@@ -804,6 +991,9 @@ class SystemConfigServices extends BaseServices
                     case 'select'://多选框
                         $formbuider = array_merge($formbuider, $this->createSelectForm($data));
                         break;
+                    case 'switch'://开关
+                        $formbuider = array_merge($formbuider, $this->createSwitchForm($data));
+                        break;
                 }
             }
         }
@@ -812,6 +1002,7 @@ class SystemConfigServices extends BaseServices
 
     /**
      * 系统配置form表单创建
+     * @param $url
      * @param int $tabId
      * @return array
      * @throws \FormBuilder\Exception\FormBuilderException
@@ -881,9 +1072,18 @@ class SystemConfigServices extends BaseServices
         /** @var SystemConfigTabServices $service */
         $service = app()->make(SystemConfigTabServices::class);
         $formbuider = [];
+        $linkData = $this->linkData($menu['config_tab_id']);
+        $formbuider[] = $this->builder->radio('level', '联动显示', $menu['level'])->options([['value' => 0, 'label' => '否'], ['value' => 1, 'label' => '是']])->appendRule('suffix', [
+            'type' => 'div',
+            'class' => 'tips-info',
+            'domProps' => ['innerHTML' => '否：默认正常展示此配置；是：此配置默认隐藏，当选中下方对应配置的值时，此配置才会显示']
+        ])->appendControl(1, [
+            $this->builder->cascader('link_data', '关联配置/值', [$menu['link_id'], $menu['link_value']])->options($linkData)->props(['props' => ['multiple' => false, 'checkStrictly' => false, 'emitPath' => true]])->style(['width' => '100%']),
+        ]);
         $formbuider[] = $this->builder->input('menu_name', '字段变量', $menu['menu_name'])->disabled(1);
         $formbuider[] = $this->builder->hidden('type', $menu['type']);
-        $formbuider[] = $this->builder->select('config_tab_id', '分类', (int)$menu['config_tab_id'])->setOptions($service->getSelectForm());
+        [$configTabList, $data] = $service->getConfigTabListForm((int)($menu['config_tab_id'] ?? 0));
+        $formbuider[] = $this->builder->cascader('config_tab_id', '分类', $data)->options($configTabList)->filterable(true)->props(['props' => ['multiple' => false, 'checkStrictly' => true, 'emitPath' => true]])->style(['width' => '100%']);
         $formbuider[] = $this->builder->input('info', '配置名称', $menu['info'])->autofocus(1);
         $formbuider[] = $this->builder->input('desc', '配置简介', $menu['desc']);
         switch ($menu['type']) {
@@ -891,14 +1091,16 @@ class SystemConfigServices extends BaseServices
                 $menu['value'] = json_decode($menu['value'], true);
                 $formbuider[] = $this->builder->select('input_type', '类型', $menu['input_type'])->setOptions([
                     ['value' => 'input', 'label' => '文本框']
-                    , ['value' => 'dateTime', 'label' => '时间']
+                    , ['value' => 'dateTime', 'label' => '日期时间']
+                    , ['value' => 'date', 'label' => '日期']
+                    , ['value' => 'time', 'label' => '时间']
                     , ['value' => 'color', 'label' => '颜色']
                     , ['value' => 'number', 'label' => '数字']
                 ]);
                 //输入框验证规则
                 $formbuider[] = $this->builder->input('value', '默认值', $menu['value']);
                 if (!empty($menu['required'])) {
-                    $formbuider[] = $this->builder->number('width', '文本框宽(%)', (int)$menu['width']);
+                    $formbuider[] = $this->builder->number('width', '文本框宽', (int)$menu['width']);
                     $formbuider[] = $this->builder->input('required', '验证规则', $menu['required'])->placeholder('多个请用,隔开例如：required:true,url:true');
                 }
                 break;
@@ -907,8 +1109,8 @@ class SystemConfigServices extends BaseServices
                 //多行文本
                 if (!empty($menu['high'])) {
                     $formbuider[] = $this->builder->textarea('value', '默认值', $menu['value'])->rows(5);
-                    $formbuider[] = $this->builder->number('width', '文本框宽(%)', (int)$menu['width']);
-                    $formbuider[] = $this->builder->number('high', '多行文本框高(%)', (int)$menu['high']);
+                    $formbuider[] = $this->builder->number('width', '文本框宽', (int)$menu['width']);
+                    $formbuider[] = $this->builder->number('high', '多行文本框高', (int)$menu['high']);
                 } else {
                     $formbuider[] = $this->builder->input('value', '默认值', $menu['value']);
                 }
@@ -933,6 +1135,9 @@ class SystemConfigServices extends BaseServices
                 if (!empty($menu['upload_type'])) {
                     $formbuider[] = $this->builder->radio('upload_type', '上传类型', $menu['upload_type'])->options([['value' => 1, 'label' => '单图'], ['value' => 2, 'label' => '多图'], ['value' => 3, 'label' => '文件']]);
                 }
+                break;
+            case 'switch':
+                $formbuider = array_merge($formbuider, $this->createSwitchForm($menu));
                 break;
         }
         $formbuider[] = $this->builder->number('sort', '排序', (int)$menu['sort']);
@@ -970,7 +1175,9 @@ class SystemConfigServices extends BaseServices
     {
         return [
             ['value' => 'input', 'label' => '文本框']
-            , ['value' => 'dateTime', 'label' => '时间']
+            , ['value' => 'dateTime', 'label' => '日期时间']
+            , ['value' => 'date', 'label' => '日期']
+            , ['value' => 'time', 'label' => '时间']
             , ['value' => 'color', 'label' => '颜色']
             , ['value' => 'number', 'label' => '数字']
         ];
@@ -981,6 +1188,10 @@ class SystemConfigServices extends BaseServices
      * @param int $type
      * @param int $tab_id
      * @return array
+     * @throws \FormBuilder\Exception\FormBuilderException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function createFormRule(int $type, int $tab_id): array
     {
@@ -995,14 +1206,14 @@ class SystemConfigServices extends BaseServices
                 $form_type = 'text';
                 $info_type = $this->builder->select('input_type', '类型')->setOptions($this->textType());
                 $parameter[] = $this->builder->input('value', '默认值');
-                $parameter[] = $this->builder->number('width', '文本框宽(%)', 100);
+                $parameter[] = $this->builder->number('width', '文本框宽', 100);
                 $parameter[] = $this->builder->input('required', '验证规则')->placeholder('多个请用,隔开例如：required:true,url:true');
                 break;
             case 1://多行文本框
                 $form_type = 'textarea';
                 $parameter[] = $this->builder->textarea('value', '默认值');
-                $parameter[] = $this->builder->number('width', '文本框宽(%)', 100);
-                $parameter[] = $this->builder->number('high', '多行文本框高(%)', 5);
+                $parameter[] = $this->builder->number('width', '文本框宽', 100);
+                $parameter[] = $this->builder->number('high', '多行文本框高', 5);
                 break;
             case 2://单选框
                 $form_type = 'radio';
@@ -1021,21 +1232,60 @@ class SystemConfigServices extends BaseServices
                 $form_type = 'select';
                 $parameter[] = $this->builder->textarea('parameter', '配置参数')->placeholder("参数方式例如:\n1=>白色\n2=>红色\n3=>黑色");
                 break;
+            case 6://开关
+                $form_type = 'switch';
+                $parameter[] = $this->builder->switches('value', '默认');
+                break;
         }
         if ($form_type) {
             $formbuider[] = $this->builder->hidden('type', $form_type);
-            $formbuider[] = $this->builder->select('config_tab_id', '分类', $tab_id)->setOptions($service->getSelectForm());
+            [$configTabList, $data] = $service->getConfigTabListForm((int)($tab_id ?? 0));
+            $linkData = $this->linkData($tab_id);
+            $formbuider[] = $this->builder->radio('level', '联动显示', 0)->options([['value' => 0, 'label' => '否'], ['value' => 1, 'label' => '是']])->appendRule('suffix', [
+                'type' => 'div',
+                'class' => 'tips-info',
+                'domProps' => ['innerHTML' => '否：默认正常展示此配置；是：此配置默认隐藏，当选中下方对应配置的值时，此配置才会显示']
+            ])->appendControl(1, [
+                $this->builder->cascader('link_data', '关联配置/值')->options($linkData)->props(['props' => ['multiple' => false, 'checkStrictly' => false, 'emitPath' => true]])->style(['width' => '100%']),
+            ]);
+            $formbuider[] = $this->builder->cascader('config_tab_id', '分类', $data)->options($configTabList)->filterable(true)->props(['props' => ['multiple' => false, 'checkStrictly' => true, 'emitPath' => false]])->style(['width' => '100%']);
             if ($info_type) {
                 $formbuider[] = $info_type;
             }
             $formbuider[] = $this->builder->input('info', '配置名称')->autofocus(1);
             $formbuider[] = $this->builder->input('menu_name', '字段变量')->placeholder('例如：site_url');
-            $formbuider[] = $this->builder->input('desc', '配置简介');
+            $formbuider[] = $this->builder->input('desc', '表单说明');
             $formbuider = array_merge($formbuider, $parameter);
             $formbuider[] = $this->builder->number('sort', '排序', 0);
+
             $formbuider[] = $this->builder->radio('status', '状态', 1)->options($this->formStatus());
         }
         return create_form('添加字段', $formbuider, $this->url('/setting/config'), 'POST');
+    }
+
+    /**
+     * 根据指定的标签ID，链接数据并以特定格式返回。
+     * @param $tab_id
+     * @return array
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2024/5/30
+     */
+    public function linkData($tab_id)
+    {
+        $linkData = $this->selectList(['config_tab_id' => $tab_id, 'type' => 'radio', 'level' => 0], 'info as label,id as value,parameter')->toArray();
+        foreach ($linkData as &$item) {
+            $parameter = [];
+            $parameter = explode("\n", $item['parameter']);
+            foreach ($parameter as $pv) {
+                $pvArr = explode('=>', $pv);
+                $item['children'][] = [
+                    'label' => $pvArr[1],
+                    'value' => (int)$pvArr[0]
+                ];
+            }
+        }
+        return $linkData;
     }
 
     /**
@@ -1114,7 +1364,8 @@ class SystemConfigServices extends BaseServices
         }
     }
 
-    /**保存平台电子面单打印信息
+    /**
+     * 保存平台电子面单打印信息
      * @param array $data
      * @return bool
      */
@@ -1131,7 +1382,7 @@ class SystemConfigServices extends BaseServices
         foreach ($data as $key => $value) {
             $this->dao->update(['menu_name' => 'config_export_' . $key], ['value' => json_encode($value)]);
         }
-        \crmeb\services\CacheService::clear();
+        CacheService::clear();
         return true;
     }
 
@@ -1148,7 +1399,7 @@ class SystemConfigServices extends BaseServices
             if ($banner) {
                 $banner = array_column($banner, 'pic');
                 $this->dao->update(['menu_name' => 'spread_banner'], ['value' => json_encode($banner)]);
-                \crmeb\services\CacheService::clear();
+                CacheService::clear();
             }
         }
         return $banner;

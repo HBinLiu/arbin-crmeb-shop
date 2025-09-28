@@ -35,6 +35,16 @@
 								<view class='line'></view>
 							</view>
 							<view class='list acea-row'>
+								<navigator hover-class='none'
+									:url='"/pages/goods/goods_list/index?cid="+item.id+"&title="+item.cate_name'
+									class='item acea-row row-column row-middle'>
+									<view class='picture'>
+										<easy-loadimage mode="widthFix" :image-src="item.pic || defimg">
+										</easy-loadimage>
+										<!-- <image src="/static/images/sort-img.png" v-else></image> -->
+									</view>
+									<view class='name line1'>{{$t(`全部商品`)}}</view>
+								</navigator>
 								<block v-for="(itemn,indexn) in item.children" :key="indexn">
 									<navigator hover-class='none'
 										:url='"/pages/goods/goods_list/index?sid="+itemn.id+"&title="+itemn.cate_name'
@@ -53,8 +63,6 @@
 				</scroll-view>
 			</view>
 		</view>
-		<tabBar v-if="!is_diy" :pagePath="'/pages/goods_cate/goods_cate'"></tabBar>
-		<pageFooter v-else></pageFooter>
 	</view>
 </template>
 
@@ -71,15 +79,14 @@
 		getNavigation
 	} from '@/api/public.js'
 	import pageFooter from '@/components/pageFooter/index.vue'
-	import tabBar from "@/pages/index/visualization/components/tabBar.vue";
 	const app = getApp();
 	export default {
 		components: {
-			pageFooter,
-			tabBar
+			pageFooter
 		},
 		data() {
 			return {
+				defimg: require('@/static/images/all_cat.png'),
 				navlist: [],
 				productList: [],
 				navActive: 0,
@@ -118,7 +125,10 @@
 			let routes = getCurrentPages();
 			let curRoute = routes[routes.length - 1].route
 			this.activeRouter = '/' + curRoute
-			this.getAllCategory();
+			!that.productList.length && this.getAllCategory(1);
+			uni.$on('uploadCatData', () => {
+				this.getAllCategory(1);
+			})
 		},
 		methods: {
 			getNav() {
@@ -170,15 +180,24 @@
 				this.toView = id;
 				this.navActive = index;
 				this.$set(this, 'lock', true);
+				uni.$emit('scroll');
 			},
-			getAllCategory: function() {
+			getAllCategory: function(type) {
 				let that = this;
-				getCategoryList().then(res => {
-					that.productList = res.data;
+				if (type || !uni.getStorageSync('CAT1_DATA')) {
+					getCategoryList().then(res => {
+						uni.setStorageSync('CAT1_DATA', res.data)
+						that.productList = res.data;
+						that.$nextTick(res => {
+							that.infoScroll();
+						})
+					})
+				} else {
+					that.productList = uni.getStorageSync('CAT1_DATA')
 					that.$nextTick(res => {
 						that.infoScroll();
 					})
-				})
+				}
 			},
 			scroll: function(e) {
 				let scrollTop = e.detail.scrollTop;
@@ -212,11 +231,6 @@
 		}
 	}
 </script>
-<style>
-	page {
-		height: 100%;
-	}
-</style>
 <style scoped lang="scss">
 	/deep/uni-scroll-view {
 		padding-bottom: 0 !important;
@@ -327,6 +341,7 @@
 		padding: 0 14rpx;
 		background-color: #fff;
 		position: relative;
+		padding-bottom: 200rpx;
 	}
 
 	.productSort .conter .listw {

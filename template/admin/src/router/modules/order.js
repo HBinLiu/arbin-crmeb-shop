@@ -8,18 +8,20 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
 
-import BasicLayout from '@/components/main';
+import LayoutMain from '@/layout';
+import setting from '@/setting';
+let routePre = setting.routePre;
 
 const pre = 'order_';
 
 export default {
-  path: '/admin/order',
+  path: routePre + '/order',
   name: 'order',
   header: 'order',
   redirect: {
     name: `${pre}list`,
   },
-  component: BasicLayout,
+  component: LayoutMain,
   children: [
     {
       path: 'list',
@@ -29,15 +31,6 @@ export default {
         title: '订单管理',
       },
       component: () => import('@/pages/order/orderList/index'),
-    },
-    {
-      path: 'split_list',
-      name: `${pre}split_list`,
-      meta: {
-        auth: ['admin-order-storeOrder-index'],
-        title: '子订单列表',
-      },
-      component: () => import('@/pages/order/orderList/splitList.vue'),
     },
     {
       path: 'offline',

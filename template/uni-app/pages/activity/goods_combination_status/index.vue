@@ -1,13 +1,13 @@
 <template>
 	<div class="group-con" :style="colorStyle">
-		<div class="header acea-row row-between-wrapper">
+		<div class="header acea-row row-between-wrapper" v-if="storeCombination">
 			<div class="pictrue"><img :src="storeCombination.image" /></div>
 			<div class="text">
 				<div class="line1" v-text="storeCombination.title"></div>
 				<div class="money">
 					{{$t(`￥`)}}
 					<span class="num" v-text="storeCombination.price"></span>
-					<span class="team cart-color" v-text="storeCombination.people + $t(`人拼`)"></span>
+					<span class="team cart-color">{{storeCombination.people + $t(`人拼`)}}</span>
 				</div>
 			</div>
 			<div v-if="pinkBool === -1" class="iconfont icon-pintuanshibai"></div>
@@ -18,8 +18,8 @@
 				<div class="line"></div>
 				<div class="name acea-row row-center-wrapper">
 					{{$t(`剩余`)}}
-					<CountDown :is-day="false" :tip-text="' '" :day-text="' '" :hour-text="' : '" :minute-text="' : '"
-						:second-text="' '" :datatime="pinkT.stop_time"></CountDown>
+					<CountDown :is-day="false" :tip-text="' '" :day-text="' '" hourText=" : " minute-text=" : "
+						second-text="" :datatime="pinkT.stop_time"></CountDown>
 					{{$t(`结束`)}}
 				</div>
 				<div class="line"></div>
@@ -29,7 +29,10 @@
 			<div class="tips font-num" v-else-if="pinkBool === 0">{{$t(`拼团中，还差`)}}{{ count }}{{$t(`人拼团成功`)}}</div>
 			<div class="list acea-row row-middle"
 				:class="[pinkBool === 1 || pinkBool === -1 ? 'result' : '', iShidden ? 'on' : '']">
-				<div class="pictrue"><img :src="pinkT.avatar" /></div>
+				<div class="pictrue"><img :src="pinkT.avatar" />
+					<view class="dumpling">{{$t(`团长`)}}</view>
+				</div>
+
 				<div class="acea-row row-middle" v-if="pinkAll.length > 0">
 					<div class="pictrue" v-for="(item, index) in pinkAll" :key="index"><img :src="item.avatar" /></div>
 				</div>
@@ -46,7 +49,8 @@
 				<div class="teamBnt bg-color-red" @click="listenerActionSheet">{{$t(`邀请好友参团`)}}</div>
 			</div>
 			<div class="teamBnt bg-color-red" v-else-if="userBool === 0 && pinkBool === 0 && count > 0" @click="pay">
-				{{$t(`我要参团`)}}</div>
+				{{$t(`我要参团`)}}
+			</div>
 			<div class="teamBnt bg-color-red" v-if="pinkBool === 1 || pinkBool === -1"
 				@click="goDetail(storeCombination.id)">{{$t(`再次开团`)}}</div>
 			<div class="cancel" @click="getCombinationRemove"
@@ -78,7 +82,7 @@
 				</div>
 			</div>
 		</div>
-		<product-window :attr="attr" :limitNum="1" :iSbnt="1" @myevent="onMyEvent" @ChangeAttr="ChangeAttr"
+		<product-window :attr="attr" :limitNum="storeCombination ? storeCombination.once_num : 0" :iSbnt="1" @myevent="onMyEvent" @ChangeAttr="ChangeAttr"
 			@ChangeCartNum="ChangeCartNum" @iptCartNum="iptCartNum" @attrVal="attrVal" @goCat="goPay"></product-window>
 		<!-- 分享按钮 -->
 		<view class="generate-posters acea-row row-middle" :class="posters ? 'on' : ''">
@@ -155,7 +159,9 @@
 	// #endif
 	const app = getApp();
 	import colors from '@/mixins/color.js';
-	import {HTTP_REQUEST_URL} from '@/config/app';
+	import {
+		HTTP_REQUEST_URL
+	} from '@/config/app';
 	export default {
 		name: NAME,
 		components: {
@@ -170,14 +176,14 @@
 		mixins: [colors],
 		data: function() {
 			return {
-				imgHost:HTTP_REQUEST_URL,
+				imgHost: HTTP_REQUEST_URL,
 				currentPinkOrder: '', //当前拼团订单
 				isOk: 0, //判断拼团是否完成
 				pinkBool: 0, //判断拼团是否成功|0=失败,1=成功
 				userBool: 0, //判断当前用户是否在团内|0=未在,1=在
 				pinkAll: [], //团员
 				pinkT: [], //团长信息
-				storeCombination: [], //拼团产品
+				storeCombination: undefined, //拼团产品
 				storeCombinationHost: [], //拼团推荐
 				pinkId: 0,
 				count: 0, //拼团剩余人数
@@ -206,7 +212,7 @@
 				isAuto: false, //没有授权的不会自动授权
 				isShowAuth: false, //是否隐藏授权
 				attrTxt: this.$t(`请选择`), //属性页面提示
-				attrValue: '' ,//已选属性,
+				attrValue: '', //已选属性,
 				orderPid: 0
 			};
 		},
@@ -229,7 +235,6 @@
 				handler: function(newV, oldV) {
 					if (newV) {
 						this.userInfo = newV;
-						app.globalData.openPages = '/pages/activity/goods_combination_status/index?id=' + this.pinkId;
 					}
 				},
 				deep: true
@@ -263,13 +268,15 @@
 			let that = this;
 			return {
 				title: that.$t(`您的好友`) + that.userInfo.nickname + this.$t(`邀请您参团`) + that.storeCombination.title,
-				path: app.globalData.openPages,
+				path: '/pages/activity/goods_combination_status/index?id=' + that.pinkId,
 				imageUrl: that.storeCombination.image
 			};
 		},
 		//#endif
 		mounted() {
-			this.getCombinationPink();
+			if (this.isLogin) {
+				this.getCombinationPink();
+			}
 		},
 		methods: {
 			// app分享
@@ -283,7 +290,8 @@
 					scene: scene,
 					type: 0,
 					href: `${HTTP_REQUEST_URL}${curRoute}`,
-					title: that.$t(`您的好友`) + that.userInfo.nickname + that.$t(`邀请您参团`) + that.storeCombination.title,
+					title: that.$t(`您的好友`) + that.userInfo.nickname + that.$t(`邀请您参团`) + that.storeCombination
+						.title,
 					imageUrl: that.storeCombination.small_image,
 					success: function(res) {
 						uni.showToast({
@@ -310,7 +318,6 @@
 			// 授权后回调
 			onLoadFun: function(e) {
 				this.userInfo = e;
-				app.globalData.openPages = '/pages/activity/goods_combination_status/index?id=' + this.pinkId;
 				this.getCombinationPink();
 			},
 			/**
@@ -630,7 +637,10 @@
 					title: that.$t(`您的好友`) + that.userInfo.nickname + that.$t(`邀请您参团`) + that.storeCombination.title,
 					desc: that.storeCombination.title,
 					link: window.location.protocol + '//' + window.location.host +
-						'/pages/activity/goods_combination_status/index?id=' + that.pinkId,
+						'/pages/activity/goods_combination_status/index?id=' + that.pinkId + '&bargain=' + that
+						.userInfo.uid +
+						'&spid=' +
+						that.userInfo.uid,
 					imgUrl: that.storeCombination.image
 				};
 				if (this.$wechat.isWeixin()) {
@@ -660,9 +670,8 @@
 					.then(res => {
 						that.$util.Tips({
 							title: res.msg
-						}, {
-							tab: 3
 						});
+						this.getCombinationPink()
 					})
 					.catch(res => {
 						that.$util.Tips({
@@ -820,7 +829,6 @@
 
 	.group-con .wrapper .list.result {
 		max-height: 240rpx;
-		overflow: hidden;
 	}
 
 	.group-con .wrapper .list.result.on {
@@ -831,6 +839,24 @@
 		width: 94rpx;
 		height: 94rpx;
 		margin: 0 0 29rpx 35rpx;
+	}
+
+	.group-con .wrapper .list .pictrue {
+		position: relative;
+	}
+
+	.group-con .wrapper .list .pictrue .dumpling {
+		width: 72rpx;
+		height: 32rpx;
+		line-height: 32rpx;
+		font-size: 18rpx;
+		text-align: center;
+		color: #fff;
+		top: -12rpx;
+		right: -20rpx;
+		border-radius: 18rpx;
+		position: absolute;
+		background-color: var(--view-theme);
 	}
 
 	.group-con .wrapper .list .pictrue img,
@@ -925,6 +951,7 @@
 		height: 210rpx;
 		position: relative;
 	}
+
 
 	.group-con .group-recommend .list .item .pictrue img {
 		width: 100%;

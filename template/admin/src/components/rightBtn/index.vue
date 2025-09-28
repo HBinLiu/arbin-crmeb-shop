@@ -1,6 +1,8 @@
 <template>
   <div class="btn-box" style="display: none">
-    <Button type="primary" @click="handleSubmit('formInline')" style="text-align: center; width: 60%">确定</Button>
+    <el-button type="primary" v-db-click @click="handleSubmit('formInline')" style="text-align: center; width: 60%"
+      >确定</el-button
+    >
   </div>
 </template>
 

@@ -11,10 +11,9 @@
 
 namespace crmeb\services;
 
-use think\cache\Driver;
-use think\cache\TagSet;
 use think\facade\Cache;
 use think\facade\Config;
+use think\cache\TagSet;
 
 /**
  * CRMEB 缓存类
@@ -24,42 +23,10 @@ use think\facade\Config;
 class CacheService
 {
     /**
-     * 缓存队列key
-     * @var string[]
-     */
-    protected static $redisQueueKey = [
-        0 => 'product',
-        1 => 'seckill',
-        2 => 'bargain',
-        3 => 'combination',
-        6 => 'advance'
-    ];
-
-    /**
      * 过期时间
      * @var int
      */
     protected static $expire;
-
-    /**
-     * 获取缓存过期时间
-     * @param int|null $expire
-     * @return int
-     */
-    protected static function getExpire(int $expire = null): int
-    {
-        if ($expire == null) {
-            if (self::$expire) {
-                return (int)self::$expire;
-            }
-            $default = Config::get('cache.default');
-            $expire = Config::get('cache.stores.' . $default . '.expire');
-            if (!is_int($expire)) {
-                $expire = (int)$expire;
-            }
-        }
-        return self::$expire = $expire;
-    }
 
     /**
      * 写入缓存
@@ -67,10 +34,10 @@ class CacheService
      * @param mixed $value 缓存值
      * @param int|null $expire 缓存时间，为0读取系统缓存时间
      */
-    public static function set(string $name, $value, int $expire = null, string $tag = 'crmeb')
+    public static function set(string $name, $value, int $expire = 0, string $tag = 'crmeb')
     {
         try {
-            return Cache::tag($tag)->set($name, $value, $expire ?? self::getExpire($expire));
+            return Cache::tag($tag)->set($name, $value, $expire);
         } catch (\Throwable $e) {
             return false;
         }
@@ -84,10 +51,10 @@ class CacheService
      * @param string $tag
      * @return mixed|string|null
      */
-    public static function remember(string $name, $default = '', int $expire = null, string $tag = 'crmeb')
+    public static function remember(string $name, $default = '', int $expire = 0, string $tag = 'crmeb')
     {
         try {
-            return Cache::tag($tag)->remember($name, $default, $expire ?? self::getExpire($expire));
+            return Cache::tag($tag)->remember($name, $default, $expire);
         } catch (\Throwable $e) {
             try {
                 if (is_callable($default)) {
@@ -132,6 +99,18 @@ class CacheService
     }
 
     /**
+     * 清空全部缓存
+     * @return bool
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/12/19
+     */
+    public static function clearAll()
+    {
+        return Cache::clear();
+    }
+
+    /**
      * 检查缓存是否存在
      * @param string $key
      * @return bool
@@ -145,102 +124,15 @@ class CacheService
         }
     }
 
-    /** 以下三个方法仅开启redis之后才使用 */
     /**
-     * 设置redis入库队列
-     * @param string $unique
-     * @param int $number
-     * @param int $type
-     * @param bool $isPush
-     * @return false
-     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 指定缓存类型
+     * @param string $type
+     * @param string $tag
+     * @return TagSet
      */
-    public static function setStock(string $unique, int $number, int $type = 1, bool $isPush = true)
+    public static function store(string $type = 'file', string $tag = 'crmeb')
     {
-        if (Config::get('cache.default') == 'file') return true;
-        if (!$unique || !$number) return false;
-        $name = (self::$redisQueueKey[$type] ?? '') . '_' . $type . '_' . $unique;
-        if ($isPush) {
-            Cache::store('redis')->delete($name);
-        }
-        $data = [];
-        for ($i = 1; $i <= $number; $i++) {
-            $data[] = $i;
-        }
-        return Cache::store('redis')->lPush($name, ...$data);
-    }
-
-    /**
-     * 是否有库存|返回库存
-     * @param string $unique
-     * @param int $number
-     * @param int $type
-     * @return bool
-     */
-    public static function checkStock(string $unique, int $number = 0, int $type = 1)
-    {
-        if (Config::get('cache.default') == 'file') return true;
-        $name = (self::$redisQueueKey[$type] ?? '') . '_' . $type . '_' . $unique;
-        if ($number) {
-            return Cache::store('redis')->lLen($name) >= $number;
-        } else {
-            return Cache::store('redis')->lLen($name);
-        }
-    }
-
-    /**
-     * 弹出redis队列中的库存条数
-     * @param string $unique
-     * @param int $number
-     * @param int $type
-     * @return bool
-     */
-    public static function popStock(string $unique, int $number, int $type = 1)
-    {
-        if (Config::get('cache.default') == 'file') return true;
-        if (!$unique || !$number) return false;
-        $name = (self::$redisQueueKey[$type] ?? '') . '_' . $type . '_' . $unique;
-        $res = true;
-        if ($number > Cache::store('redis')->lLen($name)) {
-            return false;
-        }
-        for ($i = 1; $i <= $number; $i++) {
-            $res = $res && Cache::store('redis')->lPop($name);
-        }
-        return $res;
-    }
-
-    /**
-     * 存入当前秒杀商品属性有序集合
-     * @param $set_key
-     * @param $score
-     * @param $value
-     * @return false
-     */
-    public static function zAdd($set_key, $score, $value)
-    {
-        if (Config::get('cache.default') == 'file') return true;
-        try {
-            return Cache::store('redis')->zAdd($set_key, $score, $value);
-        } catch (\Throwable $e) {
-            return false;
-        }
-    }
-
-    /**
-     * 取消集合中的秒杀商品
-     * @param $set_key
-     * @param $value
-     * @return false
-     */
-    public static function zRem($set_key, $value)
-    {
-        if (Config::get('cache.default') == 'file') return true;
-        try {
-            return Cache::store('redis')->zRem($set_key, $value);
-        } catch (\Throwable $e) {
-            return false;
-        }
+        return Cache::store($type)->tag($tag);
     }
 
     /**
@@ -248,9 +140,6 @@ class CacheService
      * @param string $key
      * @param int $timeout
      * @return bool
-     * @author 等风来
-     * @email 136327134@qq.com
-     * @date 2022/11/22
      */
     public static function setMutex(string $key, int $timeout = 10): bool
     {
@@ -282,20 +171,22 @@ class CacheService
         Cache::store('redis')->handler()->del($readMutexKey);
     }
 
+
     /**
-     * Redis缓存句柄
-     * @param null $type
+     * 数据库锁
+     * @param $key
+     * @param $fn
+     * @param int $ex
      * @return mixed
      * @author 吴汐
      * @email 442384644@qq.com
-     * @date 2023/02/10
+     * @date 2023/03/01
      */
-    public static function redisHandler($type = null)
+    public static function lock($key, $fn, int $ex = 6)
     {
-        if ($type) {
-            return Cache::store('redis')->tag($type);
-        } else {
-            return Cache::store('redis');
+        if (Config::get('cache.default') == 'file') {
+            return $fn();
         }
+        return app()->make(LockService::class)->exec($key, $fn, $ex);
     }
 }

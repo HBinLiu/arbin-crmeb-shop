@@ -1,7 +1,7 @@
 <template>
   <div>
-    <Modal v-model="isTemplate" title="推荐人信息" width="45%" @on-cancel="cancel">
-      <div class="Modals">
+    <el-dialog :visible.sync="isTemplate" title="推荐人信息" width="720px" @closed="cancel">
+      <div class="Modals" v-loading="spinShow">
         <div class="header acea-row row-middle">
           <div class="pictrue"><img :src="spread.avatar" /></div>
           <div class="name">{{ spread.nickname }}</div>
@@ -49,9 +49,7 @@
           </div>
         </div>
       </div>
-      <div slot="footer"></div>
-      <Spin size="large" fix v-if="spinShow"></Spin>
-    </Modal>
+    </el-dialog>
   </div>
 </template>
 
@@ -77,7 +75,7 @@ export default {
           that.spread = res.data.spread;
         })
         .catch((res) => {
-          that.$Message.error(res.msg);
+          that.$message.error(res.msg);
         });
     },
     cancel() {},
@@ -85,31 +83,40 @@ export default {
 };
 </script>
 
-<style scoped lang="stylus">
-.Modals
-   width 100%
-   border 1px solid #e8eaec
-.Modals .header
-    background-color #f5f5f5
-    padding 10px 15px
-.Modals .header .pictrue
-    width 50px
-    height 50px
-    border-radius 50%
-.Modals .header .pictrue img
-    width 100%
-    height 100%
-    border-radius 50%
-.Modals .header .name
-    color #333
-    margin-left 15px
-.Modals .list .item .name.money
-    color #ff0005 !important
-.Modals .list .item .name.commission
-    color green !important
-.Modals .list .item
-    border-top 1px solid #e8eaec
-.Modals .list .item .name
-    padding 10px 15px
-    width 50%
+<style lang="scss" scoped>
+.Modals {
+  width: 100%;
+  border: 1px solid #e8eaec;
+}
+.Modals .header {
+  background-color: #f5f5f5;
+  padding: 10px 15px;
+}
+.Modals .header .pictrue {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+}
+.Modals .header .pictrue img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+.Modals .header .name {
+  color: #333;
+  margin-left: 15px;
+}
+.Modals .list .item .name.money {
+  color: #ff0005 !important;
+}
+.Modals .list .item .name.commission {
+  color: green !important;
+}
+.Modals .list .item {
+  border-top: 1px solid #e8eaec;
+}
+.Modals .list .item .name {
+  padding: 10px 15px;
+  width: 50%;
+}
 </style>

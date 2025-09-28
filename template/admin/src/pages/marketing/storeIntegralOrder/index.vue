@@ -1,11 +1,10 @@
 <template>
-  <div>
+  <div v-loading="spinShow">
     <productlist-details
       class="ivu-mt"
       v-if="currentTab === 'article' || 'project' || 'app'"
       ref="productlist"
     ></productlist-details>
-    <Spin size="large" fix v-if="spinShow"></Spin>
   </div>
 </template>
 
@@ -68,7 +67,7 @@ export default {
         })
         .catch((res) => {
           this.spinShow = false;
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
       // getOrdes({}).then(async res => {
       //     this.tablists = res.data;
@@ -76,7 +75,7 @@ export default {
       //     this.spinShow = false;
       // }).catch(res => {
       //     this.spinShow = false;
-      //     this.$Message.error(res.msg);
+      //     this.$message.error(res.msg);
       // })
     },
     onClickTab() {
@@ -90,16 +89,14 @@ export default {
   },
 };
 </script>
-<style scoped lang="stylus">
-.product_tabs >>> .ivu-tabs-bar {
+<style lang="scss" scoped>
+.product_tabs ::v-deep .ivu-tabs-bar {
   margin-bottom: 0px !important;
 }
-
-.product_tabs >>> .ivu-page-header-content {
+.product_tabs ::v-deep .ivu-page-header-content {
   margin-bottom: 0px !important;
 }
-
-.product_tabs >>> .ivu-page-header-breadcrumb {
+.product_tabs ::v-deep .ivu-page-header-breadcrumb {
   margin-bottom: 0px !important;
 }
 </style>

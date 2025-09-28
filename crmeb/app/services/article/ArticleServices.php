@@ -19,7 +19,6 @@ use crmeb\exceptions\AdminException;
 /**
  * Class ArticleServices
  * @package app\services\article
- * @method cidByArticleList(array $where, int $page, int $limit, string $field)
  */
 class ArticleServices extends BaseServices
 {
@@ -38,18 +37,23 @@ class ArticleServices extends BaseServices
      * @param int $page
      * @param int $limit
      * @return array
+     * @throws \ReflectionException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function getList(array $where, int $page = 0, int $limit = 0)
     {
         if (!$page && !$limit) {
             [$page, $limit] = $this->getPageValue();
         }
-        /** @var WechatNewsCategoryServices $services */
-        $services = app()->make(WechatNewsCategoryServices::class);
-        $where['ids'] = $services->getNewIds();
+        $where['ids'] = app()->make(WechatNewsCategoryServices::class)->getNewIds();
         $list = $this->dao->getList($where, $page, $limit);
         foreach ($list as &$item) {
             $item['store_name'] = $item['storeInfo']['store_name'] ?? '';
+            $item['copy_url'] = sys_config('site_url') . '/pages/extension/news_details/index?id=' . $item['id'];
+            $item['copy_url_pc'] = sys_config('site_url') . '/news_detail?id=' . $item['id'];
+            unset($item['content']);
         }
         $count = $this->dao->count($where);
         return compact('list', 'count');
@@ -89,9 +93,13 @@ class ArticleServices extends BaseServices
     }
 
     /**
-     * 获取商品详情
-     * @param $id
+     * 获取文章详情
+     * @param int $id
      * @return array
+     * @throws \ReflectionException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function read(int $id)
     {
@@ -101,7 +109,7 @@ class ArticleServices extends BaseServices
     }
 
     /**
-     * 删除商品
+     * 删除文章
      * @param int $id
      */
     public function del(int $id)
@@ -131,16 +139,22 @@ class ArticleServices extends BaseServices
     /**
      * 获取数量
      * @param array $where
+     * @param bool $search
      * @return int
      */
-    public function count(array $where)
+    public function count(array $where = [], bool $search = true): int
     {
-        return $this->dao->count($where);
+        return $this->search($where, $search)->count();
     }
 
-    /**获取一条数据
+    /**
+     * 获取一条数据
      * @param int $id
      * @return mixed
+     * @throws \ReflectionException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function getInfo(int $id)
     {
@@ -160,15 +174,22 @@ class ArticleServices extends BaseServices
      * 获取文章列表
      * @param $new_id
      * @return int
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function articleList($new_id)
     {
         return $this->dao->articleLists($new_id);
     }
 
-    /**图文详情
+    /**
+     * 图文详情
      * @param $new_id
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function articlesList($new_id)
     {

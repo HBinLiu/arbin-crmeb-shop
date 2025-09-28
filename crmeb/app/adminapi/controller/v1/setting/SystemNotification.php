@@ -34,8 +34,10 @@ class SystemNotification extends AuthController
 
     /**
      * 显示资源列表
-     *
      * @return \think\Response
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function index()
     {
@@ -46,9 +48,59 @@ class SystemNotification extends AuthController
     }
 
     /**
-     * 显示编辑
-     *
+     * 添加消息
      * @return \think\Response
+     * @throws \FormBuilder\Exception\FormBuilderException
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2024/2/19
+     */
+    public function notForm($id)
+    {
+        return app('json')->success($this->services->getNotForm($id));
+    }
+
+    /**
+     * 保存自定义消息
+     * @param $id
+     * @return \think\Response
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2024/2/20
+     */
+    public function notFormSave($id)
+    {
+        $data = $this->request->postMore([
+            ['custom_trigger', ''],
+            ['name', ''],
+            ['mark', ''],
+        ]);
+        $this->services->notFormSave($id, $data);
+        return app('json')->success(100000);
+    }
+
+    /**
+     * 删除消息
+     * @param $id
+     * @return \think\Response
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2024/2/20
+     */
+    public function delNot($id)
+    {
+        if (!$id) return app('json')->fail(100100);
+        $this->services->delete($id);
+        return app('json')->success(100002);
+    }
+
+
+    /**
+     * 显示编辑
+     * @return \think\Response
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function info()
     {
@@ -81,20 +133,24 @@ class SystemNotification extends AuthController
             ['system_title', ''],
             ['system_text', ''],
             ['tempid', ''],
+            ['tempkey', ''],
+            ['content', ''],
             ['ent_wechat_text', ''],
             ['url', ''],
             ['wechat_id', ''],
             ['routine_id', ''],
             ['mark', ''],
             ['sms_id', ''],
+            ['key_list', ''],
+            ['sms_text', ''],
+            ['wechat_link', ''],
+            ['routine_link', ''],
+            ['wechat_to_routine', ''],
         ]);
         if ($data['mark'] == 'verify_code') $data['type'] = 'is_sms';
         if (!$data['id']) return app('json')->fail(100100);
         if ($this->services->saveData($data)) {
-            CacheService::delete('NOTICE_SMS_' . $data['mark']);
-            CacheService::delete('wechat_' . $data['mark']);
-            CacheService::delete('routine_' . $data['mark']);
-            CacheService::delete('TEMP_IDS_LIST');
+            CacheService::clear();
             return app('json')->success(100001);
         } else {
             return app('json')->fail(100007);
@@ -117,10 +173,7 @@ class SystemNotification extends AuthController
         if ($type == '' || $status == '' || $id == 0) return app('json')->fail(100100);
         $this->services->update($id, [$type => $status]);
         $res = $this->services->getOneNotce(['id' => $id]);
-        CacheService::delete('NOTICE_SMS_' . $res->mark);
-        CacheService::delete('wechat_' . $res->mark);
-        CacheService::delete('routine_' . $res->mark);
-        CacheService::delete('TEMP_IDS_LIST');
+        CacheService::clear();
         return app('json')->success(100014);
     }
 }

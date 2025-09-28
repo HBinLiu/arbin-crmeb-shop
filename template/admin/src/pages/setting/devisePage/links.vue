@@ -10,10 +10,10 @@
       </div>
       <div class="tips">
         例如：{{ item.example }}
-        <!--<Button size="small" style="margin-left: 10px" v-clipboard:copy="item.example"-->
+        <!--<el-button size="small" style="margin-left: 10px" v-clipboard:copy="item.example"-->
         <!--v-clipboard:success="onCopy"-->
-        <!--v-clipboard:error="onError">复制</Button>-->
-        <span class="copy copy-data" @click="onCopy(item.example)">复制</span>
+        <!--v-clipboard:error="onError">复制</el-button>-->
+        <span class="copy copy-data" v-db-click @click="onCopy(item.example)">复制</span>
       </div>
     </div>
   </div>
@@ -52,7 +52,7 @@ export default {
     this.$nextTick(function () {
       this.clipboard = new ClipboardJS('.copy-data');
       this.clipboard.on('success', () => {
-        this.$Message.success('复制成功');
+        this.$message.success('复制成功');
       });
     });
   },
@@ -64,20 +64,20 @@ export default {
     onCopy(copyData) {
       this.$copyText(copyData)
         .then((message) => {
-          this.$Message.success('复制成功');
+          this.$message.success('复制成功');
         })
         .catch((err) => {
-          this.$Message.error('复制失败');
+          this.$message.error('复制失败');
         });
     },
     // onError () {
-    //     this.$Message.error('复制成功');
+    //     this.$message.error('复制成功');
     // }
   },
 };
 </script>
 
-<style scoped lang="stylus">
+<style lang="scss" scoped>
 .right-box {
   width: 400px;
   margin-left: 50px;
@@ -86,36 +86,30 @@ export default {
   height: 700px;
   overflow-y: scroll;
   padding: 0 10px;
-
   &::-webkit-scrollbar {
     /* 滚动条整体样式 */
     width: 4px; /* 高宽分别对应横竖滚动条的尺寸 */
     height: 1px;
   }
-
   &::-webkit-scrollbar-thumb {
     /* 滚动条里面小方块 */
     border-radius: 4px;
     box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
     background: #535353;
   }
-
   &::-webkit-scrollbar-track {
     /* 滚动条里面轨道 */
     box-shadow: inset 0 0 5px #fff;
     border-radius: 4px;
     background: #fff;
   }
-
   .link-item {
     padding: 10px 0;
     border-bottom: 1px solid #f5f5f5;
-
     .title {
       font-size: 14px;
       color: #2d8cf0;
     }
-
     .txt {
       margin: 5px 0;
       font-size: 12px;
@@ -132,17 +126,14 @@ export default {
         span {
           color: #333;
         }
-
         &.red {
           color: #f00;
         }
       }
     }
-
     .tips {
       font-size: 12px;
       color: #999;
-
       .copy {
         padding: 3px 5px;
         border: 1px solid #cccccc;
@@ -150,7 +141,6 @@ export default {
         color: #333;
         cursor: pointer;
         margin-left: 5px;
-
         &:hover {
           border-color: #2d8cf0;
           color: #2d8cf0;

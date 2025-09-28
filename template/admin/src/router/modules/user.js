@@ -8,7 +8,9 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
 
-import BasicLayout from '@/components/main';
+import LayoutMain from '@/layout';
+import setting from '@/setting';
+let routePre = setting.routePre;
 
 const meta = {
   auth: true,
@@ -17,14 +19,14 @@ const meta = {
 const pre = 'user_';
 
 export default {
-  path: '/admin/user',
+  path: routePre + '/user',
   name: 'user',
   header: 'user',
   redirect: {
     name: `${pre}list`,
   },
   meta,
-  component: BasicLayout,
+  component: LayoutMain,
   children: [
     {
       path: 'list',

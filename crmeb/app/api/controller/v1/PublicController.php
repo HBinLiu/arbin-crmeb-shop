@@ -12,9 +12,12 @@ namespace app\api\controller\v1;
 
 
 use app\services\activity\combination\StorePinkServices;
+use app\services\activity\lottery\LuckLotteryRecordServices;
 use app\services\diy\DiyServices;
 use app\services\kefu\service\StoreServiceServices;
 use app\services\order\DeliveryServiceServices;
+use app\services\order\StoreOrderCartInfoServices;
+use app\services\order\StoreOrderServices;
 use app\services\other\AgreementServices;
 use app\services\other\CacheServices;
 use app\services\product\product\StoreCategoryServices;
@@ -24,20 +27,23 @@ use app\services\shipping\SystemCityServices;
 use app\services\system\AppVersionServices;
 use app\services\system\attachment\SystemAttachmentServices;
 use app\services\system\config\SystemConfigServices;
+use app\services\system\config\SystemStorageServices;
 use app\services\system\lang\LangCodeServices;
 use app\services\system\lang\LangCountryServices;
 use app\services\system\lang\LangTypeServices;
 use app\services\system\store\SystemStoreServices;
 use app\services\system\store\SystemStoreStaffServices;
 use app\services\user\UserBillServices;
+use app\services\user\UserExtractServices;
 use app\services\user\UserInvoiceServices;
 use app\services\user\UserServices;
+use app\services\wechat\RoutineSchemeServices;
 use app\services\wechat\WechatUserServices;
 use app\Request;
 use crmeb\services\CacheService;
 use app\services\other\UploadService;
+use crmeb\services\pay\Pay;
 use crmeb\services\workerman\ChannelService;
-use think\facade\Cache;
 
 /**
  * 公共类
@@ -101,7 +107,7 @@ class PublicController
     public function share()
     {
         $data['img'] = sys_config('wechat_share_img');
-        if (strstr($data['img'], 'http') === false) {
+        if (strstr($data['img'], 'http') === false && $data['img'] != '') {
             $data['img'] = sys_config('site_url') . $data['img'];
         }
         $data['img'] = str_replace('\\', '/', $data['img']);
@@ -117,6 +123,9 @@ class PublicController
     public function getSiteConfig()
     {
         $data['record_No'] = sys_config('record_No');
+        $data['icp_url'] = sys_config('icp_url');
+        $data['network_security'] = sys_config('network_security');
+        $data['network_security_url'] = sys_config('network_security_url');
         return app('json')->success($data);
     }
 
@@ -136,42 +145,47 @@ class PublicController
         if ($request->hasMacro('user')) $userInfo = $request->user();
         if ($request->hasMacro('uid')) $uid = $request->uid();
 
+        //用户等级开关
         $vipOpen = sys_config('member_func_status');
+        //分销功能开关
         $brokerageFuncStatus = sys_config('brokerage_func_status');
+        //余额功能开关
         $balanceFuncStatus = sys_config('balance_func_status');
-        $vipCard = sys_config('member_card_status', 0);
-        $svipOpen = (bool)sys_config('member_card_status');
-        $userService = $invoiceStatus = $deliveryUser = $isUserPromoter = $userVerifyStatus = $userOrder = true;
-
+        //付费会员开关
+        $svipOpen = sys_config('member_card_status');
+        $userService = $userOrder = $userVerifyStatus = $deliveryUser = $invoiceStatus = $isUserPromoter = false;
         if ($uid && $userInfo) {
             /** @var StoreServiceServices $storeService */
             $storeService = app()->make(StoreServiceServices::class);
+            //是否客服
             $userService = $storeService->checkoutIsService(['uid' => $uid, 'status' => 1]);
+            //是否订单管理
             $userOrder = $storeService->checkoutIsService(['uid' => $uid, 'status' => 1, 'customer' => 1]);
-            /** @var SystemStoreStaffServices $systemStoreStaff */
-            $systemStoreStaff = app()->make(SystemStoreStaffServices::class);
-            /** @var UserServices $user */
-            $user = app()->make(UserServices::class);
-            /** @var UserInvoiceServices $userInvoice */
-            $userInvoice = app()->make(UserInvoiceServices::class);
-            $invoiceStatus = $userInvoice->invoiceFuncStatus(false);
-            /** @var DeliveryServiceServices $deliveryService */
-            $deliveryService = app()->make(DeliveryServiceServices::class);
-            $deliveryUser = $deliveryService->checkoutIsService($uid);
-            $isUserPromoter = $user->checkUserPromoter($uid, $userInfo);
-            $userVerifyStatus = $systemStoreStaff->verifyStatus($uid);
+            //是否核销员
+            $userVerifyStatus = app()->make(SystemStoreStaffServices::class)->verifyStatus($uid);
+            //是否配送员
+            $deliveryUser = app()->make(DeliveryServiceServices::class)->checkoutIsService($uid);
+            //发票功能开关
+            $invoiceStatus = app()->make(UserInvoiceServices::class)->invoiceFuncStatus(false);
+            //是否分销员
+            $isUserPromoter = app()->make(UserServices::class)->checkUserPromoter($uid, $userInfo);
         }
         $auth = [];
-        $auth['/pages/users/user_vip/index'] = !$vipOpen;
-        $auth['/pages/users/user_spread_user/index'] = !$brokerageFuncStatus || !$isUserPromoter || $uid == 0;
-        $auth['/pages/users/user_money/index'] = !$balanceFuncStatus;
-        $auth['/pages/admin/order/index'] = !$userOrder || $uid == 0;
-        $auth['/pages/admin/order_cancellation/index'] = (!$userVerifyStatus && !$deliveryUser) || $uid == 0;
-        $auth['/pages/users/user_invoice_list/index'] = !$invoiceStatus;
-        $auth['/pages/annex/vip_paid/index'] = !$vipCard || !$svipOpen;
-        $auth['/kefu/mobile_list'] = !$userService || $uid == 0;
+        $auth['/pages/users/user_vip/index'] = $vipOpen;
+        $auth['/pages/users/user_spread_user/index'] = $brokerageFuncStatus && $isUserPromoter;
+        $auth['/pages/annex/settled/index'] = $brokerageFuncStatus && sys_config('store_brokerage_statu') == 1 && !$isUserPromoter;
+        $auth['/pages/users/user_money/index'] = $balanceFuncStatus;
+        $auth['/pages/admin/order/index'] = $userOrder;
+        $auth['/pages/admin/order_cancellation/index'] = $userVerifyStatus || $deliveryUser;
+        $auth['/pages/users/user_invoice_list/index'] = $invoiceStatus;
+        $auth['/pages/annex/vip_paid/index'] = $svipOpen;
+        $auth['/kefu/mobile_list'] = $userService;
         foreach ($menusInfo as $key => &$value) {
-            if (isset($auth[$value['url']]) && $auth[$value['url']]) {
+            if ($value['url'] == '/pages/users/user_spread_user/index' && $auth['/pages/annex/settled/index']) {
+                $value['name'] = '分销申请';
+                $value['url'] = '/pages/annex/settled/index';
+            }
+            if (isset($auth[$value['url']]) && !$auth[$value['url']]) {
                 unset($menusInfo[$key]);
                 continue;
             }
@@ -189,7 +203,7 @@ class PublicController
         $routine_contact_type = sys_config('routine_contact_type', 0);
         /** @var DiyServices $diyServices */
         $diyServices = app()->make(DiyServices::class);
-        $diy_data = $diyServices->get(['template_name' => 'member', 'type' => 1], ['value', 'order_status', 'my_banner_status']);
+        $diy_data = $diyServices->get(['template_name' => 'member', 'type' => 1], ['value', 'order_status', 'my_banner_status', 'my_menus_status', 'business_status']);
         $diy_data = $diy_data ? $diy_data->toArray() : [];
         return app('json')->success(['routine_my_menus' => array_merge($menusInfo), 'routine_my_banner' => $my_banner, 'routine_spread_banner' => $bannerInfo, 'routine_contact_type' => $routine_contact_type, 'diy_data' => $diy_data]);
     }
@@ -217,8 +231,8 @@ class PublicController
     /**
      * 图片上传
      * @param Request $request
+     * @param SystemAttachmentServices $services
      * @return mixed
-     * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     public function upload_image(Request $request, SystemAttachmentServices $services)
     {
@@ -226,7 +240,7 @@ class PublicController
             ['filename', 'file'],
         ]);
         if (!$data['filename']) return app('json')->fail(100100);
-        if (Cache::has('start_uploads_' . $request->uid()) && Cache::get('start_uploads_' . $request->uid()) >= 100) return app('json')->fail(100101);
+        if (CacheService::has('start_uploads_' . $request->uid()) && CacheService::get('start_uploads_' . $request->uid()) >= 100) return app('json')->fail(100101);
         $upload = UploadService::init();
         $info = $upload->to('store/comment')->validate()->move($data['filename']);
         if ($info === false) {
@@ -234,12 +248,12 @@ class PublicController
         }
         $res = $upload->getUploadInfo();
         $services->attachmentAdd($res['name'], $res['size'], $res['type'], $res['dir'], $res['thumb_path'], 1, (int)sys_config('upload_type', 1), $res['time'], 3);
-        if (Cache::has('start_uploads_' . $request->uid()))
-            $start_uploads = (int)Cache::get('start_uploads_' . $request->uid());
+        if (CacheService::has('start_uploads_' . $request->uid()))
+            $start_uploads = (int)CacheService::get('start_uploads_' . $request->uid());
         else
             $start_uploads = 0;
         $start_uploads++;
-        Cache::set('start_uploads_' . $request->uid(), $start_uploads, 86400);
+        CacheService::set('start_uploads_' . $request->uid(), $start_uploads, 86400);
         $res['dir'] = path_to_url($res['dir']);
         if (strpos($res['dir'], 'http') === false) $res['dir'] = $request->domain() . $res['dir'];
         return app('json')->success(100009, ['name' => $res['name'], 'url' => $res['dir']]);
@@ -305,10 +319,26 @@ class PublicController
             ['image', ''],
             ['code', ''],
         ], true);
-        if ($imageUrl !== '' && !preg_match('/.*(\.png|\.jpg|\.jpeg|\.gif)$/', $imageUrl)) {
+        /** @var SystemStorageServices $systemStorageServices */
+        $systemStorageServices = app()->make(SystemStorageServices::class);
+        $domainArr = $systemStorageServices->getColumn([], 'domain');
+        $domainArr = array_merge($domainArr, [$request->host()]);
+        $domainArr = array_unique(array_diff($domainArr, ['']));
+        if (count($domainArr)) {
+            $domainArr = array_map(function ($item) {
+                return str_replace(['https://', 'http://'], '', $item);
+            }, $domainArr);
+        }
+        $domainArr[] = 'mp.weixin.qq.com';
+        $imageUrlHost = $imageUrl ? (parse_url($imageUrl)['host'] ?? $imageUrl) : $imageUrl;
+        $codeUrlHost = $codeUrl ? (parse_url($codeUrl)['host'] ?? $codeUrl) : $codeUrl;
+        if ($domainArr && (($imageUrl && !in_array($imageUrlHost, $domainArr)) || ($codeUrl && !in_array($codeUrlHost, $domainArr)))) {
             return app('json')->success(['code' => false, 'image' => false]);
         }
-        if ($codeUrl !== '' && !(preg_match('/.*(\.png|\.jpg|\.jpeg|\.gif)$/', $codeUrl) || strpos($codeUrl, 'https://mp.weixin.qq.com/cgi-bin/showqrcode') !== false)) {
+        if ($imageUrl !== '' && !preg_match('/.*(\.png|\.jpg|\.jpeg|\.gif)$/', $imageUrl) && strpos(strtolower($imageUrl), "phar://") !== false) {
+            return app('json')->success(['code' => false, 'image' => false]);
+        }
+        if ($codeUrl !== '' && !(preg_match('/.*(\.png|\.jpg|\.jpeg|\.gif)$/', $codeUrl) || strpos($codeUrl, 'https://mp.weixin.qq.com/cgi-bin/showqrcode') !== false) && strpos(strtolower($codeUrl), "phar://") !== false) {
             return app('json')->success(['code' => false, 'image' => false]);
         }
         try {
@@ -316,8 +346,11 @@ class PublicController
                 $codeTmp = $code = $codeUrl ? image_to_base64($codeUrl) : false;
                 if (!$codeTmp) {
                     $putCodeUrl = put_image($codeUrl);
+                    //TODO
                     $code = $putCodeUrl ? image_to_base64(app()->request->domain(true) . '/' . $putCodeUrl) : false;
-                    $code ?? unlink($_SERVER["DOCUMENT_ROOT"] . '/' . $putCodeUrl);
+                    if ($putCodeUrl) {
+                        unlink($_SERVER["DOCUMENT_ROOT"] . DS . $putCodeUrl);
+                    }
                 }
                 return $code;
             });
@@ -325,8 +358,11 @@ class PublicController
                 $imageTmp = $image = $imageUrl ? image_to_base64($imageUrl) : false;
                 if (!$imageTmp) {
                     $putImageUrl = put_image($imageUrl);
+                    //TODO
                     $image = $putImageUrl ? image_to_base64(app()->request->domain(true) . '/' . $putImageUrl) : false;
-                    $image ?? unlink($_SERVER["DOCUMENT_ROOT"] . '/' . $putImageUrl);
+                    if ($putImageUrl) {
+                        unlink($_SERVER["DOCUMENT_ROOT"] . DS . $putImageUrl);
+                    }
                 }
                 return $image;
             });
@@ -375,6 +411,11 @@ class PublicController
             $uids = array_rand($uids, count($uids) < 3 ? count($uids) : 3);
         }
         $data['avatars'] = $uids ? $user->getColumn(is_array($uids) ? [['uid', 'in', $uids]] : ['uid' => $uids], 'avatar') : [];
+        foreach ($data['avatars'] as &$avatar) {
+            if (strpos($avatar, '/statics/system_images/') !== false) {
+                $avatar = set_file_url($avatar);
+            }
+        }
         return app('json')->success($data);
     }
 
@@ -502,6 +543,11 @@ class PublicController
     public function getScript()
     {
         return sys_config('statistic_script', '');
+    }
+
+    public function customPcJs()
+    {
+        return sys_config('custom_pc_js', '');
     }
 
     /**
@@ -643,6 +689,140 @@ class PublicController
      */
     public function getVersion()
     {
-        return app('json')->success(['version' => get_crmeb_version()]);
+        $version = parse_ini_file(app()->getRootPath() . '.version');
+        return app('json')->success(['version' => $version['version'], 'version_code' => $version['version_code']]);
+    }
+
+    /**
+     * 获取多语言缓存
+     * @return \think\Response
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/03/06
+     */
+    public function getLangVersion()
+    {
+        return app('json')->success(app()->make(LangCodeServices::class)->getLangVersion());
+    }
+
+    /**
+     * 商城基础配置汇总接口
+     * @return \think\Response
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/04/03
+     */
+    public function getMallBasicConfig()
+    {
+        $data['site_name'] = sys_config('site_name');//网站名称
+        $data['site_url'] = sys_config('site_url');//网站地址
+        $data['wap_login_logo'] = sys_config('wap_login_logo');//移动端登录logo
+        $data['record_No'] = sys_config('record_No');//备案号
+        $data['icp_url'] = sys_config('icp_url');//备案号链接
+        $data['network_security'] = sys_config('network_security');//网安备案
+        $data['network_security_url'] = sys_config('network_security_url');//网安备案链接
+        $data['store_self_mention'] = sys_config('store_self_mention');//是否开启到店自提
+        $data['invoice_func_status'] = sys_config('invoice_func_status');//发票功能启用
+        $data['special_invoice_status'] = sys_config('special_invoice_status');//专用发票启用
+        $data['member_func_status'] = sys_config('member_func_status');//用户等级启用
+        $data['balance_func_status'] = sys_config('balance_func_status');//余额功能启用
+        $data['recharge_switch'] = sys_config('recharge_switch');//小程序充值开关
+        $data['member_card_status'] = sys_config('member_card_status');//是否开启付费会员
+        $data['member_price_status'] = sys_config('member_price_status');//商品会员折扣价展示启用
+        $data['ali_pay_status'] = sys_config('ali_pay_status') != '0';//支付宝是否启用
+        $data['pay_weixin_open'] = sys_config('pay_weixin_open') != '0';//微信是否启用
+        $data['yue_pay_status'] = sys_config('yue_pay_status') == 1 && sys_config('balance_func_status') != 0;//余额是否启用
+        $data['offline_pay_status'] = sys_config('offline_pay_status') == 1;//线下是否启用
+        $data['friend_pay_status'] = sys_config('friend_pay_status') == 1;//好友是否启用
+        $data['wechat_auth_switch'] = (int)in_array(1, sys_config('routine_auth_type'));//微信登录开关
+        $data['phone_auth_switch'] = (int)in_array(2, sys_config('routine_auth_type'));//手机号登录开关
+        $data['wechat_status'] = sys_config('wechat_appid') != '' && sys_config('wechat_appsecret') != '';//公众号是否配置
+        $data['site_func'] = sys_config('model_checkbox', ['seckill', 'bargain', 'combination']);
+        return app('json')->success($data);
+    }
+
+    /**
+     * 小程序跳转链接接口
+     * @param $id
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2024/2/26
+     */
+    public function getSchemeUrl($id)
+    {
+        $url = app()->make(RoutineSchemeServices::class)->value($id, 'url');
+        if ($url) {
+            echo '<script>window.location.href="' . $url . '";</script>';
+        } else {
+            echo '<h1>未找到跳转路径</h1>';
+        }
+    }
+
+    /**
+     * 微信服务商支付
+     * @param Request $request
+     * @return \think\Response
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2024/4/7
+     */
+    public function servicePayResult(Request $request)
+    {
+        [$sub_mch_id, $out_trade_no, $check_code] = $request->getMore([
+            ['sub_mch_id', ''],
+            ['out_trade_no', ''],
+            ['check_code', ''],
+        ], true);
+        $data['site_name'] = sys_config('site_name');//网站名称
+        $data['site_url'] = sys_config('site_url');//网站地址
+        $data['site_logo'] = sys_config('wap_login_logo');//移动端登录logo
+        $order = app()->make(StoreOrderServices::class)->getOne(['order_id' => $out_trade_no]);
+        $data['goods_name'] = app()->make(StoreOrderCartInfoServices::class)->getCarIdByProductTitle((int)$order['id']);
+        $data['pay_price'] = $order['pay_price'];
+        $data['jump_url'] = sys_config('site_url') . '/pages/goods/order_pay_status/index?order_id=' . $out_trade_no . '&msg=支付成功&type=3&totalPrice=' . $data['pay_price'];
+        return app('json')->header(['X-Frame-Options' => 'payapp.weixin.qq.com'])->success($data);
+    }
+
+    public function getTransferInfo(Request $request, $order_id, $type)
+    {
+        $extractServices = app()->make(UserExtractServices::class);
+        $lotteryRecordServices = app()->make(LuckLotteryRecordServices::class);
+        $uid = (int)$request->uid();
+        if ($type == 1) {
+            $info = $extractServices->getExtractByOrderId($uid, $order_id);
+            $info['true_extract_price'] = bcsub($info['extract_price'], $info['extract_fee'], 2);
+        } else {
+            $info = $lotteryRecordServices->getRecordByOrderId($uid, $order_id);
+            $info['true_extract_price'] = $info['num'];
+        }
+        if ($info['state'] == 'WAIT_USER_CONFIRM') {
+            $pay = new Pay('v3_wechat_pay');
+            $res = $pay->queryTransferBills($order_id);
+            if (isset($res['fail_reason']) && $res['fail_reason'] != '') {
+                if ($type == 1) {
+                    $extractServices->changeFail($info['id'], $info, '提现失败，原因：超时未领取');
+                    $extractServices->update($info['id'], ['state' => 'FAIL']);
+                } else {
+                    $lotteryRecordServices->update($info['id'], ['state' => 'FAIL']);
+                }
+                $info['state'] = 'FAIL';
+            }
+        }
+        switch ($info['channel_type']) {
+            case 'wechat':
+                $info['wechat_appid'] = sys_config('wechat_appid');
+                break;
+            case 'routine':
+                $info['wechat_appid'] = sys_config('routine_appid');
+                break;
+            case 'app':
+                $info['wechat_appid'] = sys_config('app_appid');
+                break;
+        }
+        $info['mchid'] = sys_config('pay_weixin_mchid');
+        return app('json')->success($info);
     }
 }

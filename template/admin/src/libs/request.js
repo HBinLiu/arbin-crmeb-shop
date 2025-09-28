@@ -9,13 +9,13 @@
 // +---------------------------------------------------------------------
 
 import axios from 'axios';
-import { Message } from 'iview';
+import { Message } from 'element-ui';
 import { getCookies, removeCookies } from '@/libs/util';
 import Setting from '@/setting';
 import router from '@/router';
 const service = axios.create({
   baseURL: Setting.apiBaseURL,
-  timeout: 10000, // 请求超时时间
+  timeout: 100000, // 请求超时时间
 });
 
 axios.defaults.withCredentials = true; // 携带cookie
@@ -69,7 +69,7 @@ service.interceptors.response.use(
         removeCookies('token');
         removeCookies('expires_time');
         removeCookies('uuid');
-        router.replace({ path: '/admin/login' });
+        router.replace({ name: 'login' });
         break;
       case 110005:
       case 110006:
@@ -81,14 +81,13 @@ service.interceptors.response.use(
         router.replace({ path: '/kefu' });
         break;
       case 110008:
-        router.replace({ path: '/admin/system/maintain/system_file/login' });
+        router.replace({ name: 'system_opendir_login' });
         break;
       default:
         return Promise.reject(obj || { msg: '未知错误' });
     }
   },
   (error) => {
-    console.log(error);
     Message.error(error.msg);
     return Promise.reject(error);
   },

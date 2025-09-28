@@ -16,10 +16,10 @@ class ComposerStaticInitf16474ac994ccc25392f403933800b79
         'f598d06aa772fa33d905e87be6398fb1' => __DIR__ . '/..' . '/symfony/polyfill-intl-idn/bootstrap.php',
         '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
         'd767e4fc2dc52fe66584ab8c6684783e' => __DIR__ . '/..' . '/adbario/php-dot-notation/src/helpers.php',
-        '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
         '9b552a3cc426e3287cc811caefa3cf53' => __DIR__ . '/..' . '/topthink/think-helper/src/helper.php',
-        '538ca81a9a966a6716601ecf48f4eaef' => __DIR__ . '/..' . '/opis/closure/functions.php',
+        '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
         '65fec9ebcfbb3cbb4fd0d519687aea01' => __DIR__ . '/..' . '/danielstjules/stringy/src/Create.php',
+        'b067bc7112e384b61c701452d53a14a8' => __DIR__ . '/..' . '/mtdowling/jmespath.php/src/JmesPath.php',
         'abede361264e2ae69ec1eee813a101af' => __DIR__ . '/..' . '/markbaker/complex/classes/src/functions/abs.php',
         '21a5860fbef5be28db5ddfbc3cca67c4' => __DIR__ . '/..' . '/markbaker/complex/classes/src/functions/acos.php',
         '1546e3f9d127f2a9bb2d1b6c31c26ef1' => __DIR__ . '/..' . '/markbaker/complex/classes/src/functions/acosh.php',
@@ -78,9 +78,9 @@ class ComposerStaticInitf16474ac994ccc25392f403933800b79
         'aa53dcba601214d17ad405b7c291b7e8' => __DIR__ . '/..' . '/markbaker/matrix/classes/src/operations/multiply.php',
         '75c79eb1b25749b05a47976f32b0d8a2' => __DIR__ . '/..' . '/markbaker/matrix/classes/src/operations/divideby.php',
         '6ab8ad87a734f276a6bcd5a0fe1289be' => __DIR__ . '/..' . '/markbaker/matrix/classes/src/operations/divideinto.php',
-        'b067bc7112e384b61c701452d53a14a8' => __DIR__ . '/..' . '/mtdowling/jmespath.php/src/JmesPath.php',
         '0d0b82117c23db94c492fee02b2ed01f' => __DIR__ . '/..' . '/songshenzong/support/src/StringsHelpers.php',
         'd96a90b43bcdea846705672ffd4e9294' => __DIR__ . '/..' . '/songshenzong/support/src/BashEchoHelpers.php',
+        '8a9dc1de0ca7e01f3e08231539562f61' => __DIR__ . '/..' . '/aws/aws-sdk-php/src/functions.php',
         '9e090711773bfc38738f5dbaee5a7f14' => __DIR__ . '/..' . '/overtrue/wechat/src/Payment/helpers.php',
         '841780ea2e1d6545ea3a253239d59c05' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/functions.php',
         '667aeda72477189d0494fecd327c3641' => __DIR__ . '/..' . '/symfony/var-dumper/Resources/functions/dump.php',
@@ -97,6 +97,7 @@ class ComposerStaticInitf16474ac994ccc25392f403933800b79
         't' => 
         array (
             'think\\view\\driver\\' => 18,
+            'think\\migration\\' => 16,
             'think\\captcha\\' => 14,
             'think\\app\\' => 10,
             'think\\' => 6,
@@ -161,11 +162,11 @@ class ComposerStaticInitf16474ac994ccc25392f403933800b79
             'Psr\\Container\\' => 14,
             'Psr\\Cache\\' => 10,
             'PhpOffice\\PhpSpreadsheet\\' => 25,
+            'Phinx\\' => 6,
         ),
         'O' => 
         array (
             'Overtrue\\Socialite\\' => 19,
-            'Opis\\Closure\\' => 13,
             'OneSm\\' => 6,
             'OSS\\' => 4,
         ),
@@ -178,7 +179,7 @@ class ComposerStaticInitf16474ac994ccc25392f403933800b79
         'L' => 
         array (
             'Lizhichao\\Word\\' => 15,
-            'League\\Flysystem\\Cached\\' => 24,
+            'League\\MimeTypeDetection\\' => 25,
             'League\\Flysystem\\' => 17,
         ),
         'J' => 
@@ -232,6 +233,7 @@ class ComposerStaticInitf16474ac994ccc25392f403933800b79
         ),
         'A' => 
         array (
+            'Aws\\' => 4,
             'Alipay\\EasySDK\\' => 15,
             'AlibabaCloud\\Tea\\XML\\' => 21,
             'AlibabaCloud\\Tea\\Utils\\' => 23,
@@ -258,6 +260,10 @@ class ComposerStaticInitf16474ac994ccc25392f403933800b79
         array (
             0 => __DIR__ . '/..' . '/topthink/think-view/src',
         ),
+        'think\\migration\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/topthink/think-migration/src',
+        ),
         'think\\captcha\\' => 
         array (
             0 => __DIR__ . '/..' . '/topthink/think-captcha/src',
@@ -270,11 +276,12 @@ class ComposerStaticInitf16474ac994ccc25392f403933800b79
         array (
             0 => __DIR__ . '/..' . '/topthink/framework/src/think',
             1 => __DIR__ . '/..' . '/topthink/think-factory/src',
-            2 => __DIR__ . '/..' . '/topthink/think-helper/src',
-            3 => __DIR__ . '/..' . '/topthink/think-image/src',
-            4 => __DIR__ . '/..' . '/topthink/think-orm/src',
-            5 => __DIR__ . '/..' . '/topthink/think-queue/src',
-            6 => __DIR__ . '/..' . '/topthink/think-template/src',
+            2 => __DIR__ . '/..' . '/topthink/think-filesystem/src',
+            3 => __DIR__ . '/..' . '/topthink/think-helper/src',
+            4 => __DIR__ . '/..' . '/topthink/think-image/src',
+            5 => __DIR__ . '/..' . '/topthink/think-orm/src',
+            6 => __DIR__ . '/..' . '/topthink/think-queue/src',
+            7 => __DIR__ . '/..' . '/topthink/think-template/src',
         ),
         'dh2y\\qrcode\\' => 
         array (
@@ -400,13 +407,13 @@ class ComposerStaticInitf16474ac994ccc25392f403933800b79
         array (
             0 => __DIR__ . '/..' . '/phpoffice/phpspreadsheet/src/PhpSpreadsheet',
         ),
+        'Phinx\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/topthink/think-migration/phinx/src/Phinx',
+        ),
         'Overtrue\\Socialite\\' => 
         array (
             0 => __DIR__ . '/..' . '/overtrue/socialite/src',
-        ),
-        'Opis\\Closure\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/opis/closure/src',
         ),
         'OneSm\\' => 
         array (
@@ -432,9 +439,9 @@ class ComposerStaticInitf16474ac994ccc25392f403933800b79
         array (
             0 => __DIR__ . '/..' . '/lizhichao/word/Lib',
         ),
-        'League\\Flysystem\\Cached\\' => 
+        'League\\MimeTypeDetection\\' => 
         array (
-            0 => __DIR__ . '/..' . '/league/flysystem-cached-adapter/src',
+            0 => __DIR__ . '/..' . '/league/mime-type-detection/src',
         ),
         'League\\Flysystem\\' => 
         array (
@@ -551,6 +558,10 @@ class ComposerStaticInitf16474ac994ccc25392f403933800b79
         'Carbon\\' => 
         array (
             0 => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon',
+        ),
+        'Aws\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/aws/aws-sdk-php/src',
         ),
         'Alipay\\EasySDK\\' => 
         array (

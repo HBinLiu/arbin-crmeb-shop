@@ -4,12 +4,12 @@
       <span>选择模板</span>{{ datas[name].tabList[datas[name].tabVal].name }}
     </div>
     <div class="radio-box" :class="{ on: datas[name].type == 1 }">
-      <RadioGroup v-model="datas[name].tabVal" type="button" size="large" @on-change="radioChange($event)">
-        <Radio :label="index" v-for="(item, index) in datas[name].tabList" :key="index">
+      <el-radio-group v-model="datas[name].tabVal" size="mini" type="button" @input="radioChange()">
+        <el-radio-button :label="index" v-for="(item, index) in datas[name].tabList" :key="index">
           <span class="iconfont" :class="item.icon" v-if="item.icon"></span>
           <span v-else>{{ item.name }}</span>
-        </Radio>
-      </RadioGroup>
+        </el-radio-button>
+      </el-radio-group>
     </div>
   </div>
 </template>
@@ -55,35 +55,44 @@ export default {
   },
   methods: {
     radioChange(e) {
-      this.$emit('getConfig', e);
-      this.$store.commit('moren/upDataGoodList', { name: this.moduleName, type: e });
+      this.$emit('getConfig', this.datas[this.name].tabVal);
+      this.$store.commit('moren/upDataGoodList', { name: this.moduleName, type: this.datas[this.name].tabVal });
     },
   },
 };
 </script>
 
-<style scoped lang="stylus">
-.radio-box
-    /deep/.ivu-radio-group-button
-        display flex
-        width 100%
-        .ivu-radio-wrapper
-            flex 1
-            display flex
-            align-items center
-            justify-content center
-    &.on
-        /deep/.ivu-radio-group-button
-            .ivu-radio-wrapper
-                flex 1
-.title-tips
-    padding-bottom 10px
-    font-size 14px
-    color #333
-    span
-        margin-right 14px
-        color #999
-.iconfont
-    font-size 20px
-    line-height 18px
+<style lang="scss" scoped>
+.radio-box {
+  ::v-deep .ivu-radio-group-button {
+    display: flex;
+    width: 100%;
+    .ivu-radio-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+  &.on {
+    ::v-deep .ivu-radio-group-button {
+      .ivu-radio-wrapper {
+        flex: 1;
+      }
+    }
+  }
+}
+.title-tips {
+  padding-bottom: 10px;
+  font-size: 14px;
+  color: #333;
+  span {
+    margin-right: 14px;
+    color: #999;
+  }
+}
+.iconfont {
+  font-size: 20px;
+  line-height: 18px;
+}
 </style>

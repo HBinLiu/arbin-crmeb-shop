@@ -57,12 +57,19 @@ class StoreProductRelationServices extends BaseServices
      */
     public function getUserCollectCount(int $uid)
     {
-        return $this->dao->count(['uid' => $uid, 'tye' => 'collect']);
+        return $this->dao->count(['uid' => $uid, 'type' => 'collect']);
     }
 
     /**
+     * 收藏
      * @param int $uid
-     * @return mixed
+     * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/03/01
      */
     public function getUserCollectProduct(int $uid)
     {
@@ -111,6 +118,14 @@ class StoreProductRelationServices extends BaseServices
         }
         //收藏记录
         ProductLogJob::dispatch(['collect', ['uid' => $uid, 'product_id' => $productId]]);
+
+        //自定义事件-用户商品收藏
+        event('CustomEventListener', ['user_product_collect', [
+            'product_id' => $productId,
+            'uid' => $uid,
+            'collect_time' => date('Y-m-d H:i:s'),
+        ]]);
+
         return true;
     }
 

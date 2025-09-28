@@ -1,71 +1,96 @@
 <template>
 	<view v-if="pageShow" class="page"
-		:class="bgTabVal==2?'fullsize noRepeat':bgTabVal==1?'repeat ysize':'noRepeat ysize'"
-		:style="'background-color:'+bgColor+';background-image: url('+bgPic+');min-height:'+windowHeight+'px;'">
-		<view :style="{ marginTop: sortMpTop + 'px' }">
-			<!-- #ifdef H5 -->
-			<view v-for="(item, index) in styleConfig" :key="index">
-				<component :is="item.name" :index="index" :dataConfig="item" @changeBarg="changeBarg"
-					@changeTab="changeTab" :tempArr="tempArr" :iSshowH="iSshowH" @detail="goDetail"></component>
-			</view>
-			<!-- #endif -->
-			<!-- #ifdef MP || APP-PLUS-->
-			<block v-for="(item, index) in styleConfig" :key="index">
-				<activeParty v-if="item.name == 'activeParty'" :dataConfig="item"></activeParty>
-				<articleList v-if="item.name == 'articleList'" :dataConfig="item"></articleList>
-				<bargain v-if="item.name == 'bargain'" :dataConfig="item" @changeBarg="changeBarg"></bargain>
-				<blankPage v-if="item.name == 'blankPage'" :dataConfig="item"></blankPage>
-				<combination v-if="item.name == 'combination'" :dataConfig="item"></combination>
-				<coupon v-if="item.name == 'coupon'" :dataConfig="item"></coupon>
-				<customerService v-if="item.name == 'customerService'" :dataConfig="item"></customerService>
-				<goodList v-if="item.name == 'goodList'" :dataConfig="item" @detail="goDetail"></goodList>
-				<guide v-if="item.name == 'guide'" :dataConfig="item"></guide>
-				<headerSerch v-if="item.name == 'headerSerch'" :dataConfig="item" :special="1"></headerSerch>
-				<liveBroadcast v-if="item.name == 'liveBroadcast'" :dataConfig="item"></liveBroadcast>
-				<menus v-if="item.name == 'menus'" :dataConfig="item"></menus>
-				<news v-if="item.name == 'news'" :dataConfig="item"></news>
-				<pictureCube v-if="item.name == 'pictureCube'" :dataConfig="item" :isSortType="isSortType">
-				</pictureCube>
-				<promotionList v-if="item.name == 'promotionList'" :dataConfig="item" @changeTab="changeTab"
-					:tempArr="tempArr" :iSshowH="iSshowH" @detail="goDetail"></promotionList>
-				<richText v-if="item.name == 'richText'" :dataConfig="item"></richText>
-				<seckill v-if="item.name == 'seckill'" :dataConfig="item"></seckill>
-				<swiperBg v-if="item.name == 'swiperBg'" :dataConfig="item"></swiperBg>
-				<swipers v-if="item.name == 'swipers'" :dataConfig="item"></swipers>
-				<tabNav v-if="item.name == 'tabNav'" :dataConfig="item"></tabNav>
-				<titles v-if="item.name == 'titles'" :dataConfig="item"></titles>
-			</block>
-			<!-- #endif -->
-			<view class="loadingicon acea-row row-center-wrapper"
-				v-if="tempArr.length && styleConfig[styleConfig.length - 1].name == 'promotionList'">
-				<text class="loading iconfont icon-jiazai" :hidden="loading == false"></text>
-				{{ loadTitle }}
-			</view>
-			<view class="foot" v-if="newData.menuList && newData.status.status">
-				<view class="page-footer" id="target" :style="{'background-color':newData.bgColor.color[0].item}">
-					<view class="foot-item" v-for="(item,index) in newData.menuList" :key="index"
-						@click="goRouter(item)">
-						<block v-if="item.link == activeRouter">
-							<image :src="item.imgList[0]"></image>
-							<view class="txt" :style="{color:newData.activeTxtColor.color[0].item}">{{item.name}}</view>
-						</block>
-						<block v-else>
-							<image :src="item.imgList[1]"></image>
-							<view class="txt" :style="{color:newData.txtColor.color[0].item}">{{item.name}}</view>
-						</block>
-						<div class="count-num"
-							v-if="item.link === '/pages/order_addcart/order_addcart' && $store.state.indexData.cartNum && $store.state.indexData.cartNum > 0">
-							{{$store.state.indexData.cartNum}}
-						</div>
+		:class="bgTabVal==2?'fullsize noRepeat':bgTabVal==1?'repeat ysize':'noRepeat ysize'" :style="[pageStyle]">
+		<view :style="colorStyle">
+			<!-- 轮播搜索 -->
+			<homeComb v-if="showHomeComb" :dataConfig="homeCombData" :belongIndex='belongIndex' :special='1' @bindSortId="bindSortId" :isScrolled="isScrolled"  @storeTap="storeTap"></homeComb>
+			<!-- 顶部搜索框 -->
+			<headerSerch v-if="isHeaderSerch" :dataConfig="headerSerchCombData" :belongIndex='belongIndex' :special='1'  @storeTap="storeTap"></headerSerch>
+			<tabNav v-if="showCateNav" :dataConfig="cateNavData" @bindHeight="bindHeighta"
+				@bindSortId="bindSortId" :special='1' :isFixed="isFixed && !cateNavData.stickyConfig.tabVal"></tabNav>
+			<view class="index">
+				<!-- 自定义样式 -->
+				<block v-for="(item, index) in styleConfig" :key="index">
+					<!-- <homeComb v-if="item.name == 'homeComb'" :dataConfig="item" @bindSortId="bindSortId"
+						:isScrolled="isScrolled" :special='1'></homeComb> -->
+					<!-- <headerSerch v-if="item.name == 'headerSerch'" :dataConfig="item" :special='1'></headerSerch> -->
+					<!-- 顶部选项卡 -->
+					<!-- <tabNav v-if="item.name == 'tabNav'" :dataConfig="item" @bindHeight="bindHeighta"
+						@bindSortId="bindSortId" :special='1' :isFixed="isFixed && !item.stickyConfig.tabVal"></tabNav> -->
+					<userInfor v-if="item.name == 'userInfor'" :dataConfig="item" @changeLogin="changeLogin">
+					</userInfor>
+					<newVip v-if="item.name == 'newVip'" :dataConfig="item"></newVip>
+					<!-- 文章列表 -->
+					<articleList v-if="item.name == 'articleList'" :dataConfig="item"></articleList>
+					<bargain v-if="item.name == 'bargain'" :dataConfig="item" @changeBarg="changeBarg"></bargain>
+					<blankPage v-if="item.name == 'blankPage'" :dataConfig="item"></blankPage>
+					<combination v-if="item.name == 'combination'" :dataConfig="item">
+					</combination>
+					<!-- 优惠券 -->
+					<coupon v-if="item.name == 'coupon'" :dataConfig="item" @changeLogin="changeLogin"></coupon>
+					<!-- 客户服务 -->
+					<customerService v-if="item.name == 'customerService'" :dataConfig="item">
+					</customerService>
+					<!-- 商品列表 -->
+					<goodList ref="goodLists" v-if="item.name == 'goodList'" :dataConfig="item"></goodList>
+					<guide v-if="item.name == 'guide'" :dataConfig="item"></guide>
+					<!-- 直播模块 -->
+					<!-- #ifdef  MP-WEIXIN -->
+					<liveBroadcast v-if="item.name == 'liveBroadcast'" :dataConfig="item"></liveBroadcast>
+					<!-- #endif -->
+					<menus v-if="item.name == 'menus'" :dataConfig="item"></menus>
+					<!-- 实时消息 -->
+					<news v-if="item.name == 'news'" :dataConfig="item"></news>
+					<!-- 图片库 -->
+					<pictureCube v-if="item.name == 'pictureCube'" :dataConfig="item">
+					</pictureCube>
+					<!-- 促销列表 -->
+					<promotionList ref="promotionLists" v-if="item.name == 'promotionList'" :dataConfig="item"
+					:productVideoStatus='product_video_status' :positionTop="positionTop">
+					</promotionList>
+					<richText v-if="item.name == 'richText'" :dataConfig="item"></richText>
+					<videos v-if="item.name == 'videos'" :dataConfig="item"></videos>
+					<seckill v-if="item.name == 'seckill'" :dataConfig="item"></seckill>
+					<!-- 轮播图-->
+					<swiperBg v-if="item.name == 'swiperBg'" :dataConfig="item"></swiperBg>
+					<swipers v-if="item.name == 'swipers'" :dataConfig="item"></swipers>
+					<!-- 标题 -->
+					<titles v-if="item.name == 'titles'" :dataConfig="item"></titles>
+					<ranking v-if="item.name == 'ranking'" :dataConfig="item"></ranking>
+					<presale v-if="item.name == 'presale'" :dataConfig="item"></presale>
+					<pointsMall v-if="item.name == 'pointsMall'" :dataConfig="item"></pointsMall>
+					<signIn v-if="item.name == 'signIn'" :dataConfig="item"></signIn>
+					<hotspot v-if="item.name == 'hotspot'" :dataConfig="item"></hotspot>
+					<follow v-if="item.name == 'follow'" :dataConfig="item"></follow>
+				</block>
+				<!-- 分类商品模块 -->
+				<!-- #ifndef  APP-PLUS -->
+				<view class="sort-product px-20" v-if="sortList.children && sortList.children.length">
+				<!-- #endif -->
+					<!-- #ifdef  APP-PLUS -->
+					<!-- 商品排序 -->
+					<view class="sort-product px-20" :style="{ marginTop: sortMpTop + 'px' }"
+						v-if="sortList.children && sortList.children.length">
+					<!-- #endif -->
+						<waterfallsFlow ref="waterfallsFlow" :wfList="goodList" :goDetail="'goDetail'" @itemTap="goDetail"></waterfallsFlow>
+						<Loading :loaded="loaded" :loading="loading"></Loading>
+						<view v-if="goodList.length == 0 && loaded" class="sort-scroll rd-16rpx">
+							<view class="empty-box pb-24">
+								<image :src="imgHost + '/statics/images/no-thing.png'"></image>
+								<view class="tips">暂无商品，去看点别的吧</view>
+							</view>
+						</view>
 					</view>
+					<view :style="[pdHeights]" v-if="isFooter"></view>
+					<pageFooter :isTabBar="false" :configData="tabBarData"></pageFooter>
 				</view>
 			</view>
 		</view>
-	</view>
 </template>
 
 <script>
 	const app = getApp();
+	import colors from "@/mixins/color";
 	import couponWindow from '@/components/couponWindow/index'
 	import {
 		getCouponV2,
@@ -75,32 +100,43 @@
 		getShare
 	} from '@/api/public.js';
 	// #ifdef H5
-	import mConfig from '@/pages/index/diy/components/index.js';
+	import {
+		silenceAuth
+	} from '@/api/public.js';
 	// #endif
-	// #ifdef MP || APP-PLUS
-	import authorize from '@/components/Authorize';
-	import activeParty from '@/pages/index/diy/components/activeParty';
-	import headerSerch from '@/pages/index/diy/components/headerSerch';
-	import swipers from '@/pages/index/diy/components/swipers';
-	import coupon from '@/pages/index/diy/components/coupon';
-	import articleList from '@/pages/index/diy/components/articleList';
-	import bargain from '@/pages/index/diy/components/bargain';
-	import blankPage from '@/pages/index/diy/components/blankPage';
-	import combination from '@/pages/index/diy/components/combination';
-	import customerService from '@/pages/index/diy/components/customerService';
-	import goodList from '@/pages/index/diy/components/goodList';
-	import guide from '@/pages/index/diy/components/guide';
-	import liveBroadcast from '@/pages/index/diy/components/liveBroadcast';
-	import menus from '@/pages/index/diy/components/menus';
-	import news from '@/pages/index/diy/components/news';
-	import promotionList from '@/pages/index/diy/components/promotionList';
-	import richText from '@/pages/index/diy/components/richText';
-	import seckill from '@/pages/index/diy/components/seckill';
-	import swiperBg from '@/pages/index/diy/components/swiperBg';
-	import tabNav from '@/pages/index/diy/components/tabNav';
-	import titles from '@/pages/index/diy/components/titles';
-	import pictureCube from '@/pages/index/diy/components/pictureCube';
 
+	import userInfor from '@/pages/index/components/userInfor';
+	import homeComb from '@/pages/index/components/homeComb';
+	import newVip from '@/pages/index/components/newVip';
+	import headerSerch from '@/pages/index/components/headerSerch';
+	import swipers from '@/pages/index/components/swipers';
+	import coupon from '@/pages/index/components/coupon';
+	import articleList from '@/pages/index/components/articleList';
+	import bargain from '@/pages/index/components/bargain';
+	import blankPage from '@/pages/index/components/blankPage';
+	import combination from '@/pages/index/components/combination';
+	import customerService from '@/pages/index/components/customerService';
+	import goodList from '@/pages/index/components/goodList';
+	import guide from '@/pages/index/components/guide';
+	import liveBroadcast from '@/pages/index/components/liveBroadcast';
+	import menus from '@/pages/index/components/menus';
+	import news from '@/pages/index/components/news';
+	import pictureCube from '@/pages/index/components/pictureCube';
+	import promotionList from '@/pages/index/components/promotionList';
+	import richText from '@/pages/index/components/richText';
+	import seckill from '@/pages/index/components/seckill';
+	import swiperBg from '@/pages/index/components/swiperBg';
+	import tabNav from '@/pages/index/components/tabNav';
+	import titles from '@/pages/index/components/titles';
+	import ranking from '@/pages/index/components/ranking';
+	import presale from '@/pages/index/components/presale'
+	import pointsMall from '@/pages/index/components/pointsMall';
+	import videos from '@/pages/index/components/videos';
+	import signIn from '@/pages/index/components/signIn';
+	import hotspot from '@/pages/index/components/hotspot';
+	import follow from '@/pages/index/components/follow';
+	import waterfallsFlow from "@/components/WaterfallsFlow/WaterfallsFlow.vue";
+	// #ifdef MP
 	import {
 		getTempIds
 	} from '@/api/api.js';
@@ -108,17 +144,20 @@
 		SUBSCRIBE_MESSAGE,
 		TIPS_KEY
 	} from '@/config/cache';
-
 	// #endif
 	import {
-		mapGetters
+		mapGetters,
+		mapMutations
 	} from 'vuex';
 	import {
 		getDiy,
-		getIndexData
+		getDiyVersion,
+		getEntryStore
 	} from '@/api/api.js';
 	import {
-		getGroomList
+		getCategoryList,
+		getProductslist,
+		getProductHot,
 	} from '@/api/store.js';
 	import {
 		goShopDetail
@@ -126,18 +165,37 @@
 	import {
 		toLogin
 	} from '@/libs/login.js';
+	import {
+		HTTP_REQUEST_URL
+	} from '@/config/app';
 	import pageFooter from '@/components/pageFooter/index.vue'
+	import Loading from '@/components/Loading/index.vue';
+	import Cache from '@/utils/cache';
 	export default {
-		computed: mapGetters(['isLogin', 'uid']),
+		computed: {
+			pageStyle() {
+				return {
+					backgroundColor: this.bgColor,
+					backgroundImage: this.bgPic ? `url(${this.bgPic})` : '',
+					minHeight: this.windowHeight + 'px'
+				}
+			},
+			pdHeights(){
+				let H = `${this.pdHeight*2 + 100}rpx`
+				return{
+					height: this.isFooter?H:'100rpx'
+				}
+			},
+			...mapGetters(['isLogin', 'uid']),
+		},
+		mixins: [colors],
 		components: {
+			Loading,
 			pageFooter,
 			couponWindow,
-			// #ifdef H5
-			...mConfig,
-			// #endif
-			// #ifdef MP || APP-PLUS
-			authorize,
-			activeParty,
+			homeComb,
+			newVip,
+			userInfor,
 			headerSerch,
 			swipers,
 			coupon,
@@ -150,6 +208,7 @@
 			guide,
 			liveBroadcast,
 			menus,
+			pictureCube,
 			news,
 			promotionList,
 			richText,
@@ -157,21 +216,31 @@
 			swiperBg,
 			tabNav,
 			titles,
-			pictureCube
-			// #endif
+			ranking,
+			presale,
+			pointsMall,
+			videos,
+			signIn,
+			hotspot,
+			follow,
+			waterfallsFlow
 		},
-		computed: mapGetters(['isLogin']),
 		data() {
 			return {
+				isFixed: false,
+				isHeaderSerch: false,
+				showHomeComb: false,
+				showCateNav: false,
+				homeCombData:{},
+				headerSerchCombData:{},
+				cateNavData:{},
+				domOffsetTop: 50,
 				styleConfig: [],
-				tempArr: [],
-				goodType: 3,
 				loading: false,
 				loadend: false,
-				loadTitle: this.$t(`加载更多`), //提示语
+				loadTitle: '加载更多', //提示语
 				page: 1,
 				limit: this.$config.LIMIT,
-				iSshowH: false,
 				numConfig: 0,
 				code: '',
 				isCouponShow: false,
@@ -181,13 +250,41 @@
 				footConfig: {},
 				pageId: '',
 				sortMpTop: 0,
-				newData: {},
-				activeRouter: '',
 				bgColor: '',
 				bgPic: '',
 				bgTabVal: '',
 				pageShow: true,
-				windowHeight: 0
+				windowHeight: 0,
+				isShowAuth: false,
+				isScrolled: false,
+				sortList: '',
+				sortAll: [],
+				isSortType: 0,
+				hostProduct: [],
+				hotScroll: false,
+				hotPage: 1,
+				hotLimit: 10,
+				curSort: 0,
+				loaded: false,
+				goodPage: 1,
+				goodList: [],
+				sid: 0,
+				positionTop: 0,
+				imgHost: HTTP_REQUEST_URL,
+                product_video_status: false,
+				isFooter: false,
+				pdHeight:0, //自定义底部导航上下边距和
+				entryData:{
+					store_id:'',
+					latitude:'',
+					longitude:'',
+					select_store_id:''
+				},
+				goodsIndex: [],
+				promotionIndex: [],
+				belongIndex:0, // 进店规则归属门店排序位置；
+				isBelongStore: false, //判断是否为归属门店；
+				tabBarData:{},
 			};
 		},
 		onLoad(options) {
@@ -211,23 +308,13 @@
 			}
 			// #endif
 			uni.setNavigationBarTitle({
-				title: this.$t(`专题栏`)
+				title: '专题栏'
 			});
 
 			// #ifdef APP-PLUS
 			this.sortMpTop = -50
 			// #endif
-			uni.getLocation({
-				type: 'wgs84',
-				success: function(res) {
-					try {
-						uni.setStorageSync('user_latitude', res.latitude);
-						uni.setStorageSync('user_longitude', res.longitude);
-					} catch {}
-				}
-			});
 			this.diyData();
-			this.getIndexData();
 			// #ifdef H5
 			this.setOpenShare();
 			// #endif
@@ -237,9 +324,10 @@
 			getShare().then(res => {
 				this.shareInfo = res.data;
 			})
-			let routes = getCurrentPages(); // 获取当前打开过的页面路由数组
-			let curRoute = routes[routes.length - 1].route //获取当前页面路由
-			this.activeRouter = '/' + curRoute + '?id=' + this.pageId
+		},
+		onUnload() {
+			// 清除监听
+			uni.$off('activeFn');
 		},
 		watch: {
 			isLogin: {
@@ -259,7 +347,8 @@
 				}
 			}
 		},
-		mounted() {
+		onShow() {
+			uni.removeStorageSync('form_type_cart');
 			// 优惠券弹窗
 			var newDates = new Date().toLocaleDateString();
 			if (this.isLogin) {
@@ -277,18 +366,135 @@
 		},
 		mounted() {},
 		methods: {
-			goRouter(item) {
-				var pages = getCurrentPages();
-				var page = (pages[pages.length - 1]).$page.fullPath;
-				if (item.link == page) return
-				uni.switchTab({
-					url: item.link,
-					fail(err) {
-						uni.redirectTo({
-							url: item.link
-						})
-					}
-				})
+			...mapMutations(['SET_NEARBY']),
+			locationTap(val){
+				this.entryData.latitude = val.latitude;
+				this.entryData.longitude = val.longitude;
+				this.entryStore(1);
+			},
+			storeTap(id){
+				this.entryData.select_store_id = id;
+				this.entryData.store_id = '';
+				uni.removeStorageSync('rulesStoreId');
+				this.entryStore(1);
+			},
+			// 分类点击
+			changeSort(item, index) {
+				if (this.curSort == index) return;
+				this.curSort = index;
+				this.sid = item.id;
+				this.goodList = [];
+				this.goodPage = 1;
+				this.loaded = false;
+				this.getGoodsList();
+			},
+			/**
+			 * @param data {
+				classPage: 0 分类id
+				microPage: 0 微页面id
+				type: 1   0 商品分类 1 微页面
+			 }*/
+			bindSortId(data) {
+				this.styleConfig = [];
+				if (data.type == 1) {
+					this.getProductList(data.classPage);
+				} else {
+					this.sortList = [];
+					this.getMicroPage(data.microPage, true);
+				}
+			},
+			/**
+			 * 获取DIY
+			 * @param {number} id
+			 * @param {boolean} type 区分是否是微页面
+			 */
+			getMicroPage(id, type) {
+				let that = this;
+				that.styleConfig = []
+				uni.showLoading({
+					title: '加载中...'
+				});
+				getDiy(id).then(res => {
+					uni.hideLoading();
+					let data = res.data;
+					let diyArr = that.objToArr(res.data.value);
+					diyArr = diyArr.filter(item => !item.isHide);
+					diyArr.forEach((item,index) => {
+					  if(['headerSerch','homeComb'].includes(item.name)){
+					    diyArr.splice(index, 1);
+					  }
+					});
+					this.styleConfig = diyArr;
+				}).catch(err => {
+					return that.$util.Tips({
+						title: err
+					});
+					uni.hideLoading();
+				});
+			},
+			getProductList(data) {
+				this.curSort = 0;
+				this.loaded = false;
+				if (this.sortAll.length > 0) {
+					this.sortAll.forEach((el, index) => {
+						if (el.id == data) {
+							this.$set(this, 'sortList', el);
+							this.sid = el.children.length ? el.children[0].id : '';
+						}
+					});
+					this.goodList = [];
+					this.goodPage = 1;
+					this.$nextTick(() => {
+						if (this.sortList != '') this.getGoodsList();
+					});
+				} else {
+					getCategoryList().then(res => {
+						this.sortAll = res.data;
+						res.data.forEach((el, index) => {
+							if (el.id == data) {
+								this.sortList = el;
+								this.sid = el.children.length ? el.children[0].id : '';
+							}
+						});
+						this.goodList = [];
+						this.goodPage = 1;
+						this.$nextTick(() => {
+							if (this.sortList != '') this.getGoodsList();
+						});
+					});
+				}
+			},
+			// 商品列表
+			getGoodsList() {
+				if (this.loading || this.loaded) return;
+				this.loading = true;
+				getProductslist({
+					sid: this.sid,
+					keyword: '',
+					priceOrder: '',
+					salesOrder: '',
+					news: 0,
+					page: this.goodPage,
+					limit: 10,
+					cid: this.sortList.id
+				}).then(res => {
+					this.loading = false;
+					this.loaded = res.data.length < 10;
+					this.goodPage++;
+					this.goodList = this.goodList.concat(res.data);
+				});
+			},
+			/**
+			 * 获取我的推荐
+			 */
+			get_host_product: function() {
+				let that = this;
+				if (that.hotScroll) return;
+				getProductHot(that.hotPage, that.hotLimit).then(res => {
+					that.hotPage++;
+					that.hotScroll = res.data.length < that.hotLimit;
+					that.hostProduct = that.hostProduct.concat(res.data);
+				});
 			},
 			// 新用户优惠券
 			getCouponOnce() {
@@ -320,7 +526,6 @@
 					uni.setStorageSync('oldDate', new Date().toLocaleDateString());
 				} catch {}
 			},
-			onLoadFun() {},
 			// #ifdef H5
 			// 获取url后面的参数
 			getQueryString(name) {
@@ -342,120 +547,158 @@
 			getTempIds() {
 				let messageTmplIds = wx.getStorageSync(SUBSCRIBE_MESSAGE);
 				if (!messageTmplIds) {
-					getTempIds().then(res => {
-						if (res.data) wx.setStorageSync(SUBSCRIBE_MESSAGE, JSON.stringify(res.data));
-					});
+					// getTempIds().then(res => {
+					// 	if (res.data) wx.setStorageSync(SUBSCRIBE_MESSAGE, JSON.stringify(res.data));
+					// });
 				}
 			},
 			// #endif
 			// 对象转数组
 			objToArr(data) {
-				if (!data) return
 				const keys = Object.keys(data)
 				keys.sort((a, b) => a - b)
 				const m = keys.map(key => data[key]);
 				return m;
 			},
-			diyData() {
-				let that = this;
-				getDiy(this.pageId).then(res => {
-					let data = res.data;
-					if (res.data.length == 0) {
-						return this.$util.Tips({
-							title: this.$t(`暂无数据`)
-						}, {
-							tab: 3
-						})
-					}
-
-					if (data.is_bg_color) {
-						this.bgColor = data.color_picker
-					}
-					if (data.is_bg_pic) {
-						this.bgPic = data.bg_pic
-						this.bgTabVal = data.bg_tab_val
-					}
-					this.pageShow = data.is_show
-					uni.setNavigationBarTitle({
-						title: res.data.title
+			setDiyData(data) {
+				if (data.length == 0) {
+					return this.$util.Tips({
+						title: '暂无数据'
+					}, {
+						tab: 3
 					})
-					let temp = []
-					let lastArr = that.objToArr(res.data.value)
-					lastArr.forEach((item, index, arr) => {
-						if (item.name == 'pageFoot') {
-							uni.setStorageSync('pageFoot', item)
-							that.$store.commit('FOOT_UPLOAD', item)
-							arr.splice(index, 1)
-							this.newData = item
+				}
+
+				if (data.is_bg_color) {
+					this.bgColor = data.color_picker
+				}
+				if (data.is_bg_pic) {
+					this.bgPic = data.bg_pic
+					this.bgTabVal = data.bg_tab_val
+				}
+				this.pageShow = data.is_show
+				uni.setNavigationBarTitle({
+					title: data.title
+				})
+				let temp = []
+				let goodsIndex = [];
+				let promotionIndex = [];
+				let lastArr = this.objToArr(data.value)
+				lastArr.forEach((item, index, arr) => {
+					if (item.name === 'homeComb' && !item.isHide) {
+						this.showHomeComb = true;
+						this.homeCombData = item;
+						if (item.searchConfig.tabVal) {
+							this.positionTop = 43
 						}
-						if (item.name == 'promotionList') {
-							that.numConfig = item.numConfig.val;
-							that.getGroomList();
-						}
-						temp = arr
-					});
-					that.styleConfig = temp;
+					}
+					if (item.name == 'headerSerch' && !item.isHide) {
+						this.isHeaderSerch = true;
+						this.headerSerchCombData = item;
+					}
+					if (item.name == 'tabNav' && !item.isHide) {
+						this.showCateNav = true;
+						this.cateNavData = item;
+					}
+					if(item.name == 'goodList' && !item.isHide){
+						goodsIndex.push(index)
+					}
+					if(item.name == 'promotionList' && !item.isHide){
+						promotionIndex.push(index)
+					}
+					if (item.name == 'pageFoot') {
+						this.tabBarData = item;
+						this.isFooter = item.effectConfig.tabVal?true:false
+						this.pdHeight = item.topConfig.val + item.bottomConfig.val
+					}
+					if (!item.isHide) {
+						temp.push(item);
+					}
+				});
+				function sortNumber(a, b) {
+					return a.timestamp - b.timestamp;
+				}
+				temp.sort(sortNumber);
+				this.styleConfig = temp;
+				this.goodsIndex = goodsIndex;
+				this.promotionIndex = promotionIndex;
+				this.entryStore();
+			},
+			getDiyData() {
+				getDiy(this.pageId).then(res => {
+					uni.setStorageSync('specialDiyData', JSON.stringify(res.data));
+					this.setDiyData(res.data);
 				});
 			},
-			getIndexData() {},
+			diyData() {
+				this.getDiyData();
+				// let that = this;
+				// let diyData = uni.getStorageSync('specialDiyData');
+				// if (diyData) {
+				// 	getDiyVersion(this.pageId).then(res => {
+				// 		let diyVersion = uni.getStorageSync('specialDiyVersion');
+				// 		if ((res.data.version + this.pageId) === diyVersion) {
+				// 			this.setDiyData(JSON.parse(diyData));
+				// 		} else {
+				// 			uni.setStorageSync('specialDiyVersion', (res.data.version + this.pageId));
+				// 			this.getDiyData();
+				// 		}
+				// 	});
+				// } else {
+				// 	this.getDiyData();
+				// }
+			},
+			entryStore(num){
+				// num 更新门店或是位置时需要重新获取门店商品数据（针对得是单店模式）
+				// this.entryData.store_id = Cache('rulesStoreId');
+				// getEntryStore(this.entryData).then(res=>{
+				// 	if(res.data.user_entry_name == 'user_belong_store'){
+				// 		this.isBelongStore = true;
+				// 	}
+				// 	let storeId= res.data.store_id;
+				// 	uni.setStorageSync('user_store_id', storeId);
+				// 	uni.setStorageSync('shop_operation_type', res.data.shop_operation_type);
+				// 	this.SET_NEARBY(storeId);
+				// 	let data = {
+				// 		store_id:storeId
+				// 	}
+				// 	let changeStore = true;
+				// 	let entryRules = res.data.user_entry_rules;
+				// 	entryRules.forEach((item,index)=>{
+				// 		if(item.name == 'user_belong_store'){
+				// 			this.belongIndex = index;
+				// 			changeStore = item.is_change_store;
+				// 		}
+				// 	})
+				// 	if(res.data.shop_operation_type !=1 && num){
+				// 		this.goodsIndex.forEach((item,index)=>{
+				// 			this.$refs.goodLists[index].productslist();
+				// 		})
+				// 		this.promotionIndex.forEach((item,index)=>{
+				// 			this.$refs.promotionLists[index].$refs.goodLists.productslist();
+				// 		})
+				// 	}
+				// }).catch(err=>{
+				//    this.$util.Tips({
+				// 	   title: err
+				//    });
+				// })
+			},
 			changeBarg(item) {
 				if (!this.isLogin) {
-					toLogin();
+					toLogin()
 				} else {
 					uni.navigateTo({
-						url: `/pages/activity/goods_bargain_details/index?id=${item.id}&bargain=${this.uid}`
+						url: `/pages/activity/goods_bargain_details/index?id=${item.id}&spid=${this.uid}`
 					});
 				}
-			},
-			// 促销列表的点击事件；
-			changeTab(type) {
-				this.goodType = type;
-				this.tempArr = [];
-				this.page = 1;
-				this.loadend = false;
-				let onloadH = true;
-				this.getGroomList(onloadH);
-			},
-			// 精品推荐
-			getGroomList(onloadH) {
-				let that = this;
-				let type = that.goodType;
-				if (that.loadend) return false;
-				if (that.loading) return false;
-				if (onloadH) {
-					that.$set(that, 'iSshowH', true);
-				}
-				getGroomList(type, {
-						page: that.page,
-						limit: that.limit
-					})
-					.then(({
-						data
-					}) => {
-						that.$set(that, 'iSshowH', false);
-						let maxPage = Math.ceil(this.numConfig / this.limit);
-						let list = data.list,
-							loadend = list.length < that.limit || that.page >= maxPage;
-						let tempArr = that.$util.SplitArray(list, that.tempArr);
-						that.$set(that, 'tempArr', tempArr.slice(0, this.numConfig));
-						that.loadend = loadend;
-						that.loadTitle = loadend ? that.$t(`没有更多内容啦~`) : that.$t(`加载更多`);
-						that.page = that.page + 1;
-						that.loading = false;
-					})
-					.catch(res => {
-						that.loading = false;
-						that.loadTitle = that.$t(`加载更多`);
-					});
 			},
 			goDetail(item) {
-
 				goShopDetail(item, this.uid).then(res => {
 					uni.navigateTo({
 						url: `/pages/goods_details/index?id=${item.id}`
 					});
 				});
-
 			},
 			// #ifdef H5
 			// 微信分享；
@@ -477,8 +720,27 @@
 			}
 			// #endif
 		},
-		onReachBottom: function() {
-			this.getGroomList();
+		onReachBottom: function() {},
+		onPageScroll(e) {
+			if (this.isHeaderSerch) {
+				if (e.scrollTop > this.domOffsetTop) {
+					this.isFixed = true;
+				}
+				if (e.scrollTop < this.domOffsetTop) {
+					this.$nextTick(() => {
+						this.isFixed = false;
+					});
+				}
+			} else {
+				this.isFixed = false
+			}
+			if (e.scrollTop > 10) {
+				this.isScrolled = true;
+			} else {
+				this.isScrolled = false;
+			}
+			uni.$emit('scroll');
+			uni.$emit('onPageScroll', e.scrollTop);
 		},
 		//#ifdef MP || APP-PLUS
 		onShareAppMessage() {
@@ -493,6 +755,130 @@
 </script>
 
 <style lang="scss">
+	.sort-scroll {
+		background-color: #fff;
+	}
+
+	.empty-box {
+		text-align: center;
+		padding-top: 50rpx;
+
+		.tips {
+			color: #aaa;
+			font-size: 26rpx;
+		}
+
+		image {
+			width: 414rpx;
+			height: 304rpx;
+		}
+	}
+
+	.sort-product {
+		margin-top: 20rpx;
+
+		.sort-box {
+			display: flex;
+			width: 100%;
+			border-radius: 16rpx;
+			padding: 30rpx 0;
+
+			.sort-item {
+				width: 20%;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+
+				image {
+					width: 90rpx;
+					height: 90rpx;
+					border-radius: 50%;
+				}
+
+				.txt {
+					color: #272727;
+					font-size: 24rpx;
+					margin-top: 10rpx;
+					overflow: hidden;
+					white-space: nowrap;
+					text-overflow: ellipsis;
+					width: 140rpx;
+					text-align: center;
+				}
+
+				.pictrues {
+					width: 90rpx;
+					height: 90rpx;
+					background: #f8f8f8;
+					border-radius: 50%;
+					margin: 0 auto;
+				}
+
+				.icon-gengduo1 {
+					color: #333;
+				}
+
+				&.on {
+					.txt {
+						color: #fc4141;
+					}
+
+					image {
+						border: 1px solid #fc4141;
+					}
+				}
+			}
+		}
+
+		.product-list {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: space-between;
+			margin-top: 30rpx;
+			padding: 0 20rpx;
+
+			.product-item {
+				position: relative;
+				width: 344rpx;
+				background: #fff;
+				border-radius: 10rpx;
+				margin-bottom: 20rpx;
+				overflow: hidden;
+
+				.pictrue {
+					position: relative;
+				}
+
+				image {
+					width: 100%;
+					height: 344rpx;
+					border-radius: 10rpx 10rpx 0 0;
+				}
+
+				.info {
+					padding: 14rpx 16rpx;
+
+					.title {
+						font-size: 28rpx;
+					}
+
+					.price-box {
+						font-size: 34rpx;
+						font-weight: 700;
+						margin-top: 8px;
+						color: #fc4141;
+
+						text {
+							font-size: 26rpx;
+						}
+					}
+				}
+			}
+		}
+	}
+
 	.page {
 		padding-bottom: 50px;
 	}
@@ -511,62 +897,5 @@
 
 	.noRepeat {
 		background-repeat: no-repeat;
-	}
-
-	.page-footer {
-		position: fixed;
-		bottom: 0;
-		z-index: 30;
-		display: flex;
-		align-items: center;
-		justify-content: space-around;
-		width: 100%;
-		height: calc(98rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
-		height: calc(98rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
-		box-sizing: border-box;
-		border-top: solid 1rpx #F3F3F3;
-		background-color: #fff;
-		box-shadow: 0px 0px 17rpx 1rpx rgba(206, 206, 206, 0.32);
-		padding-bottom: constant(safe-area-inset-bottom); ///兼容 IOS<11.2/
-		padding-bottom: env(safe-area-inset-bottom); ///兼容 IOS>11.2/
-
-		.foot-item {
-			display: flex;
-			width: max-content;
-			align-items: center;
-			justify-content: center;
-			flex-direction: column;
-			position: relative;
-
-			.count-num {
-				position: absolute;
-				display: flex;
-				justify-content: center;
-				align-items: center;
-				width: 40rpx;
-				height: 40rpx;
-				top: 0rpx;
-				right: -15rpx;
-				color: #fff;
-				font-size: 20rpx;
-				background-color: #FD502F;
-				border-radius: 50%;
-				padding: 4rpx;
-			}
-		}
-
-		.foot-item image {
-			height: 50rpx;
-			width: 50rpx;
-			text-align: center;
-			margin: 0 auto;
-		}
-
-		.foot-item .txt {
-			font-size: 24rpx;
-
-
-			&.active {}
-		}
 	}
 </style>

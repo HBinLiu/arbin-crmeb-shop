@@ -68,8 +68,12 @@ class WechatUserServices extends BaseServices
 
     /**
      * 用uid获得 微信openid
-     * @param $uid
+     * @param int $uid
+     * @param string $userType
      * @return mixed
+     * @author: 吴汐
+     * @email: 442384644@qq.com
+     * @date: 2023/8/17
      */
     public function uidToOpenid(int $uid, string $userType = 'wechat')
     {
@@ -83,9 +87,9 @@ class WechatUserServices extends BaseServices
      * @param string $openidType
      * @return mixed
      */
-    public function openidTouid($openid, $openidType = 'openid')
+    public function openidToUid($openid, string $openidType = 'openid')
     {
-        $uid = $this->dao->value([[$openidType, '=', $openid], ['user_type', '<>', 'h5']], 'uid');
+        $uid = $this->dao->value([$openidType => $openid, 'is_del' => 0], 'uid');
         if (!$uid)
             throw new AdminException(400710);
         return $uid;
@@ -113,7 +117,7 @@ class WechatUserServices extends BaseServices
      */
     public function saveUser($openid)
     {
-        if ($this->getWechatUserInfo(['openid' => $openid])) {
+        if ($this->getWechatUserInfo(['openid' => $openid, 'is_del' => 0])) {
             $this->updateUser($openid);
             return false;
         } else {
@@ -171,7 +175,7 @@ class WechatUserServices extends BaseServices
         $uid = 0;
         $userInfoData = null;
         if (isset($userInfo['unionid'])) {
-            $wechatInfo = $this->getWechatUserInfo(['unionid' => $userInfo['unionid']]);
+            $wechatInfo = $this->getWechatUserInfo(['unionid' => $userInfo['unionid'], 'is_del' => 0]);
         }
         if (!$wechatInfo) {
             /** @var UserServices $userServices */
@@ -198,6 +202,10 @@ class WechatUserServices extends BaseServices
      * 授权后获取用户信息
      * @param $openid
      * @param $user_type
+     * @return array|\think\Model|null
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/02/24
      */
     public function getAuthUserInfo($openid, $user_type)
     {
@@ -227,7 +235,7 @@ class WechatUserServices extends BaseServices
         [$uid, $userData] = $data;
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
-        if (!$userInfo = $userServices->getUserInfo($uid)) {
+        if (!$userInfo = $userServices->getUserInfo((int)$uid)) {
             return false;
         }
         /** @var LoginServices $loginService */
@@ -239,7 +247,7 @@ class WechatUserServices extends BaseServices
 
         $wechatUserInfo = [];
         if (isset($userData['nickname']) && $userData['nickname']) $wechatUserInfo['nickname'] = filter_emoji($userData['nickname'] ?? '');//姓名
-        if (isset($userData['headimgurl']) && $userData['headimgurl']) $wechatUserInfo['headimgurl'] = $userData['avatarUrl'] ?? '';//头像
+        if (isset($userData['headimgurl']) && $userData['headimgurl']) $wechatUserInfo['headimgurl'] = $userData['headimgurl'] ?? '';//头像
         if (isset($userData['sex']) && $userData['sex']) $wechatUserInfo['sex'] = $userData['gender'] ?? '';//性别
         if (isset($userData['language']) && $userData['language']) $wechatUserInfo['language'] = $userData['language'] ?? '';//语言
         if (isset($userData['city']) && $userData['city']) $wechatUserInfo['city'] = $userData['city'] ?? '';//城市
@@ -256,14 +264,19 @@ class WechatUserServices extends BaseServices
 
     /**
      * 微信授权成功后
-     * @param $event
+     * @param $data
+     * @return array|mixed|\think\Model|null
      * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/02/24
      */
-    public function wechatOauthAfter(array $data)
+    public function wechatOauthAfter($data)
     {
-        [$openid, $wechatInfo, $spreadId, $login_type, $userType] = $data;
+        if (!$data) throw new ApiException('用户信息获取失败，请刷新页面重试');
+        [$openid, $wechatInfo, $spreadId, $agent_id, $login_type, $userType] = $data;
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
         $spreadInfo = $userServices->getUserInfo((int)$spreadId);
@@ -325,10 +338,19 @@ class WechatUserServices extends BaseServices
             //更新用户表和wechat_user表
             //判断该类性用户在wechatUser中是否存在
             $wechatUser = $this->dao->getOne(['uid' => $uid, 'user_type' => $userType, 'is_del' => 0]);
+            //判断获取到的 openid 和当前登录传入的 openid 不一致时，不更新用户信息
+            if ($wechatUser && $wechatUser['openid'] != $wechatInfo['openid']) {
+                return $userInfo;
+            }
             /** @var LoginServices $loginService */
             $loginService = app()->make(LoginServices::class);
-            $this->transaction(function () use ($loginService, $wechatInfo, $userInfo, $uid, $userType, $spreadId, $wechatUser) {
-                $wechatInfo['code'] = $spreadId;
+            $this->transaction(function () use ($loginService, $wechatInfo, $userInfo, $uid, $userType, $spreadId, $wechatUser, $agent_id) {
+                if ($agent_id) {
+                    $wechatInfo['code'] = $agent_id;
+                    $wechatInfo['is_staff'] = 1;
+                } else {
+                    $wechatInfo['code'] = $spreadId;
+                }
                 $loginService->updateUserInfo($wechatInfo, $userInfo);
                 if ($wechatUser) {
                     if (!$this->dao->update($wechatUser['id'], $wechatInfo, 'id')) {
@@ -345,7 +367,6 @@ class WechatUserServices extends BaseServices
             //user表没有用户,wechat_user表没有用户创建新用户
             //不存在则创建用户
             $userInfo = $this->transaction(function () use ($userServices, $wechatInfo, $spreadId, $userType) {
-                Log::error($wechatInfo);
                 $userInfo = $userServices->setUserInfo($wechatInfo, (int)$spreadId, $userType);
                 if (!$userInfo) {
                     throw new AuthException(410083);

@@ -21,10 +21,17 @@ use think\Response;
 class Json
 {
     private $code = 200;
+    private $header = [];
 
     public function code(int $code): self
     {
         $this->code = $code;
+        return $this;
+    }
+
+    public function header(array $header): self
+    {
+        $this->header = $header;
         return $this;
     }
 
@@ -35,10 +42,13 @@ class Json
         if (!is_null($data))
             $res['data'] = $data;
 
-        if (is_numeric($res['msg']))
+        if (is_numeric($res['msg'])) {
+            $res['code'] = $res['msg'];
             $res['msg'] = getLang($res['msg'], $replace);
+        }
 
-        return Response::create($res, 'json', $this->code);
+
+        return Response::create($res, 'json', $this->code)->header($this->header);
     }
 
     public function success($msg = 'success', ?array $data = null, ?array $replace = []): Response
@@ -68,6 +78,6 @@ class Json
             $result = $msg;
             $msg = 'success';
         }
-        return app('json')->success($msg, compact('status', 'result'));
+        return $this->success($msg, compact('status', 'result'));
     }
 }

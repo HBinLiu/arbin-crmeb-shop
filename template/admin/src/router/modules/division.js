@@ -8,21 +8,23 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
 
-import BasicLayout from '@/components/main';
+import LayoutMain from '@/layout';
+import setting from '@/setting';
+let routePre = setting.routePre;
 
 const pre = 'division_';
 const meta = {
   auth: true,
 };
 export default {
-  path: '/admin/division',
+  path: routePre + '/division',
   name: 'division',
   header: 'division',
   redirect: {
     name: `${pre}division`,
   },
   meta,
-  component: BasicLayout,
+  component: LayoutMain,
   children: [
     {
       path: 'index',
@@ -41,6 +43,15 @@ export default {
         title: '代理商列表',
       },
       component: () => import('@/pages/division/agent/index'),
+    },
+    {
+      path: 'agent/statistics',
+      name: `${pre}agent`,
+      meta: {
+        auth: ['agent-division-statistics'],
+        title: '事业部统计',
+      },
+      component: () => import('@/pages/division/agent/statistics'),
     },
     {
       path: 'agent/applyList',

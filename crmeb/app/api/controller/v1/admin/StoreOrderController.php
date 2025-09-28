@@ -15,6 +15,7 @@ use app\services\order\DeliveryServiceServices;
 use app\services\order\StoreOrderCartInfoServices;
 use app\services\order\StoreOrderCreateServices;
 use app\services\order\StoreOrderDeliveryServices;
+use app\services\order\StoreOrderEconomizeServices;
 use app\services\order\StoreOrderRefundServices;
 use app\services\order\StoreOrderServices;
 use app\services\order\StoreOrderWapServices;
@@ -43,6 +44,84 @@ class StoreOrderController
     public function __construct(StoreOrderWapServices $services)
     {
         $this->service = $services;
+    }
+
+
+    /**
+     * 订单 查看物流
+     * @param StoreOrderCartInfoServices $services
+     * @param ExpressServices $expressServices
+     * @param $uni
+     * @param string $type
+     * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     */
+    public function express(StoreOrderServices $orderServices, StoreOrderCartInfoServices $services, ExpressServices $expressServices, $uni, $type = '')
+    {
+        if ($type == 'refund') {
+            /** @var StoreOrderRefundServices $refundService */
+            $refundService = app()->make(StoreOrderRefundServices::class);
+            $order = $refundService->refundDetail($uni);
+            $express = $order['refund_express'];
+            $cacheName = $uni . $express;
+            $orderInfo = [];
+            $info = [];
+            $cartNew = [];
+            foreach ($order['cart_info'] as $k => $cart) {
+                $cartNew['cart_num'] = $cart['cart_num'];
+                $cartNew['truePrice'] = $cart['truePrice'];
+                $cartNew['postage_price'] = $cart['postage_price'];
+                $cartNew['productInfo']['image'] = $cart['productInfo']['image'];
+                $cartNew['productInfo']['store_name'] = $cart['productInfo']['store_name'];
+                $cartNew['productInfo']['unit_name'] = $cart['productInfo']['unit_name'] ?? '';
+                array_push($info, $cartNew);
+                unset($cart);
+            }
+            $orderInfo['cartInfo'] = $info;
+            $orderInfo['delivery_id'] = $express;
+            $orderInfo['delivery_name'] = $order['refund_express_name'];
+            $orderInfo['delivery_code'] = '';
+        } else {
+            if (!$uni || !($order = $orderServices->getUserOrderDetail($uni, 0, []))) {
+                return app('json')->fail(410173);
+            }
+            if ($type != 'refund' && ($order['delivery_type'] != 'express' || !$order['delivery_id'])) {
+                return app('json')->fail(410206);
+            }
+            $express = $type == 'refund' ? $order['refund_express'] : $order['delivery_id'];
+            $cacheName = $uni . $express;
+            $orderInfo = [];
+            $cartInfo = $services->getCartColunm(['oid' => $order['id']], 'cart_info', 'unique');
+            $info = [];
+            $cartNew = [];
+            foreach ($cartInfo as $k => $cart) {
+                $cart = json_decode($cart, true);
+                $cartNew['cart_num'] = $cart['cart_num'];
+                $cartNew['truePrice'] = $cart['truePrice'];
+                $cartNew['postage_price'] = $cart['postage_price'];
+                $cartNew['productInfo']['image'] = $cart['productInfo']['image'];
+                $cartNew['productInfo']['store_name'] = $cart['productInfo']['store_name'];
+                $cartNew['productInfo']['unit_name'] = $cart['productInfo']['unit_name'] ?? '';
+                array_push($info, $cartNew);
+                unset($cart);
+            }
+            $orderInfo['delivery_id'] = $express;
+            $orderInfo['delivery_name'] = $type == 'refund' ? '用户退回' : $order['delivery_name'];;
+            $orderInfo['delivery_code'] = $type == 'refund' ? '' : $order['delivery_code'];
+            $orderInfo['delivery_type'] = $order['delivery_type'];
+            $orderInfo['user_address'] = $order['user_address'];
+            $orderInfo['user_mark'] = $order['mark'];
+            $orderInfo['cartInfo'] = $info;
+        }
+        return app('json')->success([
+            'order' => $orderInfo,
+            'express' => [
+                'result' => ['list' => $expressServices->query($cacheName, $orderInfo['delivery_id'], $orderInfo['delivery_code'], $order['user_phone'])
+                ]
+            ]
+        ]);
     }
 
     /**
@@ -105,17 +184,16 @@ class StoreOrderController
      * @param UserServices $userServices
      * @param $orderId
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function detail(Request $request, StoreOrderServices $services, UserServices $userServices, $orderId)
     {
-        $order = $this->service->getOne(['order_id' => $orderId], '*', ['pink']);
-        if (!$order) return app('json')->fail(410173);
-        $order = $order->toArray();
-        $nickname = $userServices->value(['uid' => $order['uid']], 'nickname');
-        $orderInfo = $services->tidyOrder($order, true);
-        unset($orderInfo['uid'], $orderInfo['seckill_id'], $orderInfo['pink_id'], $orderInfo['combination_id'], $orderInfo['bargain_id'], $orderInfo['status'], $orderInfo['total_postage']);
-        $orderInfo['nickname'] = $nickname;
-        return app('json')->success($orderInfo);
+        $economizeServices = app()->make(StoreOrderEconomizeServices::class);
+        $orderData = $services->getUserOrderByKey($economizeServices, $orderId, 0);
+        $orderData['nickname'] = $userServices->value(['uid' => $orderData['uid']], 'nickname');
+        return app('json')->success($orderData);
     }
 
     /**
@@ -163,7 +241,8 @@ class StoreOrderController
             ['sh_delivery_id', ''],//送货人电话
             ['sh_delivery_uid', ''],//送货人ID
 
-            ['fictitious_content', '']//虚拟发货内容
+            ['fictitious_content', ''],//虚拟发货内容
+            ['pickup_time', []]
         ]);
         if ($data['delivery_type']) {
             $data['delivery_name'] = $data['delivery_type'];
@@ -238,7 +317,7 @@ class StoreOrderController
             $start = $middle;
         }
         $space = bcsub($stop, $start, 0);//间隔时间段
-        $front = bcsub($start, $space, 0);//第一个时间段
+        $front = bcsub($start, $space, 0) - 1;//第一个时间段
         /** @var StoreOrderServices $orderService */
         $orderService = app()->make(StoreOrderServices::class);
         $order_where = [
@@ -246,10 +325,11 @@ class StoreOrderController
             'paid' => 1,
             'refund_status' => [0, 3],
             'is_del' => 0,
-            'is_system_del' => 0];
+            'is_system_del' => 0
+        ];
 
         if ($type == 1) {//销售额
-            $frontPrice = $orderService->sum($order_where + ['time' => [$front, $start]], 'pay_price', true);
+            $frontPrice = $orderService->sum($order_where + ['time' => [$front, $start - 1]], 'pay_price', true);
             $afterPrice = $orderService->sum($order_where + ['time' => [$start, $stop]], 'pay_price', true);
             $chartInfo = $orderService->chartTimePrice($start, $stop);
             $data['chart'] = $chartInfo;//营业额图表数据
@@ -262,7 +342,7 @@ class StoreOrderController
             $data['increase_time'] = abs($increase); //同比上个时间区间增长营业额
             $data['increase_time_status'] = $increase >= 0 ? 1 : 2; //同比上个时间区间增长营业额增长 1 减少 2
         } else {//订单数
-            $frontNumber = $orderService->count($order_where + ['time' => [$front, $start]]);
+            $frontNumber = $orderService->count($order_where + ['time' => [$front, $start - 1]]);
             $afterNumber = $orderService->count($order_where + ['time' => [$start, $stop]]);
             $chartInfo = $orderService->chartTimeNumber($start, $stop);
             $data['chart'] = $chartInfo;//订单数图表数据
@@ -365,6 +445,7 @@ class StoreOrderController
                 }
                 $refundData['pay_price'] = $orderInfo['pay_price'];
                 $refundData['refund_price'] = $price;
+                $refundData['order_id'] = $orderId;
 
 
                 //修改订单退款状态
@@ -435,7 +516,7 @@ class StoreOrderController
                 }
                 $refundOrderData['cart_info'] = json_encode(array_column($cartInfos, 'cart_info'));
                 $res = $services->save($refundOrderData);
-
+                $refund_data['order_id'] = $refundOrderData['order_id'];
 
                 //修改订单退款状态
                 if ($services->agreeRefund((int)$res->id, $refund_data)) {
@@ -536,7 +617,7 @@ class StoreOrderController
             ['order_id', ''],
             ['time', ''],
             ['refund_type', 0],
-            ['keywords', ''],
+            ['keywords', '', '', 'real_name'],
         ]);
         $where['is_cancel'] = 0;
         $data = $services->refundList($where)['list'];

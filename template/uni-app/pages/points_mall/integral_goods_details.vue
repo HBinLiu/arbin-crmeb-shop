@@ -54,16 +54,18 @@
 						<view class="introduce acea-row row-between">
 							<view class="infor"> {{ storeInfo.title }}</view>
 						</view>
+						<view class="limit_good" v-if="storeInfo.num > 0">
+							{{ $t(`最多可兑换`)}}: {{storeInfo.num}}{{$t(storeInfo.unit_name)}}
+						</view>
 						<view class="label acea-row row-middle">
-							<view class="stock">{{$t(`划线价`)}}：{{ storeInfo.product_price }}</view>
+							<view class="stock delete-line">{{ storeInfo.product_price }}</view>
 							<view class="stock">{{$t(`限量`)}}:
 								{{ storeInfo.quota_show }}
 							</view>
 							<view class="stock">{{$t(`已兑换`)}}：{{ storeInfo.sales }} </view>
 						</view>
 					</view>
-					<view class="attribute acea-row row-between-wrapper" @tap="selecAttr"
-						v-if="attribute.productAttr.length">
+					<view class="attribute acea-row row-between-wrapper" @tap="selecAttr" v-if="attribute.productAttr.length">
 						<!-- <view class="df"><text class='atterTxt line1'>{{attr}}：{{attrValue}}</text></view>
 						<view class='iconfont icon-jiantou'></view> -->
 						<view class="flex">
@@ -78,8 +80,8 @@
 						<view class="acea-row row-between-wrapper" style="margin-top: 7px; padding-left: 70px"
 							v-if="skuArr.length > 1">
 							<view class="flexs">
-								<image :src="item.image" v-for="(item, index) in skuArr.slice(0, 4)" :key="index"
-									class="attrImg"></image>
+								<image :src="item.image" v-for="(item, index) in skuArr.slice(0, 4)" :key="index" class="attrImg">
+								</image>
 							</view>
 							<view class="switchTxt">{{$t(`共`)}}{{ skuArr.length }}{{$t(`种规格可选`)}}</view>
 						</view>
@@ -401,7 +403,7 @@
 					this.replyCount = res.data.replyCount;
 					this.reply = res.data.reply ? [res.data.reply] : [];
 					this.replyChance = res.data.replyChance;
-					that.routineContact = res.data.routine_contact_type;
+					that.routineContact = Number(res.data.routine_contact_type);
 					for (let key in res.data.productValue) {
 						let obj = res.data.productValue[key];
 						that.skuArr.push(obj);
@@ -415,11 +417,6 @@
 					that.storeImage = that.storeInfo.image
 					// #endif
 					that.DefaultSelect();
-					app.globalData.openPages = '/pages/activity/goods_seckill_details/index?id=' + that.id +
-						'&time=' + that.time +
-						'&status=' + that.status + '&scene=' + that.storeInfo.uid;
-					// wxParse.wxParse('description', 'html', that.data.storeInfo.description || '', that, 0);
-					// wxh.time(that.data.time, that);
 				}).catch(err => {
 					that.$util.Tips({
 						title: err
@@ -882,6 +879,12 @@
 		margin: 0;
 	}
 
+	.limit_good {
+		font-size: 16rpx;
+		margin: 10rpx 0rpx;
+		color: red;
+	}
+
 	.product-con .wrapper .introduce .infor {
 		// width: 570rpx;
 	}
@@ -914,7 +917,7 @@
 		display: flex;
 		align-items: center;
 		flex-wrap: nowrap;
-		height: calc(100rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+		height: calc(100rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
 		height: calc(100rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
 	}
 
@@ -1174,5 +1177,9 @@
 		display: flex;
 		flex-wrap: nowrap;
 		width: 130rpx;
+	}
+
+	.delete-line {
+		text-decoration: line-through;
 	}
 </style>

@@ -69,10 +69,10 @@ class User extends BaseModel
         return app('request')->ip();
     }
 
-    protected function getPhoneAttr($value)
-    {
-        return $value && app('request')->hasMacro('adminInfo') && app('request')->adminInfo()['level'] != 0 ? substr_replace($value, '****', 3, 4) : $value;
-    }
+//    protected function getPhoneAttr($value)
+//    {
+//        return $value && app('request')->hasMacro('adminInfo') && app('request')->adminInfo()['level'] != 0 ? substr_replace($value, '****', 3, 4) : $value;
+//    }
 
     /**
      * 链接会员登陆设置表
@@ -223,7 +223,7 @@ class User extends BaseModel
      */
     public function searchLikeAttr($query, $value)
     {
-        $query->where('account|nickname|phone|real_name|uid', 'LIKE', "%$value%");
+        $query->where('account|nickname|phone|real_name|uid', 'like', '%' . $value . '%');
     }
 
     /**
@@ -439,5 +439,15 @@ class User extends BaseModel
     public function searchIsDelAttr($query, $value)
     {
         if ($value !== '') $query->where('is_del', $value);
+    }
+
+    /**
+     * 不等于uid搜索器
+     * @param $query
+     * @param $value
+     */
+    public function searchNotUidAttr($query, $value)
+    {
+        if ($value !== '') $query->where('uid', '<>', $value);
     }
 }

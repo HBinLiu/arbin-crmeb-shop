@@ -1,23 +1,14 @@
 <template>
   <div class="upload_img">
     <div class="title">{{ datas[name].title }}</div>
-    <div class="box" @click="modalPicTap('单选')">
+    <div class="box" v-db-click @click="modalPicTap('单选')">
       <img :src="datas[name].url" alt="" v-if="datas[name].url" />
       <div class="upload-box" v-else>
-        <Icon type="ios-camera-outline" size="36" />
+        <i class="el-icon-picture-outline" style="font-size: 24px"></i>
       </div>
     </div>
     <div>
-      <Modal
-        v-model="modalPic"
-        width="950px"
-        scrollable
-        footer-hide
-        closable
-        title="上传商品图"
-        :mask-closable="false"
-        :z-index="888"
-      >
+      <el-dialog :visible.sync="modalPic" width="950px" title="上传商品图" :mask-closable="false" :z-index="888">
         <uploadPictures
           :isChoice="isChoice"
           @getPic="getPic"
@@ -25,13 +16,14 @@
           :gridPic="gridPic"
           v-if="modalPic"
         ></uploadPictures>
-      </Modal>
+      </el-dialog>
     </div>
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex';
+import settings from '@/setting';
 import uploadPictures from '@/components/uploadPictures';
 export default {
   name: 'c_upload_img',
@@ -104,7 +96,7 @@ export default {
         'test-dialog',
         function (editor, uiName) {
           let dialog = new window.UE.ui.Dialog({
-            iframeUrl: '/admin/widget.images/index.html?fodder=dialog',
+            iframeUrl: settings.routePre + '/widget.images/index.html?fodder=dialog',
             editor: editor,
             name: uiName,
             title: '上传图片',
@@ -139,7 +131,7 @@ export default {
 };
 </script>
 
-<style scoped lang="stylus">
+<style lang="scss" scoped>
 .title {
   margin-bottom: 10px;
   padding-bottom: 10px;
@@ -147,7 +139,6 @@ export default {
   font-size: 12px;
   color: #999;
 }
-
 .box {
   width: 60px;
   height: 60px;
@@ -159,7 +150,6 @@ export default {
     height: 100%;
   }
 }
-
 .upload-box {
   display: flex;
   align-items: center;

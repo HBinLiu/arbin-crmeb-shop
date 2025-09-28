@@ -12,7 +12,7 @@
 			<view class="sub_btn" @click="loginBtn">{{$t(`立即登录`)}}</view>
 		</view>
 
-		<Verify @success="success" :captchaType="'blockPuzzle'" :imgSize="{ width: '330px', height: '155px' }"
+		<Verify @success="success" :captchaType="captchaType" :imgSize="{ width: '330px', height: '155px' }"
 			ref="verify"></Verify>
 	</view>
 </template>
@@ -21,7 +21,7 @@
 	const app = getApp();
 	import sendVerifyCode from "@/mixins/SendVerifyCode";
 	import Routine from '@/libs/routine';
-	import Verify from '../verify/verify.vue';
+	import Verify from '../verify/index.vue';
 	import Cache from '@/utils/cache';
 	import {
 		loginMobile,
@@ -75,7 +75,7 @@
 					registerVerify({
 						phone: that.account,
 						key: res.data.key,
-						captchaType: 'blockPuzzle',
+						captchaType: this.captchaType,
 						captchaVerification: data.captchaVerification
 					}).then(res => {
 						that.$util.Tips({

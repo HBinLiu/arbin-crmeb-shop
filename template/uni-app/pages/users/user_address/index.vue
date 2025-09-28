@@ -20,7 +20,6 @@
 								@columnchange="bindMultiPickerColumnChange" :value="valueRegion" :range="multiArray">
 								<view class='acea-row'>
 									<view class="picker">{{region[0]}}，{{region[1]}}，{{region[2]}}</view>
-									<view class='iconfont icon-dizhi fontcolor'></view>
 								</view>
 							</picker>
 						</view>
@@ -42,7 +41,8 @@
 				<view class="wechatAddress" v-if="!id" @click="getWxAddress">{{$t(`导入微信地址`)}}</view>
 				<!-- #endif -->
 				<!-- #ifdef H5 -->
-				<view class="wechatAddress" v-if="this.$wechat.isWeixin() && !id" @click="getAddress">{{$t(`导入微信地址`)}}</view>
+				<view class="wechatAddress" v-if="this.$wechat.isWeixin() && !id" @click="getAddress">{{$t(`导入微信地址`)}}
+				</view>
 				<!-- #endif -->
 			</view>
 		</form>
@@ -104,7 +104,9 @@
 				defaultRegion: [this.$t(`广东省`), this.$t(`广州市`), this.$t(`番禺区`)],
 				defaultRegionCode: '110101',
 				news: '',
-				noCoupon: 0
+				noCoupon: 0,
+				is_gift: 0,
+				order_id: 0,
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -126,6 +128,8 @@
 				this.id = options.id || 0;
 				this.noCoupon = options.noCoupon || 0;
 				this.news = options.new || '';
+				this.is_gift = options.is_gift || '';
+				this.orderId = options.order_id || '';
 				uni.setNavigationBarTitle({
 					title: options.id ? this.$t(`修改地址`) : this.$t(`添加地址`)
 				})
@@ -319,7 +323,9 @@
 													'&new=' + that
 													.news +
 													'&noCoupon=' + that
-													.noCoupon
+													.noCoupon + '&is_gift=' + that.is_gift
+													+
+													'&order_id=' + that.orderId
 											});
 										} else {
 											uni.navigateBack({
@@ -328,7 +334,7 @@
 										}
 									}, 1000);
 									return that.$util.Tips({
-										title: this.$t(`添加成功`),
+										title: that.$t(`添加成功`),
 										icon: 'success'
 									});
 								}).catch(err => {
@@ -340,15 +346,15 @@
 							fail: function(res) {
 								if (res.errMsg == 'chooseAddress:cancel') return that.$util
 									.Tips({
-										title: this.$t(`取消选择`)
+										title: that.$t(`取消选择`)
 									});
 							},
 						})
 					},
 					fail: function(res) {
 						uni.showModal({
-							title: this.$t(`您已拒绝导入微信地址权限`),
-							content: this.$t(`是否进入权限管理，调整授权？`),
+							title: that.$t(`您已拒绝导入微信地址权限`),
+							content: that.$t(`是否进入权限管理，调整授权？`),
 							success(res) {
 								if (res.confirm) {
 									uni.openSetting({
@@ -382,8 +388,12 @@
 							post_code: userInfo.postalCode,
 							type: 1,
 						})
-						.then(() => {
-							setTimeout(function() {
+						.then((res) => {
+							// close();
+							that.$util.Tips({
+								title: that.$t(`添加成功`),
+								icon: 'success'
+							}, () => {
 								if (that.cartId) {
 									let cartId = that.cartId;
 									let pinkId = that.pinkId;
@@ -395,10 +405,10 @@
 										url: '/pages/goods/order_confirm/index?cartId=' +
 											cartId + '&addressId=' + (that.id ? that.id :
 												res.data
-												.id) + '&pinkId=' + pinkId + '&couponId=' +
-											couponId + '&new=' + that.news +
-											'&noCoupon=' + that
-											.noCoupon
+												.id) + '&pinkId=' + pinkId +
+											'&couponId=' +
+											couponId + '&new=' + that.news + '&is_gift=' + that.is_gift + 
+						'&order_id=' + that.orderId
 									});
 								} else {
 									uni.navigateTo({
@@ -406,11 +416,6 @@
 									})
 									// history.back();
 								}
-							}, 1000);
-							// close();
-							that.$util.Tips({
-								title: that.$t(`添加成功`),
-								icon: 'success'
 							});
 						})
 						.catch(err => {
@@ -482,7 +487,8 @@
 										res.data.id) + '&pinkId=' + pinkId + '&couponId=' +
 									couponId +
 									'&noCoupon=' + that
-									.noCoupon
+									.noCoupon + '&is_gift=' + that.is_gift + 
+									'&order_id=' + that.orderId
 							});
 						} else {
 							// #ifdef H5

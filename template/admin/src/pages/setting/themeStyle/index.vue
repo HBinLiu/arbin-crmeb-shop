@@ -1,57 +1,44 @@
 <template>
   <div>
-    <!-- <div class="i-layout-page-header">
-      <PageHeader
-        class="product_tabs"
-        :title="$route.meta.title"
-        hidden-breadcrumb
-      >
-        <div slot="title">
-          <div style="float: left">
-            <span v-text="$route.meta.title" class="mr20"></span>
-          </div>
-          <div style="float: right">
-            <Button
-              class="bnt"
-              type="primary"
-              @click="submit"
-              :loading="loadingExist"
-              >保存</Button
-            >
-          </div>
-        </div>
-      </PageHeader>
-    </div> -->
-    <div class="i-layout-page-header">
+    <div class="i-layout-page-header header-title">
       <span class="ivu-page-header-title mr20">{{ $route.meta.title }}</span>
       <div>
         <div style="float: right">
-          <Button class="bnt" type="primary" @click="submit">保存</Button>
+          <el-button class="bnt" type="primary" v-db-click @click="submit">保存</el-button>
         </div>
       </div>
     </div>
-    <Card :bordered="false" dis-hover class="ivu-mt" :style="'min-height:' + clientHeight + 'px'">
-      <Form :label-width="labelWidth">
-        <FormItem label="选择配色方案：">
-          <RadioGroup v-model="current" @on-change="changeColor">
-            <Radio :label="1" border class="box">天空蓝<i class="iconfont iconxuanzhong6"></i></Radio>
-            <Radio :label="2" border class="box green">生鲜绿<i class="iconfont iconxuanzhong6"></i></Radio>
-            <Radio :label="3" border class="box red">热情红<i class="iconfont iconxuanzhong6"></i></Radio>
-            <Radio :label="4" border class="box pink">魅力粉<i class="iconfont iconxuanzhong6"></i></Radio>
-            <Radio :label="5" border class="box orange">活力橙<i class="iconfont iconxuanzhong6"></i></Radio>
-          </RadioGroup>
-        </FormItem>
-        <FormItem label="当前风格示例：">
-          <div class="acea-row row-top">
-            <div class="pictrue" v-for="(item, index) in picList" :key="index">
-              <img :src="item.image" />
+    <el-card :bordered="false" shadow="never" class="ivu-mt p20 h100">
+      <div class="acea-row">
+        <div
+          class="tab_color"
+          v-for="(item, index) in tabList"
+          :key="index"
+          :class="current === index + 1 ? 'active' : ''"
+          v-db-click
+          @click="selected(index)"
+        >
+          <div class="color_cont flex align-center">
+            <div class="main_c mr-2" :class="item.class">
+              <span class="iconfont iconxuanzhong6" v-show="current == index + 1"></span>
             </div>
+            <div style="line-height: 24px">{{ item.tit }}</div>
           </div>
-        </FormItem>
-      </Form>
-    </Card>
+        </div>
+      </div>
+      <div class="acea-row row-top position-relative">
+        <div
+          class="pictrue position-absolute"
+          :class="{ sel: current == index + 1 }"
+          v-for="(item, index) in picList"
+          :key="index"
+        >
+          <img :src="item.image" />
+        </div>
+      </div>
+    </el-card>
     <!--<div class="footer acea-row row-center-wrapper">-->
-    <!--<Button type="primary" @click="submit">保存</Button>-->
+    <!--<el-button type="primary" v-db-click @click="submit">保存</el-button>-->
     <!--</div>-->
   </div>
 </template>
@@ -70,12 +57,20 @@ export default {
         sm: 24,
         xs: 24,
       },
-      picList: [],
-      picListBule: [{ image: require('@/assets/images/bule.jpg') }],
-      picListGreen: [{ image: require('@/assets/images/green.jpg') }],
-      picListRed: [{ image: require('@/assets/images/red.jpg') }],
-      picListPink: [{ image: require('@/assets/images/pink.jpg') }],
-      picListOrange: [{ image: require('@/assets/images/orange.jpg') }],
+      tabList: [
+        { tit: '天空蓝', class: 'blue' },
+        { tit: '生鲜绿', class: 'green' },
+        { tit: '热情红', class: 'red' },
+        { tit: '魅力粉', class: 'pink' },
+        { tit: '活力橙', class: 'orange' },
+      ],
+      picList: [
+        { image: require('@/assets/images/bule.jpg') },
+        { image: require('@/assets/images/green.jpg') },
+        { image: require('@/assets/images/red.jpg') },
+        { image: require('@/assets/images/pink.jpg') },
+        { image: require('@/assets/images/orange.jpg') },
+      ],
       current: '',
       clientHeight: 0,
       loadingExist: false,
@@ -84,14 +79,14 @@ export default {
   computed: {
     ...mapState('admin/layout', ['isMobile']),
     labelWidth() {
-      return this.isMobile ? undefined : 100;
+      return this.isMobile ? undefined : '110px';
     },
     labelPosition() {
       return this.isMobile ? 'top' : 'right';
     },
   },
   created() {
-    this.picList = this.picListBule;
+    // this.picList = this.picListBule;
     this.getInfo();
   },
   mounted: function () {
@@ -104,6 +99,9 @@ export default {
     });
   },
   methods: {
+    selected(index) {
+      this.current = index + 1;
+    },
     getInfo() {
       getColorChange('color_change')
         .then((res) => {
@@ -111,7 +109,7 @@ export default {
           this.changeColor(this.current);
         })
         .catch((err) => {
-          this.$Message.error(err.msg);
+          this.$message.error(err.msg);
         });
     },
     submit() {
@@ -119,42 +117,22 @@ export default {
       colorChange(this.current, 'color_change')
         .then((res) => {
           this.loadingExist = false;
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
         })
         .catch(() => {
           this.loadingExist = false;
         });
     },
     changeColor(e) {
-      switch (e) {
-        case 1:
-          this.picList = this.picListBule;
-          break;
-        case 2:
-          this.picList = this.picListGreen;
-          break;
-        case 3:
-          this.picList = this.picListRed;
-          break;
-        case 4:
-          this.picList = this.picListPink;
-          break;
-        case 5:
-          this.picList = this.picListOrange;
-          break;
-        default:
-          break;
-      }
+      this.current = e;
     },
   },
 };
 </script>
 
-<style scoped lang="stylus">
+<style scoped lang="scss">
 .box {
-  height: 40px;
   width: 100px;
-  line-height: 40px;
   text-align: center;
 }
 
@@ -163,13 +141,18 @@ export default {
 }
 
 .pictrue {
-  width: 800px;
-  height: 100%;
+  top: 0;
+  left: 0;
+  max-width: 1000px;
   margin: 10px 24px 0 0;
-
   img {
     width: 100%;
     height: 100%;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  &.sel img {
+    opacity: 1;
   }
 }
 
@@ -183,74 +166,77 @@ export default {
   left: 0;
   z-index: 9;
 }
-
-/deep/.i-layout-content-main {
-  margin-bottom: 0 !important;
+.main_c {
+  width: 25px;
+  height: 25px;
+  border-radius: 5px;
+  text-align: center;
+  line-height: 25px;
+  font-size: 14px;
 }
-
-/deep/.ivu-card-body {
-  padding-bottom: 0 !important;
+.tab_color {
+  width: 114px;
+  height: 45px;
+  border: 1px solid #e5e5e5;
+  margin-bottom: 10px;
+  margin-right: 20px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
 }
-
-/deep/.ivu-radio-inner {
-  background-color: #1db0fc;
-  border: 0;
-  border-radius: 3px;
+.color_cont {
+  font-size: 14px;
+}
+.mr-2 {
+  margin-right: 10px;
+}
+.color_bdg {
+  display: block;
   width: 18px;
   height: 18px;
+  border-top: 1px solid #fff;
+  border-bottom: 1px solid #fff;
+}
+.blue {
+  background-color: #1ca5e9;
 }
 
-/deep/.ivu-radio-wrapper-checked .iconfont {
-  display: inline-block;
+.green {
+  background-color: #42ca4d;
 }
 
-/deep/.ivu-radio-focus {
-  box-shadow: unset;
-  z-index: unset;
+.red {
+  background-color: #e93323;
 }
 
-/deep/.ivu-radio-wrapper {
-  margin-right: 18px;
+.pink {
+  background-color: #ff448f;
 }
 
-.green /deep/.ivu-radio-inner {
-  background-color: #42CA4D;
+.orange {
+  background-color: #fe5c2d;
+}
+.active {
+  border: 1px solid var(--prev-color-primary);
 }
 
-.red /deep/.ivu-radio-inner {
-  background-color: #E93323;
-}
-
-.pink/deep/.ivu-radio-inner {
-  background-color: #FF448F;
-}
-
-.orange/deep/.ivu-radio-inner {
-  background-color: #FE5C2D;
-}
-
-/deep/.ivu-radio-border {
+::v-deep .ivu-radio-border {
   position: relative;
 }
 
 .iconfont {
-  position: absolute;
-  top: 0px;
-  left: 21px;
   font-size: 12px;
-  display: none;
   color: #fff;
 }
 
-/deep/.ivu-radio-inner:after {
+::v-deep .ivu-radio-inner:after {
   background-color: unset;
   transform: unset;
 }
 
-/deep/.i-layout-page-header {
-  height: 66px;
-  background-color: #fff;
-  border-bottom: 1px solid #e8eaec;
+::v-deep .i-layout-page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;

@@ -13,8 +13,10 @@ namespace crmeb\services\upload\storage;
 use crmeb\services\upload\BaseUpload;
 use crmeb\exceptions\AdminException;
 use crmeb\exceptions\UploadException;
+use GuzzleHttp\Psr7\Utils;
 use Qcloud\Cos\Client;
 use QCloud\COSSTS\Sts;
+use crmeb\services\upload\extend\cos\Client as CrmebClient;
 
 /**
  * 腾讯云COS文件上传
@@ -44,7 +46,7 @@ class Cos extends BaseUpload
 
     /**
      * 句柄
-     * @var Client
+     * @var CrmebClient
      */
     protected $handle;
 
@@ -65,6 +67,11 @@ class Cos extends BaseUpload
      * @var mixed|null
      */
     protected $storageRegion;
+
+    /**
+     * @var string
+     */
+    protected $cdn;
 
     /**
      * 水印位置
@@ -96,21 +103,24 @@ class Cos extends BaseUpload
         $this->uploadUrl = $this->checkUploadUrl($config['uploadUrl'] ?? '');
         $this->storageName = $config['storageName'] ?? null;
         $this->storageRegion = $config['storageRegion'] ?? null;
+        $this->cdn = $config['cdn'] ?? null;
         $this->waterConfig['watermark_text_font'] = 'simfang仿宋.ttf';
     }
 
     /**
      * 实例化cos
-     * @return Client
+     * @return CrmebClient
      */
     protected function app()
     {
-        if (!$this->accessKey || !$this->secretKey) {
-            throw new UploadException(400721);
-        }
-        $this->handle = new Client(['region' => $this->storageRegion, 'credentials' => [
-            'secretId' => $this->accessKey, 'secretKey' => $this->secretKey
-        ]]);
+        $this->handle = new CrmebClient([
+            'accessKey' => $this->accessKey,
+            'secretKey' => $this->secretKey,
+            'region' => $this->storageRegion ?: 'ap-chengdu',
+            'bucket' => $this->storageName,
+            'appid' => $this->appid,
+            'uploadUrl' => $this->uploadUrl
+        ]);
         return $this->handle;
     }
 
@@ -126,33 +136,30 @@ class Cos extends BaseUpload
         if (!$isStream) {
             $fileHandle = app()->request->file($file);
             if (!$fileHandle) {
-                return $this->setError('Upload file does not exist');
+                return $this->setError('上传的文件不存在');
             }
             if ($this->validate) {
-                if (!in_array(pathinfo($fileHandle->getOriginalName(), PATHINFO_EXTENSION), $this->validate['fileExt'])) {
-                    return $this->setError('Upload fileExt error');
+                if (!in_array(strtolower(pathinfo($fileHandle->getOriginalName(), PATHINFO_EXTENSION)), $this->validate['fileExt'])) {
+                    return $this->setError('不合法的文件后缀');
                 }
                 if (filesize($fileHandle) > $this->validate['filesize']) {
-                    return $this->setError('Upload filesize error');
+                    return $this->setError('文件过大');
                 }
                 if (!in_array($fileHandle->getOriginalMime(), $this->validate['fileMime'])) {
-                    return $this->setError('Upload fileMine error');
+                    return $this->setError('不合法的文件类型');
                 }
             }
             $key = $this->saveFileName($fileHandle->getRealPath(), $fileHandle->getOriginalExtension());
             $body = fopen($fileHandle->getRealPath(), 'rb');
+            $body = (string)Utils::streamFor($body);
         } else {
             $key = $file;
             $body = $fileContent;
         }
         try {
             $key = $this->getUploadPath($key);
-            $this->fileInfo->uploadInfo = $this->app()->putObject([
-                'Bucket' => $this->storageName,
-                'Key' => $key,
-                'Body' => $body
-            ]);
-            $this->fileInfo->filePath = $this->uploadUrl . '/' . $key;
+            $this->fileInfo->uploadInfo = $this->app()->putObject($key, $body);
+            $this->fileInfo->filePath = ($this->cdn ?: $this->uploadUrl) . '/' . $key;
             $this->fileInfo->realName = isset($fileHandle) ? $fileHandle->getOriginalName() : $key;
             $this->fileInfo->fileName = $key;
             $this->fileInfo->filePathWater = $this->water($this->fileInfo->filePath);
@@ -263,7 +270,7 @@ class Cos extends BaseUpload
     public function delete(string $filePath)
     {
         try {
-            return $this->app()->deleteObject(['Bucket' => $this->storageName, 'Key' => $filePath]);
+            return $this->app()->deleteObject($this->storageName, $filePath);
         } catch (\Exception $e) {
             return $this->setError($e->getMessage());
         }
@@ -303,6 +310,7 @@ class Cos extends BaseUpload
         // 获取临时密钥，计算签名
         $result = $sts->getTempKeys($config);
         $result['url'] = $this->uploadUrl . '/';
+        $result['cdn'] = $this->cdn;
         $result['type'] = 'COS';
         $result['bucket'] = $this->storageName;
         $result['region'] = $this->storageRegion;
@@ -379,7 +387,7 @@ class Cos extends BaseUpload
     {
         try {
             $res = $this->app()->listBuckets();
-            return $res->toArray()['Buckets'] ?? [];
+            return $res['Buckets']['Bucket'] ?? [];
         } catch (\Throwable $e) {
             return [];
         }
@@ -403,7 +411,7 @@ class Cos extends BaseUpload
         $app = $this->app();
         //检测桶
         try {
-            $app->headBucket(['Bucket' => $name . '-' . $this->appid]);
+            $app->headBucket($name);
         } catch (\Throwable $e) {
             //桶不存在返回404
             if (strstr('404', $e->getMessage())) {
@@ -412,7 +420,7 @@ class Cos extends BaseUpload
         }
         //创建桶
         try {
-            $res = $app->createBucket(['Bucket' => $name . '-' . $this->appid, 'ACL' => $acl]);
+            $res = $app->createBucket($name . '-' . $this->appid, '', $acl);
         } catch (\Throwable $e) {
             if (strstr('[curl] 6', $e->getMessage())) {
                 return $this->setError('COS:无效的区域!!');
@@ -432,14 +440,11 @@ class Cos extends BaseUpload
     public function deleteBucket(string $name)
     {
         try {
-            $res = $this->app()->deleteBucket(['Bucket' => $name]);
-            if ($res->get('RequestId')) {
-                return true;
-            }
+            $this->app()->deleteBucket($name);
+            return true;
         } catch (\Throwable $e) {
             return $this->setError($e->getMessage());
         }
-        return false;
     }
 
     /**
@@ -451,10 +456,8 @@ class Cos extends BaseUpload
     {
         $this->storageRegion = $region;
         try {
-            $res = $this->app()->GetBucketDomain([
-                'Bucket' => $name,
-            ]);
-            $domainRules = $res->toArray()['DomainRules'];
+            $res = $this->app()->getBucketDomain($name);
+            $domainRules = $res['DomainRules'];
             return array_column($domainRules, 'Name');
         } catch (\Throwable $e) {
         }
@@ -473,18 +476,15 @@ class Cos extends BaseUpload
         $this->storageRegion = $region;
         $parseDomin = parse_url($domain);
         try {
-            $res = $this->app()->putBucketDomain([
-                'Bucket' => $name,
-                'DomainRules' => [
-                    [
-                        'Name' => $parseDomin['host'],
-                        'Status' => 'ENABLED',
-                        'Type' => 'REST',
-                        'ForcedReplacement' => 'CNAME'
-                    ]
-                ]
+            $res = $this->app()->putBucketDomain($name, '', [
+                'Name' => $parseDomin['host'],
+                'Status' => 'ENABLED',
+                'Type' => 'REST',
+                'ForcedReplacement' => 'CNAME'
             ]);
-            $res = $res->toArray();
+            if (method_exists($res, 'toArray')) {
+                $res = $res->toArray();
+            }
             if ($res['RequestId'] ?? null) {
                 return true;
             }
@@ -530,17 +530,12 @@ class Cos extends BaseUpload
     {
         $this->storageRegion = $region;
         try {
-            $res = $this->app()->PutBucketCors([
-                'Bucket' => $name,
-                'CORSRules' => [
-                    [
-                        'AllowedHeaders' => ['*'],
-                        'AllowedMethods' => ['PUT', 'GET', 'POST', 'DELETE', 'HEAD'],
-                        'AllowedOrigins' => ['*'],
-                        'ExposeHeaders' => ['ETag', 'Content-Length', 'x-cos-request-id'],
-                        'MaxAgeSeconds' => 12
-                    ]
-                ]
+            $res = $this->app()->putBucketCors($name, [
+                'AllowedHeader' => ['*'],
+                'AllowedMethod' => ['PUT', 'GET', 'POST', 'DELETE', 'HEAD'],
+                'AllowedOrigin' => ['*'],
+                'ExposeHeader' => ['ETag', 'Content-Length', 'x-cos-request-id'],
+                'MaxAgeSeconds' => 12
             ]);
             if (isset($res['RequestId'])) {
                 return true;

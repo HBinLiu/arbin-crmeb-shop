@@ -14,20 +14,20 @@ import config from '@/config';
 import { forEach, hasOneOf, objEqual } from '@/libs/tools';
 import { cloneDeep } from 'lodash';
 const { title, useI18n } = config;
-
+import packageConfig from '../../package.json';
 // 设置setCookies；
 // setToken
 export const setCookies = (key, val, cookieExpires) => {
-  Cookies.set(key, val, { expires: cookieExpires || 1 });
+  Cookies.set(`${packageConfig.name}:${key}`, val, { expires: cookieExpires || 1 });
 };
 // 获取getCookies；
 // getToken
 export const getCookies = (key) => {
-  return Cookies.get(key);
+  return Cookies.get(`${packageConfig.name}:${key}`);
 };
 
 export const removeCookies = (key) => {
-  return Cookies.remove(key);
+  return Cookies.remove(`${packageConfig.name}:${key}`);
 };
 
 export const hasChild = (item) => {
@@ -68,7 +68,7 @@ export const getMenuByRouter = (list, access) => {
  * @returns {Array}
  */
 export const getBreadCrumbList = (route, homeRoute) => {
-  let homeItem = { ...homeRoute, icon: homeRoute.meta.icon };
+  let homeItem = { ...homeRoute, icon: homeRoute.meta?.icon };
   let routeMetched = route.matched;
   if (routeMetched.some((item) => item.name === homeRoute.name)) return [homeItem];
   let res = routeMetched
@@ -163,7 +163,7 @@ export const getHomeRoute = (routers, homeName = 'home') => {
 export const getNewTagList = (list, newRoute) => {
   const { name, path, meta } = newRoute;
   let newList = [...list];
-  if (newList.findIndex((item) => item.name === name) >= 0) return newList;
+  if (newList.findIndex((item) => item.path === path) >= 0) return newList;
   else newList.push({ name, path, meta });
   return newList;
 };
@@ -271,7 +271,7 @@ export const getArrayFromFile = (file) => {
 /**
  * @param {Array} array 表格数据二维数组
  * @returns {Object} { columns, tableData }
- * @description 从二维数组中获取表头和表格数据，将第一行作为表头，用于在iView的表格中展示数据
+ * @description 从二维数组中获取表头和表格数据，将第一行作为表头，用于在表格中展示数据
  */
 export const getTableDataFromArray = (array) => {
   let columns = [];
@@ -411,9 +411,10 @@ export const scrollTop = (el, from = 0, to, duration = 500, endCallback) => {
  * @param {Object} vm Vue实例
  */
 export const setTitle = (routeItem, vm) => {
+  let winTitle = localStorage.getItem('ADMIN_TITLE') || title;
   const handledRoute = getRouteTitleHandled(routeItem);
   const pageTitle = showTitle(handledRoute, vm);
-  const resTitle = pageTitle ? `${title} - ${pageTitle}` : title;
+  const resTitle = pageTitle ? `${winTitle} - ${pageTitle}` : winTitle;
   window.document.title = resTitle;
 };
 

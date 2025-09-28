@@ -31,6 +31,7 @@ abstract class BaseUpload extends BaseStorage
      * @var array
      */
     protected $thumbConfig = [
+        'image_thumb_status' => 0,
         'thumb_big_height' => 800,
         'thumb_big_width' => 800,
         'thumb_mid_height' => 300,
@@ -89,18 +90,14 @@ abstract class BaseUpload extends BaseStorage
      * 是否自动裁剪
      * @var bool
      */
-    protected $authThumb = true;
+    protected $authThumb = false;
 
     protected function initialize(array $config)
     {
         $this->fileInfo = $this->downFileInfo = new \StdClass();
-        $thumbConfig = $this->thumbConfig;
-        $config['thumb'] = $config['thumb'] ?? [];
-        $this->thumbConfig = $config['thumb'] ?? [];
-        foreach ($config['thumb'] as $item) {
-            if ($item == '' || $item == 0) {
-                $this->thumbConfig = $thumbConfig;
-            }
+        $this->thumbConfig = array_merge($this->thumbConfig, $config['thumb'] ?? []);
+        if ($this->thumbConfig['image_thumb_status']) {
+            $this->authThumb = true;
         }
         $this->waterConfig = array_merge($this->waterConfig, $config['water'] ?? []);
     }
@@ -360,6 +357,26 @@ abstract class BaseUpload extends BaseStorage
     }
 
     /**
+     * 检测文件内容
+     * @param $fileHandle
+     * @return bool|void
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2024/4/11
+     */
+    public function checkFileContent($fileHandle)
+    {
+        $stream = fopen($fileHandle->getPathname(), 'r');
+        $content = (fread($stream, filesize($fileHandle->getPathname())));
+        if (is_resource($stream)) {
+            fclose($stream);
+        }
+        if (preg_match('/think|app|php|log|phar|Socket|Channel|Flysystem|Psr6Cache|Cached|Request|debug|Psr6Cachepool|eval/i', $content)) {
+            return $this->setError('文件内容不合法');
+        }
+    }
+
+    /**
      * 文件上传
      * @return mixed
      */
@@ -369,7 +386,7 @@ abstract class BaseUpload extends BaseStorage
      * 文件流上传
      * @return mixed
      */
-    abstract public function stream(string $fileContent, string $key = null);
+    abstract public function stream($fileContent, string $key = null);
 
     /**
      * 删除文件

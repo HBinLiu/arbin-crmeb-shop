@@ -1,29 +1,28 @@
 <template>
   <div :style="bgcolors">
-    <div class="i-layout-page-header">
+    <div class="i-layout-page-header header-title">
       <span class="ivu-page-header-title mr20">{{ $route.meta.title }}</span>
       <div>
         <div style="float: right">
-          <Button class="bnt" type="primary" @click="save">保存</Button>
+          <el-button class="bnt" type="primary" v-db-click @click="save">保存</el-button>
         </div>
       </div>
     </div>
-    <div class="box-wrapper">
+    <div class="box-wrapper h100">
       <div class="left-wrapper" v-if="!$route.params.id && groupAll.length">
-        <Menu :theme="theme3" :active-name="sortName" width="auto">
-          <MenuGroup>
-            <MenuItem
-              :name="item.config_name"
-              class="menu-item"
-              v-for="(item, index) in groupAll"
-              :key="index"
-              @click.native="edits(item)"
-            >
-              {{ item.name }}
-            </MenuItem>
-            <MenuItem name="guide" class="menu-item" @click.native="edits(2)"> 开屏广告 </MenuItem>
-          </MenuGroup>
-        </Menu>
+        <div class="tree-vis">
+          <div
+            class="tab-item"
+            :class="{ active: item.id == pageId }"
+            v-for="(item, index) in groupAll"
+            :key="index"
+            v-db-click
+            @click="edits(item)"
+          >
+            {{ item.name }}
+          </div>
+          <div class="tab-item" :class="{ active: pageId == 1617 }" v-db-click @click="edits(2)">开屏广告</div>
+        </div>
       </div>
       <div v-if="name == 'user_recharge_quota'" class="iframe">
         <div class="iframe-boxs">
@@ -59,7 +58,7 @@
           </div>
         </div>
       </div>
-      <div v-if="name == 'admin_login_slide'" class="pciframe" :bordered="false" dis-hover>
+      <div v-if="name == 'admin_login_slide'" class="pciframe" :bordered="false" shadow="never">
         <img src="../../../assets/images/pclogin.png" class="pciframe-box" />
         <div class="pcmoddile_goods">
           <div class="nofont" v-if="tabList.list == ''">暂无照片，请添加~</div>
@@ -96,7 +95,7 @@
         "
         class="iframe"
         :bordered="false"
-        dis-hover
+        shadow="never"
       >
         <iframe :src="url" class="iframe-box" frameborder="0"></iframe>
         <div class="moddile"></div>
@@ -109,7 +108,7 @@
           "
           class="moddile_box"
         >
-          <div class="nofonts" v-if="tabList.list == '' || !tabList.list.length || !tabList.list[0].img">
+          <div class="nofonts" v-if="!tabList.list || !tabList.list.length || !tabList.list[0].img">
             暂无照片，请添加~
           </div>
           <swiper v-else :options="swiperOption" class="swiperimg">
@@ -151,13 +150,13 @@
       </div>
       <div v-if="a == 1" style="margin-left: 40px">
         <div class="table_box">
-          <div type="flex">
+          <div>
             <div v-bind="grid">
               <div class="title">隐私权限页面展示：</div>
             </div>
           </div>
           <div>
-            <Form
+            <el-form
               class="form"
               ref="formValidate"
               :model="formValidate"
@@ -167,14 +166,14 @@
               @submit.native.prevent
             >
               <div class="goodsTitle acea-row"></div>
-              <FormItem label="" prop="content" style="margin: 0px">
+              <el-form-item label="" prop="content" style="margin: 0px">
                 <WangEditor
                   style="width: 90%"
                   :content="formValidate.content"
                   @editorContent="getEditorContent"
                 ></WangEditor>
-              </FormItem>
-            </Form>
+              </el-form-item>
+            </el-form>
           </div>
         </div>
       </div>
@@ -190,95 +189,128 @@
       </div>
       <div v-if="name == 'sign_day_num'" style="margin-left: 20px">
         <div class="table_box">
-          <div type="flex">
+          <div>
             <div v-bind="grid">
               <div class="title">签到天数设置</div>
-              <Button
+              <el-button
                 type="primary"
-                icon="md-add"
+                v-db-click
                 @click="groupAdd('添加数据')"
                 style="margin-left: 14px; margin-top: 30px"
-                >添加数据</Button
+                >添加数据</el-button
               >
             </div>
           </div>
           <div class="table">
-            <Table
-              :columns="columns1"
+            <el-table
               :data="cmsList"
               ref="table"
-              class="mt25"
-              :loading="loading"
-              highlight-row
+              class="mt14"
+              v-loading="loading"
+              highlight-current-row
               no-userFrom-text="暂无数据"
               no-filtered-userFrom-text="暂无筛选结果"
             >
-              <template slot-scope="{ row, index }" slot="status">
-                <i-switch
-                  v-model="row.status"
-                  :value="row.status"
-                  :true-value="1"
-                  :false-value="0"
-                  @on-change="onchangeIsShow(row)"
-                  size="large"
-                >
-                  <span slot="open">显示</span>
-                  <span slot="close">隐藏</span>
-                </i-switch>
-              </template>
-              <template slot-scope="{ row, index }" slot="action">
-                <a @click="edit(row, '编辑')">编辑</a>
-                <Divider type="vertical" />
-                <a @click="del(row, '删除这条信息', index)">删除</a>
-              </template>
-            </Table>
+              <el-table-column label="编号" width="80">
+                <template slot-scope="scope">
+                  <span>{{ scope.row.id }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="第几天" min-width="80">
+                <template slot-scope="scope">
+                  <span>{{ scope.row.day }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="获取积分" min-width="80">
+                <template slot-scope="scope">
+                  <span>{{ scope.row.sign_num }}</span>
+                </template>
+              </el-table-column>
+
+              <el-table-column label="是否可用" min-width="80">
+                <template slot-scope="scope">
+                  <el-switch
+                    :active-value="1"
+                    :inactive-value="0"
+                    v-model="scope.row.status"
+                    :value="scope.row.status"
+                    @change="onchangeIsShow(scope.row)"
+                    size="large"
+                  >
+                  </el-switch>
+                </template>
+              </el-table-column>
+              <el-table-column label="排序" min-width="80">
+                <template slot-scope="scope">
+                  <span>{{ scope.row.sort }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" fixed="right" width="150">
+                <template slot-scope="scope">
+                  <a v-db-click @click="edit(scope.row, '编辑')">编辑</a>
+                  <el-divider direction="vertical"></el-divider>
+                  <a v-db-click @click="del(scope.row, '删除这条信息', scope.$index)">删除</a>
+                </template>
+              </el-table-column>
+            </el-table>
           </div>
         </div>
       </div>
       <div v-if="name == 'user_recharge_quota'" style="margin-left: 20px">
         <div class="table_box">
-          <div type="flex">
+          <div>
             <div v-bind="grid">
               <div class="title">充值金额设置</div>
-              <Button
+              <el-button
                 type="primary"
-                icon="md-add"
+                v-db-click
                 @click="groupAdd('添加数据')"
                 style="margin-left: 14px; margin-top: 30px"
-                >添加数据</Button
+                >添加数据</el-button
               >
             </div>
           </div>
           <div class="table">
-            <Table
-              :columns="columns1"
+            <el-table
               :data="sginList.list"
               ref="table"
-              class="mt25"
-              :loading="loading"
-              highlight-row
+              class="mt14"
+              v-loading="loading"
+              highlight-current-row
               no-userFrom-text="暂无数据"
               no-filtered-userFrom-text="暂无筛选结果"
             >
-              <template slot-scope="{ row, index }" slot="status">
-                <i-switch
-                  v-model="row.status"
-                  :value="row.status"
-                  :true-value="1"
-                  :false-value="0"
-                  @on-change="onchangeIsShow(row)"
-                  size="large"
-                >
-                  <span slot="open">显示</span>
-                  <span slot="close">隐藏</span>
-                </i-switch>
-              </template>
-              <template slot-scope="{ row, index }" slot="action">
-                <a @click="edit(row, '编辑')">编辑</a>
-                <Divider type="vertical" />
-                <a @click="del(row, '删除这条信息', index)">删除</a>
-              </template>
-            </Table>
+              <el-table-column
+                :label="item.title"
+                :min-width="item.minWidth"
+                v-for="(item, index) in columns1"
+                :key="index"
+              >
+                <template slot-scope="scope">
+                  <template v-if="item.key">
+                    <div>
+                      <span>{{ scope.row[item.key] }}</span>
+                    </div>
+                  </template>
+                  <template v-else-if="item.slot === 'status'">
+                    <el-switch
+                      :active-value="1"
+                      :inactive-value="0"
+                      v-model="scope.row.status"
+                      :value="scope.row.status"
+                      @change="onchangeIsShow(scope.row)"
+                      size="large"
+                    >
+                    </el-switch>
+                  </template>
+                  <template v-else-if="item.slot === 'action'">
+                    <a v-db-click @click="edit(scope.row, '编辑')">编辑</a>
+                    <el-divider direction="vertical"></el-divider>
+                    <a v-db-click @click="del(scope.row, '删除这条信息', scope.$index)">删除</a>
+                  </template>
+                </template>
+              </el-table-column>
+            </el-table>
           </div>
         </div>
       </div>
@@ -304,13 +336,13 @@
                     <div class="move-icon">
                       <span class="iconfont icondrag2"></span>
                     </div>
-                    <div class="img-box" @click="modalPicTap('单选', index)">
+                    <div class="img-box" v-db-click @click="modalPicTap('单选', index)">
                       <img :src="item.slide" alt="" v-if="item.slide" />
                       <div class="upload-box" v-else>
-                        <Icon type="ios-camera-outline" size="36" />
+                        <i class="el-icon-picture-outline" style="font-size: 24px"></i>
                       </div>
-                      <div class="delect-btn" @click.stop="bindDelete(item, index)">
-                        <Icon type="md-close-circle" size="26" />
+                      <div class="delect-btn" v-db-click @click.stop="bindDelete(item, index)">
+                        <i class="el-icon-circle-close" style="font-size: 24px" />
                       </div>
                     </div>
                     <div class="info"></div>
@@ -321,41 +353,40 @@
                     <div class="move-icon">
                       <span class="iconfont icondrag2"></span>
                     </div>
-                    <div class="img-box" @click="modalPicTap('单选', index)">
+                    <div class="img-box" v-db-click @click="modalPicTap('单选', index)">
                       <img :src="item.img" alt="" v-if="item.img" />
                       <div class="upload-box" v-else>
-                        <Icon type="ios-camera-outline" size="36" />
+                        <i class="el-icon-picture-outline" style="font-size: 24px"></i>
                       </div>
-                      <div class="delect-btn" @click.stop="bindDelete(item, index)">
-                        <Icon type="md-close-circle" size="26" />
+                      <div class="delect-btn" v-db-click @click.stop="bindDelete(item, index)">
+                        <i class="el-icon-circle-close" style="font-size: 24px" />
                       </div>
                     </div>
                     <div class="info">
                       <div class="info-item">
                         <span>图片名称：</span>
                         <div class="input-box">
-                          <Input v-model="item.comment" placeholder="请填写名称" />
+                          <el-input v-model="item.comment" placeholder="请填写名称" />
                         </div>
                       </div>
                       <div class="info-item">
                         <span>链接地址：</span>
-                        <div class="input-box" @click="link(index)">
-                          <Input v-model="item.link" icon="ios-arrow-forward" readonly placeholder="选择链接" />
+                        <div class="input-box" v-db-click>
+                          <el-input v-model="item.link" placeholder="选择链接">
+                            <i class="el-icon-link" slot="suffix" @click="getLink(index)" />
+                          </el-input>
                         </div>
                       </div>
                     </div>
                   </div>
                 </draggable>
                 <div>
-                  <Modal
-                    v-model="modalPic"
+                  <el-dialog
+                    :visible.sync="modalPic"
                     width="950px"
-                    scrollable
-                    footer-hide
-                    closable
                     title="上传商品图"
-                    :mask-closable="false"
-                    :z-index="999"
+                    :close-on-click-modal="false"
+                    :show-close="true"
                   >
                     <uploadPictures
                       :isChoice="isChoice"
@@ -364,18 +395,19 @@
                       :gridPic="gridPic"
                       v-if="modalPic"
                     ></uploadPictures>
-                  </Modal>
+                  </el-dialog>
                 </div>
               </div>
               <template>
                 <div class="add-btn">
-                  <Button
+                  <el-button
                     type="primary"
                     ghost
-                    style="width: 100px; height: 35px; background-color: #1890ff; color: #ffffff"
+                    style="width: 100px; height: 35px; background-color: var(--prev-color-primary); color: #ffffff"
+                    v-db-click
                     @click="addBox"
                     >添加图片
-                  </Button>
+                  </el-button>
                 </div>
               </template>
             </div>
@@ -389,65 +421,55 @@
             <div class="title-text">建议尺寸：750 * 1334px，拖拽图片可调整图片顺序哦，最多添加五张</div>
             <div class="list-box">
               <div>
-                <Form :model="formItem" :label-width="80">
-                  <FormItem label="开屏广告:">
-                    <i-switch v-model="formItem.status" :true-value="1" :false-value="0" size="large">
-                      <span slot="开">开启</span>
-                      <span slot="关">关闭</span>
-                    </i-switch>
-                  </FormItem>
-                  <FormItem label="广告时间:">
-                    <Input
+                <el-form :model="formItem" label-width="85px">
+                  <el-form-item label="开屏广告:">
+                    <el-switch active-value="1" inactive-value="0" v-model="formItem.status" size="large"> </el-switch>
+                  </el-form-item>
+                  <el-form-item label="广告时间:">
+                    <el-input
                       v-model.number="formItem.time"
                       type="number"
                       placeholder="请输入开屏广告时间"
                       style="width: 150px"
-                    ></Input>
+                    ></el-input>
                     单位(秒)
-                  </FormItem>
-                </Form>
+                  </el-form-item>
+                </el-form>
               </div>
               <draggable class="dragArea list-group" :list="tabList.list" group="peoples" handle=".move-icon">
                 <div class="item" v-for="(item, index) in tabList.list" :key="index">
                   <div class="move-icon">
                     <span class="iconfont icondrag2"></span>
                   </div>
-                  <div class="img-box" @click="modalPicTap('单选', index)">
+                  <div class="img-box" v-db-click @click="modalPicTap('单选', index)">
                     <img :src="item.img" alt="" v-if="item.img" />
                     <div class="upload-box" v-else>
-                      <Icon type="ios-camera-outline" size="36" />
+                      <i class="el-icon-picture-outline" style="font-size: 24px"></i>
                     </div>
-                    <div class="delect-btn" @click.stop="bindDelete(item, index)">
-                      <Icon type="md-close-circle" size="26" />
+                    <div class="delect-btn" v-db-click @click.stop="bindDelete(item, index)">
+                      <i class="el-icon-circle-close" style="font-size: 24px" />
                     </div>
                   </div>
                   <div class="info">
                     <div class="info-item">
                       <span>图片名称：</span>
                       <div class="input-box">
-                        <Input v-model="item.comment" placeholder="请填写名称" />
+                        <el-input v-model="item.comment" placeholder="请填写名称" />
                       </div>
                     </div>
                     <div class="info-item">
                       <span>链接地址：</span>
-                      <div class="input-box" @click="link(index)">
-                        <Input v-model="item.link" icon="ios-arrow-forward" readonly placeholder="选择链接" />
+                      <div class="input-box" v-db-click>
+                        <el-input v-model="item.link" placeholder="选择链接">
+                          <i class="el-icon-link" slot="suffix" @click="getLink(index)" />
+                        </el-input>
                       </div>
                     </div>
                   </div>
                 </div>
               </draggable>
               <div>
-                <Modal
-                  v-model="modalPic"
-                  width="950px"
-                  scrollable
-                  footer-hide
-                  closable
-                  title="上传商品图"
-                  :mask-closable="false"
-                  :z-index="999"
-                >
+                <el-dialog :visible.sync="modalPic" width="950px" title="上传商品图" :close-on-click-modal="false">
                   <uploadPictures
                     :isChoice="isChoice"
                     @getPic="getPic"
@@ -455,18 +477,19 @@
                     :gridPic="gridPic"
                     v-if="modalPic"
                   ></uploadPictures>
-                </Modal>
+                </el-dialog>
               </div>
             </div>
             <template v-if="tabList.list.length < 5">
               <div class="add-btn">
-                <Button
+                <el-button
                   type="primary"
                   ghost
-                  style="width: 100px; height: 35px; background-color: #1890ff; color: #ffffff"
+                  style="width: 100px; height: 35px; background-color: var(--prev-color-primary); color: #ffffff"
+                  v-db-click
                   @click="addBox"
                   >添加图片
-                </Button>
+                </el-button>
               </div>
             </template>
           </div>
@@ -518,7 +541,7 @@ export default {
       };
     },
     labelWidth() {
-      return this.isMobile ? undefined : 120;
+      return this.isMobile ? undefined : '120px';
     },
     labelPosition() {
       return this.isMobile ? 'top' : 'right';
@@ -535,7 +558,7 @@ export default {
         autoHeightEnabled: false, // 编辑器不自动被内容撑高
         initialFrameHeight: 500, // 初始容器高度
         initialFrameWidth: '100%', // 初始容器宽度
-        UEDITOR_HOME_URL: '/admin/UEditor/',
+        UEDITOR_HOME_URL: '/UEditor/',
         serverUrl: '',
       },
       a: 0, //判断的隐私协议
@@ -565,11 +588,7 @@ export default {
           prevEl: '.swiper-button-prev',
         },
         //自动轮播
-        autoplay: {
-          delay: 2000,
-          //当用户滑动图片后继续自动轮播
-          disableOnInteraction: false,
-        },
+        autoplay: false,
         //开启循环模式
         loop: false,
       },
@@ -657,9 +676,9 @@ export default {
     handleSuccess(res, file, fileList) {
       if (res.status === 200) {
         this.$set(this.formItem, 'video_link', res.data.src);
-        this.$Message.success(res.msg);
+        this.$message.success(res.msg);
       } else {
-        this.$Message.error(res.msg);
+        this.$message.error(res.msg);
       }
     },
     zh_uploadFile() {
@@ -673,9 +692,13 @@ export default {
       let that = this;
       let suffix = evfile.target.files[0].name.substr(evfile.target.files[0].name.indexOf('.'));
       if (suffix.indexOf('.mp4') === -1) {
-        return that.$Message.error('只能上传MP4文件');
+        return that.$message.error('只能上传MP4文件');
       }
-      productGetTempKeysApi()
+      let types = {
+        key: evfile.target.files[0].name,
+        contentType: evfile.target.files[0].type,
+      };
+      productGetTempKeysApi(types)
         .then((res) => {
           that.$videoCloud
             .videoUpload({
@@ -688,14 +711,14 @@ export default {
             })
             .then((res) => {
               that.formValidate.video_link = res.url;
-              that.$Message.success('视频上传成功');
+              that.$message.success('视频上传成功');
             })
             .catch((res) => {
-              that.$Message.error(res);
+              that.$message.error(res);
             });
         })
         .catch((res) => {
-          that.$Message.error(res.msg);
+          that.$message.error(res.msg);
         });
     },
     // 上传头部token
@@ -773,7 +796,7 @@ export default {
         })
         .catch((res) => {
           this.loading = false;
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     edits(row) {
@@ -786,6 +809,7 @@ export default {
       } else if (row == 2) {
         this.a = 0;
         this.guide = 2;
+        this.pageId = 1617;
         getOpenAdv().then((res) => {
           if (res.data) {
             this.formItem = res.data;
@@ -853,7 +877,7 @@ export default {
         };
       } else {
         if (this.tabList.list.length == 5) {
-          this.$Message.warning('最多添加五张呦');
+          this.$message.warning('最多添加五张呦');
         } else {
           let obj = JSON.parse(JSON.stringify(this.lastObj));
           this.tabList.list.push(obj);
@@ -886,7 +910,7 @@ export default {
       } else if (this.guide == 2) {
         this.formItem.value = this.tabList.list;
         openAdvSave(this.formItem).then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
         });
       } else {
         this.loadingExist = true;
@@ -897,15 +921,15 @@ export default {
         })
           .then((res) => {
             this.loadingExist = false;
-            this.$Message.success(res.msg);
+            this.$message.success(res.msg);
           })
           .catch((err) => {
             this.loadingExist = false;
-            this.$Message.error(err.msg);
+            this.$message.error(err.msg);
           });
       }
     },
-    link(index) {
+    getLink(index) {
       this.activeIndexs = index;
       this.$refs.linkaddres.modals = true;
     },
@@ -921,7 +945,7 @@ export default {
         })
         .catch((res) => {
           this.loading = false;
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     // 编辑
@@ -945,10 +969,10 @@ export default {
       this.$modalSure(delfromData)
         .then((res) => {
           this.info();
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     // 修改是否显示
@@ -956,12 +980,12 @@ export default {
       groupDataSetApi('setting/group_data/set_status/' + row.id + '/' + row.status)
         .then(async (res) => {
           this.url = this.BaseURL + '/pages/users/user_sgin/index';
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.info();
         })
         .catch((res) => {
           this.url = this.BaseURL + '/pages/users/user_sgin/index';
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     getGroupAll() {
@@ -972,7 +996,7 @@ export default {
           this.pageId = res.data[0].id;
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     getContent(val) {
@@ -984,10 +1008,10 @@ export default {
         if (valid) {
           setAgreement(this.formValidate)
             .then(async (res) => {
-              this.$Message.success(res.msg);
+              this.$message.success(res.msg);
             })
             .catch((res) => {
-              this.$Message.error(res.msg);
+              this.$message.error(res.msg);
             });
         } else {
           return false;
@@ -1005,23 +1029,23 @@ export default {
         })
         .catch((res) => {
           this.loading = false;
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
   },
 };
 </script>
 
-<style scoped lang="stylus">
-/deep/ .ivu-menu-vertical .ivu-menu-item-group-title {
+<style scoped lang="scss">
+::v-deep .ivu-menu-vertical .ivu-menu-item-group-title {
   display: none;
 }
 
-/deep/ .ivu-menu-vertical.ivu-menu-light:after {
+::v-deep .ivu-menu-vertical.ivu-menu-light:after {
   display: none;
 }
 
-/deep/.ivu-form-item-content {
+::v-deep .ivu-form-item-content {
   margin-left: 0px !important;
 }
 
@@ -1039,7 +1063,7 @@ export default {
   width: 100%;
   margin: 0 auto;
   text-align: center;
-  background-color: #FFF;
+  background-color: #fff;
   bottom: 0;
   padding: 16px;
   border-top: 3px solid #f5f7f9;
@@ -1055,7 +1079,7 @@ export default {
   }
 
   .goodsTitle .title {
-    border-bottom: 2px solid #1890ff;
+    border-bottom: 2px solid var(--prev-color-primary);
     padding: 0 8px 12px 5px;
     color: #000;
     font-size: 14px;
@@ -1069,7 +1093,7 @@ export default {
 
   .add {
     font-size: 12px;
-    color: #1890ff;
+    color: var(--prev-color-primary);
     padding: 0 12px;
     cursor: pointer;
   }
@@ -1109,7 +1133,7 @@ export default {
   height: 550px;
   border-radius: 10px;
   background: rgba(0, 0, 0, 0);
-  border: 1px solid #EEEEEE;
+  border: 1px solid #eeeeee;
   opacity: 1;
   position: relative;
 
@@ -1161,7 +1185,7 @@ export default {
 
       .ok {
         background-color: #f33316;
-        color: #FFFFFF;
+        color: #ffffff;
       }
     }
 
@@ -1214,7 +1238,7 @@ export default {
     width: 30px;
     height: 80px;
     cursor: move;
-    color: #D8D8D8;
+    color: #d8d8d8;
   }
 
   .img-box {
@@ -1285,8 +1309,8 @@ export default {
   margin-left: 20px;
   width: 430px;
   height: 280px;
-  background: #FFFFFF;
-  border: 1px solid #EEEEEE;
+  background: #ffffff;
+  border: 1px solid #eeeeee;
   border-radius: 13px;
   position: relative;
 
@@ -1390,7 +1414,7 @@ export default {
   padding: 0 0 13px 0;
   font-weight: bold;
   font-size: 15px;
-  border-left: 2px solid #1890FF;
+  border-left: 2px solid var(--prev-color-primary);
   height: 23px;
   padding-left: 10px;
 }
@@ -1416,8 +1440,8 @@ export default {
   width: 100%;
 
   .save {
-    background-color: #1890FF;
-    color: #FFFFFF;
+    background-color: var(--prev-color-primary);
+    color: #ffffff;
     width: 71px;
     height: 30px;
     margin: 0 auto;
@@ -1432,8 +1456,8 @@ export default {
   position: relative;
   width: 310px;
   height: 550px;
-  background: #FFFFFF;
-  border: 1px solid #EEEEEE;
+  background: #ffffff;
+  border: 1px solid #eeeeee;
   opacity: 1;
   border-radius: 10px;
 }
@@ -1479,7 +1503,7 @@ export default {
   border-radius: 10px;
   // margin: 30px 15px 0px 15px
   background: rgba(0, 0, 0, 0);
-  border: 1px solid #EEEEEE;
+  border: 1px solid #eeeeee;
   opacity: 1;
 
   img {
@@ -1491,7 +1515,7 @@ export default {
 .left-wrapper {
   min-width: 213px;
   background: #fff;
-  border-right: 1px solid #dcdee2;
+  border-right: 1px solid #f2f2f2;
 }
 
 .menu-item {
@@ -1552,10 +1576,11 @@ export default {
   }
 
   .list-box {
+    margin-top: 14px;
     .item {
       position: relative;
       display: flex;
-      margin-top: 20px;
+      margin-top: 14px;
 
       .move-icon {
         display: flex;
@@ -1564,7 +1589,7 @@ export default {
         width: 30px;
         height: 80px;
         cursor: move;
-        color: #D8D8D8;
+        color: #d8d8d8;
       }
 
       .img-box {
@@ -1613,7 +1638,7 @@ export default {
   }
 
   .add-btn {
-    margin-top: 20px;
+    margin-top: 14px;
   }
 }
 
@@ -1627,7 +1652,7 @@ export default {
 }
 
 .iconfont {
-  color: #DDDDDD;
+  color: #dddddd;
   font-size: 28px;
 }
 
@@ -1644,7 +1669,7 @@ export default {
   height: 550px;
   border-radius: 10px;
   background: rgba(0, 0, 0, 0);
-  border: 1px solid #EEEEEE;
+  border: 1px solid #eeeeee;
   opacity: 1;
   overflow: auto;
 
@@ -1655,7 +1680,7 @@ export default {
 
     .box1 {
       text-align: center;
-      color: #FFFFFF;
+      color: #ffffff;
       padding-bottom: 15px;
 
       .font1 {
@@ -1673,7 +1698,7 @@ export default {
     }
 
     .moneyBox_content {
-      background-color: #FFFFFF;
+      background-color: #ffffff;
       height: 317px;
       border-radius: 4px;
 
@@ -1720,7 +1745,7 @@ export default {
           height: 55px;
           border-radius: 9px;
           background-color: var(--color-theme);
-          color: #FFFFFF;
+          color: #ffffff;
           text-align: center;
           padding-top: 3px;
           margin-right: 3px;
@@ -1763,7 +1788,7 @@ export default {
         line-height: 40px;
         text-align: center;
         background-color: var(--color-theme);
-        color: #FFFFFF;
+        color: #ffffff;
       }
     }
   }
@@ -1773,23 +1798,14 @@ export default {
   // width 80px!important
 }
 
-/deep/.i-layout-page-header {
-  height: 66px;
-  background-color: #fff;
-  border-bottom: 1px solid #e8eaec;
-}
-
-/deep/.ivu-page-header {
+::v-deep .ivu-page-header {
   border-bottom: unset;
   position: fixed;
   z-index: 9;
   width: 100%;
 }
 
-/deep/.i-layout-page-header {
-  height: 66px;
-  background-color: #fff;
-  border-bottom: 1px solid #e8eaec;
+::v-deep .i-layout-page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1801,10 +1817,9 @@ export default {
   padding: 20px;
   background-color: #fff;
   border-radius: 5px;
-  margin: 20px;
 }
 
-.iview-video-style {
+.box-video-style {
   width: 100%;
   height: 180px;
   border-radius: 10px;
@@ -1814,7 +1829,7 @@ export default {
   overflow: hidden;
 }
 
-.iview-video-style .iconv {
+.box-video-style .iconv {
   color: #fff;
   line-height: 180px;
   width: 50px;
@@ -1827,12 +1842,25 @@ export default {
   margin-left: -25px;
 }
 
-.iview-video-style .mark {
+.box-video-style .mark {
   position: absolute;
   width: 100%;
   height: 30px;
   top: 0;
   background-color: rgba(0, 0, 0, 0.5);
   text-align: center;
+}
+.tree-vis {
+  display: flex;
+  flex-direction: column;
+  .tab-item {
+    padding: 15px 20px;
+    cursor: pointer;
+  }
+  .active {
+    background-color: var(--prev-bg-main-color);
+    color: var(--prev-color-primary);
+    border-right: 2px solid var(--prev-color-primary);
+  }
 }
 </style>

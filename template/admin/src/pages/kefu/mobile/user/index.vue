@@ -16,7 +16,7 @@
           <span class="label" v-for="(item, index) in activeUserInfo.labelNames" :key="index">{{ item }}</span>
         </div>
         <span v-else class="labelBox">无</span>
-        <span class="iconfontYI icon-up" @click="onShowLabel"></span>
+        <span class="iconfontYI icon-up" v-db-click @click="onShowLabel"></span>
       </div>
       <div class="acea-row item bgt">
         <span class="sp1">手机号</span>
@@ -28,9 +28,10 @@
           class="checkName"
           v-if="activeUserInfo.group_name"
           v-text="activeUserInfo.group_name"
+          v-db-click
           @click="showName"
         ></span>
-        <span v-else @click="showName">无</span>
+        <span v-else v-db-click @click="showName">无</span>
         <vue-pickers
           :data="groupList"
           v-if="groupList.length"
@@ -162,7 +163,7 @@ export default {
     confirm(res) {
       putGroupApi(this.$route.params.uid, res[0].value)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.getUserInfo();
         })
         .catch((err) => {
@@ -176,7 +177,7 @@ export default {
 };
 </script>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 .userBox {
   background: #f0f1f2;
 }
@@ -185,6 +186,9 @@ export default {
 }
 .user {
   &-header {
+    padding: 0 0.3rem;
+    background: #fff;
+    margin-bottom: 0.15rem;
     width: 100%;
     height: 1.5rem;
     line-height: 1.5rem;
@@ -212,9 +216,6 @@ export default {
         border-radius: 4px;
       }
     }
-    padding: 0 0.3rem;
-    background: #fff;
-    margin-bottom: 0.15rem;
   }
   &-list {
     padding: 0 0.2rem;

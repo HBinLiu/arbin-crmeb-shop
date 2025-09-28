@@ -44,7 +44,7 @@ class StoreBargainDao extends BaseDao
      */
     public function getList(array $where, int $page = 0, int $limit = 0)
     {
-        return $this->search($where)->where('is_del', 0)
+        return $this->search($where, false)->where('is_del', 0)
             ->when(isset($where['start_status']) && $where['start_status'] !== '', function ($query) use ($where) {
                 $time = time();
                 switch ($where['start_status']) {
@@ -60,6 +60,8 @@ class StoreBargainDao extends BaseDao
                 }
             })->when($page != 0 && $limit != 0, function ($query) use ($page, $limit) {
                 $query->page($page, $limit);
+            })->when(isset($where['product_id']) && $where['product_id'] != 0, function ($query) use ($where) {
+                $query->where('product_id', $where['product_id']);
             })->order('sort desc,id desc')->select()->toArray();
     }
 
@@ -119,7 +121,7 @@ class StoreBargainDao extends BaseDao
             ->where('start_time', '<=', time())
             ->where('stop_time', '>=', time())
             ->where('product_id', 'IN', function ($query) {
-                $query->name('store_product')->where('is_show', 1)->where('is_del', 0)->field('id');
+                $query->name('store_product')->where('is_del', 0)->field('id');
             })->with('product')->field($field)->page($page, $limit)->order('sort DESC,id DESC')->select()->toArray();
     }
 
@@ -135,7 +137,7 @@ class StoreBargainDao extends BaseDao
      */
     public function DiyBargainList(array $where, int $page, int $limit)
     {
-        return $this->search($where)
+        return $this->search($where, false)
             ->when(isset($where['sid']) && $where['sid'], function ($query) use ($where) {
                 $query->whereIn('id', function ($query) use ($where) {
                     $query->name('store_product_cate')->where('cate_id', $where['sid'])->field('product_id')->select();
@@ -165,7 +167,7 @@ class StoreBargainDao extends BaseDao
      */
     public function getHomeList(array $where, int $page, int $limit)
     {
-        return $this->search($where)
+        return $this->search($where, false)
             ->when(isset($where['sid']) && $where['sid'], function ($query) use ($where) {
                 $query->whereIn('id', function ($query) use ($where) {
                     $query->name('store_product_cate')->where('cate_id', $where['sid'])->field('product_id')->select();
@@ -215,7 +217,7 @@ class StoreBargainDao extends BaseDao
      */
     public function getCount(array $where)
     {
-        return $this->search($where)
+        return $this->search($where, false)
             ->when(isset($where['sid']) && $where['sid'], function ($query) use ($where) {
                 $query->whereIn('product_id', function ($query) use ($where) {
                     $query->name('store_product_cate')->where('cate_id', $where['sid'])->field('product_id')->select();
@@ -242,5 +244,11 @@ class StoreBargainDao extends BaseDao
     public function addBargain(int $id, string $field)
     {
         return $this->getModel()->where('id', $id)->inc($field, 1)->update();
+    }
+
+    public function getProductExist($productIds)
+    {
+        return $this->getModel()->where('product_id', 'in', $productIds)->where('is_del', 0)
+            ->group('product_id')->column('COUNT(*) as count', 'product_id');
     }
 }

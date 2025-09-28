@@ -14,6 +14,10 @@ use think\facade\Route;
  * 订单路由
  */
 Route::group('order', function () {
+    //获取快递信息
+    Route::get('kuaidi_coms', 'v1.order.StoreOrder/getKuaidiComs')->option(['real_name' => '获取快递信息']);
+    //取消商家寄件
+    Route::post('shipment_cancel_order/:id', 'v1.order.StoreOrder/shipmentCancelOrder')->option(['real_name' => '取消商家寄件']);
     //打印订单
     Route::get('print/:id', 'v1.order.StoreOrder/order_print')->name('StoreOrderPrint')->option(['real_name' => '打印订单']);
     //订单列表
@@ -30,8 +34,12 @@ Route::group('order', function () {
     Route::put('update/:id', 'v1.order.StoreOrder/update')->name('StoreOrderUpdate')->option(['real_name' => '修改订单']);
     //确认收货
     Route::put('take/:id', 'v1.order.StoreOrder/take_delivery')->name('StoreOrderTakeDelivery')->option(['real_name' => '确认收货']);
+    //批量发货
+    Route::get('delivery/import_express', 'v1.order.StoreOrder/importExpress')->name('importExpress')->option(['real_name' => '批量发货']);
     //发送货
     Route::put('delivery/:id', 'v1.order.StoreOrder/update_delivery')->name('StoreOrderUpdateDelivery')->option(['real_name' => '订单发送货']);
+    //获取商家寄件金额
+    Route::post('price', 'v1.order.StoreOrder/getPrice')->name('getPrice')->option(['real_name' => '获取商家寄件金额']);
     //获取订单可拆分商品列表
     Route::get('split_cart_info/:id', 'v1.order.StoreOrder/split_cart_info')->name('StoreOrderSplitCartInfo')->option(['real_name' => '获取订单可拆分商品列表']);
     //拆单发送货
@@ -42,6 +50,8 @@ Route::group('order', function () {
     Route::get('refund/:id', 'v1.order.StoreOrder/refund')->name('StoreOrderRefund')->option(['real_name' => '订单退款表单']);
     //订单退款
     Route::put('refund/:id', 'v1.order.StoreOrder/update_refund')->name('StoreOrderUpdateRefund')->option(['real_name' => '订单退款']);
+    //获取电子面单模版
+    Route::get('express/temp', 'v1.order.StoreOrder/express_temp')->option(['real_name' => '快递公司电子面单模版']);
     //获取物流信息
     Route::get('express/:id', 'v1.order.StoreOrder/get_express')->name('StoreOrderUpdateExpress')->option(['real_name' => '获取物流信息']);
     //获取物流公司
@@ -72,7 +82,6 @@ Route::group('order', function () {
     Route::post('dels', 'v1.order.StoreOrder/del_orders')->name('StoreOrderorDels')->option(['real_name' => '批量删除订单']);
     //面单默认配置信息
     Route::get('sheet_info', 'v1.order.StoreOrder/getDeliveryInfo')->option(['real_name' => '面单默认配置信息']);
-
     //获取线下付款二维码
     Route::get('offline_scan', 'v1.order.OtherOrder/offline_scan')->name('OfflineScan')->option(['real_name' => '获取线下付款二维码']);
     //线下收银列表
@@ -85,6 +94,22 @@ Route::group('order', function () {
     Route::post('invoice/set/:id', 'v1.order.StoreOrderInvoice/set_invoice')->name('StoreOrderorInvoiceSet')->option(['real_name' => '设置发票状态']);
     //开票订单详情
     Route::get('invoice_order_info/:id', 'v1.order.StoreOrderInvoice/orderInfo')->name('StoreOrderorInvoiceOrderInfo')->option(['real_name' => '开票订单详情']);
+    //获取发票开具页面iframe地址
+    Route::get('invoice_issuance_url/:id', 'v1.order.StoreOrderInvoice/invoiceIssuanceUrl')->name('invoiceIssuanceUrl')->option(['real_name' => '获取发票开具页面iframe地址']);
+    //保存发票信息
+    Route::post('save_invoice_info/:id', 'v1.order.StoreOrderInvoice/saveInvoiceInfo')->name('saveInvoiceInfo')->option(['real_name' => '保存发票信息']);
+    //电子发票分类
+    Route::get('invoice_category', 'v1.order.StoreOrderInvoice/invoiceCategory')->name('invoiceCategory')->option(['real_name' => '电子发票分类']);
+    //开具发票
+    Route::post('invoice_issuance', 'v1.order.StoreOrderInvoice/invoiceIssuance')->name('invoiceIssuance')->option(['real_name' => '开具发票']);
+    //查看发票详情
+    Route::get('invoice_info/:id', 'v1.order.StoreOrderInvoice/invoiceInfo')->name('invoiceInfo')->option(['real_name' => '查看发票详情']);
+    //开具负数发票
+    Route::get('red_invoice_issuance/:id', 'v1.order.StoreOrderInvoice/redInvoiceIssuance')->name('redInvoiceIssuance')->option(['real_name' => '开具负数发票']);
+    //下载发票
+    Route::get('down_invoice/:id', 'v1.order.StoreOrderInvoice/downInvoice')->name('downInvoice')->option(['real_name' => '下载发票']);
+    //电子发票配置
+    Route::get('elec_invoice_config', 'v1.order.StoreOrderInvoice/elecInvoiceConfig')->name('elecInvoiceConfig')->option(['real_name' => '电子发票配置']);
     //配送员列表
     Route::get('delivery/index', 'v1.order.DeliveryService/index')->option(['real_name' => '配送员列表']);
     //新增配送表单
@@ -103,7 +128,9 @@ Route::group('order', function () {
     Route::get('delivery/list', 'v1.order.DeliveryService/get_delivery_list')->option(['real_name' => '订单列表获取配送员']);
     //电子面单模板列表
     Route::get('expr/temp', 'v1.order.StoreOrder/expr_temp')->option(['real_name' => '电子面单模板列表']);
-    Route::get('express/temp', 'v1.order.StoreOrder/express_temp')->option(['real_name' => '快递公司电子面单模版']);
+    //打印发货单
+    Route::get('print/shipping/:order_id', 'v1.order.StoreOrder/printShipping')->option(['real_name' => '打印发货单']);
+
     //更多操作打印电子面单
     Route::get('order_dump/:order_id', 'v1.order.StoreOrder/order_dump')->option(['real_name' => '更多操作打印电子面单']);
 })->middleware([
@@ -111,7 +138,7 @@ Route::group('order', function () {
     \app\adminapi\middleware\AdminAuthTokenMiddleware::class,
     \app\adminapi\middleware\AdminCheckRoleMiddleware::class,
     \app\adminapi\middleware\AdminLogMiddleware::class
-]);
+])->option(['mark' => 'order', 'mark_name' => '订单管理']);
 
 /**
  * 售后 相关路由
@@ -138,4 +165,4 @@ Route::group('refund', function () {
     \app\adminapi\middleware\AdminAuthTokenMiddleware::class,
     \app\adminapi\middleware\AdminCheckRoleMiddleware::class,
     \app\adminapi\middleware\AdminLogMiddleware::class
-]);
+])->option(['mark' => 'refund', 'mark_name' => '退款订单']);

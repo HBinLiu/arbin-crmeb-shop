@@ -1,38 +1,39 @@
 <template>
   <div class="agreemant">
-    <Card :bordered="false" dis-hover class="ivu-mt" :padding="0">
-      <div class="new_card_pd">
-        <Tabs v-model="currentTab" @on-click="changeTab">
-          <TabPane :label="item.label" :name="item.value.toString()" v-for="(item, index) in headerList" :key="index" />
-        </Tabs>
+    <el-card :bordered="false" shadow="never" class="ivu-mt" :body-style="{ padding: '0 20px' }">
+      <div>
+        <el-tabs v-model="currentTab" @tab-click="changeTab">
+          <el-tab-pane
+            :label="item.label"
+            :name="item.value.toString()"
+            v-for="(item, index) in headerList"
+            :key="index"
+          />
+        </el-tabs>
       </div>
-    </Card>
+    </el-card>
 
-    <Row class="mb10 content">
-      <Col span="16">
+    <el-row class="content">
+      <el-col :span="16">
         <WangEditor style="width: 100%" :content="formValidate.content" @editorContent="getEditorContent"></WangEditor>
-      </Col>
-      <Col span="6" style="width: 33%">
+      </el-col>
+      <el-col :span="6" style="width: 33%">
         <div class="ifam">
           <div class="content" v-html="content"></div>
         </div>
-      </Col>
-    </Row>
-    <!-- <Row class="mb10 content">
-      <Button class="bnt" type="primary" @click="save" :loading="loadingExist"
-        >保存</Button
+      </el-col>
+    </el-row>
+    <!-- <el-row class="mb10 content">
+      <el-button class="bnt" type="primary" v-db-click @click="save" :loading="loadingExist"
+        >保存</el-button
       >
-    </Row> -->
-    <Card
-      :bordered="false"
-      dis-hover
-      class="fixed-card"
-      :style="{ left: `${!menuCollapse ? '200px' : isMobile ? '0' : '80px'}` }"
-    >
+    </el-row> -->
+
+    <el-card :bordered="false" shadow="never" class="fixed-card" :style="{ left: `${fixBottomWidth}` }">
       <div class="acea-row row-center">
-        <Button class="bnt" type="primary" @click="save" :loading="loadingExist">保存</Button>
+        <el-button class="bnt" type="primary" v-db-click @click="save" :loading="loadingExist">保存</el-button>
       </div>
-    </Card>
+    </el-card>
   </div>
 </template>
 
@@ -54,12 +55,13 @@ export default {
         { label: '用户协议', value: '4' },
         { label: '注销协议', value: '5' },
         { label: '积分协议', value: '6' },
+        { label: '分销协议', value: '8' },
       ],
       ueConfig: {
         autoHeightEnabled: false,
         initialFrameHeight: 500,
         initialFrameWidth: '100%',
-        UEDITOR_HOME_URL: '/admin/UEditor/',
+        UEDITOR_HOME_URL: '/UEditor/',
         serverUrl: '',
       },
       id: 0,
@@ -71,7 +73,33 @@ export default {
     };
   },
   computed: {
-    ...mapState('admin/layout', ['isMobile', 'menuCollapse']),
+    // 设置是否显示 tagsView
+    fixBottomWidth() {
+      let { layout, isCollapse } = this.$store.state.themeConfig.themeConfig;
+      let w;
+      if (['columns'].includes(layout)) {
+        if (isCollapse) {
+          w = '85px';
+        } else {
+          w = '265px';
+        }
+      } else if (['classic'].includes(layout)) {
+        if (isCollapse) {
+          w = '85px';
+        } else {
+          w = '180px';
+        }
+      } else if (['defaults', 'classic'].includes(layout)) {
+        if (isCollapse) {
+          w = '64px';
+        } else {
+          w = '180px';
+        }
+      } else {
+        w = '0px';
+      }
+      return w;
+    },
   },
   created() {
     this.changeTab(this.currentTab);
@@ -81,18 +109,18 @@ export default {
       this.formValidate.content = this.content;
       setAgreements(this.formValidate)
         .then(async (res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     getEditorContent(content) {
       this.content = content;
     },
-    changeTab(data) {
+    changeTab() {
       this.formValidate.content = ' ';
-      getAgreements(data).then((res) => {
+      getAgreements(this.currentTab).then((res) => {
         this.formValidate.id = res.data.id || 0;
         this.formValidate.type = res.data.type;
         this.formValidate.title = res.data.title;
@@ -104,17 +132,17 @@ export default {
 };
 </script>
 
-<style lang="stylus" scoped>
+<style lang="scss" scoped>
+::v-deep .el-tabs__item {
+  height: 54px !important;
+  line-height: 54px !important;
+}
 .agreemant {
   background-color: #fff;
-  padding: 5px 15px ;
-  margin-top 10px;
 }
-
 .content {
-  padding: 10px 0px;
+  padding: 10px 16px;
 }
-
 .ifam {
   width: 344px;
   height: 644px;
@@ -123,7 +151,6 @@ export default {
   padding: 40px 20px;
   padding-top: 50px;
   margin: 0 auto 0 20px;
-
   .content {
     height: 560px;
     overflow: hidden;
@@ -132,38 +159,14 @@ export default {
     overflow-x: hidden;
     overflow-y: auto;
   }
-
   .content::-webkit-scrollbar {
     display: none; /* Chrome Safari */
   }
 }
-
 .new_tab {
-  >>>.ivu-tabs-nav .ivu-tabs-tab {
+  ::v-deep .ivu-tabs-nav .ivu-tabs-tab {
     padding: 4px 16px 20px !important;
     font-weight: 500;
-  }
-}
-
-.fixed-card {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 200px;
-  z-index: 99;
-  box-shadow: 0 -1px 2px rgb(240, 240, 240);
-
-  /deep/ .ivu-card-body {
-    padding: 15px 16px 14px;
-  }
-
-  .ivu-form-item {
-    margin-bottom: 0;
-  }
-
-  /deep/ .ivu-form-item-content {
-    margin-right: 124px;
-    text-align: center;
   }
 }
 </style>

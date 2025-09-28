@@ -15,6 +15,7 @@ namespace app\services\user;
 use app\dao\user\UserRechargeDao;
 use app\services\BaseServices;
 use app\services\order\StoreOrderCreateServices;
+use app\services\pay\PayServices;
 use app\services\pay\RechargeServices;
 use app\services\statistic\CapitalFlowServices;
 use app\services\system\config\SystemGroupDataServices;
@@ -103,14 +104,14 @@ class UserRechargeServices extends BaseServices
 
         foreach ($list as &$item) {
             switch ($item['recharge_type']) {
-                case 'routine':
-                    $item['_recharge_type'] = '小程序充值';
-                    break;
-                case 'weixin':
-                    $item['_recharge_type'] = '公众号充值';
+                case PayServices::WEIXIN_PAY:
+                    $item['_recharge_type'] = '微信充值';
                     break;
                 case 'system':
                     $item['_recharge_type'] = '系统充值';
+                    break;
+                case PayServices::ALIAPY_PAY:
+                    $item['_recharge_type'] = '支付宝充值';
                     break;
                 default:
                     $item['_recharge_type'] = '其他充值';
@@ -119,7 +120,7 @@ class UserRechargeServices extends BaseServices
             $item['_pay_time'] = $item['pay_time'] ? date('Y-m-d H:i:s', $item['pay_time']) : '暂无';
             $item['_add_time'] = $item['add_time'] ? date('Y-m-d H:i:s', $item['add_time']) : '暂无';
             $item['paid_type'] = $item['paid'] ? '已支付' : '未支付';
-            $item['avatar'] = strpos($item['avatar'], 'http') === false ? (sys_config('site_url') . $item['avatar']) : $item['avatar'];
+            $item['avatar'] = strpos($item['avatar'] ?? '', 'http') === false ? (sys_config('site_url') . $item['avatar']) : $item['avatar'];
             unset($item['user']);
         }
         return compact('list', 'count');
@@ -134,8 +135,8 @@ class UserRechargeServices extends BaseServices
         $data = [];
         $data['sumPrice'] = $this->getRechargeSum($where, 'price');
         $data['sumRefundPrice'] = $this->getRechargeSum($where, 'refund_price');
-        $where['recharge_type'] = 'routine';
-        $data['sumRoutinePrice'] = $this->getRechargeSum($where, 'price');
+        $where['recharge_type'] = 'alipay';
+        $data['sumAlipayPrice'] = $this->getRechargeSum($where, 'price');
         $where['recharge_type'] = 'weixin';
         $data['sumWeixinPrice'] = $this->getRechargeSum($where, 'price');
         return [
@@ -143,36 +144,41 @@ class UserRechargeServices extends BaseServices
                 'name' => '充值总金额',
                 'field' => '元',
                 'count' => $data['sumPrice'],
-                'className' => 'logo-yen',
+                'className' => 'iconjiaoyijine',
                 'col' => 6,
             ],
             [
                 'name' => '充值退款金额',
                 'field' => '元',
                 'count' => $data['sumRefundPrice'],
-                'className' => 'logo-usd',
+                'className' => 'iconshangpintuikuanjine',
                 'col' => 6,
             ],
             [
-                'name' => '小程序充值金额',
+                'name' => '支付宝充值金额',
                 'field' => '元',
-                'count' => $data['sumRoutinePrice'],
-                'className' => 'logo-bitcoin',
+                'count' => $data['sumAlipayPrice'],
+                'className' => 'iconzhifubao',
                 'col' => 6,
             ],
             [
-                'name' => '公众号充值金额',
+                'name' => '微信充值金额',
                 'field' => '元',
                 'count' => $data['sumWeixinPrice'],
-                'className' => 'ios-bicycle',
+                'className' => 'iconweixinzhifu',
                 'col' => 6,
             ],
         ];
     }
 
-    /**退款表单
-     * @param $id
-     * @return mixed|void
+    /**
+     * 退款表单
+     * @param int $id
+     * @return array
+     * @throws \FormBuilder\Exception\FormBuilderException
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/03/24
      */
     public function refund_edit(int $id)
     {
@@ -192,15 +198,17 @@ class UserRechargeServices extends BaseServices
         $f = array();
         $f[] = Form::input('order_id', '退款单号', $UserRecharge->getData('order_id'))->disabled(true);
         $f[] = Form::radio('refund_price', '状态', 1)->options([['label' => '本金(扣赠送余额)', 'value' => 1], ['label' => '仅本金', 'value' => 0]]);
-//        $f[] = Form::number('refund_price', '退款金额', (float)$UserRecharge->getData('price'))->precision(2)->min(0)->max($UserRecharge->getData('price'));
         return create_form('编辑', $f, Url::buildUrl('/finance/recharge/' . $id), 'PUT');
     }
 
     /**
      * 退款操作
      * @param int $id
-     * @param $refund_price
+     * @param string $refund_price
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function refund_update(int $id, string $refund_price)
     {
@@ -225,23 +233,32 @@ class UserRechargeServices extends BaseServices
 
         try {
             $recharge_type = $UserRecharge['recharge_type'];
-            /** @var Pay $pay */
-            $pay = app()->make(Pay::class);
             if ($recharge_type == 'weixin') {
                 $refund_data['wechat'] = true;
-                $pay->refund($UserRecharge['order_id'], $refund_data);
             } else {
                 $refund_data['trade_no'] = $UserRecharge['trade_no'];
                 $refund_data['order_id'] = $UserRecharge['order_id'];
                 /** @var WechatUserServices $wechatUserServices */
                 $wechatUserServices = app()->make(WechatUserServices::class);
-                $refund_data['open_id'] = $wechatUserServices->uidToOpenid((int)$UserRecharge['uid'],'routine') ?? '';
+                $refund_data['open_id'] = $wechatUserServices->uidToOpenid((int)$UserRecharge['uid'], 'routine') ?? '';
                 $refund_data['pay_new_weixin_open'] = sys_config('pay_new_weixin_open');
-                /** @var StoreOrderCreateServices $storeOrderCreateServices  */
+                /** @var StoreOrderCreateServices $storeOrderCreateServices */
                 $storeOrderCreateServices = app()->make(StoreOrderCreateServices::class);
                 $refund_data['refund_no'] = $storeOrderCreateServices->getNewOrderId('tk');
-                $pay->refund($UserRecharge['order_id'], $refund_data);
             }
+            if ($recharge_type == 'allinpay') {
+                $drivers = 'allin_pay';
+                $trade_no = $UserRecharge['trade_no'];
+            } elseif (sys_config('pay_wechat_type')) {
+                $drivers = 'v3_wechat_pay';
+                $trade_no = $UserRecharge['trade_no'];
+            } else {
+                $drivers = 'wechat_pay';
+                $trade_no = $UserRecharge['order_id'];
+            }
+            /** @var Pay $pay */
+            $pay = app()->make(Pay::class, [$drivers]);
+            $pay->refund($trade_no, $refund_data);
         } catch (\Exception $e) {
             throw new AdminException($e->getMessage());
         }
@@ -274,7 +291,23 @@ class UserRechargeServices extends BaseServices
         $userMoneyServices->income('user_recharge_refund', $UserRecharge['uid'], $number, $now_money, $id);
 
         //提醒推送
-        event('notice.notice', [['user_type' => strtolower($userInfo['user_type']), 'data' => $data, 'UserRecharge' => $UserRecharge, 'now_money' => $refund_price], 'recharge_order_refund_status']);
+        event('NoticeListener', [['user_type' => strtolower($userInfo['user_type']), 'data' => $data, 'UserRecharge' => $UserRecharge, 'now_money' => $refund_price], 'recharge_order_refund_status']);
+
+        //自定义通知-充值退款
+        $UserRecharge['now_money'] = $now_money;
+        $UserRecharge['time'] = date('Y-m-d H:i:s');
+        event('NoticeListener', [$UserRecharge['uid'], $UserRecharge, 'recharge_refund']);
+
+        //自定义事件-后台充值退款
+        event('CustomEventListener', ['admin_recharge_refund', [
+            'uid' => $UserRecharge['uid'],
+            'refund_price' => $UserRecharge['price'],
+            'now_money' => $now_money,
+            'nickname' => $UserRecharge['price'],
+            'phone' => $UserRecharge['phone'],
+            'refund_time' => date('Y-m-d H:i:s')
+        ]]);
+
         return true;
     }
 
@@ -310,6 +343,9 @@ class UserRechargeServices extends BaseServices
      * @param int $uid
      * @param $price
      * @return bool
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function importNowMoney(int $uid, $price)
     {
@@ -336,7 +372,7 @@ class UserRechargeServices extends BaseServices
         //写入充值记录
         $rechargeInfo = [
             'uid' => $uid,
-            'order_id' => $this->getOrderId(),
+            'order_id' => app()->make(StoreOrderCreateServices::class)->getNewOrderId('cz'),
             'recharge_type' => 'balance',
             'price' => $price,
             'give_price' => 0,
@@ -377,9 +413,17 @@ class UserRechargeServices extends BaseServices
     /**
      * 申请充值
      * @param int $uid
+     * @param $price
+     * @param $recharId
+     * @param $type
+     * @param $from
+     * @param bool $renten
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
-    public function recharge(int $uid, $price, $recharId, $type, $from)
+    public function recharge(int $uid, $price, $recharId, $type, $from, bool $renten = false)
     {
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
@@ -398,6 +442,7 @@ class UserRechargeServices extends BaseServices
                         throw new ApiException(400682);
                     } else {
                         $paid_price = $data['give_money'] ?? 0;
+                        $price = $data['price'] ?? 0;
                     }
                 }
                 $recharge_data = [];
@@ -419,6 +464,9 @@ class UserRechargeServices extends BaseServices
                 } catch (\Exception $e) {
                     throw new ApiException($e->getMessage());
                 }
+                if ($renten) {
+                    return $order_info;
+                }
                 return ['msg' => '', 'type' => $from, 'data' => $order_info];
             case 1: //佣金转入余额
                 $this->importNowMoney($uid, $price);
@@ -429,10 +477,15 @@ class UserRechargeServices extends BaseServices
     }
 
     /**
-     * //TODO用户充值成功后
+     * 用户充值成功后
      * @param $orderId
+     * @param array $other
+     * @return bool
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
-    public function rechargeSuccess($orderId,array $other = [])
+    public function rechargeSuccess($orderId, array $other = [])
     {
         $order = $this->dao->getOne(['order_id' => $orderId, 'paid' => 0]);
         if (!$order) {
@@ -445,7 +498,7 @@ class UserRechargeServices extends BaseServices
             throw new ApiException(410032);
         }
         $price = bcadd((string)$order['price'], (string)$order['give_price'], 2);
-        if (!$this->dao->update($order['id'], ['paid' => 1, 'pay_time' => time() ,'trade_no'=> $other['trade_no'] ?? ''], 'id')) {
+        if (!$this->dao->update($order['id'], ['paid' => 1, 'recharge_type' => $other['pay_type'], 'pay_time' => time(), 'trade_no' => $other['trade_no'] ?? ''], 'id')) {
             throw new ApiException(410286);
         }
         $now_money = bcadd((string)$user['now_money'], (string)$price, 2);
@@ -463,12 +516,39 @@ class UserRechargeServices extends BaseServices
         $capitalFlowServices->setFlow($order, 'recharge');
 
         //提醒推送
-        event('notice.notice', [['order' => $order, 'now_money' => $now_money], 'recharge_success']);
+        event('NoticeListener', [['order' => $order, 'now_money' => $now_money], 'recharge_success']);
+
+        //自定义消息-订单拒绝退款
+        $order['now_money'] = $now_money;
+        $order['time'] = date('Y-m-d H:i:s');
+        event('CustomNoticeListener', [$order['uid'], $order, 'recharge_success']);
+
+        $order['pay_type'] = $other['pay_type'];
+        // 小程序订单服务
+        event('OrderShippingListener', ['recharge', $order, 3, '', '']);
+
+        //自定义事件-用户充值
+        event('CustomEventListener', ['user_recharge', [
+            'uid' => $order['uid'],
+            'id' => (int)$order['id'],
+            'order_id' => $orderId,
+            'nickname' => $order['nickname'],
+            'phone' => $order['phone'],
+            'price' => $order['price'],
+            'give_price' => $order['give_price'],
+            'now_money' => $order['now_money'],
+            'recharge_time' => date('Y-m-d H:i:s'),
+        ]]);
+
         return true;
     }
 
-    /**根据查询用户充值金额
+    /**
+     * 根据查询用户充值金额
      * @param array $where
+     * @param string $rechargeSumField
+     * @param string $selectType
+     * @param string $group
      * @return float|int
      */
     public function getRechargeMoneyByWhere(array $where, string $rechargeSumField, string $selectType, string $group = "")

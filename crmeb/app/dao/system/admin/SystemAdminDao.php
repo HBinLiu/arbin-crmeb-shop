@@ -47,7 +47,7 @@ class SystemAdminDao extends BaseDao
      */
     public function accountByAdmin(string $account)
     {
-        return $this->search(['account' => $account, 'is_del' => 0, 'status' => 1])->find();
+        return $this->search(['account' => $account, 'is_del' => 0])->find();
     }
 
     /**
@@ -102,6 +102,6 @@ class SystemAdminDao extends BaseDao
      */
     public function checkRoleUse(int $id): bool
     {
-        return (bool)$this->getModel()->whereFindInSet('roles', $id)->count();
+        return (bool)$this->getModel()->where('level', '<>', 0)->where('is_del', 0)->whereFindInSet('roles', $id)->count();
     }
 }

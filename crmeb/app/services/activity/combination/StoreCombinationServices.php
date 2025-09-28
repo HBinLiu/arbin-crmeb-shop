@@ -84,7 +84,7 @@ class StoreCombinationServices extends BaseServices
         $data['start_time'] = strtotime($data['section_time'][0]);
         $data['stop_time'] = strtotime($data['section_time'][1]);
         if ($data['stop_time'] < strtotime(date('Y-m-d', time()))) throw new AdminException(400096);
-        $data['image'] = $data['images'][0];
+        $data['image'] = $data['image'];
         $data['images'] = json_encode($data['images']);
         $data['price'] = min(array_column($detail, 'price'));
         $data['quota'] = $data['quota_show'] = array_sum(array_column($detail, 'quota'));
@@ -108,22 +108,15 @@ class StoreCombinationServices extends BaseServices
                 $valueGroup = $storeProductAttrServices->saveProductAttr($skuList, (int)$id, 3);
                 if (!$res) throw new AdminException(100007);
             } else {
-                if (!$storeProductServices->getOne(['is_show' => 1, 'is_del' => 0, 'id' => $data['product_id']])) {
-                    throw new AdminException(400091);
+                if (!$storeProductServices->getOne(['is_del' => 0, 'id' => $data['product_id']])) {
+                    throw new AdminException('无法添加回收站商品');
                 }
                 $data['add_time'] = time();
                 $res = $this->dao->save($data);
                 $storeDescriptionServices->saveDescription((int)$res->id, $description, 3);
-                $skuList = $storeProductServices->validateProductAttr($items, $detail, (int)$res->id, 3);
+                $skuList = $storeProductServices->validateProductAttr($items, $detail, (int)$res->id, 3, 1, true);
                 $valueGroup = $storeProductAttrServices->saveProductAttr($skuList, (int)$res->id, 3);
                 if (!$res) throw new AdminException(100022);
-            }
-            $res = true;
-            foreach ($valueGroup->toArray() as $item) {
-                $res = $res && CacheService::setStock($item['unique'], (int)$item['quota_show'], 3);
-            }
-            if (!$res) {
-                throw new AdminException(400092);
             }
         });
     }
@@ -143,20 +136,30 @@ class StoreCombinationServices extends BaseServices
         $countAll = $storePinkServices->getPinkCount([]);
         $countTeam = $storePinkServices->getPinkCount(['k_id' => 0, 'status' => 2]);
         $countPeople = $storePinkServices->getPinkCount(['k_id' => 0]);
+        $stopIds = [];
         foreach ($list as &$item) {
             $item['count_people'] = $countPeople[$item['id']] ?? 0;//拼团数量
             $item['count_people_all'] = $countAll[$item['id']] ?? 0;//参与人数
             $item['count_people_pink'] = $countTeam[$item['id']] ?? 0;//成团数量
             $item['stop_status'] = $item['stop_time'] < time() ? 1 : 0;
             if ($item['is_show']) {
-                if ($item['start_time'] > time())
+                if ($item['start_time'] > time()) {
                     $item['start_name'] = '未开始';
-                else if ($item['stop_time'] < time())
+                } else if ($item['stop_time'] < time()) {
                     $item['start_name'] = '已结束';
-                else if ($item['stop_time'] > time() && $item['start_time'] < time()) {
+                    $item['is_show'] = 0;
+                    $stopIds[] = $item['id'];
+                } else if ($item['stop_time'] > time() && $item['start_time'] < time()) {
                     $item['start_name'] = '进行中';
                 }
-            } else $item['start_name'] = '已结束';
+            } else {
+                $item['start_name'] = '已结束';
+            }
+            $item['start_time'] = $item['start_time'] ? date('Y-m-d H:i:s', $item['start_time']) : '';
+            $item['stop_time'] = $item['stop_time'] ? date('Y-m-d 23:59:59', $item['stop_time']) : '';
+        }
+        if ($stopIds) {
+            $this->dao->batchUpdate($stopIds, ['is_show' => 0]);
         }
         return compact('list', 'count');
     }
@@ -231,10 +234,11 @@ class StoreCombinationServices extends BaseServices
         $header[] = ['title' => '成本价', 'key' => 'cost', 'align' => 'center', 'minWidth' => 80];
         $header[] = ['title' => '日常售价', 'key' => 'r_price', 'align' => 'center', 'minWidth' => 80];
         $header[] = ['title' => '库存', 'key' => 'stock', 'align' => 'center', 'minWidth' => 80];
-        $header[] = ['title' => '限量', 'key' => 'quota', 'type' => 1, 'align' => 'center', 'minWidth' => 80];
+        $header[] = ['title' => '限量', 'slot' => 'quota', 'type' => 1, 'align' => 'center', 'minWidth' => 80];
         $header[] = ['title' => '重量(KG)', 'key' => 'weight', 'align' => 'center', 'minWidth' => 80];
         $header[] = ['title' => '体积(m³)', 'key' => 'volume', 'align' => 'center', 'minWidth' => 80];
-        $header[] = ['title' => '商品编号', 'key' => 'bar_code', 'align' => 'center', 'minWidth' => 80];
+        $header[] = ['title' => '商品编码', 'key' => 'bar_code', 'align' => 'center', 'minWidth' => 80];
+        $header[] = ['title' => '条形码', 'key' => 'bar_code_number', 'align' => 'center', 'minWidth' => 80];
         $attrs['header'] = $header;
         return $attrs;
     }
@@ -255,7 +259,7 @@ class StoreCombinationServices extends BaseServices
         $count = 0;
         foreach ($value as $suk) {
             $detail = explode(',', $suk);
-            $sukValue = $storeProductAttrValueServices->getColumn(['product_id' => $id, 'type' => $type, 'suk' => $suk], 'bar_code,cost,price,ot_price,stock,image as pic,weight,volume,brokerage,brokerage_two,quota', 'suk');
+            $sukValue = $storeProductAttrValueServices->getColumn(['product_id' => $id, 'type' => $type, 'suk' => $suk], 'bar_code,bar_code_number,cost,price,ot_price,stock,image as pic,weight,volume,brokerage,brokerage_two,quota', 'suk');
             if (count($sukValue)) {
                 foreach ($detail as $k => $v) {
                     $valueNew[$count]['value' . ($k + 1)] = $v;
@@ -268,6 +272,7 @@ class StoreCombinationServices extends BaseServices
                 $valueNew[$count]['stock'] = $sukValue[$suk]['stock'] ? intval($sukValue[$suk]['stock']) : 0;
                 $valueNew[$count]['quota'] = $sukValue[$suk]['quota'] ? intval($sukValue[$suk]['quota']) : 0;
                 $valueNew[$count]['bar_code'] = $sukValue[$suk]['bar_code'] ?? '';
+                $valueNew[$count]['bar_code_number'] = $sukValue[$suk]['bar_code_number'] ?? '';
                 $valueNew[$count]['weight'] = $sukValue[$suk]['weight'] ? floatval($sukValue[$suk]['weight']) : 0;
                 $valueNew[$count]['volume'] = $sukValue[$suk]['volume'] ? floatval($sukValue[$suk]['volume']) : 0;
                 $valueNew[$count]['brokerage'] = $sukValue[$suk]['brokerage'] ? floatval($sukValue[$suk]['brokerage']) : 0;
@@ -385,6 +390,8 @@ class StoreCombinationServices extends BaseServices
         $storeInfo['userCollect'] = $storeProductRelationServices->isProductRelation(['uid' => $uid, 'product_id' => $id, 'type' => 'collect', 'category' => 'product']);
         $storeInfo['userLike'] = false;
         $storeInfo['store_name'] = $storeInfo['title'];
+        $storeInfo['product_is_show'] = app()->make(StoreProductServices::class)->value($storeInfo['product_id'], 'is_show');
+
 
         if (sys_config('share_qrcode', 0) && request()->isWechat()) {
             /** @var QrcodeServices $qrcodeService */
@@ -400,11 +407,11 @@ class StoreCombinationServices extends BaseServices
 
         /** @var StorePinkServices $pinkService */
         $pinkService = app()->make(StorePinkServices::class);
-        list($pink, $pindAll) = $pinkService->getPinkList($id, true);//拼团列表
+        list($pink, $pinkAll) = $pinkService->getPinkList($id, true);//拼团列表
         $data['pink_ok_list'] = $pinkService->getPinkOkList($uid);
         $data['pink_ok_sum'] = $pinkService->getPinkOkSumTotalNum();
         $data['pink'] = $pink;
-        $data['pindAll'] = $pindAll;
+        $data['pinkAll'] = $pinkAll;
 
         /** @var StoreOrderServices $storeOrderServices */
         $storeOrderServices = app()->make(StoreOrderServices::class);
@@ -425,7 +432,7 @@ class StoreCombinationServices extends BaseServices
         $data['routine_contact_type'] = sys_config('routine_contact_type', 0);
 
         //用户访问事件
-        event('user.userVisit', [$uid, $id, 'combination', $storeInfo['product_id'], 'view']);
+        event('UserVisitListener', [$uid, $id, 'combination', $storeInfo['product_id'], 'view']);
         //浏览记录
         ProductLogJob::dispatch(['visit', ['uid' => $uid, 'product_id' => $storeInfo['product_id']]]);
         return $data;
@@ -549,6 +556,7 @@ class StoreCombinationServices extends BaseServices
             } else {
                 $pinkBool = $pinkService->pinkFail($pinkAll, $pinkT, $pinkBool);
             }
+            $pinkT = $pinkService->getPinkUserOne($pinkT['id']);
         }
         if (!empty($pinkAll)) {
             foreach ($pinkAll as $v) {
@@ -650,8 +658,8 @@ class StoreCombinationServices extends BaseServices
         $spread_count = $pinkServices->getDistinctCount([['cid', '=', $id], ['k_id', '>', 0]], 'uid', false);
         $start_count = $pinkServices->count(['cid' => $id, 'k_id' => 0]);
         $success_count = $pinkServices->count(['cid' => $id, 'k_id' => 0, 'status' => 2]);
-        $pay_price = $orderServices->sum(['combination_id' => $id, 'paid' => 1], 'pay_price', true);
-        $pay_count = $orderServices->getDistinctCount([['combination_id', '=', $id], ['paid', '=', 1]], 'uid', false);
+        $pay_price = $orderServices->sum([['combination_id', '=', $id], ['paid', '=', 1], ['pid', '<>', -1], ['refund_type', 'in', [0, 3]], ['is_del', '=', 0]], 'pay_price', false);
+        $pay_count = $orderServices->getDistinctCount([['combination_id', '=', $id], ['paid', '=', 1], ['refund_type', 'in', [0, 3]], ['is_del', '=', 0]], 'uid', false);
         return compact('people_count', 'spread_count', 'start_count', 'success_count', 'pay_price', 'pay_count');
     }
 
@@ -666,9 +674,9 @@ class StoreCombinationServices extends BaseServices
         /** @var StoreOrderServices $orderServices */
         $orderServices = app()->make(StoreOrderServices::class);
         [$page, $limit] = $this->getPageValue();
+        $where = $where + ['paid' => 1, 'refund_status' => 0, 'is_del' => 0];
         $list = $orderServices->combinationStatisticsOrder($id, $where, $page, $limit);
-        $where['combination_id'] = $id;
-        $count = $orderServices->count($where);
+        $count = $orderServices->combinationStatisticsCount($id, $where);
         foreach ($list as &$item) {
             if ($item['status'] == 0) {
                 if ($item['paid'] == 0) {

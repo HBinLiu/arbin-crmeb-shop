@@ -1,27 +1,30 @@
 <template>
 	<view :style="colorStyle">
 		<view class="product-window"
-			:class="(attr.cartAttr === true ? 'on' : '') + ' ' + (iSbnt?'join':'') + ' ' + (iScart?'joinCart':'')">
-			<view class="textpic acea-row row-between-wrapper">
+			:class="(attr.cartAttr === true ? 'on' : '') + ' ' + (iSbnt?'join':'') + ' ' + (iScart?'joinCart':'')" :style="{ bottom: bottomVal }">
+			<view class="textpic acea-row row-between-wrapper"  @touchmove.stop.prevent="moveHandle">
 				<view class="pictrue" @click="showImg()">
 					<image :src="attr.productSelect.image"></image>
 				</view>
 				<view class="text">
-					<view class="line1">
+					<view class="line2 store-name">
 						{{ attr.productSelect.store_name }}
 					</view>
 					<view class="money font-color">
 						<view class="acea-row row-middle">
-							{{$t(`￥`)}}<text class="num">{{ attr.productSelect.price }}</text>
-							<text class='vip-money'
-								v-if="is_vip>0 && attr.productSelect.vip_price">{{$t(`￥`)}}{{attr.productSelect.vip_price}}</text>
-							<view class="vipImg" v-if="is_vip>0 && attr.productSelect.vip_price">
+							{{ $t(`到手价`) }}
+							<baseMoney class="mr-12" :money="attr.productSelect.price" symbolSize="24" integerSize="40" decimalSize="24" weight color="var(--view-theme)"></baseMoney>
+							<!-- <text class='vip-money'
+								v-if="is_vip == 0 && attr.productSelect.vip_price">{{$t(`￥`)}}{{attr.productSelect.vip_price}}</text>
+							<view class="vipImg" v-if="is_vip == 0 && attr.productSelect.vip_price">
 								<image src="../../static/images/svip.gif"></image>
-							</view>
+							</view> -->
 						</view>
-						<text class="stock" v-if='isShow && !type'>{{$t(`库存`)}}: {{ attr.productSelect.stock }}</text>
-						<text class='stock'
-							v-if="limitNum">{{type ? $t(`库存`) : $t(`限量`)}}:{{type ? attr.productSelect.quota : limitNum + unitName}}</text>
+						
+						<text class="stock"
+							v-if='isShow && !type'>{{$t(`库存`)}} {{ attr.productSelect.stock + unitName }}</text>
+						<text class='stock' v-if="limitNum && type">{{$t(`库存`) }} {{attr.productSelect.quota + unitName}}</text>
+						<text class="stock" v-if='minQty > 1 && is_virtual'>{{$t(`起购`)}} {{ minQty + unitName }}</text>
 					</view>
 				</view>
 				<view class="iconfont icon-guanbi" @click="closeAttr"></view>
@@ -34,6 +37,7 @@
 							<view class="itemn" :class="item.index === itemn.attr ? 'on' : ''"
 								v-for="(itemn, indexn) in item.attr_value" @click="tapAttr(indexw, indexn)"
 								:key="indexn">
+								<img v-if="itemn.pic" class="attr-img" :src="itemn.pic" alt="" srcset="" />
 								{{ $t(itemn.attr) }}
 							</view>
 						</view>
@@ -42,19 +46,25 @@
 				<view class="cart acea-row row-between-wrapper" v-if="!is_virtual">
 					<view class="title">{{$t(`数量`)}}</view>
 					<view class="carnum acea-row row-left">
+						<text class='stock' v-if="limitNum && !type">{{$t(`限购`)}}{{limitNum + unitName}}</text>
+						<text class='stock line' v-if='limitNum && !type && minQty > 1'> | </text>
+						<text class="stock" v-if='minQty > 1'>{{$t(`起购`)}}{{ minQty + unitName }}</text>
 						<view class="item reduce acea-row row-center-wrapper"
-							:class="attr.productSelect.cart_num <= 1 ? 'on' : ''"
-							v-if="attr.productSelect.cart_num <= 1">
+							:class="attr.productSelect.cart_num <= minQty ? 'on' : ''"
+							v-if="attr.productSelect.cart_num <= minQty">
 							<text class="iconfont icon-shangpinshuliang-jian"></text>
 						</view>
 						<view class="item reduce acea-row row-center-wrapper"
-							:class="attr.productSelect.cart_num <= 1 ? 'on' : ''" @click="CartNumDes" v-else>
+							:class="attr.productSelect.cart_num <= minQty ? 'on' : ''" @click="CartNumDes" v-else>
 							<text class="iconfont icon-shangpinshuliang-jian"></text>
 						</view>
 						<view class='item num acea-row row-middle'>
 							<input type="number" v-model="attr.productSelect.cart_num"
 								data-name="productSelect.cart_num"
-								@input="bindCode(attr.productSelect.cart_num)"></input>
+								@input="bindCode(attr.productSelect.cart_num)" 
+								@focus="inputBindFocus"     
+								@blur="inputBindBlur"
+							></input>
 						</view>
 						<view v-if="iSplus" class="item plus acea-row row-center-wrapper" :class="
 				      attr.productSelect.cart_num >= attr.productSelect.stock || (limitNum && attr.productSelect.cart_num >= limitNum)
@@ -80,7 +90,8 @@
 			<view class="joinBnt bg-color" v-if="iScart && attr.productSelect.stock" @click="goCat">{{$t(`确定`)}}</view>
 			<view class="joinBnt on" v-else-if="iScart && !attr.productSelect.stock">{{$t(`已售罄`)}}</view>
 		</view>
-		<view class="mask" @touchmove.prevent :hidden="attr.cartAttr === false" @click="closeAttr"></view>
+		<view class="mask" @touchmove.stop.prevent="moveHandle" :hidden="attr.cartAttr === false" @click="closeAttr">
+		</view>
 	</view>
 </template>
 
@@ -94,6 +105,10 @@
 				default: () => {}
 			},
 			limitNum: {
+				type: Number,
+				value: 0
+			},
+			minQty: {
 				type: Number,
 				value: 0
 			},
@@ -131,12 +146,21 @@
 			},
 		},
 		data() {
-			return {};
+			return {
+				bottomVal: ''
+			};
 		},
 		mounted() {
 
 		},
 		methods: {
+			inputBindFocus(e) {
+			  // this.bottomVal = 40 +  'rpx'
+			},
+			inputBindBlur(){
+				this.bottomVal = '0px'
+			}, 
+			moveHandle() {},
 			getpreviewImage: function() {
 				uni.previewImage({
 					urls: this.attr.productSelect.image.split(','),
@@ -151,7 +175,7 @@
 			 * 
 			 */
 			bindCode: function(e) {
-				this.$emit('iptCartNum', this.attr.productSelect.cart_num);
+				this.$emit('iptCartNum', e);
 			},
 			closeAttr: function() {
 				this.$emit('myevent');
@@ -232,7 +256,7 @@
 		transform: translate3d(0, 100%, 0);
 		transition: all .3s cubic-bezier(.25, .5, .5, .9);
 		padding-bottom: 140rpx;
-		padding-bottom: calc(140rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+		padding-bottom: calc(140rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
 		padding-bottom: calc(140rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
 	}
 
@@ -250,7 +274,7 @@
 	}
 
 	.product-window .textpic {
-		padding: 0 130rpx 0 30rpx;
+		padding: 0 80rpx 0 30rpx;
 		margin-top: 29rpx;
 		position: relative;
 	}
@@ -267,14 +291,14 @@
 	}
 
 	.product-window .textpic .text {
-		width: 410rpx;
-		font-size: 32rpx;
+		width: 470rpx;
+		font-size: 28rpx;
 		color: #202020;
 	}
 
 	.product-window .textpic .text .money {
 		font-size: 24rpx;
-		margin-top: 40rpx;
+		margin-top: 10rpx;
 	}
 
 	.product-window .textpic .text .money .num {
@@ -323,6 +347,13 @@
 		border-radius: 25rpx;
 		margin: 20rpx 0 0 14rpx;
 		background-color: #F2F2F2;
+		display: flex;
+		align-items: center;
+		.attr-img{
+			width: 37rpx;
+			height: 37rpx;
+			margin-right: 8rpx;
+		}
 	}
 
 	.product-window .productWinList .item .listn .itemn.on {
@@ -339,6 +370,7 @@
 	.product-window .cart {
 		margin-top: 36rpx;
 		padding: 0 30rpx;
+		align-items: center;
 	}
 
 	.product-window .cart .title {
@@ -348,7 +380,16 @@
 
 	.product-window .cart .carnum {
 		height: 54rpx;
-		margin-top: 24rpx;
+
+		.stock {
+			font-size: 20rpx;
+			line-height: 54rpx;
+			color: #aaa;
+		}
+
+		.line {
+			padding: 0 6rpx;
+		}
 	}
 
 	.product-window .cart .carnum .iconfont {

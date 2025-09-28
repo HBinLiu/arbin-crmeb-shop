@@ -11,6 +11,7 @@
 namespace app\adminapi\controller\v1\system;
 
 use think\facade\App;
+use think\facade\Db;
 use think\facade\Session;
 use app\adminapi\controller\AuthController;
 use app\services\system\SystemDatabackupServices;
@@ -49,8 +50,47 @@ class SystemDatabackup extends AuthController
      */
     public function read()
     {
-        $tablename = request()->param('tablename', '', 'htmlspecialchars');
+        [$tablename] = $this->request->getMore([
+            ['tablename', ''],
+        ], true);
         return app('json')->success($this->services->getRead($tablename));
+    }
+
+    /**
+     * 更新数据表或者表字段备注
+     * @return \think\Response
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/04/11
+     */
+    public function updateMark()
+    {
+        [$table, $field, $type, $mark, $is_field] = $this->request->postMore([
+            ['table', ''],
+            ['field', ''],
+            ['type', ''],
+            ['mark', ''],
+            ['is_field', 0],
+        ], true);
+        if ($is_field == 0) {
+            $sql = "ALTER TABLE $table COMMENT '$mark'";
+        } else {
+            $fieldInfo = Db::query("SHOW FULL COLUMNS FROM `{$table}` WHERE Field = '{$field}'");
+            $sql = "ALTER TABLE $table MODIFY COLUMN ";
+            $sql .= $field . ' ' . $type . ' ';
+            if ($fieldInfo[0]['Null'] == 'NO') {
+                $sql .= 'NOT NULL ';
+                if (!is_null($fieldInfo[0]['Default'])) {
+                    $sql .= "DEFAULT '" . $fieldInfo[0]['Default'] . "' ";
+                }
+            }
+            if ($fieldInfo[0]['Extra']) {
+                $sql .= $fieldInfo[0]['Extra'] . ' ';
+            }
+            $sql .= "COMMENT '$mark'";
+        }
+        Db::execute($sql);
+        return app('json')->success(100024);
     }
 
     /**
@@ -58,7 +98,9 @@ class SystemDatabackup extends AuthController
      */
     public function optimize()
     {
-        $tables = $this->request->param('tables', '', 'htmlspecialchars');
+        [$tables] = $this->request->postMore([
+            ['tables', ''],
+        ], true);
         $res = $this->services->getDbBackup()->optimize($tables);
         return app('json')->success($res ? 100047 : 100048);
     }
@@ -68,7 +110,9 @@ class SystemDatabackup extends AuthController
      */
     public function repair()
     {
-        $tables = $this->request->param('tables', '', 'htmlspecialchars');
+        [$tables] = $this->request->postMore([
+            ['tables', ''],
+        ], true);
         $res = $this->services->getDbBackup()->repair($tables);
         return app('json')->success($res ? 100049 : 100050);
     }
@@ -78,7 +122,9 @@ class SystemDatabackup extends AuthController
      */
     public function backup()
     {
-        $tables = $this->request->param('tables', '', 'htmlspecialchars');
+        [$tables] = $this->request->postMore([
+            ['tables', ''],
+        ], true);
         $data = $this->services->backup($tables);
         return app('json')->success(100051);
     }

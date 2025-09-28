@@ -1,9 +1,9 @@
 <template>
   <div :style="bgcolors">
-    <div class="i-layout-page-header">
+    <div class="i-layout-page-header header-title">
       <span class="ivu-page-header-title mr20">{{ $route.meta.title }}</span>
       <div style="float: right">
-        <Button class="bnt" type="primary" @click="onsubmit('formValidate')">保存</Button>
+        <el-button class="bnt" type="primary" v-db-click @click="onsubmit('formValidate')">保存</el-button>
       </div>
     </div>
     <div class="box-wrapper">
@@ -22,13 +22,13 @@
       </div>
       <div style="margin-left: 40px">
         <div class="table_box">
-          <div type="flex">
+          <div>
             <div v-bind="grid">
               <div class="title">隐私权限页面展示：</div>
             </div>
           </div>
           <div>
-            <Form
+            <el-form
               class="form"
               ref="formValidate"
               :model="formValidate"
@@ -37,14 +37,14 @@
               @submit.native.prevent
             >
               <div class="goodsTitle acea-row"></div>
-              <FormItem label="" style="margin: 0px">
+              <el-form-item label="" style="margin: 0px">
                 <WangEditor
                   style="width: 90%"
                   :content="formValidate.content"
                   @editorContent="getEditorContent"
                 ></WangEditor>
-              </FormItem>
-            </Form>
+              </el-form-item>
+            </el-form>
           </div>
         </div>
       </div>
@@ -58,22 +58,11 @@ import WangEditor from '@/components/wangEditor/index.vue';
 import Setting from '@/setting';
 import { getColorChange } from '@/api/diy';
 import { mapState } from 'vuex';
-import editFrom from '@/components/from/from';
-import { productGetTempKeysApi, uploadType } from '@/api/product';
 import {
-  groupAllApi,
-  groupDataListApi,
-  groupSaveApi,
-  openAdvSave,
-  groupDataAddApi,
   groupDataHeaderApi,
-  groupDataEditApi,
-  groupDataSetApi,
   getAgreement,
   setAgreement,
-  getOpenAdv,
 } from '@/api/system';
-import draggable from 'vuedraggable';
 import uploadPictures from '@/components/uploadPictures';
 import linkaddress from '@/components/linkaddress';
 import { getCookies } from '@/libs/util';
@@ -81,8 +70,6 @@ import { getCookies } from '@/libs/util';
 export default {
   name: 'list',
   components: {
-    editFrom,
-    draggable,
     uploadPictures,
     linkaddress,
     WangEditor,
@@ -94,7 +81,7 @@ export default {
       };
     },
     labelWidth() {
-      return this.isMobile ? undefined : 120;
+      return this.isMobile ? undefined : '80px';
     },
     labelPosition() {
       return this.isMobile ? 'top' : 'right';
@@ -111,7 +98,7 @@ export default {
         autoHeightEnabled: false, // 编辑器不自动被内容撑高
         initialFrameHeight: 500, // 初始容器高度
         initialFrameWidth: '100%', // 初始容器宽度
-        UEDITOR_HOME_URL: '/admin/UEditor/',
+        UEDITOR_HOME_URL: '/UEditor/',
         serverUrl: '',
       },
       a: 1, //判断的隐私协议
@@ -207,7 +194,7 @@ export default {
         })
         .catch((res) => {
           this.loading = false;
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     getContent(val) {
@@ -218,10 +205,10 @@ export default {
       this.formValidate.content = this.content;
       setAgreement(this.formValidate)
         .then(async (res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     //详情
@@ -236,57 +223,50 @@ export default {
         })
         .catch((res) => {
           this.loading = false;
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
   },
 };
 </script>
 
-<style scoped lang="stylus">
+<style lang="scss" scoped>
 .save {
   width: 100%;
   margin: 0 auto;
   text-align: center;
-  background-color: #FFF;
+  background-color: #fff;
   bottom: 0;
   padding: 16px;
   border-top: 3px solid #f5f7f9;
 }
-
 .form {
   .goodsTitle {
     margin-bottom: 25px;
   }
-
   .goodsTitle ~ .goodsTitle {
     margin-top: 20px;
   }
-
   .goodsTitle .title {
-    border-bottom: 2px solid #1890ff;
+    border-bottom: 2px solid var(--prev-color-primary);
     padding: 0 8px 12px 5px;
     color: #000;
     font-size: 14px;
   }
-
   .goodsTitle .icons {
     font-size: 15px;
     margin-right: 8px;
     color: #999;
   }
-
   .add {
     font-size: 12px;
-    color: #1890ff;
+    color: var(--prev-color-primary);
     padding: 0 12px;
     cursor: pointer;
   }
-
   .radio {
     margin-right: 20px;
   }
-
   .upLoad {
     width: 58px;
     height: 58px;
@@ -295,33 +275,28 @@ export default {
     border-radius: 4px;
     background: rgba(0, 0, 0, 0.02);
   }
-
   .iconfont {
     color: #898989;
   }
-
   .pictrue {
     width: 60px;
     height: 60px;
     border: 1px dotted rgba(0, 0, 0, 0.1);
     margin-right: 10px;
   }
-
   .pictrue img {
     width: 100%;
     height: 100%;
   }
 }
-
 .agreement-box {
   width: 310px;
   height: 550px;
   border-radius: 10px;
   background: rgba(0, 0, 0, 0);
-  border: 1px solid #EEEEEE;
+  border: 1px solid #eeeeee;
   opacity: 1;
   position: relative;
-
   .template {
     position: absolute;
     width: 100%;
@@ -331,7 +306,6 @@ export default {
     border-radius: 10px;
     background-color: #817e81;
   }
-
   .htmls_box {
     font-size: 12px;
     width: 259px;
@@ -341,7 +315,6 @@ export default {
     position: absolute;
     top: 58px;
     left: 26px;
-
     .htmls_top {
       position: absolute;
       top: 8px;
@@ -353,7 +326,6 @@ export default {
       font-weight: 600;
       font-size: 20px;
     }
-
     .htmls_font {
       position: absolute;
       bottom: 0;
@@ -367,13 +339,11 @@ export default {
         line-height: 35px;
         border-radius: 20px;
       }
-
       .ok {
         background-color: #f33316;
-        color: #FFFFFF;
+        color: #ffffff;
       }
     }
-
     .htmls {
       position: absolute;
       background-color: #fff;
@@ -386,13 +356,11 @@ export default {
       padding: 5px 15px;
       word-break: break-word;
     }
-
     .htmls::-webkit-scrollbar {
       display: none;
     }
   }
 }
-
 .item {
   margin-right: 15px;
   border: 1px dashed #dbdbdb;
@@ -400,7 +368,6 @@ export default {
   padding-right: 15px;
   padding-top: 20px;
 }
-
 .swiperimg {
   width: 310px;
   border-top-left-radius: 10px;
@@ -411,32 +378,27 @@ export default {
     height: 100%;
   }
 }
-
 .title {
   padding: 0 0 13px 0;
   font-weight: bold;
   font-size: 15px;
-  border-left: 2px solid #1890FF;
+  border-left: 2px solid var(--prev-color-primary);
   height: 23px;
   padding-left: 10px;
 }
-
 .content {
-  // width 510px;
   .right-box {
     margin-left: 40px;
   }
 }
-
 .box {
   border-top: 3px solid #f5f7f9;
   padding: 10px;
   padding-top: 25px;
   width: 100%;
-
   .save {
-    background-color: #1890FF;
-    color: #FFFFFF;
+    background-color: var(--prev-color-primary);
+    color: #ffffff;
     width: 71px;
     height: 30px;
     margin: 0 auto;
@@ -445,23 +407,20 @@ export default {
     cursor: pointer;
   }
 }
-
 .iframe {
   margin-left: 20px;
   position: relative;
   width: 310px;
-  // height: 550px;
-  background: #FFFFFF;
-  border: 1px solid #EEEEEE;
+
+  background: #ffffff;
+  border: 1px solid #eeeeee;
   opacity: 1;
   border-radius: 10px;
 }
-
 .iconfont {
-  color: #DDDDDD;
+  color: #dddddd;
   font-size: 28px;
 }
-
 .box-wrapper {
   display: flex;
   flex-wrap: nowrap;

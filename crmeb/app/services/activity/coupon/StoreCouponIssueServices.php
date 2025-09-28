@@ -23,6 +23,7 @@ use app\services\user\UserServices;
 use crmeb\exceptions\AdminException;
 use crmeb\exceptions\ApiException;
 use crmeb\services\FormBuilder;
+use think\facade\Db;
 
 /**
  *
@@ -64,7 +65,7 @@ class StoreCouponIssueServices extends BaseServices
         foreach ($list as &$item) {
             $item['use_time'] = date('Y-m-d', $item['start_use_time']) . ' ~ ' . date('Y-m-d', $item['end_use_time']);
         }
-        $count = $this->dao->count($where);
+        $count = $this->dao->couponCount($where);
         return compact('list', 'count');
     }
 
@@ -88,41 +89,76 @@ class StoreCouponIssueServices extends BaseServices
      */
     public function saveCoupon($data)
     {
-        if ($data['start_time'] && $data['start_use_time']) {
-            if ($data['start_use_time'] < $data['start_time']) {
-                throw new AdminException(400513);
-            }
-        }
-
-        if (!in_array((int)$data['receive_type'], [1, 2, 3, 4])) {
-            throw new AdminException(400758);
-        }
-
-        if (!in_array((int)$data['is_permanent'], [0, 1])) {
-            throw new AdminException(400758);
+        if ($data['id']) {
+            $res = $this->dao->update($data['id'], [
+                'coupon_title' => $data['coupon_title'],
+                'title' => $data['coupon_title'],
+                'total_count' => $data['total_count'],
+                'remain_count' => $data['total_count'],
+                'receive_limit' => $data['receive_limit'],
+                'status' => $data['status'],
+            ]);
+            if (!$res) throw new AdminException(100007);
+            return (int)$data['id'];
         }
 
         if (empty($data['coupon_title'])) {
             throw new AdminException(400759);
         }
 
-        if ($data['end_time'] && $data['end_use_time']) {
-            if ($data['end_use_time'] < $data['end_time']) {
-                throw new AdminException(400514);
-            }
+        if (!in_array((int)$data['receive_type'], [1, 2, 3, 4])) {
+            throw new AdminException(400758);
+        }
+
+        if ($data['user_type'] == 2) {
+            $data['receive_type'] = 4;
+        }
+
+        if ($data['receive_type'] == 3) {
+            $data['is_permanent'] = 1;
+            $data['total_count'] = 0;
+        }
+
+        if (!in_array((int)$data['is_permanent'], [0, 1])) {
+            throw new AdminException(400758);
         }
 
         $data['start_use_time'] = strtotime((string)$data['start_use_time']);
         $data['end_use_time'] = strtotime((string)$data['end_use_time']);
         $data['start_time'] = strtotime((string)$data['start_time']);
         $data['end_time'] = strtotime((string)$data['end_time']);
+
+        if ($data['start_time'] && $data['start_use_time']) {
+
+            if ($data['start_time'] < date('Y-m-d 00:00:00')) {
+                throw new AdminException('开始领取时间不能小于当前时间');
+            }
+            if ($data['start_use_time'] < date('Y-m-d 00:00:00')) {
+                throw new AdminException('开始使用时间不能小于当前时间');
+            }
+            if ($data['start_use_time'] < $data['start_time']) {
+                throw new AdminException(400513);
+            }
+        }
+
+        if ($data['end_time'] && $data['end_use_time']) {
+            if ($data['end_use_time'] < $data['end_time']) {
+                throw new AdminException('最后使用时间不能小于最后领取时间');
+            }
+        }
+
         $data['title'] = $data['coupon_title'];
         $data['remain_count'] = $data['total_count'];
         $data['category_id'] = implode(',', $data['category_id']);
-        if ($data['receive_type'] == 2 || $data['receive_type'] == 3) {
-            $data['is_permanent'] = 1;
-            $data['total_count'] = 0;
+//        if ($data['receive_type'] == 2 || $data['receive_type'] == 3) {
+//            $data['is_permanent'] = 1;
+//            $data['total_count'] = 0;
+//        }
+
+        if ($data['is_permanent'] != 1 && $data['receive_limit'] > $data['total_count']) {
+            throw new AdminException('用户领取数量不能大于发布数量');
         }
+
         $data['add_time'] = time();
         $res = $this->dao->save($data);
         if (($data['product_id'] !== '' || $data['category_id'] !== '') && $res) {
@@ -194,9 +230,13 @@ class StoreCouponIssueServices extends BaseServices
      */
     public function userFirstSubGiveCoupon(int $uid)
     {
-        $couponList = $this->dao->getGiveCoupon(['receive_type' => 2]);
-        $this->giveUserCoupon($uid, $couponList ?: []);
-        return true;
+        $giveCoupon = sys_config('reward_coupon', []);
+        if (count($giveCoupon)) {
+            $couponList = $this->dao->getGiveCoupon([['id', 'in', array_column($giveCoupon, 'id')]]);
+            $this->giveUserCoupon($uid, $couponList ?: []);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -252,14 +292,15 @@ class StoreCouponIssueServices extends BaseServices
                 $data['coupon_title'] = $item['title'];
                 $data['coupon_price'] = $item['coupon_price'];
                 $data['use_min_price'] = $item['use_min_price'];
+                $data['add_time'] = $time;
                 if ($item['coupon_time']) {
-                    $data['add_time'] = $time;
+                    $data['start_time'] = $time;
                     $data['end_time'] = $data['add_time'] + $item['coupon_time'] * 86400;
                 } else {
-                    $data['add_time'] = $item['start_use_time'];
+                    $data['start_time'] = $item['start_use_time'];
                     $data['end_time'] = $item['end_use_time'];
                 }
-                $data['type'] = 'get';
+                $data['type'] = 'send';
                 $issue['uid'] = $uid;
                 $issue['issue_coupon_id'] = $item['id'];
                 $issue['add_time'] = $time;
@@ -357,29 +398,24 @@ class StoreCouponIssueServices extends BaseServices
     public function issueUserCoupon($id, $user, bool $is_receive = false)
     {
         $issueCouponInfo = $this->dao->getInfo((int)$id);
-        $uid = $user->uid;
         if (!$issueCouponInfo) throw new ApiException(400516);
-        /** @var MemberRightServices $memberRightService */
-        $memberRightService = app()->make(MemberRightServices::class);
-        if ($issueCouponInfo->receive_type == 4 && (!$user->is_money_level || !$memberRightService->getMemberRightStatus("coupon"))) {
-            if (!$user->is_money_level) throw new ApiException(400097);
-            if (!$memberRightService->getMemberRightStatus("coupon")) throw new ApiException(400098);
+        if ($user->is_money_level <= 0 && $issueCouponInfo['receive_type'] == 4) {
+            throw new ApiException('请先开通付费会员才能领取会员券');
         }
+        $uid = $user->uid;
         /** @var StoreCouponIssueUserServices $issueUserService */
         $issueUserService = app()->make(StoreCouponIssueUserServices::class);
-        if ($is_receive) {
-            $alreadyReceived = $issueUserService->count(['uid' => $uid, 'issue_coupon_id' => $id]);
-            if ($alreadyReceived >= $issueCouponInfo['receive_limit']) {
-                throw new ApiException(400518);
-            }
-        }
         /** @var StoreCouponUserServices $couponUserService */
         $couponUserService = app()->make(StoreCouponUserServices::class);
-        if ($issueCouponInfo->remain_count <= 0 && !$issueCouponInfo->is_permanent) throw new ApiException(400518);
-        $this->transaction(function () use ($issueUserService, $uid, $id, $couponUserService, $issueCouponInfo) {
+        // 已经领取过的数量
+        $issueUserCount = $issueUserService->getIssueUserCount($uid, $id);
+        if ($issueUserCount >= $issueCouponInfo['receive_limit']) {
+            throw new ApiException('不能再次领取此优惠券');
+        }
+        $this->transaction(function () use ($issueUserService, $uid, $id, $couponUserService, $issueCouponInfo, $is_receive) {
             $issueUserService->save(['uid' => $uid, 'issue_coupon_id' => $id, 'add_time' => time()]);
-            $couponUserService->addUserCoupon($uid, $issueCouponInfo, "get");
-            if ($issueCouponInfo['total_count'] > 0) {
+            $couponUserService->addUserCoupon($uid, $issueCouponInfo, $is_receive ? 'get' : 'send');
+            if ($issueCouponInfo['total_count'] > 0 && $is_receive) {
                 $issueCouponInfo['remain_count'] -= 1;
                 $issueCouponInfo->save();
             }
@@ -423,6 +459,9 @@ class StoreCouponIssueServices extends BaseServices
      * @param int $uid
      * @param $types
      * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function getUserCouponList(int $uid, $types)
     {
@@ -506,6 +545,9 @@ class StoreCouponIssueServices extends BaseServices
      * 获取单个优惠券类型
      * @param array $where
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function getOne(array $where)
     {
@@ -524,6 +566,7 @@ class StoreCouponIssueServices extends BaseServices
     {
         $date1_stamp = strtotime($date1);
         $date2_stamp = strtotime($date2);
+        $date_1 = $date_2 = [];
         list($date_1['y'], $date_1['m']) = explode("-", date('Y-m', $date1_stamp));
         list($date_2['y'], $date_2['m']) = explode("-", date('Y-m', $date2_stamp));
         return abs($date_1['y'] - $date_2['y']) * 12 + $date_2['m'] - $date_1['m'];
@@ -532,6 +575,8 @@ class StoreCouponIssueServices extends BaseServices
     /**
      * 给会员发放优惠券
      * @param $uid
+     * @param int $couponId
+     * @return bool
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException

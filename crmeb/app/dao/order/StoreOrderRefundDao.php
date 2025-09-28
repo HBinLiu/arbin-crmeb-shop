@@ -19,14 +19,16 @@ class StoreOrderRefundDao extends BaseDao
     /**
      * 搜索器
      * @param array $where
+     * @param bool $search
      * @return \crmeb\basic\BaseModel|mixed|\think\Model
+     * @throws \ReflectionException
      */
-    public function search(array $where = [])
+    public function search(array $where = [], bool $search = false)
     {
         $realName = $where['real_name'] ?? '';
         $fieldKey = $where['field_key'] ?? '';
         $fieldKey = $fieldKey == 'all' ? '' : $fieldKey;
-        return parent::search($where)->when(isset($where['refund_type']) && $where['refund_type'] !== '', function ($query) use ($where) {
+        return parent::search($where, $search)->when(isset($where['refund_type']) && $where['refund_type'] !== '', function ($query) use ($where) {
             if ($where['refund_type'] == 0) {
                 $query->where('refund_type', '>', 0);
             } else {
@@ -38,7 +40,7 @@ class StoreOrderRefundDao extends BaseDao
             }
         })->when(isset($where['order_id']) && $where['order_id'] != '', function ($query) use ($where) {
             $query->where(function ($q) use ($where) {
-                $q->whereLike('order_id', '%' . $where['order_id'] . '%')->whereOr('store_order_id', 'IN', function ($orderModel) use ($where) {
+                $q->where('order_id|refund_express', 'like', '%' . $where['order_id'] . '%')->whereOr('store_order_id', 'IN', function ($orderModel) use ($where) {
                     $orderModel->name('store_order')->field('id')->whereLike('order_id', '%' . $where['order_id'] . '%');
                 });
             });
@@ -52,7 +54,7 @@ class StoreOrderRefundDao extends BaseDao
                             $q->name('store_product')->whereLike('store_name|keyword', '%' . $where['real_name'] . '%')->field(['id'])->select();
                         })->field(['oid'])->select();
                     })->whereOr('store_order_id', 'in', function ($orderModel) use ($where) {
-                        $orderModel->name('store_order')->field('id')->whereLike('order_id', '%' . $where['real_name'] . '%');
+                        $orderModel->name('store_order')->field('id')->whereLike('order_id|user_phone', '%' . $where['real_name'] . '%');
                     });
                 });
             });
@@ -94,8 +96,26 @@ class StoreOrderRefundDao extends BaseDao
     }
 
     /**
+     * 退款订单数量
+     * @param array $where
+     * @param bool $search
+     * @return int
+     * @throws \ReflectionException
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/06/19
+     */
+    public function count(array $where = [], bool $search = false)
+    {
+        return $this->search($where, $search)->count();
+    }
+
+    /**
      * 根据时间获取
      * @param array $where
+     * @param string $sum_field
+     * @param string $selectType
+     * @param string $group
      * @return float|int
      */
     public function getOrderRefundMoneyByWhere(array $where, string $sum_field, string $selectType, string $group = "")
@@ -149,5 +169,31 @@ class StoreOrderRefundDao extends BaseDao
                 $query->group("FROM_UNIXTIME($group, '$timeUinx')");
             })
             ->order('add_time ASC')->select()->toArray();
+    }
+
+    /**
+     * @param $time
+     * @param $timeType
+     * @param $field
+     * @param $str
+     * @return mixed
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/03/06
+     */
+    public function getProductTrend($time, $timeType, $field, $str)
+    {
+        return $this->getModel()->where(function ($query) use ($time, $field) {
+            if ($time[0] == $time[1]) {
+                $query->whereDay($field, $time[0]);
+            } else {
+                $query->whereTime($field, 'between', $time);
+            }
+        })->field("FROM_UNIXTIME($field,'$timeType') as days,$str as num")->group('days')->select()->toArray();
+    }
+
+    public function orderIsRefund($store_order_id)
+    {
+        return boolval($this->getModel()->where('store_order_id', $store_order_id)->whereIn('refund_type', [1, 2, 4, 5])->where('is_cancel', 0)->count());
     }
 }

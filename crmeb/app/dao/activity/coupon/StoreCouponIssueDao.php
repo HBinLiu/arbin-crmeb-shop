@@ -34,11 +34,13 @@ class StoreCouponIssueDao extends BaseDao
 
     /**
      * @param array $where
+     * @param bool $search
      * @return \crmeb\basic\BaseModel|mixed|\think\Model
+     * @throws \ReflectionException
      */
-    public function search(array $where = [])
+    public function search(array $where = [], bool $search = false)
     {
-        return parent::search($where)->when(isset($where['type']) && $where['type'] != '', function ($query) use ($where) {
+        return parent::search($where, $search)->when(isset($where['type']) && $where['type'] != '', function ($query) use ($where) {
             if ($where['type'] == 'send') {
                 $query->where('receive_type', 3)->where(function ($query1) {
                     $query1->where(function ($query2) {
@@ -50,6 +52,14 @@ class StoreCouponIssueDao extends BaseDao
             }
         })->when(isset($where['receive_type']) && $where['receive_type'], function ($query) use ($where) {
             $query->where('receive_type', $where['receive_type']);
+        })->when(isset($where['receive_types']) && $where['receive_types'], function ($query) use ($where) {
+            $query->where(function ($query) use ($where) {
+                if ($where['receive_types'] == 1) {
+                    $query->where('receive_type', 1)->whereOr('receive_type', 4);
+                } else {
+                    $query->where('receive_type', 2)->whereOr('receive_type', 3);
+                }
+            });
         });
     }
 
@@ -68,6 +78,17 @@ class StoreCouponIssueDao extends BaseDao
     {
         return $this->search($where)->field($field)
             ->page($page, $limit)->order('id desc')->select()->toArray();
+    }
+
+    /**
+     * 优惠券数量
+     * @param $where
+     * @return int
+     * @throws \ReflectionException
+     */
+    public function couponCount($where): int
+    {
+        return $this->search($where)->count();
     }
 
     /**
@@ -306,13 +327,11 @@ class StoreCouponIssueDao extends BaseDao
      */
     public function getTodayCoupon($uid)
     {
-//        return $this->getModel()->where('receive_type', 1)->where('is_del', 0)->whereDay('add_time')->select()->toArray();
         return $this->getModel()->where('status', 1)
             ->where('is_del', 0)
             ->where('remain_count > 0 OR is_permanent = 1')
             ->where(function ($query) {
                 $query->where('receive_type', 1)->whereOr('receive_type', 4);
-//                $query->where('receive_type', 1);
             })->where(function ($query) {
                 $query->where(function ($query) {
                     $query->where('start_time', '<', time())->where('end_time', '>', time());
@@ -347,5 +366,34 @@ class StoreCouponIssueDao extends BaseDao
     public function checkProductCoupon($product_id)
     {
         return (bool)$this->getModel()->whereFindInSet('product_id', $product_id)->count();
+    }
+
+    public function canReceiveCoupons($uid, $isMember)
+    {
+        return $this->getModel()->where('status', 1)
+            ->where('is_del', 0)
+            ->where('remain_count > 0 OR is_permanent = 1')
+            ->where(function ($query) use ($isMember) {
+                if ($isMember) {
+                    $query->where('receive_type', 1)->whereOr('receive_type', 4);
+                } else {
+                    $query->where('receive_type', 1);
+                }
+            })->where(function ($query) {
+                $query->where(function ($query) {
+                    $query->where('start_time', '<', time())->where('end_time', '>', time());
+                })->whereOr(function ($query) {
+                    $query->where('start_time', 0)->where('end_time', 0);
+                });
+            })->where(function ($query) {
+                $query->where(function ($query) {
+                    $query->where('start_use_time', '<', time())->where('end_use_time', '>', time());
+                })->whereOr(function ($query) {
+                    $query->where('start_use_time', 0)->where('end_use_time', 0);
+                });
+            })
+            ->with(['used' => function ($query) use ($uid) {
+                $query->where('uid', $uid);
+            }])->order('coupon_price desc')->select()->toArray();
     }
 }

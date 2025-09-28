@@ -1,42 +1,77 @@
 <template>
   <div>
-    <Card :bordered="false" dis-hover class="ivu-mt">
-      <Row type="flex" class="mb20">
-        <Col span="24">
-          <Button type="primary" icon="md-add" @click="add" class="mr10">发布版本</Button>
-        </Col>
-      </Row>
-      <Table
-        :columns="columns1"
+    <el-card :bordered="false" shadow="never" class="ivu-mt">
+      <el-row class="mb20">
+        <el-col :span="24">
+          <el-button type="primary" v-db-click @click="add" class="mr10">发布版本</el-button>
+        </el-col>
+      </el-row>
+      <el-table
         :data="tableList"
-        :loading="loading"
-        highlight-row
+        v-loading="loading"
+        highlight-current-row
         no-userFrom-text="暂无数据"
         no-filtered-userFrom-text="暂无筛选结果"
       >
-        <template slot-scope="{ row }" slot="version">
-          <Poptip v-if="row.is_new" trigger="hover" placement="top-start" content="当前为最新线上版本!">
-            <Icon size="16" type="ios-bookmark" color="red" style="margin-right: 10px" />
-          </Poptip>
-          <Icon v-else size="16" type="ios-bookmark" color="white" style="margin-right: 10px" />
-          <span>{{ row.version }} </span>
-        </template>
-        <template slot-scope="{ row }" slot="platform">
-          <span>{{ row.platform === 1 ? '安卓' : '苹果' }}</span>
-        </template>
-        <template slot-scope="{ row }" slot="is_force">
-          <span>{{ row.is_force === 1 ? '强制' : '非强制' }}</span>
-        </template>
-        <template slot-scope="{ row, index }" slot="action">
-          <a @click="edit(row)">编辑</a>
-          <!-- <Divider type="vertical" /> -->
-          <!-- <a @click="del(row, '删除版本', index)">删除</a> -->
-        </template>
-      </Table>
+        <el-table-column label="版本号" width="80">
+          <template slot-scope="scope">
+            <el-tooltip
+              effect="light"
+              v-if="scope.row.is_new"
+              trigger="hover"
+              placement="top-start"
+              content="当前为最新线上版本!"
+            >
+              <i class="el-icon-s-promotion" style="font-size: 16px; color: red"></i>
+            </el-tooltip>
+            {{ scope.row.version }}
+          </template>
+        </el-table-column>
+        <el-table-column label="平台类型" min-width="90">
+          <template slot-scope="scope">
+            <div>
+              <span>{{ scope.row.platform === 1 ? '安卓' : '苹果' }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="升级信息" min-width="130">
+          <template slot-scope="scope">
+            <span>{{ scope.row.info }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="是否强制" min-width="130">
+          <template slot-scope="scope">
+            <span>{{ scope.row.is_force === 1 ? '强制' : '非强制' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="发布日期" min-width="130">
+          <template slot-scope="scope">
+            <span>{{ scope.row.add_time }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="下载地址" min-width="130">
+          <template slot-scope="scope">
+            <span>{{ scope.row.url }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" fixed="right" width="120">
+          <template slot-scope="scope">
+            <a v-db-click @click="edit(scope.row)">编辑</a>
+            <el-divider direction="vertical"></el-divider>
+            <a v-db-click @click="del(scope.row, '删除版本', scope.$index)">删除</a>
+          </template>
+        </el-table-column>
+      </el-table>
       <div class="acea-row row-right page">
-        <Page :total="total" show-elevator show-total @on-change="pageChange" :page-size="tableFrom.limit" />
+        <pagination
+          v-if="total"
+          :total="total"
+          :page.sync="tableFrom.page"
+          :limit.sync="tableFrom.limit"
+          @pagination="getList"
+        />
       </div>
-    </Card>
+    </el-card>
   </div>
 </template>
 
@@ -49,10 +84,10 @@ export default {
     ...mapState('media', ['isMobile']),
     ...mapState('userLevel', ['categoryId']),
     labelWidth() {
-      return this.isMobile ? undefined : 80;
+      return this.isMobile ? undefined : '80px';
     },
     labelPosition() {
-      return this.isMobile ? 'top' : 'left';
+      return this.isMobile ? 'top' : 'right';
     },
   },
   data() {
@@ -63,45 +98,6 @@ export default {
         page: 1,
         limit: 15,
       },
-      columns1: [
-        {
-          title: '版本号',
-          slot: 'version',
-          width: 80,
-        },
-        {
-          title: '平台类型',
-          slot: 'platform',
-          align: 'center',
-          minWidth: 120,
-        },
-        {
-          title: '升级信息',
-          key: 'info',
-          minWidth: 60,
-        },
-        {
-          title: '是否强制',
-          slot: 'is_force',
-          minWidth: 120,
-        },
-        {
-          title: '发布日期',
-          key: 'add_time',
-          minWidth: 120,
-        },
-        {
-          title: '下载地址',
-          key: 'url',
-          minWidth: 120,
-        },
-        {
-          title: '操作',
-          slot: 'action',
-          align: 'center',
-          minWidth: 50,
-        },
-      ],
       loading: false,
       tableList: [],
     };
@@ -137,7 +133,7 @@ export default {
           this.loading = false;
         })
         .catch((err) => {
-          this.$Message.error(err);
+          this.$message.error(err.msg);
           this.loading = false;
         });
     },
@@ -152,25 +148,25 @@ export default {
       let delfromData = {
         title: tit,
         num: num,
-        url: `app/version/del/${row.id}`,
+        url: `system/version_del/${row.id}`,
         method: 'DELETE',
         ids: '',
       };
       this.$modalSure(delfromData)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.tableList.splice(num, 1);
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     handleSubmit(name) {
       this.$refs[name].validate((valid) => {
         if (valid) {
-          this.$Message.success('成功!');
+          this.$message.success('成功!');
         } else {
-          this.$Message.error('失败!');
+          this.$message.error('失败!');
         }
       });
     },
@@ -182,4 +178,4 @@ export default {
 };
 </script>
 
-<style scoped lang="stylus"></style>
+<style lang="scss" scoped></style>

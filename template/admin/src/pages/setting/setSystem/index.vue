@@ -1,31 +1,41 @@
 <template>
-  <div class="article-manager">
-    <Card :bordered="false" dis-hover class="ivu-mt fromBox">
-      <Tabs v-model="currentTab" @on-click="changeTab" v-if="headerList.length">
-        <TabPane
-          :icon="item.icon"
-          :label="item.label"
-          :name="item.value.toString()"
-          v-for="(item, index) in headerList"
-          :key="index"
-        />
-      </Tabs>
-      <Tabs type="card" v-model="childrenId" v-if="headerChildrenList.length" @on-click="changeChildrenTab">
-        <TabPane
-          :label="item.label"
-          :name="item.id.toString()"
-          v-for="(item, index) in headerChildrenList"
-          :key="index"
-        ></TabPane>
-      </Tabs>
-      <form-create :option="option" :rule="rules" @submit="onSubmit" v-if="rules.length !== 0"></form-create>
-      <Spin size="large" fix v-if="spinShow"></Spin>
-    </Card>
+  <div v-loading="spinShow">
+    <div class="i-layout-page-header header-title" v-if="!headerList.length">
+      <span class="ivu-page-header-title">{{ $route.meta.title }}</span>
+    </div>
+    <div class="article-manager">
+      <el-card :bordered="false" shadow="never" class="ivu-mt fromBox" :body-style="{ padding: '0 20px 20px' }">
+        <el-tabs v-model="currentTab" @tab-click="changeTab" v-if="headerList.length">
+          <el-tab-pane
+            :icon="item.icon"
+            :label="item.label"
+            :name="item.value.toString()"
+            v-for="(item, index) in headerList"
+            :key="index"
+          />
+        </el-tabs>
+        <el-tabs v-model="childrenId" v-if="headerChildrenList.length">
+          <el-tab-pane
+            :label="item.label"
+            :name="item.id.toString()"
+            v-for="(item, index) in headerChildrenList"
+            :key="index"
+          ></el-tab-pane>
+        </el-tabs>
+        <form-create
+          :option="option"
+          :rule="rules"
+          @submit="onSubmit"
+          v-if="rules.length"
+          style="padding-top: 20px"
+        ></form-create>
+      </el-card>
+    </div>
   </div>
 </template>
 
 <script>
-import formCreate from '@form-create/iview';
+import formCreate from '@form-create/element-ui';
 import { headerListApi, dataFromApi } from '@/api/setting';
 import request from '@/libs/request';
 import { getLogo } from '@/api/common';
@@ -37,7 +47,7 @@ export default {
       rules: [],
       option: {
         form: {
-          labelWidth: 185,
+          labelWidth: '120px',
         },
         submitBtn: {
           col: {
@@ -52,7 +62,7 @@ export default {
                 if (res.status === 200) {
                   file.url = res.data.src;
                 } else {
-                  this.$Message.error(res.msg);
+                  this.$message.error(res.msg);
                 }
               },
             },
@@ -105,7 +115,10 @@ export default {
     getHeader(index) {
       this.spinShow = true;
       return new Promise((resolve, reject) => {
-        let tab_id = this.$route.params.tab_id;
+        if (this.$route.query.tab_id) {
+          this.currentTab = this.$route.query.tab_id;
+        }
+        let tab_id = this.$route.params.tab_id ? this.$route.params.tab_id : this.$route.query.tab_id;
         let data = {
           type: this.$route.params.type ? this.$route.params.type : 0,
           pid: tab_id ? tab_id : 0,
@@ -114,14 +127,20 @@ export default {
           .then(async (res) => {
             let config = res.data.config_tab;
             this.headerList = config;
-            this.currentTab = config[index ? index : 0].value.toString();
+            if (!this.currentTab) {
+            }
+            if (this.$route.query.tab_id) {
+              this.currentTab = this.$route.query.tab_id;
+            } else {
+              this.currentTab = config[index ? index : 0].value.toString();
+            }
             this.childrenList(index ? 1 : 0);
             resolve(this.currentTab);
             this.spinShow = false;
           })
           .catch((err) => {
             this.spinShow = false;
-            this.$Message.error(err);
+            this.$message.error(err);
           });
       });
     },
@@ -164,14 +183,34 @@ export default {
               return this.$authLapse(res.data);
             }
             this.FromData = res.data;
+            // res.data.rules.forEach((e) => {
+            //   e.title += ':';
+            //   if (e.control) {
+            //   }
+            // });
+            this.addColon(res.data.rules);
             this.rules = res.data.rules;
             this.title = res.data.title;
           })
           .catch((res) => {
             this.spinShow = false;
-            this.$Message.error(res.msg);
+            this.$message.error(res.msg);
           });
       });
+    },
+    addColon(arr) {
+      for (let i = 0; i < arr.length; i++) {
+        const c = arr[i];
+        c.title += ':';
+        if (c.control) {
+          for (let j = 0; j < c.control.length; j++) {
+            const e = c.control[j];
+            if (e.rule.length) {
+              this.addColon(e.rule);
+            }
+          }
+        }
+      }
     },
     async getAllData() {
       if (this.$route.query.from === 'download') {
@@ -188,10 +227,6 @@ export default {
     changeTab() {
       this.childrenList();
     },
-    // 二级选择
-    changeChildrenTab(name) {
-      this.childrenId = name;
-    },
     // 提交表单 group
     onSubmit(formData) {
       request({
@@ -200,28 +235,58 @@ export default {
         data: formData,
       })
         .then((res) => {
-          this.getAdminTitle();
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
+          if (formData.site_name) {
+            localStorage.setItem('ADMIN_TITLE', formData.site_name);
+            this.$store.commit('setAdminTitle', formData.site_name);
+            window.document.title = `${formData.site_name} - 系统设置`;
+          }
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
-    },
-    getAdminTitle() {
-      getLogo().then((res) => {
-        localStorage.setItem('ADMIN_TITLE', res.data.site_name);
-      });
     },
   },
 };
 </script>
 
-<style scoped lang="stylus">
+<style scoped lang="scss">
+::v-deep .el-tabs__header {
+  margin: unset;
+}
+::v-deep .el-tabs__item {
+  height: 54px !important;
+  line-height: 54px !important;
+}
+::v-deep .el-input-number {
+  width: 414px;
+}
+::v-deep .el-input {
+  width: 414px;
+}
+::v-deep .el-input-number .el-input__inner {
+  text-align: unset;
+}
 .ivu-tabs {
   margin-bottom: 18px;
 }
 
 .fromBox {
-  min-height: 600px;
+  min-height: calc(100vh - 200px);
+  margin-top: 0px !important;
+}
+
+.article-manager ::v-deep .ivu-form-item {
+  margin-bottom: 20px !important;
+}
+// ::v-deep .form-create .el-button{
+//   float: right;
+// }
+body ::v-deep .el-dialog .el-dialog__header {
+  border: none !important;
+}
+::v-deep .el-form-item--small .el-form-item__label {
+  line-height: 14px;
+  // margin-top: 10px;
 }
 </style>

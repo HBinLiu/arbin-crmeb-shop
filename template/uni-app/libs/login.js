@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -27,6 +27,7 @@ import {
 	STATE_R_KEY
 } from './../config/cache';
 import Routine from '@/libs/routine';
+
 
 function prePage() {
 	let pages = getCurrentPages();
@@ -63,25 +64,14 @@ function _toLogin(push, pathLogin) {
 	// #ifdef H5
 	path = location.pathname + location.search;
 	// #endif
-
+	const BASIC_CONFIG = Cache.get('BASIC_CONFIG')
 	if (!pathLogin)
-		pathLogin = '/page/users/login/index'
-	Cache.set('login_back_url', path);
+		pathLogin = '/pages/users/login/index'
+	if (path !== pathLogin) {
+		Cache.set('login_back_url', path);
+	}
 	// #ifdef H5
-	if (isWeixin()) {
-		let urlData = location.pathname + location.search
-		if (urlData.indexOf('?') !== -1) {
-			urlData += '&go_longin=1';
-		} else {
-			urlData += '?go_longin=1';
-		}
-		// if (!Cache.has('snsapiKey')) {
-		// 	auth.oAuth('snsapi_base', urlData);
-		// } else {
-		// 	uni.navigateTo({
-		// 		url: '/pages/users/wechat_login/index',
-		// 	});
-		// }
+	if (isWeixin() && BASIC_CONFIG.wechat_status) {
 		uni.navigateTo({
 			url: '/pages/users/wechat_login/index',
 		});
@@ -93,20 +83,16 @@ function _toLogin(push, pathLogin) {
 	}
 	// #endif
 
-	// #ifdef MP 
+	// #ifdef MP
+	let url
+	if (!BASIC_CONFIG.wechat_auth_switch) {
+		url = '/pages/users/binding_phone/index?pageType=0'
+	} else {
+		url = '/pages/users/wechat_login/index'
+	}
 	uni.navigateTo({
-		url: '/pages/users/wechat_login/index'
+		url
 	})
-	// Routine.getCode()
-	// 	.then(code => {
-	// 		console.log(code)
-	// 		Routine.silenceAuth(code).then(res => {
-	// 			console.log(res)
-	// 		})
-	// 	})
-	// 	.catch(err => {
-	// 		uni.hideLoading();
-	// 	});
 	// #endif
 
 	// #ifdef APP-PLUS

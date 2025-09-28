@@ -14,17 +14,11 @@ use app\Request;
 use app\services\pay\PayServices;
 use app\services\shipping\ExpressServices;
 use app\services\system\admin\SystemAdminServices;
-use app\services\user\UserInvoiceServices;
-use crmeb\services\pay\extend\allinpay\AllinPay;
 use app\services\activity\{lottery\LuckLotteryServices,
-    bargain\StoreBargainServices,
-    combination\StoreCombinationServices,
-    combination\StorePinkServices,
-    seckill\StoreSeckillServices
+    combination\StorePinkServices
 };
 use app\services\activity\coupon\StoreCouponIssueServices;
-use app\services\order\{OtherOrderServices,
-    StoreCartServices,
+use app\services\order\{StoreCartServices,
     StoreOrderCartInfoServices,
     StoreOrderComputedServices,
     StoreOrderCreateServices,
@@ -32,6 +26,7 @@ use app\services\order\{OtherOrderServices,
     StoreOrderInvoiceServices,
     StoreOrderRefundServices,
     StoreOrderServices,
+    StoreOrderStatusServices,
     StoreOrderSuccessServices,
     StoreOrderTakeServices
 };
@@ -40,7 +35,12 @@ use app\services\pay\YuePayServices;
 use app\services\product\product\StoreProductReplyServices;
 use app\services\shipping\ShippingTemplatesServices;
 use crmeb\services\CacheService;
-use think\facade\Cache;
+use Psr\SimpleCache\InvalidArgumentException;
+use think\db\exception\DataNotFoundException;
+use think\db\exception\DbException;
+use think\db\exception\ModelNotFoundException;
+use think\facade\Log;
+use think\Response;
 
 /**
  * 订单控制器
@@ -59,9 +59,9 @@ class StoreOrderController
      * @var int[]
      */
     protected $getChennel = [
-        'weixin' => 0,
+        'wechat' => 0,
         'routine' => 1,
-        'weixinh5' => 2,
+        'h5' => 2,
         'pc' => 3,
         'app' => 4
     ];
@@ -79,7 +79,7 @@ class StoreOrderController
      * 获取确认订单页面是否展示快递配送和到店自提
      * @param Request $request
      * @return mixed
-     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function checkShipping(Request $request)
     {
@@ -92,23 +92,28 @@ class StoreOrderController
      * @param Request $request
      * @param ShippingTemplatesServices $services
      * @return mixed
+     * @throws InvalidArgumentException
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function confirm(Request $request, ShippingTemplatesServices $services)
     {
         if (!$services->get(1, ['id'])) {
             return app('json')->fail(410207);
         }
-        [$cartId, $new, $addressId, $shipping_type] = $request->postMore([
+        [$cartId, $new, $addressId, $shipping_type, $is_gift] = $request->postMore([
             'cartId',
             'new',
             ['addressId', 0],
             ['shipping_type', 1],
+            ['is_gift', 0],
         ], true);
         if (!is_string($cartId) || !$cartId) {
             return app('json')->fail(410201);
         }
         $user = $request->user()->toArray();
-        return app('json')->success($this->services->getOrderConfirmData($user, $cartId, !!$new, $addressId, (int)$shipping_type));
+        return app('json')->success($this->services->getOrderConfirmData($user, $cartId, !!$new, $addressId, (int)$shipping_type, (int)$is_gift));
     }
 
     /**
@@ -124,9 +129,18 @@ class StoreOrderController
         $uid = $request->uid();
         if ($this->services->be(['order_id|unique' => $key, 'uid' => $uid, 'is_del' => 0]))
             return app('json')->status('extend_order', 410173, ['orderId' => $key, 'key' => $key]);
-        list($addressId, $couponId, $payType, $useIntegral, $mark, $combinationId, $pinkId, $seckill_id, $bargainId, $shipping_type) = $request->postMore([
-            'addressId', 'couponId', ['payType', 'yue'], ['useIntegral', 0], 'mark', ['combinationId', 0], ['pinkId', 0], ['seckill_id', 0], ['bargainId', ''],
+        list($addressId, $couponId, $payType, $useIntegral, $mark, $combinationId, $pinkId, $seckill_id, $bargainId, $shipping_type, $is_gift) = $request->postMore([
+            'addressId',
+            'couponId',
+            ['payType', ''],
+            ['useIntegral', 0],
+            'mark',
+            ['combinationId', 0],
+            ['pinkId', 0],
+            ['seckill_id', 0],
+            ['bargainId', 0],
             ['shipping_type', 1],
+            ['is_gift', 0],
         ], true);
         $payType = strtolower($payType);
         $cartGroup = $this->services->getCacheOrderInfo($uid, $key);
@@ -136,7 +150,7 @@ class StoreOrderController
             'pinkId' => $pinkId,
             'seckill_id' => $seckill_id,
             'bargainId' => $bargainId,
-        ])->computedOrder($request->uid(), $request->user()->toArray(), $cartGroup, $addressId, $payType, !!$useIntegral, (int)$couponId, false, (int)$shipping_type);
+        ])->computedOrder($request->uid(), $request->user()->toArray(), $cartGroup, $addressId, $payType, !!$useIntegral, (int)$couponId, false, (int)$shipping_type, $is_gift);
         if ($priceGroup)
             return app('json')->status('NONE', 100010, $priceGroup);
         else
@@ -146,27 +160,20 @@ class StoreOrderController
     /**
      * 订单创建
      * @param Request $request
-     * @param StoreBargainServices $bargainServices
-     * @param StorePinkServices $pinkServices
      * @param StoreOrderCreateServices $createServices
-     * @param StoreSeckillServices $seckillServices
-     * @param UserInvoiceServices $userInvoiceServices
-     * @param StoreOrderInvoiceServices $storeOrderInvoiceServices
-     * @param StoreCombinationServices $combinationServices
      * @param $key
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     * @throws \think\Exception
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @return Response
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
-    public function create(Request $request, StoreBargainServices $bargainServices, StorePinkServices $pinkServices, StoreOrderCreateServices $createServices, StoreSeckillServices $seckillServices, UserInvoiceServices $userInvoiceServices, StoreOrderInvoiceServices $storeOrderInvoiceServices, StoreCombinationServices $combinationServices, $key)
+    public function create(Request $request, StoreOrderCreateServices $createServices, $key)
     {
         if (!$key) return app('json')->fail(100100);
-        $uid = (int)$request->uid();
-        if ($checkOrder = $this->services->getOne(['order_id|unique' => $key, 'uid' => $uid, 'is_del' => 0]))
+        $userInfo = $request->user()->toArray();
+        if ($checkOrder = $this->services->getOne(['order_id|unique' => $key, 'uid' => $userInfo['uid'], 'is_del' => 0]))
             return app('json')->status('extend_order', 410209, ['orderId' => $checkOrder['order_id'], 'key' => $key]);
-        [$addressId, $couponId, $payType, $useIntegral, $mark, $combinationId, $pinkId, $seckill_id, $bargainId, $from, $shipping_type, $real_name, $phone, $storeId, $news, $invoice_id, $quitUrl, $advanceId, $virtual_type, $customForm] = $request->postMore([
+        [$addressId, $couponId, $payType, $useIntegral, $mark, $combinationId, $pinkId, $seckillId, $bargainId, $shipping_type, $real_name, $phone, $storeId, $news, $invoice_id, $advanceId, $customForm, $is_gift, $gift_mark] = $request->postMore([
             [['addressId', 'd'], 0],
             [['couponId', 'd'], 0],
             ['payType', ''],
@@ -176,185 +183,23 @@ class StoreOrderController
             [['pinkId', 'd'], 0],
             [['seckill_id', 'd'], 0],
             [['bargainId', 'd'], ''],
-            ['from', 'weixin'],
             [['shipping_type', 'd'], 1],
             ['real_name', ''],
             ['phone', ''],
             [['store_id', 'd'], 0],
             ['new', 0],
             [['invoice_id', 'd'], 0],
-            ['quitUrl', ''],
             [['advanceId', 'd'], 0],
-            ['virtual_type', 0],
             ['custom_form', []],
+            ['is_gift', 0],
+            ['gift_mark', ''],
         ], true);
         $payType = strtolower($payType);
-        $cartGroup = $this->services->getCacheOrderInfo($uid, $key);
-        if (!$cartGroup) {
-            return app('json')->fail(410208);
-        }
-        //下单前砍价验证
-        if ($bargainId) {
-            $bargainServices->checkBargainUser((int)$bargainId, $uid);
-        }
-        //下单前发票验证
-        if ($invoice_id) {
-            $userInvoiceServices->checkInvoice((int)$invoice_id, $uid);
-        }
-        if ($pinkId) {
-            $pinkId = (int)$pinkId;
-            /** @var StorePinkServices $pinkServices */
-            $pinkServices = app()->make(StorePinkServices::class);
-            if ($pinkServices->isPink($pinkId, $uid))
-                return app('json')->status('ORDER_EXIST', 410210, ['orderId' => $this->services->getStoreIdPink($pinkId, $uid)]);
-            if ($this->services->getIsOrderPink($pinkId, $uid))
-                return app('json')->status('ORDER_EXIST', 410211, ['orderId' => $this->services->getStoreIdPink($pinkId, $uid)]);
-            if (!CacheService::checkStock(md5($pinkId), 1, 3) || !CacheService::popStock(md5($pinkId), 1, 3)) {
-                return app('json')->fail(410212);
-            }
-        }
-        if ($from != 'pc') {
-            if (!$this->services->checkPaytype(get_pay_type($payType))) {
-                return app('json')->fail(410213);
-            }
-        } else {
-            $payType = 'pc';
-        }
-        $isChannel = $this->getChennel[$from] ?? ($request->isApp() ? 0 : 1);
-        $cartInfo = null;
-        if ($seckill_id || $combinationId || $bargainId || $advanceId) {
-            $cartInfo = $cartGroup['cartInfo'];
-            foreach ($cartInfo as $item) {
-                $type = 0;
-                if (!isset($item['product_attr_unique']) || !$item['product_attr_unique']) continue;
-                if ($item['seckill_id']) {
-                    $type = 1;
-                } elseif ($item['bargain_id']) {
-                    $type = 2;
-                } elseif ($item['combination_id']) {
-                    $type = 3;
-                } elseif ($item['advance_id']) {
-                    $type = 6;
-                }
-                if ($type && (!CacheService::checkStock($item['product_attr_unique'], (int)$item['cart_num'], $type) || !CacheService::popStock($item['product_attr_unique'], (int)$item['cart_num'], $type))) {
-                    return app('json')->fail(410214, null, ['cart_num' => $item['cart_num'], 'unit_name' => $item['productInfo']['unit_name']]);
-
-                }
-            }
-        }
-        $virtual_type = $cartGroup['cartInfo'][0]['productInfo']['virtual_type'] ?? 0;
-        $order = $createServices->createOrder($uid, $key, $cartGroup, $request->user()->toArray(), $addressId, $payType, !!$useIntegral, $couponId, $mark, $combinationId, $pinkId, $seckill_id, $bargainId, $isChannel, $shipping_type, $real_name, $phone, $storeId, !!$news, $advanceId, $virtual_type, $customForm);
-        if ($order === false) {
-            if ($seckill_id || $combinationId || $advanceId || $bargainId) {
-                foreach ($cartInfo as $item) {
-                    $value = $item['cart_info'];
-                    $type = 0;
-                    if (!isset($value['product_attr_unique']) || $value['product_attr_unique']) continue;
-                    if ($value['seckill_id']) {
-                        $type = 1;
-                    } elseif ($value['bargain_id']) {
-                        $type = 2;
-                    } elseif ($value['combination_id']) {
-                        $type = 3;
-                    } elseif ($value['advance_id']) {
-                        $type = 6;
-                    }
-                    if ($type) CacheService::setStock($value['product_attr_unique'], (int)$value['cart_num'], $type, false);
-                }
-            }
-            return app('json')->fail(410200);
-        }
+        $order = CacheService::lock('orderCreate' . $key, function () use ($createServices, $userInfo, $key, $addressId, $payType, $useIntegral, $couponId, $mark, $combinationId, $pinkId, $seckillId, $bargainId, $shipping_type, $real_name, $phone, $storeId, $news, $advanceId, $customForm, $invoice_id, $is_gift, $gift_mark) {
+            return $createServices->createOrder($userInfo['uid'], $key, $userInfo, $addressId, $payType, !!$useIntegral, $couponId, $mark, $combinationId, $pinkId, $seckillId, $bargainId, $shipping_type, $real_name, $phone, $storeId, !!$news, $advanceId, $customForm, $invoice_id, $is_gift, $gift_mark);
+        });
         $orderId = $order['order_id'];
-        $orderInfo = $this->services->getOne(['order_id' => $orderId]);
-        if (!$orderInfo || !isset($orderInfo['paid'])) {
-            return app('json')->fail(410194);
-        }
-        //创建开票数据
-        if ($invoice_id) {
-            $storeOrderInvoiceServices->makeUp($uid, $orderId, (int)$invoice_id);
-        }
-        $orderInfo = $orderInfo->toArray();
-        $info = compact('orderId', 'key');
-        if ($orderId) {
-            switch ($payType) {
-                case PayServices::WEIXIN_PAY:
-                    if ($orderInfo['paid']) return app('json')->fail(410174);
-                    //支付金额为0
-                    if (bcsub((string)$orderInfo['pay_price'], '0', 2) <= 0) {
-                        //创建订单jspay支付
-                        /** @var StoreOrderSuccessServices $success */
-                        $success = app()->make(StoreOrderSuccessServices::class);
-                        $payPriceStatus = $success->zeroYuanPayment($orderInfo, $uid, PayServices::WEIXIN_PAY);
-                        if ($payPriceStatus)//0元支付成功
-                            return app('json')->status('success', 410195, $info);
-                        else
-                            return app('json')->status('pay_error');
-                    } else {
-                        /** @var OrderPayServices $payServices */
-                        $payServices = app()->make(OrderPayServices::class);
-                        if ($from == 'app' && $request->isApp()) {
-                            $from = 'weixin';
-                        }
-                        $info['jsConfig'] = $payServices->orderPay($orderInfo, $from);
-                        if ($from == 'weixinh5') {
-                            return app('json')->status('wechat_h5_pay', 410203, $info);
-                        } else {
-                            return app('json')->status('wechat_pay', 410203, $info);
-                        }
-                    }
-                case PayServices::YUE_PAY:
-                    /** @var YuePayServices $yueServices */
-                    $yueServices = app()->make(YuePayServices::class);
-                    $pay = $yueServices->yueOrderPay($orderInfo, $uid);
-                    if ($pay['status'] === true)
-                        return app('json')->status('success', 410197, $info);
-                    else {
-                        if (is_array($pay))
-                            return app('json')->status($pay['status'], $pay['msg'], $info);
-                        else
-                            return app('json')->status('pay_error', $pay);
-                    }
-                case PayServices::ALIAPY_PAY:
-                    if (!$quitUrl && ($request->isH5() || $request->isWechat())) {
-                        return app('json')->status('pay_error', 410198, $info);
-                    }
-                    [$url, $param] = explode('?', $quitUrl);
-                    $quitUrl = $url . '?order_id=' . $orderInfo['order_id'];
-                    //支付金额为0
-                    if (bcsub((string)$orderInfo['pay_price'], '0', 2) <= 0) {
-                        //创建订单jspay支付
-                        /** @var StoreOrderSuccessServices $success */
-                        $success = app()->make(StoreOrderSuccessServices::class);
-                        $payPriceStatus = $success->zeroYuanPayment($orderInfo, $uid, PayServices::ALIAPY_PAY);
-                        if ($payPriceStatus)//0元支付成功
-                            return app('json')->status('success', 410199, $info);
-                        else
-                            return app('json')->status('pay_error');
-                    } else {
-                        /** @var OrderPayServices $payServices */
-                        $payServices = app()->make(OrderPayServices::class);
-                        $info['jsConfig'] = $payServices->alipayOrder($orderInfo, $quitUrl, $from == 'routine');
-                        $payKey = md5($orderInfo['order_id']);
-                        CacheService::set($payKey, ['order_id' => $orderInfo['order_id'], 'other_pay_type' => false], 300);
-                        $info['pay_key'] = $payKey;
-                        return app('json')->status(PayServices::ALIAPY_PAY . '_pay', 410203, $info);
-                    }
-                case PayServices::OFFLINE_PAY:
-                case 'pc':
-                case 'friend':
-                    return app('json')->status('success', 410203, $info);
-                case PayServices::ALLIN_PAY:
-                    /** @var OrderPayServices $payServices */
-                    $payServices = app()->make(OrderPayServices::class);
-                    $info['jsConfig'] = $payServices->orderPay($orderInfo, $payType, [
-                        'returl' => sys_config('site_url') . '/pages/index/index',
-                    ]);
-                    if ($request->isWechat()) {
-                        $info['pay_url'] = AllinPay::UNITODER_H5UNIONPAY;
-                    }
-                    return app('json')->status(PayServices::ALLIN_PAY . '_pay', 410203, $info);
-            }
-        } else return app('json')->fail(410200);
+        return app('json')->status('success', 410203, compact('orderId', 'key'));
     }
 
     /**
@@ -373,29 +218,54 @@ class StoreOrderController
     }
 
     /**
+     * @param Request $request
+     * @param $orderId
+     * @param string $type
+     * @return Response
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @author 等风来
+     * @email 136327134@qq.com
+     * @date 2023/2/13
+     */
+    public function cashier(Request $request, $orderId, $type = 'order')
+    {
+        if (!$orderId) {
+            return app('json')->fail(100100);
+        }
+        return app('json')->success($this->services->getCashierInfo((int)$request->uid(), $orderId, $type));
+    }
+
+    /**
      * 订单支付
      * @param Request $request
      * @param StorePinkServices $services
      * @param OrderPayServices $payServices
      * @param YuePayServices $yuePayServices
      * @return mixed
-     * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     public function pay(Request $request, StorePinkServices $services, OrderPayServices $payServices, YuePayServices $yuePayServices)
     {
-        [$uni, $paytype, $from, $quitUrl, $type] = $request->postMore([
+        [$uni, $paytype, $quitUrl, $type] = $request->postMore([
             ['uni', ''],
-            ['paytype', 'weixin'],
-            ['from', 'weixin'],
+            ['paytype', ''],
             ['quitUrl', ''],
             ['type', 0]
         ], true);
+        $payLock = CacheService::get('PAY_LOCK_' . $uni);
+        if ($payLock) return app('json')->fail('订单支付中，请勿重复支付');
+        CacheService::set('PAY_LOCK_' . $uni, 'PAY_LOCK', 2);
         if (!$uni) return app('json')->fail(100100);
         $orderInfo = $this->services->get(['order_id' => $uni]);
+        if ($orderInfo->is_cancel == 1 || $orderInfo->is_del == 1 || $orderInfo->is_system_del == 1) return app('json')->fail('订单已经超过系统支付时间，无法支付，请重新下单');
         $uid = $type == 1 ? (int)$request->uid() : $orderInfo->uid;
+        $orderInfo->is_channel = $this->getChennel[$request->getFromType()] ?? ($request->isApp() ? 0 : 1);
+        $orderInfo->order_id = $uid != $orderInfo->pay_uid ? app()->make(StoreOrderCreateServices::class)->getNewOrderId('cp') : $uni;
         $orderInfo->pay_uid = $uid;
         $orderInfo->save();
-        $order = $this->services->get(['order_id' => $uni]);
+        $orderInfo = $orderInfo->toArray();
+        $order = $this->services->get(['order_id' => $orderInfo['order_id']]);
         if (!$order)
             return app('json')->fail(410173);
         if ($order['paid'])
@@ -403,58 +273,20 @@ class StoreOrderController
         if ($order['pink_id'] && $services->isPinkStatus($order['pink_id'])) {
             return app('json')->fail(410215);
         }
-        $isChannel = $this->getChennel[$from];
-        //缓存不存在 ｜｜ 切换另一端支付
-        if (!Cache::get('pay_' . $order['order_id']) || $isChannel != $order['is_channel']) {
-            switch ($from) {
-                case 'weixin':
-                    if ($type == 1 || in_array($order['is_channel'], [1, 2, 3, 4])) {//0
-                        $order['order_id'] = mt_rand(100, 999) . '_' . $order['order_id'];
-                    }
-                    break;
-                case 'weixinh5':
-                    if ($type == 1 || in_array($order['is_channel'], [0, 1, 3, 4])) {
-                        $order['order_id'] = mt_rand(100, 999) . '_' . $order['order_id'];
-                    }
-                    break;
-                case 'routine':
-                    if ($type == 1 || in_array($order['is_channel'], [0, 2, 3, 4])) {
-                        $order['order_id'] = mt_rand(100, 999) . '_' . $order['order_id'];
-                    }
-                    break;
-                case 'app':
-                    if ($type == 1 || in_array($order['is_channel'], [0, 1, 2, 3])) {
-                        $order['order_id'] = mt_rand(100, 999) . '_' . $order['order_id'];
-                    }
-                    break;
-                case 'pc':
-                case 'aliapy':
-                    $order['order_id'] = mt_rand(100, 999) . '_' . $order['order_id'];
-                    break;
-            }
+
+        //0元支付
+        if (bcsub((string)$orderInfo['pay_price'], '0', 2) <= 0) {
+            //创建订单jspay支付
+            /** @var StoreOrderSuccessServices $success */
+            $success = app()->make(StoreOrderSuccessServices::class);
+            $payPriceStatus = $success->zeroYuanPayment($orderInfo, $uid);
+            if ($payPriceStatus)//0元支付成功
+                return app('json')->status('success', '支付成功', ['order_id' => $orderInfo['order_id'], 'key' => $orderInfo['unique']]);
+            else
+                return app('json')->status('pay_error', 410216);
         }
-        $order['pay_type'] = get_pay_type($paytype); //重新支付选择支付方式
-        switch ($order['pay_type']) {
-            case PayServices::WEIXIN_PAY:
-                $jsConfig = $payServices->orderPay($order->toArray(), $from);
-                if ($from == 'weixinh5') {
-                    return app('json')->status('wechat_h5_pay', ['jsConfig' => $jsConfig, 'order_id' => $order['order_id']]);
-                } elseif ($from == 'weixin' || $from == 'routine') {
-                    return app('json')->status('wechat_pay', ['jsConfig' => $jsConfig, 'order_id' => $order['order_id']]);
-                } elseif ($from == 'pc') {
-                    return app('json')->status('wechat_pc_pay', ['jsConfig' => $jsConfig, 'order_id' => $order['order_id']]);
-                }
-                break;
-            case PayServices::ALIAPY_PAY:
-                if (!$quitUrl && $from != 'routine') {
-                    return app('json')->fail(410198);
-                }
-                $isCode = $from == 'routine' || $from == 'pc';
-                $jsConfig = $payServices->alipayOrder($order->toArray(), $quitUrl, $isCode);
-                if ($isCode && !($jsConfig->invalid ?? false)) $jsConfig->invalid = time() + 60;
-                $payKey = md5($order['order_id']);
-                CacheService::set($payKey, ['order_id' => $order['order_id'], 'other_pay_type' => false], 300);
-                return app('json')->status(PayServices::ALIAPY_PAY . '_pay', 410203, ['jsConfig' => $jsConfig, 'order_id' => $order['order_id'], 'pay_key' => $payKey]);
+
+        switch ($paytype) {
             case PayServices::YUE_PAY:
                 $pay = $yuePayServices->yueOrderPay($order->toArray(), $request->uid());
                 if ($pay['status'] === true)
@@ -466,48 +298,25 @@ class StoreOrderController
                         return app('json')->status('pay_error', $pay);
                 }
             case PayServices::OFFLINE_PAY:
-                if ($this->services->setOrderTypePayOffline($order['order_id']))
+                if ($this->services->setOrderTypePayOffline($order['order_id'])) {
+                    event('NoticeListener', [$order->toArray(), 'admin_pay_success_code']);
                     return app('json')->status('success', 410203);
-                else
+                } else {
                     return app('json')->status('success', 410216);
-            case PayServices::ALLIN_PAY:
-                /** @var OrderPayServices $payServices */
-                $payServices = app()->make(OrderPayServices::class);
-                $info['jsConfig'] = $payServices->orderPay($order->toArray(), $order['pay_type'], [
-                    'returl' => sys_config('site_url') . '/pages/index/index',
-                ]);
-                if ($request->isWechat()) {
-                    $info['pay_url'] = AllinPay::UNITODER_H5UNIONPAY;
                 }
-                return app('json')->status(PayServices::ALLIN_PAY . '_pay', 410203, $info);
+            default:
+                $payInfo = $payServices->beforePay($order->toArray(), $paytype, ['quitUrl' => $quitUrl]);
+                return app('json')->status($payInfo['status'], $payInfo['payInfo']);
         }
-        return app('json')->fail(410218);
-    }
-
-    /**
-     * 支付宝单独支付
-     * @param OrderPayServices $payServices
-     * @param OtherOrderServices $services
-     * @param string $key
-     * @param string $quitUrl
-     * @return mixed
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
-     */
-    public function aliPay(OrderPayServices $payServices, OtherOrderServices $services, string $key, string $quitUrl)
-    {
-        $payInfo = $this->services->aliPayOrder($payServices, $services, $key, $quitUrl);
-        return app('json')->success(['pay_content' => $payInfo]);
     }
 
     /**
      * 订单列表
      * @param Request $request
      * @return mixed
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function lst(Request $request)
     {
@@ -534,9 +343,9 @@ class StoreOrderController
      * @param StoreOrderEconomizeServices $services
      * @param $uni
      * @return mixed
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function detail(Request $request, StoreOrderEconomizeServices $services, $uni)
     {
@@ -549,9 +358,9 @@ class StoreOrderController
      * 代付订单详情
      * @param Request $request
      * @return mixed
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function friendDetail(Request $request)
     {
@@ -614,6 +423,7 @@ class StoreOrderController
      * 订单删除
      * @param Request $request
      * @return mixed
+     * @throws InvalidArgumentException
      */
     public function del(Request $request)
     {
@@ -653,8 +463,14 @@ class StoreOrderController
     /**
      * 订单 查看物流
      * @param Request $request
+     * @param StoreOrderCartInfoServices $services
+     * @param ExpressServices $expressServices
      * @param $uni
+     * @param string $type
      * @return mixed
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function express(Request $request, StoreOrderCartInfoServices $services, ExpressServices $expressServices, $uni, $type = '')
     {
@@ -670,6 +486,7 @@ class StoreOrderController
             foreach ($order['cart_info'] as $k => $cart) {
                 $cartNew['cart_num'] = $cart['cart_num'];
                 $cartNew['truePrice'] = $cart['truePrice'];
+                $cartNew['postage_price'] = $cart['postage_price'];
                 $cartNew['productInfo']['image'] = $cart['productInfo']['image'];
                 $cartNew['productInfo']['store_name'] = $cart['productInfo']['store_name'];
                 $cartNew['productInfo']['unit_name'] = $cart['productInfo']['unit_name'] ?? '';
@@ -689,10 +506,11 @@ class StoreOrderController
             $cartInfo = $services->getCartColunm(['oid' => $order['id']], 'cart_info', 'unique');
             $info = [];
             $cartNew = [];
-            foreach ($cartInfo as $k => $cart) {
+            foreach ($cartInfo as $cart) {
                 $cart = json_decode($cart, true);
                 $cartNew['cart_num'] = $cart['cart_num'];
                 $cartNew['truePrice'] = $cart['truePrice'];
+                $cartNew['postage_price'] = $cart['postage_price'];
                 $cartNew['productInfo']['image'] = $cart['productInfo']['image'];
                 $cartNew['productInfo']['store_name'] = $cart['productInfo']['store_name'];
                 $cartNew['productInfo']['unit_name'] = $cart['productInfo']['unit_name'] ?? '';
@@ -721,7 +539,8 @@ class StoreOrderController
      * @param Request $request
      * @param StoreOrderCartInfoServices $cartInfoServices
      * @param StoreProductReplyServices $replyServices
-     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @return Response|void
+     * @throws InvalidArgumentException
      */
     public function comment(Request $request, StoreOrderCartInfoServices $cartInfoServices, StoreProductReplyServices $replyServices)
     {
@@ -737,9 +556,10 @@ class StoreOrderController
         $user_info = $request->user();
         $group['nickname'] = $user_info['nickname'];
         $group['avatar'] = $user_info['avatar'];
-        if (!$cartInfo) return app('json')->fail(410294);
-        $orderUid = $this->services->value(['id' => $cartInfo['oid']], 'uid');
-        if ($uid != $orderUid) return app('json')->fail(410294);
+        if (!$cartInfo) return app('json')->fail('商品不存在');
+        $orderInfo = $this->services->get($cartInfo['oid']);
+        if (!$orderInfo) return app('json')->fail('订单不存在');
+        if ($uid != $orderInfo['uid'] && $uid != $orderInfo['gift_uid']) return app('json')->fail('不是您自己的订单，无法评价');
         if ($replyServices->be(['oid' => $cartInfo['oid'], 'unique' => $unique]))
             return app('json')->fail(410219);
         $group['comment'] = htmlspecialchars(trim($group['comment']));
@@ -756,13 +576,27 @@ class StoreOrderController
             'unique' => $unique,
             'product_id' => $productId,
             'add_time' => time(),
-            'reply_type' => 'product'
+            'reply_type' => 'product',
+            'suk' => $cartInfo['cart_info']['productInfo']['attrInfo']['suk']
         ]);
+        //评价是否需要审核
+        $group['status'] = sys_config('product_reply_examine') == 1 ? 0 : 1;
 
         $res = $replyServices->save($group);
         if (!$res) {
             return app('json')->fail(410222);
         }
+
+        //自定义事件-订单评价
+        event('CustomEventListener', ['order_comment', [
+            'uid' => $uid,
+            'oid' => $cartInfo['oid'],
+            'unique' => $unique,
+            'product_id' => $productId,
+            'add_time' => date('Y-m-d H:i:s'),
+            'suk' => $cartInfo['cart_info']['productInfo']['attrInfo']['suk']
+        ]]);
+
         try {
             $this->services->checkOrderOver($replyServices, $cartInfoServices->getCartColunm(['oid' => $cartInfo['oid']], 'unique', ''), $cartInfo['oid']);
         } catch (\Exception $e) {
@@ -771,7 +605,7 @@ class StoreOrderController
         //缓存抽奖次数
         /** @var LuckLotteryServices $luckLotteryServices */
         $luckLotteryServices = app()->make(LuckLotteryServices::class);
-        $luckLotteryServices->setCacheLotteryNum((int)$orderUid, 'comment');
+        $luckLotteryServices->setCacheLotteryNum((int)$uid == $orderInfo['uid'] ? $orderInfo['uid'] : $orderInfo['gift_uid'], 'comment');
 
         /** @var SystemAdminServices $systemAdmin */
         $systemAdmin = app()->make(SystemAdminServices::class);
@@ -795,6 +629,7 @@ class StoreOrderController
      * 订单统计数据
      * @param Request $request
      * @return mixed
+     * @throws \ReflectionException
      */
     public function data(Request $request)
     {
@@ -847,9 +682,9 @@ class StoreOrderController
      * 获取退货商品列表
      * @param Request $request
      * @return mixed
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function refundCartInfoList(Request $request)
     {
@@ -870,10 +705,10 @@ class StoreOrderController
      * @param StoreOrderServices $storeOrderServices
      * @param $id
      * @return mixed
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws InvalidArgumentException
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function applyRefund(Request $request, StoreOrderRefundServices $services, StoreOrderServices $storeOrderServices, $id)
     {
@@ -902,6 +737,7 @@ class StoreOrderController
         if (!$order || $uid != $order['uid']) {
             return app('json')->fail(410173);
         }
+        if ($order['pid'] == -1) return app('json')->fail('主订单已拆单，请刷新页面');
         $refundData = [
             'refund_reason' => $data['text'],
             'refund_explain' => $data['refund_reason_wap_explain'],
@@ -912,37 +748,6 @@ class StoreOrderController
             return app('json')->success(100027);
         else
             return app('json')->fail(100028);
-    }
-
-    /**
-     * 订单申请退款审核
-     * @param Request $request
-     * @param StoreOrderRefundServices $services
-     */
-    public function refund_verify(Request $request, StoreOrderRefundServices $services)
-    {
-//        $data = $request->postMore([
-//            ['text', ''],
-//            ['refund_reason_wap_img', ''],
-//            ['refund_reason_wap_explain', ''],
-//            ['uni', ''],
-//            ['refund_type', 1],
-//            ['cart_id', 0],
-//            ['refund_num', 0]
-//        ]);
-//        $uni = $data['uni'];
-//        unset($data['uni']);
-//        if ($data['refund_reason_wap_img'] != '') {
-//            $data['refund_reason_wap_img'] = explode(',', $data['refund_reason_wap_img']);
-//        } else {
-//            $data['refund_reason_wap_img'] = [];
-//        }
-//        if (!$uni || $data['text'] == '' || $data['refund_num'] <= 0) return app('json')->fail('参数错误!');
-//        $res = $services->orderApplyRefund($this->services->getUserOrderDetail($uni, (int)$request->uid()), $data['text'], $data['refund_reason_wap_explain'], $data['refund_reason_wap_img'], $data['refund_type'], $data['cart_id'], $data['refund_num']);
-//        if ($res)
-//            return app('json')->success('提交申请成功');
-//        else
-//            return app('json')->fail('提交失败');
     }
 
     /**
@@ -969,9 +774,9 @@ class StoreOrderController
      * 订单取消   未支付的订单回退积分,回退优惠券,回退库存
      * @param Request $request
      * @return mixed
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function cancel(Request $request)
     {
@@ -1010,5 +815,165 @@ class StoreOrderController
         $cartProduct['bargain_id'] = $cartInfo['cart_info']['bargain_id'] ?? 0;
         $cartProduct['order_id'] = $this->services->value(['id' => $cartInfo['oid']], 'order_id');
         return app('json')->success($cartProduct);
+    }
+
+    /**
+     * 商家寄件回调
+     * @param Request $request
+     * @return Response
+     * @author 等风来
+     * @email 136327134@qq.com
+     * @date 2023/6/12
+     */
+    public function callBack(Request $request)
+    {
+        $data = $request->postMore([
+            ['type', ''],
+            ['data', ''],
+        ]);
+        $data['data'] = $this->decrypt($data['data'], sys_config('sms_token'));
+        switch ($data['type']) {
+            case 'detection'://检测回调地址
+                return \json($data['data']);
+                break;
+            case 'order_success'://下单成功
+                $update = [
+                    'label' => $data['data']['label'] ?? '',
+                ];
+                //韵达会异步推送单号
+                if (isset($data['kuaidinum'])) {
+                    $update['delivery_id'] = $data['kuaidinum'];
+                }
+                if (isset($data['task_id'])) {
+                    $this->services->update(['kuaidi_task_id' => $data['task_id']], $update);
+                }
+                break;
+            case 'order_take'://取件
+                if (isset($data['data']['task_id'])) {
+                    $orderInfo = $this->services->get(['kuaidi_task_id' => $data['data']['task_id']]);
+                    if (!$orderInfo) {
+                        return app('json')->fail('订单不存在');
+                    }
+                    $this->services->transaction(function () use ($data, $orderInfo) {
+                        $this->services->update(['kuaidi_task_id' => $data['data']['task_id']], [
+                            'status' => 1,
+                            'is_stock_up' => 0
+                        ]);
+                        /** @var StoreOrderStatusServices $services */
+                        $services = app()->make(StoreOrderStatusServices::class);
+                        $services->save([
+                            'oid' => $orderInfo->id,
+                            'change_time' => time(),
+                            'change_type' => 'delivery_goods',
+                            'change_message' => '已发货 快递公司：' . $orderInfo->delivery_name . ' 快递单号：' . $orderInfo->delivery_id
+                        ]);
+                    });
+                }
+                break;
+            case 'order_cancel'://取消寄件
+                if (isset($data['data']['task_id'])) {
+                    $orderInfo = $this->services->get(['kuaidi_task_id' => $data['data']['task_id']]);
+                    if (!$orderInfo) {
+                        return app('json')->fail('订单不存在');
+                    }
+                    if ($orderInfo->is_stock_up && $orderInfo->status == 0) {
+                        app()->make(StoreOrderStatusServices::class)->save([
+                            'oid' => $orderInfo->id,
+                            'change_time' => time(),
+                            'change_type' => 'delivery_goods_cancel',
+                            'change_message' => '已取消发货，取消原因：用户手动取消'
+                        ]);
+
+                        $orderInfo->status = 0;
+                        $orderInfo->is_stock_up = 0;
+                        $orderInfo->kuaidi_task_id = '';
+                        $orderInfo->kuaidi_order_id = '';
+                        $orderInfo->express_dump = '';
+                        $orderInfo->kuaidi_label = '';
+                        $orderInfo->delivery_id = '';
+                        $orderInfo->delivery_code = '';
+                        $orderInfo->delivery_name = '';
+                        $orderInfo->delivery_type = '';
+                        $orderInfo->save();
+                    } else {
+                        Log::error('商家寄件自动回调，订单状态不正确：', [
+                            'kuaidi_task_id' => $data['data']['task_id']
+                        ]);
+                    }
+                }
+                break;
+            case 'success'://电子发票回调
+                $oid = $this->services->value(['order_id' => $data['data']['unique']], 'id');
+                if ($oid) {
+                    $invoiceServices = app()->make(StoreOrderInvoiceServices::class);
+                    $invoiceServices->update([
+                        'category' => 'order',
+                        'order_id' => $oid,
+                    ], [
+                        'unique' => $data['data']['unique'],
+                        'invoice_type' => $data['data']['invoice_type'],
+                        'invoice_num' => $data['data']['invoice_num'],
+                        'invoice_serial_number' => $data['data']['invoice_serial_number'],
+                        'is_invoice' => 1,
+                        'invoice_time' => time()
+                    ]);
+                }
+                break;
+        }
+
+        return app('json')->success();
+    }
+
+    /**
+     * 解密商家寄件回调
+     * @param string $encryptedData
+     * @param string $key
+     * @return false|string
+     * @author: 吴汐
+     * @email: 442384644@qq.com
+     * @date: 2023/8/31
+     */
+    function decrypt(string $encryptedData, string $key)
+    {
+        $key = substr($key, 0, 32);
+        $decodedData = base64_decode($encryptedData);
+        $iv = substr($decodedData, 0, 16);
+        $encrypted = substr($decodedData, 16);
+        $decrypted = openssl_decrypt($encrypted, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+        return json_decode($decrypted, true);
+    }
+
+    public function giftDetail($oid)
+    {
+        if (!$oid) {
+            return app('json')->fail('缺少参数');
+        }
+        return app('json')->success($this->services->giftDetail($oid));
+    }
+
+    public function receiveGift(Request $request, $oid)
+    {
+        [$gift_key, $shipping_type, $name, $phone, $address_id, $store_id] = $request->postMore([
+            ['gift_key', ''],
+            ['shipping_type', 1],
+            ['name', ''],
+            ['phone', ''],
+            ['address_id', 0],
+            ['store_id', 0],
+        ], true);
+        if (!$oid) {
+            return app('json')->fail('缺少参数');
+        }
+        if ($shipping_type == 1 && $address_id == 0) {
+            return app('json')->fail('请选择收货地址');
+        }
+        $uid = $request->uid();
+        $res = $this->services->receiveGift($uid, $oid, $gift_key, $shipping_type, $name, $phone, $address_id, $store_id);
+        if ($res) {
+            return app('json')->success('领取成功', ['status' => 1]);
+        } else {
+            return app('json')->success('该礼品已经被别人领取', ['status' => 0]);
+        }
+
     }
 }

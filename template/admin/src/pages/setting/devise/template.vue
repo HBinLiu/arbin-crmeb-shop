@@ -1,12 +1,12 @@
 <template>
   <div>
     <div class="i-layout-page-header">
-      <router-link :to="{ path: '/admin/setting/pages/devise' }"
-        ><Button icon="ios-arrow-back" size="small" class="mr20">返回</Button></router-link
+      <router-link :to="{ path: $routeProStr + '/setting/pages/devise' }"
+        ><el-button size="small" class="mr20">返回</el-button></router-link
       >
       <span class="ivu-page-header-title mr20">页面设计</span>
     </div>
-    <Card :bordered="false" dis-hover class="ivu-mt">
+    <el-card :bordered="false" shadow="never" class="ivu-mt">
       <div class="flex-wrapper">
         <!-- :src="iframeUrl" -->
         <iframe class="iframe-box" :src="iframeUrl" frameborder="0" ref="iframe"></iframe>
@@ -17,7 +17,7 @@
         </div>
         <links></links>
       </div>
-    </Card>
+    </el-card>
   </div>
 </template>
 
@@ -26,6 +26,7 @@ import { diyGetInfo, diySave } from '@/api/diy';
 import { mapMutations } from 'vuex';
 import rightConfig from '@/components/rightConfig/index';
 import links from './links';
+import Setting from '@/setting';
 export default {
   name: 'index',
   components: {
@@ -44,10 +45,10 @@ export default {
   created() {
     let pageId = this.$route.query.id;
     let names = this.$route.query.name;
-    this.setConfig = 'admin/' + names + '/setConfig';
-    this.updataConfig = 'admin/' + names + '/updataConfig';
+    this.setConfig = Setting.routePre + '/' + names + '/setConfig';
+    this.updataConfig = Setting.routePre + '/' + names + '/updataConfig';
     this.pageId = parseInt(pageId);
-    this.iframeUrl = `${location.origin}/pages/index/index?type=iframeWindow`;
+    this.iframeUrl = `${location.origin}/pages/index/index?mdType=iframeWindow`;
     diyGetInfo(parseInt(pageId)).then((datas) => {
       let data = datas.data.info.value;
       this.upData(data);
@@ -79,15 +80,13 @@ export default {
 };
 </script>
 
-<style scoped lang="stylus">
+<style lang="scss" scoped>
 .content {
   width: 450px;
 }
-
 .flex-wrapper {
   display: flex;
 }
-
 .iframe-box {
   width: 375px;
   height: 700px;
@@ -95,13 +94,11 @@ export default {
   border-radius: 4px;
   box-shadow: 0 0 7px #cccccc;
 }
-
 .right-box {
   width: 400px;
   margin-left: 50px;
   border: 1px solid #ddd;
   border-radius: 4px;
-
   .title-bar {
     width: 100%;
     height: 38px;

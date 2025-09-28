@@ -16,7 +16,10 @@ use app\services\activity\combination\StoreCombinationServices;
 use app\services\activity\seckill\StoreSeckillServices;
 use app\services\BaseServices;
 use app\services\order\StoreOrderServices;
+use app\services\product\product\StoreCategoryServices;
+use app\services\product\product\StoreDescriptionServices;
 use app\services\product\product\StoreProductServices;
+use app\services\product\sku\StoreProductAttrResultServices;
 use app\services\user\member\MemberCardServices;
 use app\services\user\UserServices;
 use crmeb\services\SpreadsheetExcelService;
@@ -33,7 +36,7 @@ class ExportServices extends BaseServices
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
         $data = $userServices->index($where)['list'];
-        $header = ['用户ID', '昵称', '真实姓名', '性别', '电话', '用户等级', '用户分组', '用户标签', '用户类型', '用户余额', '最后登录时间', '注册时间'];
+        $header = ['用户ID', '昵称', '真实姓名', '性别', '电话', '用户等级', '用户分组', '用户标签', '用户类型', '用户余额', '最后登录时间', '注册时间', '是否注销'];
         $filename = '用户列表_' . date('YmdHis', time());
         $export = $fileKey = [];
         if (!empty($data)) {
@@ -51,7 +54,8 @@ class ExportServices extends BaseServices
                     'user_type' => $item['user_type'],
                     'now_money' => $item['now_money'],
                     'last_time' => date('Y-m-d H:i:s', $item['last_time']),
-                    'add_time' => date('Y-m-d H:i:s', $item['add_time'])
+                    'add_time' => date('Y-m-d H:i:s', $item['add_time']),
+                    'is_del' => $item['is_del'] ? '已注销' : '正常'
                 ];
                 $export[] = $one_data;
                 if ($i == 0) {
@@ -73,7 +77,7 @@ class ExportServices extends BaseServices
      */
     public function exportOrderList($where)
     {
-        $header = ['订单号', '收货人姓名', '收货人电话', '收货地址', '商品信息', '总价格', '实际支付', '支付状态', '支付时间', '订单状态', '下单时间', '用户备注'];
+        $header = ['订单号', '收货人姓名', '收货人电话', '收货地址', '商品名称', '规格', '数量', '价格', '总价格', '实际支付', '支付状态', '支付时间', '订单状态', '下单时间', '用户备注', '商家备注', '表单信息'];
         $filename = '订单列表_' . date('YmdHis', time());
         $export = $fileKey = [];
         /** @var StoreOrderServices $orderServices */
@@ -126,6 +130,101 @@ class ExportServices extends BaseServices
                 } else if ($item['paid'] == 1 && $item['refund_status'] == 2) {
                     $item['status_name'] = '已退款';
                 }
+                $custom_form = '';
+                foreach ($item['custom_form'] as $custom_form_value) {
+                    if (is_string($custom_form_value['value'])) {
+                        $custom_form .= $custom_form_value['title'] . '：' . $custom_form_value['value'] . '；';
+                    } elseif (is_array($custom_form_value['value'])) {
+                        $custom_form .= $custom_form_value['title'] . '：' . implode(',', $custom_form_value['value']) . '；';
+                    }
+                }
+
+//                $goodsName = [];
+//                foreach ($item['_info'] as $value) {
+//                    $_info = $value['cart_info'];
+//                    $sku = '';
+//                    if (isset($_info['productInfo']['attrInfo'])) {
+//                        if (isset($_info['productInfo']['attrInfo']['suk'])) {
+//                            $sku = '(' . $_info['productInfo']['attrInfo']['suk'] . ')';
+//                        }
+//                    }
+//                    if (isset($_info['productInfo']['store_name'])) {
+//                        $goodsName[] = implode(' ',
+//                            [$_info['productInfo']['store_name'],
+//                                $sku,
+//                                "[{$_info['cart_num']} * {$_info['truePrice']}]"
+//                            ]);
+//                    }
+//                }
+//                $one_data = [
+//                    'order_id' => $item['order_id'],
+//                    'real_name' => $item['real_name'],
+//                    'user_phone' => $item['user_phone'],
+//                    'user_address' => $item['user_address'],
+//                    'goods_name' => $goodsName ? implode("\n", $goodsName) : '',
+//                    'total_price' => $item['total_price'],
+//                    'pay_price' => $item['pay_price'],
+//                    'pay_type_name' => $item['pay_type_name'],
+//                    'pay_time' => $item['pay_time'] > 0 ? date('Y-m-d H:i', (int)$item['pay_time']) : '暂无',
+//                    'status_name' => $item['status_name'] ?? '未知状态',
+//                    'add_time' => $item['add_time'],
+//                    'mark' => $item['mark'],
+//                    'remark' => $item['remark'],
+//                    'custom_form' => $custom_form,
+//                ];
+                $goodsInfo = [];
+                foreach ($item['_info'] as $value) {
+                    $goodsInfo[] = [
+                        $value['cart_info']['productInfo']['store_name'],
+                        $value['cart_info']['productInfo']['attrInfo']['suk'],
+                        $value['cart_info']['cart_num'],
+                        $value['cart_info']['truePrice'],
+                    ];
+                }
+                $one_data = [
+                    $item['order_id'],
+                    $item['real_name'],
+                    $item['user_phone'],
+                    $item['user_address'],
+                    $goodsInfo,
+                    $item['total_price'],
+                    $item['pay_price'],
+                    $item['pay_type_name'],
+                    $item['pay_time'] > 0 ? date('Y-m-d H:i', (int)$item['pay_time']) : '暂无',
+                    $item['status_name'] ?? '未知状态',
+                    $item['add_time'],
+                    $item['mark'],
+                    $item['remark'],
+                    $custom_form,
+                ];
+                $export[] = $one_data;
+                if ($i == 0) {
+                    $fileKey = array_keys($one_data);
+                }
+                $i++;
+            }
+        }
+        return compact('header', 'fileKey', 'export', 'filename');
+    }
+
+    /**
+     * 订单导出
+     * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     */
+    public function exportOrderDeliveryList()
+    {
+        $header = ['订单ID', '订单号', '快递名称', '快递编码', '快递单号', '收货人姓名', '收货人电话', '收货地址', '商品信息', '实际支付', '用户备注'];
+        $filename = '发货单_' . date('YmdHis', time());
+        $export = $fileKey = [];
+        /** @var StoreOrderServices $orderServices */
+        $orderServices = app()->make(StoreOrderServices::class);
+        $data = $orderServices->getOrderList(['status' => 1, 'shipping_type' => 1, 'virtual_type' => 0])['data'];
+        if (!empty($data)) {
+            $i = 0;
+            foreach ($data as $item) {
                 $goodsName = [];
                 foreach ($item['_info'] as $value) {
                     $_info = $value['cart_info'];
@@ -144,17 +243,16 @@ class ExportServices extends BaseServices
                     }
                 }
                 $one_data = [
+                    'id' => $item['id'],
                     'order_id' => $item['order_id'],
+                    'delivery_name' => '',
+                    'delivery_code' => '',
+                    'delivery_id' => '',
                     'real_name' => $item['real_name'],
                     'user_phone' => $item['user_phone'],
                     'user_address' => $item['user_address'],
                     'goods_name' => $goodsName ? implode("\n", $goodsName) : '',
-                    'total_price' => $item['total_price'],
                     'pay_price' => $item['pay_price'],
-                    'pay_type_name' => $item['pay_type_name'],
-                    'pay_time' => $item['pay_time'] > 0 ? date('Y-m-d H:i', (int)$item['pay_time']) : '暂无',
-                    'status_name' => $item['status_name'] ?? '未知状态',
-                    'add_time' => $item['add_time'],
                     'mark' => $item['mark'],
                 ];
                 $export[] = $one_data;
@@ -174,29 +272,91 @@ class ExportServices extends BaseServices
      */
     public function exportProductList($where)
     {
-        $header = ['商品名称', '商品类型', '商品分类', '售价', '销量', '库存', '添加时间'];
-        $filename = '商品列表_' . date('YmdHis', time());
-        $export = $fileKey = [];
         /** @var StoreProductServices $productServices */
         $productServices = app()->make(StoreProductServices::class);
-        $data = $productServices->getList($where)['list'];
-        if (!empty($data)) {
+        [$page, $limit] = $this->getPageValue();
+        $cateIds = [];
+        if (isset($where['cate_id']) && $where['cate_id']) {
+            /** @var StoreCategoryServices $storeCategory */
+            $storeCategory = app()->make(StoreCategoryServices::class);
+            $cateIds = $storeCategory->getColumn(['pid' => $where['cate_id']], 'id');
+        }
+        if ($cateIds) {
+            $cateIds[] = $where['cate_id'];
+            $where['cate_id'] = $cateIds;
+        }
+        $productList = $productServices->dao->getList($where, $page, $limit);
+        $header = [
+            '商品编号',
+            '商品名称', '商品类型', '商品分类(一级)', '商品分类(二级)', '商品单位',
+            '已售数量', '起购数量',
+            '规格类型', '规格名称', '售价', '划线价', '成本价', '库存', '重量', '体积', '商品编码', '条形码',
+            '商品简介', '商品关键字', '商品口令',
+            '购买送积分'
+        ];
+        $filename = '商品导出_' . date('YmdHis', time());
+        $virtualType = ['普通商品', '卡密/网盘', '优惠券', '虚拟商品'];
+        $export = $fileKey = [];
+        if (!empty($productList)) {
+            $productList = array_column($productList, null, 'id');
+            $productIds = array_column($productList, 'id');
+            $descriptionArr = app()->make(StoreDescriptionServices::class)->getColumn([['product_id', 'in', $productIds], ['type', '=', 0]], 'description', 'product_id');
+            $cateIds = implode(',', array_column($productList, 'cate_id'));
+            /** @var StoreCategoryServices $categoryService */
+            $categoryService = app()->make(StoreCategoryServices::class);
+            $cateList = $categoryService->getCateParentAndChildName($cateIds);
+            $attrResultArr = app()->make(StoreProductAttrResultServices::class)->getColumn([['product_id', 'in', $productIds], ['type', '=', 0]], 'result', 'product_id');
             $i = 0;
-            foreach ($data as $item) {
-                $one_data = [
-                    'store_name' => $item['store_name'],
-                    'product_type' => $item['product_type'],
-                    'cate_name' => $item['cate_name'],
-                    'price' => $item['price'],
-                    'sales' => $item['sales'],
-                    'stock' => $item['stock'],
-                    'add_time' => date('Y-m-d H:i:s', $item['add_time'])
-                ];
-                $export[] = $one_data;
-                if ($i == 0) {
-                    $fileKey = array_keys($one_data);
+            foreach ($attrResultArr as $product_id => &$attrResult) {
+                $attrResult = json_decode($attrResult, true);
+                foreach ($attrResult['value'] as &$value) {
+                    $productInfo = $productList[$product_id];
+                    $cateName = array_filter($cateList, function ($val) use ($productInfo) {
+                        if (in_array($val['id'], explode(',', $productInfo['cate_id']))) {
+                            return $val;
+                        }
+                    });
+                    $skuArr = array_combine(array_column($attrResult['attr'], 'value'), $value['detail']);
+                    $attrArr = [];
+                    foreach ($attrResult['attr'] as $attrArray) {
+                        // 将每个子数组的 'value' 和 'detail' 组合成字符串
+                        if (isset($attrArray['detail'][0]['value'])) {
+                            $attrArray['detail'] = array_column($attrArray['detail'], 'value');
+                        }
+                        $detailString = implode(',', $attrArray['detail']); // 将 detail 数组转换为逗号分隔的字符串
+                        $attrArr[] = $attrArray['value'] . '=' . $detailString;
+                    }
+                    $attrString = implode(';', $attrArr);
+                    $one_data = [
+                        'id' => intval($product_id),
+                        'store_name' => $productInfo['store_name'],
+                        'virtual_type' => $virtualType[$productInfo['virtual_type']],
+                        'cate_name_one' => reset($cateName)['one'] ?? '',
+                        'cate_name_two' => reset($cateName)['two'] ?? '',
+                        'unit_name' => $productInfo['unit_name'],
+                        'ficti' => intval($productInfo['ficti']),
+                        'min_qty' => intval($productInfo['min_qty']),
+                        'spec_type' => intval($productInfo['spec_type']) == 1 ? '多规格' : '单规格',
+                        'sku_name' => implode(',', $value['detail']),
+                        'price' => floatval($value['price']),
+                        'ot_price' => floatval($value['ot_price']),
+                        'cost' => floatval($value['cost']),
+                        'stock' => intval($value['stock']),
+                        'volume' => intval($value['volume'] ?? 0),
+                        'weight' => intval($value['weight'] ?? 0),
+                        'bar_code' => $value['bar_code'] ?? '',
+                        'bar_code_number' => $value['bar_code_number'] ?? '',
+                        'store_info' => $productInfo['store_info'],
+                        'keyword' => $productInfo['keyword'],
+                        'command_word' => $productInfo['command_word'],
+                        'give_integral' => $productInfo['give_integral'],
+                    ];
+                    $export[] = $one_data;
+                    if ($i == 0) {
+                        $fileKey = array_keys($one_data);
+                    }
+                    $i++;
                 }
-                $i++;
             }
         }
         return compact('header', 'fileKey', 'export', 'filename');
@@ -229,7 +389,7 @@ class ExportServices extends BaseServices
                     'count_people_success' => $item['count_people_success'],
                     'quota' => $item['quota'],
                     'start_name' => $item['start_name'],
-                    'activity_time' => date('Y-m-d H:i:s', $item['start_time']) . '至' . date('Y-m-d H:i:s', $item['stop_time']),
+                    'activity_time' => $item['start_time'] . '至' . $item['stop_time'],
                     'add_time' => $item['add_time']
                 ];
                 $export[] = $one_data;
@@ -267,7 +427,7 @@ class ExportServices extends BaseServices
                     'count_people_pink' => $item['count_people_pink'],
                     'quota' => $item['quota'],
                     'start_name' => $item['start_name'],
-                    'activity_time' => date('Y-m-d H:i:s', $item['start_time']) . '至' . date('Y-m-d H:i:s', $item['stop_time']),
+                    'activity_time' => $item['start_time'] . '至' . $item['stop_time'],
                     'add_time' => $item['add_time']
                 ];
                 $export[] = $one_data;
@@ -305,7 +465,7 @@ class ExportServices extends BaseServices
                     'ot_price' => $item['ot_price'],
                     'quota' => $item['quota'],
                     'start_name' => $item['start_name'],
-                    'activity_time' => date('Y-m-d H:i:s', $item['start_time']) . '至' . date('Y-m-d H:i:s', $item['stop_time']),
+                    'activity_time' => $item['start_time'] . '至' . $item['stop_time'],
                     'add_time' => $item['add_time']
                 ];
                 $export[] = $one_data;
@@ -335,13 +495,19 @@ class ExportServices extends BaseServices
         $filename = $data['title'] . '批次列表_' . date('YmdHis', time());
         $export = $fileKey = [];
         if (!empty($data['data'])) {
+            $userIds = array_column($data['data']->toArray(), 'use_uid');
+            /** @var  UserServices $userService */
+            $userService = app()->make(UserServices::class);
+            $userList = $userService->getColumn([['uid', 'in', $userIds]], 'nickname,phone,real_name', 'uid');
+
+
             $i = 0;
             foreach ($data['data'] as $item) {
                 $one_data = [
                     'card_number' => $item['card_number'],
                     'card_password' => $item['card_password'],
-                    'user_name' => $item['user_name'],
-                    'user_phone' => $item['user_phone'],
+                    'user_name' => $userList[$item['use_uid']]['real_name'] ?? $userList[$item['use_uid']]['nickname'] ?? '',
+                    'user_phone' => $userList[$item['use_uid']]['phone'] ?? "",
                     'use_time' => $item['use_time'],
                     'use_uid' => $item['use_uid'] ? '已领取' : '未领取'
                 ];
@@ -481,33 +647,22 @@ class ExportServices extends BaseServices
         $export = [];
         if (!empty($data)) {
             foreach ($data as $item) {
-                switch ($item['recharge_type']) {
-                    case 'routine':
-                        $item['_recharge_type'] = '小程序充值';
-                        break;
-                    case 'weixin':
-                        $item['_recharge_type'] = '公众号充值';
-                        break;
-                    default:
-                        $item['_recharge_type'] = '其他充值';
-                        break;
-                }
                 $item['_pay_time'] = $item['pay_time'] ? date('Y-m-d H:i:s', $item['pay_time']) : '暂无';
                 $item['_add_time'] = $item['add_time'] ? date('Y-m-d H:i:s', $item['add_time']) : '暂无';
                 $item['paid_type'] = $item['paid'] ? '已支付' : '未支付';
 
                 $export[] = [
                     $item['nickname'],
+                    $item['order_id'],
                     $item['price'],
                     $item['paid_type'],
                     $item['_recharge_type'],
                     $item['_pay_time'],
-                    $item['paid'] == 1 && $item['refund_price'] == $item['price'] ? '已退款' : '未退款',
-                    $item['_add_time']
+                    $item['paid'] == 1 && $item['refund_price'] == $item['price'] ? '已退款' : '未退款'
                 ];
             }
         }
-        $header = ['昵称/姓名', '充值金额', '是否支付', '充值类型', '支付时间', '是否退款', '添加时间'];
+        $header = ['昵称/姓名', '订单号', '充值金额', '是否支付', '充值类型', '支付时间', '是否退款'];
         $title = ['充值记录', '充值记录' . time(), ' 生成时间：' . date('Y-m-d H:i:s', time())];
         $filename = '充值记录_' . date('YmdHis', time());
         $suffix = 'xlsx';
@@ -529,8 +684,8 @@ class ExportServices extends BaseServices
                     $item['nickname'],
                     $item['phone'],
                     $item['spread_count'],
-                    $item['order_count'],
-                    $item['order_price'],
+                    $item['spread_order']['order_count'],
+                    $item['spread_order']['order_price'],
                     $item['brokerage_money'],
                     $item['extract_count_price'],
                     $item['extract_count_num'],
@@ -539,7 +694,7 @@ class ExportServices extends BaseServices
                 ];
             }
         }
-        $header = ['用户编号', '昵称', '电话号码', '推广用户数量', '订单数量', '推广订单金额', '佣金金额', '已提现金额', '提现次数', '未提现金额', '上级推广人'];
+        $header = ['用户编号', '昵称', '电话号码', '推广用户数量', '推广订单数量', '推广订单金额', '佣金金额', '已提现金额', '提现次数', '未提现金额', '上级推广人'];
         $title = ['推广用户', '推广用户导出' . time(), ' 生成时间：' . date('Y-m-d H:i:s', time())];
         $filename = '推广用户_' . date('YmdHis', time());
         $suffix = 'xlsx';
@@ -847,14 +1002,11 @@ class ExportServices extends BaseServices
                     $value['browse'],
                     $value['new'],
                     $value['paid'],
-                    $value['changes'] . '%',
                     $value['vip'],
-                    $value['recharge'],
-                    $value['payPrice'],
                 ];
             }
         }
-        $header = ['日期/时间', '访客数', '浏览量', '新增用户数', '成交用户数', '访客-支付转化率', '付费会员数', '充值用户数', '客单价'];
+        $header = ['日期/时间', '访客数', '浏览量', '新增用户数', '成交用户数', '付费会员数'];
         $title = ['用户统计', '用户统计' . time(), ' 生成时间：' . date('Y-m-d H:i:s', time())];
         $filename = '用户统计_' . date('YmdHis', time());
         $suffix = 'xlsx';

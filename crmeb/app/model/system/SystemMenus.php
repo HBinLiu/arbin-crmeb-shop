@@ -198,7 +198,7 @@ class SystemMenus extends BaseModel
      */
     public function searchRouteAttr($query, $value)
     {
-        $query->where('auth_type', 1)->where('is_show', 1)->where('is_del', 0);
+        $query->where('auth_type', 1)->where('is_del', 0);
         if ($value) {
             $query->whereIn('id', $value);
         }
@@ -231,6 +231,28 @@ class SystemMenus extends BaseModel
      */
     public function searchAuthTypeAttr($query, $value)
     {
-        $query->where('auth_type', $value);
+        if ($value !== '') {
+            if ($value == 3) {
+                $query->whereIn('auth_type', [1, 3]);
+            } else {
+                $query->where('auth_type', $value);
+            }
+        }
+    }
+
+    /**
+     * 模块检测
+     * @param Model $query
+     * @param $value
+     */
+    public function searchNoModelAttr($query, $value)
+    {
+        $query->when(!in_array('seckill', $value), function ($q1) {
+            $q1->whereNotLike('menu_name', '%秒杀%');
+        })->when(!in_array('bargain', $value), function ($q2) {
+            $q2->whereNotLike('menu_name', '%砍价%');
+        })->when(!in_array('combination', $value), function ($q3) {
+            $q3->whereNotLike('menu_name', '%拼团%');
+        });
     }
 }

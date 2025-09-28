@@ -1,6 +1,6 @@
 <template>
   <div ref="code_box" class="text">
-    <Input v-model="content" type="textarea" placeholder="" @on-change="changeContent" />
+    <el-input v-model="content" type="textarea" placeholder="" @change="changeContent" />
   </div>
 </template>
 
@@ -52,8 +52,10 @@ export default {
     },
   },
   beforeDestroy() {
-    this.monacoInstance.dispose();
-    this.monacoInstance = null;
+    if (this.monacoInstance) {
+      this.monacoInstance.dispose();
+      this.monacoInstance = null;
+    }
   },
 };
 </script>
@@ -63,10 +65,10 @@ export default {
   width: 100%;
   margin: 0 auto;
 }
-.text /deep/ .ivu-input-wrapper {
+.text ::v-deep .ivu-input-wrapper {
   min-height: 600px;
 }
-.text /deep/ textarea.ivu-input {
+.text ::v-deeptextarea.ivu-input {
   min-height: 600px;
 }
 .text {

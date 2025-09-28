@@ -9,7 +9,6 @@ use app\services\activity\integral\StoreIntegralOrderServices;
 use app\services\activity\integral\StoreIntegralServices;
 use app\services\product\sku\StoreProductAttrValueServices;
 use app\services\shipping\ExpressServices;
-use crmeb\services\CacheService;
 
 class StoreIntegralOrderController
 {
@@ -65,18 +64,8 @@ class StoreIntegralOrderController
 
         $num = (int)$num;
         //判断积分商品限量
-        $unique = $storeIntegralServices->checkoutProductStock($uid, $productInfo['product_id'], $num, $unique);
-        try {
-            //弹出队列
-            if (!CacheService::popStock($unique, $num, 4)) {
-                return app('json')->fail(410296);
-            }
-            $order = $this->services->createOrder($uid, $addressId, $mark, $request->user()->toArray(), $num, $productInfo);
-        } catch (\Throwable $e) {
-            //生成失败归还库存
-            CacheService::setStock($unique, $num, 4, false);
-            return app('json')->fail($e->getMessage());
-        }
+        $storeIntegralServices->checkoutProductStock($uid, $productInfo['product_id'], $num, $unique);
+        $order = $this->services->createOrder($uid, $addressId, $mark, $request->user()->toArray(), $num, $productInfo);
         return app('json')->status('success', 410203, ['orderId' => $order['order_id']]);
     }
 
@@ -131,6 +120,7 @@ class StoreIntegralOrderController
     /**
      * 订单 查看物流
      * @param Request $request
+     * @param ExpressServices $expressServices
      * @param $uni
      * @return mixed
      */
@@ -138,6 +128,8 @@ class StoreIntegralOrderController
     {
         if (!$uni || !($order = $this->services->getUserOrderDetail($uni, $request->uid()))) return app('json')->fail(410173);
         if ($order['delivery_type'] != 'express' || !$order['delivery_id']) return app('json')->fail(410206);
+        $order['price'] = (int)$order['price'];
+        $order['total_price'] = (int)$order['total_price'];
         $cacheName = 'integral' . $order['order_id'] . $order['delivery_id'];
         return app('json')->success([
             'order' => $order,

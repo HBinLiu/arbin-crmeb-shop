@@ -13,11 +13,7 @@
         <div class="chat-content">
           <div class="chat-body">
             <happy-scroll size="5" resize hide-horizontal :scroll-top="scrollTop" @vertical-start="scrollHandler">
-              <div style="width: 600px; padding: 20px" id="chat_scroll" ref="scrollBox">
-                <Spin v-show="isLoad">
-                  <Icon type="ios-loading" size="18" class="demo-spin-icon-load"></Icon>
-                  <div>Loading</div>
-                </Spin>
+              <div style="width: 600px; padding: 20px" id="chat_scroll" ref="scrollBox" v-loading="isLoad">
                 <div
                   class="chat-item"
                   v-for="(item, index) in records"
@@ -51,21 +47,20 @@
                             <div class="name line1">
                               {{ item.productInfo.store_name }}
                             </div>
-                            <div class="sku">
-                              库存：{{ item.productInfo.stock }} 销量：{{
-                                parseInt(item.productInfo.sales) +
-                                parseInt(item.productInfo.ficti ? item.productInfo.ficti : 0)
-                              }}
-                            </div>
+                            <div class="sku">库存：{{ item.productInfo.stock }} 销量：{{ item.productInfo.sales }}</div>
                             <div class="price-box">
                               <div class="num">¥ {{ item.productInfo.price }}</div>
-                              <a herf="javascript:;" class="more" @click.stop="lookGoods(item)">查看商品 ></a>
+                              <a herf="javascript:;" class="more" v-db-click @click.stop="lookGoods(item)"
+                                >查看商品 ></a
+                              >
                             </div>
                           </div>
                         </div>
                       </template>
                       <!-- 订单 -->
-                      <template v-if="item.msn_type == 6 && (item.orderInfo.length > 0 || item.orderInfo.id)">
+                      <template
+                        v-if="item.msn_type == 6 && item.orderInfo && (item.orderInfo.length > 0 || item.orderInfo.id)"
+                      >
                         <div class="order-wrapper pad16">
                           <div class="img-box">
                             <img :src="item.orderInfo.cartInfo[0].productInfo.image" alt="" />
@@ -77,10 +72,15 @@
                             <div class="sku">商品数量：{{ item.orderInfo.total_num }}</div>
                             <div class="price-box">
                               <div class="num">¥ {{ item.orderInfo.pay_price }}</div>
-                              <a href="javascript:;" class="more" @click.stop="lookOrder(item)">查看订单 ></a>
+                              <a href="javascript:;" class="more" v-db-click @click.stop="lookOrder(item)"
+                                >查看订单 ></a
+                              >
                             </div>
                           </div>
                         </div>
+                      </template>
+                      <template v-if="item.msn_type == 6 && !item.orderInfo">
+                        <div class="txt-wrapper pad16" v-html="item.msn"></div>
                       </template>
                     </div>
                   </div>
@@ -90,56 +90,60 @@
           </div>
           <div class="chat-textarea">
             <div class="chat-btn-wrapper">
-              <div class="left-wrapper">
-                <div class="icon-item" @click.stop="isEmoji = !isEmoji">
+              <div class="left-wrappers">
+                <div class="icon-item" v-db-click @click.stop="isEmoji = !isEmoji">
                   <span class="iconfont iconbiaoqing1"></span>
                 </div>
                 <div class="icon-item">
-                  <Upload
-                    :show-upload-list="false"
+                  <el-upload
+                    :show-file-list="false"
                     :headers="header"
                     :data="uploadData"
                     :on-success="handleSuccess"
-                    :format="['jpg', 'jpeg', 'png', 'gif']"
+                    accept="image/*"
                     :on-format-error="handleFormatError"
                     :action="upload"
+                    :before-upload="beforeUpload"
                   >
                     <span class="iconfont icontupian1"></span>
-                  </Upload>
+                  </el-upload>
                 </div>
-                <div class="icon-item" @click.stop.stop="isMsg = true">
+                <div class="icon-item" v-db-click @click.stop.stop="isMsg = true">
                   <span class="iconfont iconliaotian"></span>
                 </div>
               </div>
               <div class="right-wrapper">
-                <div class="icon-item" @click.stop="isTransfer = !isTransfer">
+                <div class="icon-item" v-db-click @click.stop="isTransfer = !isTransfer">
                   <span class="iconfont iconzhuanjie"></span>
                   <span>转接</span>
                 </div>
                 <div class="transfer-box" v-if="isTransfer">
                   <transfer @close="msgClose" @transferPeople="transferPeople" :userUid="userActive.to_uid"></transfer>
                 </div>
-                <div class="transfer-bg" v-if="isTransfer" @click.stop="isTransfer = false"></div>
+                <div class="transfer-bg" v-if="isTransfer" v-db-click @click.stop="isTransfer = false"></div>
               </div>
               <!-- 表情 -->
               <div class="emoji-box" v-show="isEmoji">
                 <div class="emoji-item" v-for="(emoji, index) in emojiList" :key="index">
-                  <i class="em" :class="emoji" @click.stop="select(emoji)"></i>
+                  <i class="em" :class="emoji" v-db-click @click.stop="select(emoji)"></i>
                 </div>
               </div>
             </div>
             <div class="textarea-box" style="position: relative">
-              <Input
+              <el-input
+                ref="chatInput"
                 v-paste="handleParse"
                 v-model="chatCon"
                 type="textarea"
-                :rows="4"
-                @on-keydown="listen($event)"
+                :rows="7"
+                @keydown.enter.native="listen($event)"
                 placeholder="请输入文字内容"
-                style="font-size: 14px"
+                style="font-size: 14px; height: 150px"
               />
               <div class="send-btn">
-                <Button class="btns" type="primary" :disabled="disabled" @click.stop="sendText">发送</Button>
+                <el-button class="btns" type="primary" :disabled="disabled" v-db-click @click.stop="sendText"
+                  >发送</el-button
+                >
               </div>
             </div>
           </div>
@@ -154,19 +158,19 @@
         </div>
       </div>
       <!-- 用户标签 -->
-      <Modal v-model="isMsg" :mask="true" class="none-radius isMsgbox" width="600" :footer-hide="true">
+      <el-dialog :visible.sync="isMsg" title="客服话术" class="none-radius isMsgbox" width="720px">
         <msgWindow v-if="isMsg" @close="msgClose" @activeTxt="activeTxt"></msgWindow>
-      </Modal>
+      </el-dialog>
       <!-- 商品弹窗 -->
       <div v-if="isProductBox">
-        <div class="bg" @click.stop="isProductBox = false"></div>
+        <div class="bg" v-db-click @click.stop="isProductBox = false"></div>
         <goodsDetail :goodsId="goodsId"></goodsDetail>
       </div>
       <!-- 订单详情 -->
       <div v-if="isOrder">
-        <Modal v-model="isOrder" title="订单信息" width="700" :footer-hide="true" :mask="true" class="none-radius">
+        <el-dialog :visible.sync="isOrder" title="订单信息" width="720px" class="none-radius">
           <orderDetail :orderId="orderId"></orderDetail>
-        </Modal>
+        </el-dialog>
       </div>
     </div>
   </div>
@@ -191,6 +195,8 @@ import orderDetail from './components/order_detail';
 import { mapState } from 'vuex';
 import { getCookies, removeCookies, setCookies } from '@/libs/util';
 import { serviceInfo } from '@/api/kefu_mobile';
+import { isPicUpload } from '@/utils';
+
 const chunk = function (arr, num) {
   num = num * 1 || 1;
   var ret = [];
@@ -347,10 +353,10 @@ export default {
           // mp3.play();
         });
         ws.$on('socket_error', () => {
-          this.$Message.error('连接失败');
+          this.$message.error('连接失败');
         });
         ws.$on('err_tip', (data) => {
-          this.$Message.error(data.msg);
+          this.$message.error(data.msg);
         });
         //用户上线提醒广播
         ws.$on('user_online', (data) => {
@@ -377,8 +383,11 @@ export default {
     // Socket.init(this,'kefu');
   },
   methods: {
+    beforeUpload(file) {
+      return isPicUpload(file);
+    },
     handleFormatError(file) {
-      this.$Message.error('上传图片只能是 jpg、jpg、jpeg、gif 格式!');
+      this.$message.error('上传图片只能是 jpg、jpg、jpeg、gif 格式!');
     },
     bindEnter(e) {},
     //微信截图上传图片时触发
@@ -415,10 +424,10 @@ export default {
     // 上传成功
     handleSuccess(res, file, fileList) {
       if (res.status === 200) {
-        this.$Message.success(res.msg);
+        this.$message.success(res.msg);
         this.sendMsg(res.data.url, 3);
       } else {
-        this.$Message.error(res.msg);
+        this.$message.error(res.msg);
       }
     },
     //订单详情
@@ -438,15 +447,15 @@ export default {
       this.online = data;
     },
     // 阻止浏览器默认换行操作
-    listen(e) {
-      if (e.shiftKey && e.keyCode == 13) {
-        console.log('换行');
-      } else if (e.keyCode == 13) {
-        if (e.target.value == '') {
-          return this.$Message.error('请输入消息');
+    listen(event) {
+      if (!event.shiftKey && event.keyCode == 13) {
+        if (event.target.value == '') {
+          return this.$message.error('请输入消息');
         }
-        this.sendMsg(e.target.value, 1);
+        console.log(event.target.value);
+        this.sendMsg(event.target.value, 1);
         this.chatCon = '';
+        this.$nextTick(() => this.$refs.chatInput.focus());
       }
     },
     // 输入框选择表情
@@ -457,7 +466,7 @@ export default {
     },
     // 聊天表情转换
     replace_em(str) {
-      str = str.replace(/\[em-([\s\S]*)\]/g, "<span class='em em-$1'/></span>");
+      str = str.replace(/\[([^\[\]]+)\]/g, "<span class='em $1'/></span>");
       return str;
     },
     // 获取是否游客
@@ -501,6 +510,7 @@ export default {
     sendText() {
       this.sendMsg(this.chatCon, 1);
       this.chatCon = '';
+      this.$nextTick(() => this.$refs.chatInput.focus());
     },
 
     // 统一发送处理
@@ -612,7 +622,7 @@ export default {
     transferPeople(data) {
       this.transferId = data.id;
       this.isTransfer = false;
-      this.$Message.success('转接成功');
+      this.$message.success('转接成功');
       Socket.then((ws) => {
         ws.send({
           type: 'to_chat',
@@ -626,14 +636,12 @@ export default {
 };
 </script>
 
-<style lang="stylus" scoped>
+<style lang="scss" scoped>
 @import '../../../styles/emoji-awesome/css/google.min.css';
-
-textarea.ivu-input {
+::v-deeptextarea.ivu-input {
   border: none;
   resize: none;
 }
-
 .kefu-layouts {
   padding-top: 30px;
   height: 100%;
@@ -641,41 +649,33 @@ textarea.ivu-input {
   background: #ccc;
   overflow: scroll;
 }
-
 .content-wrapper {
   display: flex;
   flex-direction: column;
   width: 1200px;
-  height: 808px;
+  height: 810px;
   margin: 0 auto;
   background: #fff;
-
   .container {
     flex: 1;
     display: flex;
-
     .chat-content {
       width: 600px;
       height: 100%;
-      border-right: 1px solid #ECECEC;
-
+      border-right: 1px solid #ececec;
       .chat-body {
         height: 530px;
-
         .chat-item {
           margin-bottom: 10px;
-
           .time {
             text-align: center;
             color: #999999;
             font-size: 14px;
             margin: 18px 0;
           }
-
           .flex-box {
             display: flex;
           }
-
           .avatar {
             width: 40px;
             height: 40px;
@@ -688,34 +688,28 @@ textarea.ivu-input {
               border-radius: 50%;
             }
           }
-
           .msg-wrapper {
             max-width: 320px;
-            background: #F5F5F5;
+            background: #f5f5f5;
             border-radius: 10px;
             color: #000000;
             font-size: 14px;
             overflow: hidden;
-
             .txt-wrapper {
               word-break: break-all;
               white-space: pre-wrap;
             }
-
             .pad16 {
               padding: 9px;
             }
-
             .img-wraper img {
               max-width: 100%;
               height: auto;
               display: block;
             }
-
             .order-wrapper {
               display: flex;
               width: 320px;
-
               .img-box {
                 width: 60px;
                 height: 60px;
@@ -726,7 +720,6 @@ textarea.ivu-input {
                   border-radius: 5px;
                 }
               }
-
               .order-info {
                 display: flex;
                 flex-direction: column;
@@ -734,24 +727,20 @@ textarea.ivu-input {
                 width: 224px;
                 margin-left: 10px;
                 font-size: 12px;
-
                 .price-box {
                   display: flex;
                   align-items: center;
                   justify-content: space-between;
                   font-size: 14px;
-                  color: #FF0000;
-
+                  color: #ff0000;
                   .more {
                     font-size: 12px;
-                    color: #1890FF;
+                    color: var(--prev-color-primary);
                   }
                 }
-
                 .name {
                   font-size: 14px;
                 }
-
                 .sku {
                   margin: 1px 0;
                   color: #999999;
@@ -759,60 +748,49 @@ textarea.ivu-input {
               }
             }
           }
-
           &.right-box {
             .flex-box {
               flex-direction: row-reverse;
-
               .avatar {
                 margin-right: 0;
                 margin-left: 16px;
               }
-
               .msg-wrapper {
-                background: #CDE0FF;
+                background: #cde0ff;
               }
             }
-
             &.gary .msg-wrapper {
               background: #f5f5f5;
             }
           }
         }
       }
-
       .chat-textarea {
         height: 214px;
-        border-top: 1px solid #ECECEC;
-
+        border-top: 1px solid #ececec;
         .chat-btn-wrapper {
           position: relative;
           display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 15px 0;
-
-          .left-wrapper {
+          .left-wrappers {
             display: flex;
             align-items: center;
-
             .icon-item {
               display: flex;
               align-items: center;
               margin-left: 20px;
               cursor: pointer;
-
               .iconfont {
                 font-size: 22px;
                 color: #333333;
               }
             }
           }
-
           .right-wrapper {
             position: relative;
             padding-right: 20px;
-
             .icon-item {
               display: flex;
               align-items: center;
@@ -824,7 +802,6 @@ textarea.ivu-input {
                 margin-left: 10px;
               }
             }
-
             .transfer-box {
               z-index: 60;
               position: absolute;
@@ -835,7 +812,6 @@ textarea.ivu-input {
               box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
               padding: 16px;
             }
-
             .transfer-bg {
               z-index: 50;
               position: fixed;
@@ -846,7 +822,6 @@ textarea.ivu-input {
               background: transparent;
             }
           }
-
           .emoji-box {
             position: absolute;
             left: 0;
@@ -860,12 +835,10 @@ textarea.ivu-input {
             background: #fff;
             overflow: auto;
             height: 240px;
-
             .emoji-item {
               margin-right: 13px;
               margin-bottom: 8px;
               cursor: pointer;
-
               &:nth-child(10n) {
                 margin-right: 0;
               }
@@ -876,7 +849,6 @@ textarea.ivu-input {
     }
   }
 }
-
 .send-btn {
   position: absolute;
   right: 0;
@@ -886,18 +858,15 @@ textarea.ivu-input {
   margin-top: 10px;
   margin-right: 10px;
   width: 80px;
-
   .btns {
     width: 100%;
-    background: #3875EA;
-
+    background: #3875ea;
     &[disabled] {
-      background: #CCCCCC;
+      background: #cccccc;
       color: #fff;
     }
   }
 }
-
 .bg {
   z-index: 100;
   position: fixed;
@@ -907,19 +876,16 @@ textarea.ivu-input {
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
 }
-
-/deep/.happy-scroll-content {
+::v-deep .happy-scroll-content {
   width: 100%;
-
   .demo-spin-icon-load {
     animation: ani-demo-spin 1s linear infinite;
   }
 
-  @keyframes ani-demo-spin {
+  @-webkit-keyframes ani-demo-spin {
     from {
       transform: rotate(0deg);
     }
-
     50% {
       transform: rotate(180deg);
     }
@@ -929,19 +895,76 @@ textarea.ivu-input {
     }
   }
 
+  @-moz-keyframes ani-demo-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(180deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @-ms-keyframes ani-demo-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(180deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @-o-keyframes ani-demo-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(180deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes ani-demo-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(180deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
   .demo-spin-col {
     height: 100px;
     position: relative;
     border: 1px solid #eee;
   }
 }
-
 .isMsgbox {
-  >>> .ivu-modal-body {
+  ::v-deep .ivu-modal-body {
     padding: 0;
   }
 }
 .emoji-box::-webkit-scrollbar {
   width: 0;
+}
+.textarea-box ::v-deep .ivu-input:focus {
+  box-shadow: none;
+}
+.textarea-box ::v-deep .el-textarea__inner {
+  border: none;
+  resize: none;
 }
 </style>

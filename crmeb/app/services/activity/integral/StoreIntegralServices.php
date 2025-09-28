@@ -87,25 +87,18 @@ class StoreIntegralServices extends BaseServices
                 $res = $this->dao->update($id, $data);
                 $storeDescriptionServices->saveDescription((int)$id, $description, 4);
                 $skuList = $storeProductServices->validateProductAttr($items, $detail, (int)$id, 4);
-                $valueGroup = $storeProductAttrServices->saveProductAttr($skuList, (int)$id, 4);
+                $storeProductAttrServices->saveProductAttr($skuList, (int)$id, 4);
                 if (!$res) throw new AdminException(100007);
             } else {
-                if (!$storeProductServices->getOne(['is_show' => 1, 'is_del' => 0, 'id' => $data['product_id']])) {
-                    throw new AdminException(400091);
+                if (!$storeProductServices->getOne(['is_del' => 0, 'id' => $data['product_id']])) {
+                    throw new AdminException('无法添加回收站商品');
                 }
                 $data['add_time'] = time();
                 $res = $this->dao->save($data);
                 $storeDescriptionServices->saveDescription((int)$res->id, $description, 4);
-                $skuList = $storeProductServices->validateProductAttr($items, $detail, (int)$res->id, 4);
-                $valueGroup = $storeProductAttrServices->saveProductAttr($skuList, (int)$res->id, 4);
+                $skuList = $storeProductServices->validateProductAttr($items, $detail, (int)$res->id, 4, 1, true);
+                $storeProductAttrServices->saveProductAttr($skuList, (int)$res->id, 4);
                 if (!$res) throw new AdminException(100022);
-            }
-            $res = true;
-            foreach ($valueGroup->toArray() as $item) {
-                $res = $res && CacheService::setStock($item['unique'], (int)$item['quota_show'], 4);
-            }
-            if (!$res) {
-                throw new AdminException(400092);
             }
         });
     }
@@ -126,7 +119,7 @@ class StoreIntegralServices extends BaseServices
         if (!$data) {
             throw new AdminException(400337);
         }
-        if(!$data['attrs']) throw new AdminException(400337);
+        if (!$data['attrs']) throw new AdminException(400337);
         $attrs = [];
         foreach ($data['attrs'] as $k => $v) {
             $attrs[$v['product_id']][] = $v;
@@ -219,12 +212,13 @@ class StoreIntegralServices extends BaseServices
             $header[] = ['title' => $item['value'], 'key' => 'value' . ($key + 1), 'align' => 'center', 'minWidth' => 80];
         }
         $header[] = ['title' => '图片', 'slot' => 'pic', 'align' => 'center', 'minWidth' => 120];
-        $header[] = ['title' => '兑换积分', 'key' => 'price', 'type' => 1, 'align' => 'center', 'minWidth' => 80];
+        $header[] = ['title' => '兑换积分', 'slot' => 'price', 'type' => 1, 'align' => 'center', 'minWidth' => 80];
         $header[] = ['title' => '库存', 'key' => 'stock', 'align' => 'center', 'minWidth' => 80];
-        $header[] = ['title' => '兑换次数', 'key' => 'quota', 'type' => 1, 'align' => 'center', 'minWidth' => 80];
+        $header[] = ['title' => '兑换次数', 'slot' => 'quota', 'type' => 1, 'align' => 'center', 'minWidth' => 80];
         $header[] = ['title' => '重量(KG)', 'key' => 'weight', 'align' => 'center', 'minWidth' => 80];
         $header[] = ['title' => '体积(m³)', 'key' => 'volume', 'align' => 'center', 'minWidth' => 80];
-        $header[] = ['title' => '商品编号', 'key' => 'bar_code', 'align' => 'center', 'minWidth' => 80];
+        $header[] = ['title' => '商品编码', 'key' => 'bar_code', 'align' => 'center', 'minWidth' => 80];
+        $header[] = ['title' => '条形码', 'key' => 'bar_code_number', 'align' => 'center', 'minWidth' => 80];
         $attrs['header'] = $header;
         return $attrs;
     }
@@ -245,7 +239,7 @@ class StoreIntegralServices extends BaseServices
         $count = 0;
         foreach ($value as $suk) {
             $detail = explode(',', $suk);
-            $sukValue = $storeProductAttrValueServices->getColumn(['product_id' => $id, 'type' => $type, 'suk' => $suk], 'bar_code,cost,price,ot_price,stock,image as pic,weight,volume,brokerage,brokerage_two,quota,quota_show', 'suk');
+            $sukValue = $storeProductAttrValueServices->getColumn(['product_id' => $id, 'type' => $type, 'suk' => $suk], 'bar_code,bar_code_number,cost,price,ot_price,stock,image as pic,weight,volume,brokerage,brokerage_two,quota,quota_show', 'suk');
             if (count($sukValue)) {
                 foreach ($detail as $k => $v) {
                     $valueNew[$count]['value' . ($k + 1)] = $v;
@@ -256,9 +250,9 @@ class StoreIntegralServices extends BaseServices
                 $valueNew[$count]['cost'] = $sukValue[$suk]['cost'] ? floatval($sukValue[$suk]['cost']) : 0;
                 $valueNew[$count]['ot_price'] = isset($sukValue[$suk]['ot_price']) ? floatval($sukValue[$suk]['ot_price']) : 0;
                 $valueNew[$count]['stock'] = $sukValue[$suk]['stock'] ? intval($sukValue[$suk]['stock']) : 0;
-//                $valueNew[$count]['quota'] = $sukValue[$suk]['quota'] ? intval($sukValue[$suk]['quota']) : 0;
                 $valueNew[$count]['quota'] = isset($sukValue[$suk]['quota_show']) && $sukValue[$suk]['quota_show'] ? intval($sukValue[$suk]['quota_show']) : 0;
                 $valueNew[$count]['bar_code'] = $sukValue[$suk]['bar_code'] ?? '';
+                $valueNew[$count]['bar_code_number'] = $sukValue[$suk]['bar_code_number'] ?? '';
                 $valueNew[$count]['weight'] = $sukValue[$suk]['weight'] ? floatval($sukValue[$suk]['weight']) : 0;
                 $valueNew[$count]['volume'] = $sukValue[$suk]['volume'] ? floatval($sukValue[$suk]['volume']) : 0;
                 $valueNew[$count]['brokerage'] = $sukValue[$suk]['brokerage'] ? floatval($sukValue[$suk]['brokerage']) : 0;
@@ -290,6 +284,7 @@ class StoreIntegralServices extends BaseServices
         $siteUrl = sys_config('site_url');
         $storeInfo['image'] = set_file_url($storeInfo['image'], $siteUrl);
         $storeInfo['image_base'] = set_file_url($storeInfo['image'], $siteUrl);
+        $storeInfo['product_price'] = (int)$storeInfo['product_price'];
         $storeInfo['sale_stock'] = 0;
         if ($storeInfo['stock'] > 0) $storeInfo['sale_stock'] = 1;
         $uid = $request->uid();
@@ -303,6 +298,12 @@ class StoreIntegralServices extends BaseServices
         /** @var StoreProductAttrServices $storeProductAttrServices */
         $storeProductAttrServices = app()->make(StoreProductAttrServices::class);
         list($productAttr, $productValue) = $storeProductAttrServices->getProductAttrDetail($id, $uid, 0, 4, $storeInfo['product_id']);
+        foreach ($productValue as &$item) {
+            $item['cost'] = (int)$item['cost'];
+            $item['ot_price'] = (int)$item['ot_price'];
+            $item['price'] = (int)$item['price'];
+            $item['vip_price'] = (int)$item['vip_price'];
+        }
         $data['productAttr'] = $productAttr;
         $data['productValue'] = $productValue;
         /** @var StoreVisitServices $storeVisit */
@@ -391,9 +392,6 @@ class StoreIntegralServices extends BaseServices
         }
         $product_stock = $attrValueServices->value(['product_id' => $StoreIntegralInfo['product_id'], 'suk' => $res['suk'], 'type' => 0], 'stock');
         if ($product_stock < $num) {
-            throw new ApiException(410297, ['num' => $num]);
-        }
-        if (!CacheService::checkStock($unique, $num, 4)) {
             throw new ApiException(410297, ['num' => $num]);
         }
         return $unique;

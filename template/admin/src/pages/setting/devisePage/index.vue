@@ -1,15 +1,7 @@
 <template>
   <div>
-    <div class="i-layout-page-header header_top">
-      <div class="i-layout-page-header fl_header">
-        <router-link :to="{ path: '/admin/setting/pages/devise' }"
-          ><Button icon="ios-arrow-back" size="small" type="text">返回</Button></router-link
-        >
-        <Divider type="vertical" />
-        <span class="ivu-page-header-title mr20" style="padding: 0">页面设计</span>
-      </div>
-    </div>
-    <Card :bordered="false" dis-hover class="ivu-mt">
+    <pages-header ref="pageHeader" title="页面设计" :backUrl="$routeProStr + '/setting/pages/devise/0'"></pages-header>
+    <el-card :bordered="false" shadow="never" class="ivu-mt mt15">
       <div class="flex-wrapper">
         <!-- :src="iframeUrl" -->
         <iframe class="iframe-box" :src="iframeUrl" frameborder="0" ref="iframe"></iframe>
@@ -20,7 +12,7 @@
         </div>
         <!-- <links v-if="show"></links> -->
       </div>
-    </Card>
+    </el-card>
   </div>
 </template>
 
@@ -53,9 +45,9 @@ export default {
     this.pageId = parseInt(pageId);
     let moveLink = getCookies('moveLink');
     if (Number(this.$route.query.type) === 1) {
-      this.iframeUrl = `${moveLink}/pages/index/index?type=iframeWindow`;
+      this.iframeUrl = `${moveLink}/pages/index/index?mdType=iframeWindow`;
     } else {
-      this.iframeUrl = `${location.origin}/pages/index/index?type=iframeWindow`;
+      this.iframeUrl = `${location.origin}/pages/index/index?mdType=iframeWindow`;
     }
     diyGetInfo(parseInt(pageId)).then((datas) => {
       let data = datas.data.info.value;
@@ -96,15 +88,12 @@ export default {
 };
 </script>
 
-<style scoped lang="stylus">
+<style lang="scss" scoped>
 .content {
-  // width: 500px;
 }
-
 .flex-wrapper {
   display: flex;
 }
-
 .iframe-box {
   min-width: 375px;
   height: 700px;
@@ -112,13 +101,11 @@ export default {
   border-radius: 4px;
   box-shadow: 0 0 7px #cccccc;
 }
-
 .right-box {
   width: 500px;
   margin-left: 50px;
   border: 1px solid #ddd;
   border-radius: 4px;
-
   .title-bar {
     width: 100%;
     height: 38px;

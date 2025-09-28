@@ -22,6 +22,7 @@ use app\services\product\product\StoreProductServices;
 use app\services\system\config\SystemGroupDataServices;
 use app\services\system\config\SystemGroupServices;
 use crmeb\exceptions\AdminException;
+use crmeb\services\CacheService;
 use crmeb\services\FormBuilder as Form;
 use crmeb\services\SystemConfigService;
 use think\facade\Route as Url;
@@ -55,6 +56,7 @@ class DiyServices extends BaseServices
     {
         [$page, $limit] = $this->getPageValue();
         $where['is_del'] = 0;
+        if ($where['type'] == 2) $limit = 1000;
         $list = $this->dao->getDiyList($where, $page, $limit, ['id', 'name', 'type', 'add_time', 'update_time', 'is_diy', 'status']);
         foreach ($list as &$item) {
             $item['type_name'] = $item['type'] == 0 ? '可视化' : '专题页';
@@ -82,10 +84,6 @@ class DiyServices extends BaseServices
             $id = $res->id;
         }
 
-        $this->cacheDriver()->clear();
-        $this->cacheDriver()->set('index_diy_' . $id, $data['version']);
-        $this->updateCacheDiyVersion();
-
         return $id;
     }
 
@@ -101,7 +99,7 @@ class DiyServices extends BaseServices
         $res = $this->dao->update($id, ['is_del' => 1]);
         if (!$res) throw new AdminException(100008);
 
-        $this->cacheDriver()->clear();
+        CacheService::clear();
     }
 
     /**
@@ -113,46 +111,30 @@ class DiyServices extends BaseServices
         $this->dao->update(['is_diy' => 1], ['is_show' => 1, 'type' => 2]);
         $this->dao->update([['id', '<>', $id]], ['status' => 0]);
         $this->dao->update($id, ['status' => 1, 'update_time' => time()]);
-
-        $this->cacheDriver()->clear();
-        $this->updateCacheDiyVersion();
-    }
-
-    /**
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @author 等风来
-     * @email 136327134@qq.com
-     * @date 2023/2/8
-     */
-    public function updateCacheDiyVersion()
-    {
-        $diyInfo = $this->dao->get(['status' => 1, 'is_del' => 0], ['id', 'version']);
-        if (!$diyInfo) {
-            $this->cacheDriver()->delete('index_diy_default');
-        } else {
-            $this->cacheDriver()->set('index_diy_default', $diyInfo['version']);
-        }
     }
 
     /**
      * @param int $id
-     * @return mixed|string|null
-     * @author 等风来
-     * @email 136327134@qq.com
-     * @date 2023/2/8
+     * @return array|mixed|\think\Model|null
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/05/08
      */
     public function getDiyVersion(int $id)
     {
         if ($id) {
-            return $this->cacheDriver()->remember('index_diy_' . $id, function () use ($id) {
-                return $this->dao->value(['id' => $id], 'version');
-            });
+            $where = ['id' => $id];
         } else {
-            return $this->cacheDriver()->remember('index_diy_default', function () {
-                return $this->dao->value(['status' => 1, 'is_del' => 0], 'version');
-            });
+            $where = ['status' => 1, 'is_del' => 0];
+        }
+        $data = $this->dao->getOne($where, 'version,is_diy');
+        if (isset($data['version']) && isset($data['is_diy'])) {
+            return $data;
+        } else {
+            return $this->dao->getOne($where, 'version,is_diy');
         }
     }
 
@@ -168,14 +150,12 @@ class DiyServices extends BaseServices
     {
         $field = 'name,value,is_show,is_bg_color,color_picker,bg_pic,bg_tab_val,is_bg_pic,order_status,is_diy,title';
 
-        $info = $this->cacheDriver()->remember('diy_info_' . $id, function () use ($field, $id) {
-            if ($id) {
-                $info = $this->dao->getOne(['id' => $id], $field);
-            } else {
-                $info = $this->dao->getOne(['status' => 1, 'is_del' => 0], $field);
-            }
-            return $info ? $info->toArray() : [];
-        });
+        if ($id) {
+            $info = $this->dao->getOne(['id' => $id], $field);
+        } else {
+            $info = $this->dao->getOne(['status' => 1, 'is_del' => 0], $field);
+        }
+        $info = $info ? $info->toArray() : [];
 
         if ($info) {
             if ($info['value']) {
@@ -354,9 +334,9 @@ class DiyServices extends BaseServices
         $systemGroupServices = app()->make(SystemGroupServices::class);
         $menus_gid = $systemGroupServices->value(['config_name' => 'routine_my_menus'], 'id');
         $banner_gid = $systemGroupServices->value(['config_name' => 'routine_my_banner'], 'id');
-        $routine_my_menus = $systemGroupDataServices->getGroupDataList(['gid' => $menus_gid]);
+        $routine_my_menus = $systemGroupDataServices->getGroupDataList(['gid' => $menus_gid], 'all');
         $routine_my_menus = $routine_my_menus['list'] ?? [];
-        $routine_my_banner = $systemGroupDataServices->getGroupDataList(['gid' => $banner_gid]);
+        $routine_my_banner = $systemGroupDataServices->getGroupDataList(['gid' => $banner_gid], 'all');
         $routine_my_banner = $routine_my_banner['list'] ?? [];
         $my_banner_status = boolval($info['my_banner_status']);
         return compact('status', 'order_status', 'routine_my_menus', 'routine_my_banner', 'color_change', 'my_banner_status');
@@ -380,6 +360,8 @@ class DiyServices extends BaseServices
             $info->my_banner_status = $data['my_banner_status'];
             $info->value = $data['status'];
             $info->order_status = $data['order_status'];
+            $info->business_status = $data['business_status'];
+            $info->my_menus_status = $data['my_menus_status'];
             $info->update_time = time();
             $res = $info->save();
         } else {
@@ -397,13 +379,10 @@ class DiyServices extends BaseServices
      */
     public function getNavigation(string $template_name)
     {
-        $value = $this->cacheDriver()->remember('navigation', function () {
-            $value = $this->dao->value(['status' => 1], 'value');
-            if (!$value) {
-                $value = $this->dao->value(['template_name' => 'default'], 'value');
-            }
-            return $value;
-        });
+        $value = $this->dao->value(['status' => 1], 'value');
+        if (!$value) {
+            $value = $this->dao->value(['template_name' => 'default'], 'value');
+        }
 
         $navigation = [];
         if ($value) {
@@ -422,6 +401,9 @@ class DiyServices extends BaseServices
      * 取单个diy小程序预览二维码
      * @param int $id
      * @return string
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function getRoutineCode(int $id)
     {
@@ -431,7 +413,6 @@ class DiyServices extends BaseServices
         }
         /** @var QrcodeServices $QrcodeService */
         $QrcodeService = app()->make(QrcodeServices::class);
-        $image = $QrcodeService->getRoutineQrcodePath($id, 0, 6, [], false);
-        return $image;
+        return $QrcodeService->getRoutineQrcodePath($id, 0, 6, [], false);
     }
 }

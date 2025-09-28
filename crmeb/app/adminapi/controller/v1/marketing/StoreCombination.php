@@ -42,7 +42,8 @@ class StoreCombination extends AuthController
         $where = $this->request->getMore([
             ['start_status', ''],
             ['is_show', ''],
-            ['store_name', '']
+            ['store_name', ''],
+            ['product_id', 0]
         ]);
         $where['is_del'] = 0;
         $list = $this->services->systemPage($where);
@@ -86,6 +87,7 @@ class StoreCombination extends AuthController
             [['title', 's'], ''],
             [['info', 's'], ''],
             [['unit_name', 's'], ''],
+            ['image', ''],
             ['images', []],
             ['section_time', []],
             [['is_host', 'd'], 0],
@@ -160,8 +162,14 @@ class StoreCombination extends AuthController
      */
     public function set_status($id, $status)
     {
+        if ($status == 1) {
+            $info = $this->services->get($id);
+            if ($info['stop_time'] < time()) {
+                return app('json')->fail('活动已结束，无法继续上架');
+            }
+        }
         $this->services->update($id, ['is_show' => $status]);
-        return app('json')->success($status == 0 ? 100014 : 100015);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -182,7 +190,11 @@ class StoreCombination extends AuthController
 
     /**
      * 拼团人列表
+     * @param $id
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function order_pink($id)
     {
@@ -207,12 +219,20 @@ class StoreCombination extends AuthController
      * 活动参与人
      * @param $id
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function combinationStatisticsList($id)
     {
+        $where = $this->request->getMore([
+            ['real_name', '', '', 'keyword'],
+            ['status', '']
+        ]);
+        $where['cid'] = $id;
         /** @var StorePinkServices $storePinkServices */
         $storePinkServices = app()->make(StorePinkServices::class);
-        $list = $storePinkServices->systemPage(['cid' => $id]);
+        $list = $storePinkServices->systemPage($where);
         return app('json')->success($list);
     }
 
@@ -228,5 +248,24 @@ class StoreCombination extends AuthController
             ['status', '']
         ]);
         return app('json')->success($this->services->combinationStatisticsOrder($id, $where));
+    }
+
+    /**
+     * 立即成团
+     * @param $id
+     * @return \think\Response
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2025/6/18
+     */
+    public function immediatelyCombination($id)
+    {
+        /** @var StorePinkServices $storePinkServices */
+        $storePinkServices = app()->make(StorePinkServices::class);
+        $storePinkServices->virtualCombination($id, 'admin');
+        return app('json')->success('成团成功');
     }
 }

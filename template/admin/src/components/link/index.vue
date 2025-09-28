@@ -4,6 +4,7 @@
     :target="target"
     class="i-link"
     :class="{ 'i-link-color': !linkColor }"
+    v-db-click
     @click.exact="handleClickItem($event, false)"
     @click.ctrl="handleClickItem($event, true)"
     @click.meta="handleClickItem($event, true)"
@@ -35,7 +36,7 @@ export default {
   },
 };
 </script>
-<style lang="less">
+<style lang="scss">
 .i-link {
   cursor: pointer;
   &-color {

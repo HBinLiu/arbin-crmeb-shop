@@ -27,7 +27,7 @@
 		<!-- #ifdef MP -->
 		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
-		<Verify @success="success" :captchaType="'blockPuzzle'" :imgSize="{ width: '330px', height: '155px' }"
+		<Verify @success="success" :captchaType="captchaType" :imgSize="{ width: '330px', height: '155px' }"
 			ref="verify"></Verify>
 	</view>
 </template>
@@ -52,7 +52,7 @@
 	import authorize from '@/components/Authorize';
 	// #endif
 	import colors from '@/mixins/color.js';
-	import Verify from '../components/verify/verify.vue';
+	import Verify from '../components/verify/index.vue';
 	export default {
 		mixins: [sendVerifyCode, colors],
 		components: {
@@ -136,9 +136,10 @@
 					phone: that.userInfo.phone,
 					type: 'reset',
 					key: that.key,
-					captchaType: 'blockPuzzle',
+					captchaType: this.captchaType,
 					captchaVerification: data.captchaVerification
 				}).then(res => {
+					this.sendCode()
 					that.$util.Tips({
 						title: res.msg
 					});

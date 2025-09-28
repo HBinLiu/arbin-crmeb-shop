@@ -13,8 +13,10 @@ namespace app\services\order;
 
 
 use app\dao\order\StoreOrderDao;
+use app\services\activity\bargain\StoreBargainServices;
 use app\services\activity\combination\StoreCombinationServices;
 use app\services\activity\combination\StorePinkServices;
+use app\services\activity\seckill\StoreSeckillServices;
 use app\services\BaseServices;
 use app\services\user\member\MemberCardServices;
 use app\services\user\UserBillServices;
@@ -43,6 +45,37 @@ class StoreOrderTakeServices extends BaseServices
     }
 
     /**
+     * 小程序订单服务收货
+     * @param $merchant_trade_no
+     * @return bool
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     *
+     * @date 2023/05/18
+     * @author yyw
+     */
+    public function miniOrderTakeOrder($merchant_trade_no)
+    {
+        //查找订单信息
+        $order = $this->dao->getOne(['order_id' => $merchant_trade_no]);
+        if (!$order) {
+            return true;
+        }
+        if ($order['pid'] == -1) {  // 有子订单
+            // 查找待收货的子订单
+            $son_order_list = $this->dao->getSubOrderNotSendList((int)$order['id']);
+            foreach ($son_order_list as $son_order) {
+                $this->takeOrder($son_order['order_id'], $son_order['uid']);
+            }
+        } else {
+            $this->takeOrder($merchant_trade_no, $order['uid']);
+        }
+
+        return true;
+    }
+
+    /**
      * 用户订单收货
      * @param $uni
      * @param $uid
@@ -53,6 +86,11 @@ class StoreOrderTakeServices extends BaseServices
         $order = $this->dao->getUserOrderDetail($uni, $uid);
         if (!$order) {
             throw new ApiException(410173);
+        }
+        $refundServices = app()->make(StoreOrderRefundServices::class);
+        $orderIsRefund = $refundServices->orderIsRefund((int)$order['id']);
+        if($orderIsRefund){
+            throw new ApiException('订单退款中，不能收货');
         }
         /** @var StoreOrderServices $orderServices */
         $orderServices = app()->make(StoreOrderServices::class);
@@ -65,15 +103,7 @@ class StoreOrderTakeServices extends BaseServices
             throw new ApiException(410266);
         }
         $order->status = 2;
-        /** @var StoreOrderStatusServices $statusService */
-        $statusService = app()->make(StoreOrderStatusServices::class);
-        $res = $order->save() && $statusService->save([
-                'oid' => $order['id'],
-                'change_type' => 'user_take_delivery',
-                'change_message' => '用户已收货',
-                'change_time' => time()
-            ]);
-        $res = $res && $this->storeProductOrderUserTakeDelivery($order);
+        $res = $order->save() && $this->storeProductOrderUserTakeDelivery($order);
         if (!$res) {
             throw new ApiException(410205);
         }
@@ -114,11 +144,35 @@ class StoreOrderTakeServices extends BaseServices
         if ($res) {
             try {
                 // 收货成功后置队列
-                event('order.orderTake', [$order, $userInfo, $storeTitle]);
+                event('OrderTakeListener', [$order, $userInfo, $storeTitle]);
                 //收货给用户发送消息
-                event('notice.notice', [['order' => $order, 'storeTitle' => $storeTitle], 'order_take']);
+                event('NoticeListener', [['order' => $order, 'storeTitle' => $storeTitle], 'order_take']);
                 //收货给客服发送消息
-                event('notice.notice', [['order' => $order, 'storeTitle' => $storeTitle], 'send_admin_confirm_take_over']);
+                event('NoticeListener', [['order' => $order, 'storeTitle' => $storeTitle], 'send_admin_confirm_take_over']);
+                //自定义消息-订单收货
+                $order['storeTitle'] = $storeTitle;
+                $order['time'] = date('Y-m-d H:i:s');
+                $order['phone'] = $order['user_phone'];
+                event('CustomNoticeListener', [$order['uid'], $order, 'order_take']);
+
+                //自定义事件-订单收货/核销
+                event('CustomEventListener', ['order_take', [
+                    'uid' => $order['uid'],
+                    'id' => (int)$order['id'],
+                    'order_id' => $order['order_id'],
+                    'real_name' => $order['real_name'],
+                    'user_phone' => $order['user_phone'],
+                    'user_address' => $order['user_address'],
+                    'total_num' => $order['total_num'],
+                    'pay_price' => $order['pay_price'],
+                    'pay_postage' => $order['pay_postage'],
+                    'deduction_price' => $order['deduction_price'],
+                    'coupon_price' => $order['coupon_price'],
+                    'store_name' => $storeTitle,
+                    'add_time' => date('Y-m-d H:i:s', $order['add_time']),
+                ]]);
+
+
             } catch (\Throwable $exception) {
 
             }
@@ -190,7 +244,29 @@ class StoreOrderTakeServices extends BaseServices
             /** @var StoreOrderServices $orderServices */
             $orderServices = app()->make(StoreOrderServices::class);
             $orderServices->update($order['id'], ['gain_integral' => $give_integral], 'id');
-            event('notice.notice', [['order' => $order, 'storeTitle' => $storeTitle, 'give_integral' => $give_integral, 'integral' => $integral], 'integral_accout']);
+            event('NoticeListener', [['order' => $order, 'storeTitle' => $storeTitle, 'give_integral' => $give_integral, 'integral' => $integral], 'integral_accout']);
+
+            //自定义消息-积分到账
+            event('CustomNoticeListener', [$order['uid'], [
+                'uid' => $order['uid'],
+                'phone' => $userInfo['phone'],
+                'storeTitle' => $storeTitle,
+                'give_integral' => $give_integral,
+                'integral' => $integral,
+                'time' => date('Y-m-d H:i:s'),
+            ], 'point_received']);
+
+            //自定义事件-积分到账
+            event('CustomEventListener', ['order_point', [
+                'uid' => $order['uid'],
+                'order_id' => $order['order_id'],
+                'phone' => $userInfo['phone'],
+                'storeTitle' => $storeTitle,
+                'give_integral' => $give_integral,
+                'integral' => $integral,
+                'add_time' => date('Y-m-d H:i:s'),
+            ]]);
+
             return true;
         }
         return true;
@@ -328,10 +404,12 @@ class StoreOrderTakeServices extends BaseServices
             }
         }
         if (isset($orderInfo['seckill_id']) && $orderInfo['seckill_id']) {
-            return true;
+            $seckill_commission = app()->make(StoreSeckillServices::class)->value(['id' => $orderInfo['seckill_id']], 'is_commission');
+            if (!$seckill_commission) return true;
         }
         if (isset($orderInfo['bargain_id']) && $orderInfo['bargain_id']) {
-            return true;
+            $bargain_commission = app()->make(StoreBargainServices::class)->value(['id' => $orderInfo['bargain_id']], 'is_commission');
+            if (!$bargain_commission) return true;
         }
         //绑定失效
         if (isset($orderInfo['spread_uid']) && $orderInfo['spread_uid'] == -1) {
@@ -365,8 +443,7 @@ class StoreOrderTakeServices extends BaseServices
         $res1 = $userServices->bcInc($one_spread_uid, 'brokerage_price', $brokeragePrice, 'uid');
         if ($res1) {
             //冻结时间
-            $broken_time = intval(sys_config('extract_time'));
-            $frozen_time = time() + $broken_time * 86400;
+            $frozen_time = time() + intval(sys_config('extract_time')) * 86400;
             // 添加佣金记录
             /** @var UserBrokerageServices $userBrokerageServices */
             $userBrokerageServices = app()->make(UserBrokerageServices::class);
@@ -436,6 +513,8 @@ class StoreOrderTakeServices extends BaseServices
         // 添加佣金记录
         /** @var UserBrokerageServices $userBrokerageServices */
         $userBrokerageServices = app()->make(UserBrokerageServices::class);
+        //冻结时间
+        $frozenTime = time() + intval(sys_config('extract_time')) * 86400;
         $res1 = $userBrokerageServices->income('get_two_brokerage', $spread_two_uid, [
             'nickname' => $userInfo['nickname'],
             'pay_price' => floatval($orderInfo['pay_price']),
@@ -481,7 +560,30 @@ class StoreOrderTakeServices extends BaseServices
             $goodsPrice = $brokeragePrice;
         }
         //提醒推送
-        event('notice.notice', [['spread_uid' => $spread_uid, 'userType' => $userType, 'brokeragePrice' => $brokeragePrice, 'goodsName' => $goodsName, 'goodsPrice' => $goodsPrice, 'add_time' => $orderInfo['add_time'] ?? time()], 'order_brokerage']);
+        event('NoticeListener', [['spread_uid' => $spread_uid, 'userType' => $userType, 'brokeragePrice' => $brokeragePrice, 'goodsName' => $goodsName, 'goodsPrice' => $goodsPrice, 'add_time' => $orderInfo['add_time'] ?? time()], 'order_brokerage']);
+
+        $spreadPhone = app()->make(UserServices::class)->value($spread_uid, 'phone');
+
+        //自定义消息-佣金到账
+        event('CustomNoticeListener', [$spread_uid, [
+            'uid' => $spread_uid,
+            'phone' => $spreadPhone,
+            'brokeragePrice' => $brokeragePrice,
+            'goodsName' => $goodsName,
+            'goodsPrice' => $goodsPrice,
+            'time' => date('Y-m-d H:i:s')
+        ], 'brokerage_received']);
+
+        //自定义事件-佣金到账
+        event('CustomEventListener', ['order_brokerage', [
+            'uid' => $spread_uid,
+            'order_id' => $orderInfo['order_id'] ?? '',
+            'phone' => $spreadPhone,
+            'brokeragePrice' => $brokeragePrice,
+            'goodsName' => $goodsName,
+            'goodsPrice' => $goodsPrice,
+            'add_time' => date('Y-m-d H:i:s')
+        ]]);
     }
 
 
@@ -518,7 +620,7 @@ class StoreOrderTakeServices extends BaseServices
         }
 
         //用户升级事件
-        event('user.userLevel', [$order['uid']]);
+        event('UserLevelListener', [$order['uid']]);
 
         return $res;
     }
@@ -530,12 +632,12 @@ class StoreOrderTakeServices extends BaseServices
     public function autoTakeOrder()
     {
         //7天前时间戳
-        $systemDeliveryTime = (int)sys_config('system_delivery_time', 0);
+        $systemDeliveryTime = sys_config('system_delivery_time', 0);
         //0为取消自动收货功能
         if ($systemDeliveryTime == 0) {
             return true;
         }
-        $sevenDay = strtotime(date('Y-m-d H:i:s', strtotime('-' . $systemDeliveryTime . ' day')));
+        $sevenDay = bcsub((string)time(), bcmul((string)$systemDeliveryTime, '86400'));
         /** @var StoreOrderStoreOrderStatusServices $service */
         $service = app()->make(StoreOrderStoreOrderStatusServices::class);
         $orderList = $service->getTakeOrderIds([
@@ -572,7 +674,7 @@ class StoreOrderTakeServices extends BaseServices
                     }
                 });
             } catch (\Throwable $e) {
-                Log::error('自动收货失败,失败原因：' . $e->getMessage());
+                Log::error('自动收货失败,失败原因：' . $e->getMessage() . '|' . $e->getFile() . '|' . $e->getLine());
             }
 
         }

@@ -1,18 +1,10 @@
 <template>
   <div>
     <div class="main">
-      <!-- <Tree class="tree" :data="treeData"  @on-contextmenu="handleContextMenu">
-          <template #contextMenu>
-            <DropdownItem @click.native="handleContextCreateFolder()">新建文件夹</DropdownItem>
-            <DropdownItem @click.native="handleContextCreateFile()">新建文件</DropdownItem>
-            <DropdownItem @click.native="handleContextDelFolder()" style="color: #ed4014">删除</DropdownItem>
-          </template>
-        </Tree> -->
-      <!-- <Tree :data="treeData" :render="renderContent" class="demo-tree-render"></Tree> -->
-      <Card :bordered="false" dis-hover class="ivu-mt mr20 card-tree">
+      <el-card :bordered="false" shadow="never" class="ivu-mt mr20 card-tree">
         <div class="tree">
           <div class="main-btn">
-            <Button class="mb10" type="primary" @click="clickMenu(4)" long>新增分类</Button>
+            <el-button class="mb10" type="primary" v-db-click @click="clickMenu(4)" long>新增分类</el-button>
           </div>
 
           <vue-tree-list
@@ -29,45 +21,39 @@
               <div
                 class="tree-node"
                 :class="{ node: slotProps.model.method, open: formValidate.id == slotProps.model.id }"
+                v-db-click
                 @click.stop="onClick(slotProps.model)"
               >
                 <span class="" :class="{ open: formValidate.id == slotProps.model.id }">{{
                   slotProps.model.name
                 }}</span>
-                <Dropdown
-                  transfer
-                  @on-click="
+                <el-dropdown
+                  size="small"
+                  @command="
                     (name) => {
                       clickMenu(name, slotProps.model);
                     }
                   "
                 >
-                  <a href="javascript:void(0)">
-                    <Icon class="add" type="ios-more" />
-                  </a>
-                  <template #list>
-                    <DropdownMenu>
-                      <DropdownItem name="1" v-if="!slotProps.model.method">新增接口</DropdownItem>
-                      <DropdownItem name="2" v-if="!slotProps.model.method">编辑分类名</DropdownItem>
-                      <DropdownItem name="3">删除</DropdownItem>
-                    </DropdownMenu>
+                  <span class="el-dropdown-link">
+                    <i class="el-icon-arrow-down el-icon--right"></i>
+                  </span>
+                  <template slot="dropdown">
+                    <el-dropdown-menu>
+                      <el-dropdown-item command="1" v-if="!slotProps.model.method">新增接口</el-dropdown-item>
+                      <el-dropdown-item command="2" v-if="!slotProps.model.method">编辑分类名</el-dropdown-item>
+                      <el-dropdown-item command="3">删除</el-dropdown-item>
+                    </el-dropdown-menu>
                   </template>
-                </Dropdown>
+                </el-dropdown>
               </div>
             </template>
             <!-- 新建文件夹 -->
-
             <span class="icon" slot="addTreeNodeIcon"></span>
-            <span class="icon" slot="addLeafNodeIcon">
-              <!-- <Icon type="md-create" /> -->
-            </span>
-            <span class="icon" slot="editNodeIcon">
-              <!-- <Icon type="md-create" /> -->
-            </span>
-            <span class="icon" slot="delNodeIcon">
-              <!-- <Icon type="ios-cut" /> -->
-            </span>
-            <template v-slot:treeNodeIcon="slotProps" class="req-method">
+            <span class="icon" slot="addLeafNodeIcon"></span>
+            <span class="icon" slot="editNodeIcon"> </span>
+            <span class="icon" slot="delNodeIcon"></span>
+            <template v-slot:treeNodeIcon="slotProps">
               <span
                 v-if="slotProps.model.method"
                 class="req-method"
@@ -82,36 +68,47 @@
             </template>
           </vue-tree-list>
         </div>
-      </Card>
-      <Card :bordered="false" dis-hover class="ivu-mt right-card">
+      </el-card>
+      <el-card :bordered="false" shadow="never" class="ivu-mt right-card">
         <div class="data">
           <div class="eidt-sub">
             <div class="name">
               {{ formValidate.name }}
             </div>
             <div>
-              <Button v-if="formValidate.id" type="primary" class="submission mr20" @click="isEdit = !isEdit">{{
-                isEdit ? '返回' : '编辑'
-              }}</Button>
-              <Button v-if="isEdit" type="primary" class="submission" @click="handleSubmit('formValidate')"
-                >保存</Button
+              <!-- <el-button type="primary" class="submission mr20" v-db-click @click="debugging()">调试</el-button> -->
+              <el-button
+                v-if="formValidate.id"
+                type="primary"
+                class="submission mr20"
+                v-db-click
+                @click="isEdit = !isEdit"
+                >{{ isEdit ? '返回' : '编辑' }}</el-button
+              >
+              <el-button
+                v-if="isEdit"
+                type="primary"
+                class="submission"
+                v-db-click
+                @click="handleSubmit('formValidate')"
+                >保存</el-button
               >
             </div>
           </div>
-          <Form
+          <el-form
             class="formValidate mt20"
             ref="formValidate"
             :rules="ruleValidate"
             :model="formValidate"
-            :label-width="100"
+            label-width="100px"
             :label-position="labelPosition"
             @submit.native.prevent
           >
-            <Row :gutter="24" type="flex">
-              <Col span="24">
+            <el-row :gutter="24">
+              <el-col :span="24">
                 <div class="title">接口信息</div>
-                <FormItem label="接口名称：" prop="name">
-                  <Input
+                <el-form-item label="接口名称：" prop="name">
+                  <el-input
                     v-if="isEdit"
                     class="perW20"
                     type="text"
@@ -120,19 +117,22 @@
                     placeholder="请输入"
                   />
                   <span v-else>{{ formValidate.name || '' }}</span>
-                </FormItem>
-                <FormItem label="请求类型：" prop="name">
-                  <Select v-if="isEdit" v-model="formValidate.method" style="width: 120px">
-                    <Option v-for="(item, index) in requestTypeList" :key="index" :value="item.value">{{
-                      item.label
-                    }}</Option>
-                  </Select>
+                </el-form-item>
+                <el-form-item label="请求类型：" prop="name">
+                  <el-select v-if="isEdit" v-model="formValidate.method" style="width: 120px">
+                    <el-option
+                      v-for="(item, index) in requestTypeList"
+                      :key="index"
+                      :value="item.value"
+                      :label="item.label"
+                    ></el-option>
+                  </el-select>
                   <span v-else class="req-method" :style="'background-color:' + methodColor">{{
                     formValidate.method || ''
                   }}</span>
-                </FormItem>
-                <FormItem label="功能描述：" prop="name">
-                  <Input
+                </el-form-item>
+                <el-form-item label="功能描述：" prop="name">
+                  <el-input
                     v-if="isEdit"
                     class="perW20"
                     type="textarea"
@@ -141,14 +141,14 @@
                     placeholder="请输入"
                   />
                   <span v-else class="text-area">{{ formValidate.describe || '' }}</span>
-                </FormItem>
-              </Col>
-            </Row>
-            <Row :gutter="24" type="flex">
-              <Col span="24">
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="24">
+              <el-col :span="24">
                 <div class="title">调用方式</div>
-                <FormItem label="调用内容：" prop="url">
-                  <Input
+                <el-form-item label="调用内容：" prop="url">
+                  <el-input
                     v-if="isEdit"
                     class="perW20"
                     type="text"
@@ -157,8 +157,8 @@
                     placeholder="请输入"
                   />
                   <span v-else>{{ formValidate.url || '' }}</span>
-                </FormItem>
-                <FormItem label="请求参数：">
+                </el-form-item>
+                <el-form-item label="请求参数：">
                   <vxe-table
                     resizable
                     show-overflow
@@ -167,7 +167,7 @@
                     row-id="id"
                     :print-config="{}"
                     :export-config="{}"
-                    :loading="loading"
+                    v-loading="loading"
                     :tree-config="{ transform: true, rowField: 'id', parentField: 'parentId' }"
                     :data="formValidate.request_params"
                   >
@@ -219,17 +219,22 @@
                           type="text"
                           v-if="row.type === 'array'"
                           status="primary"
+                          v-db-click
                           @click="insertRow(row, 'xTable')"
                           >插入</vxe-button
                         >
-                        <vxe-button type="text" status="primary" @click="removeRow(row, 'xTable')">删除</vxe-button>
+                        <vxe-button type="text" status="primary" v-db-click @click="removeRow(row, 'xTable')"
+                          >删除</vxe-button
+                        >
                       </template>
                     </vxe-column>
                   </vxe-table>
 
-                  <Button class="mt10" v-if="isEdit" type="primary" @click="insertEvent('xTable')">添加参数</Button>
-                </FormItem>
-                <FormItem label="返回参数：">
+                  <el-button class="mt10" v-if="isEdit" type="primary" v-db-click @click="insertEvent('xTable')"
+                    >添加参数</el-button
+                  >
+                </el-form-item>
+                <el-form-item label="返回参数：">
                   <vxe-table
                     resizable
                     show-overflow
@@ -280,22 +285,27 @@
                           type="text"
                           v-if="row.type === 'array'"
                           status="primary"
+                          v-db-click
                           @click="insertRow(row, 'resTable')"
                           >插入</vxe-button
                         >
-                        <vxe-button type="text" status="primary" @click="removeRow(row, 'resTable')">删除</vxe-button>
+                        <vxe-button type="text" status="primary" v-db-click @click="removeRow(row, 'resTable')"
+                          >删除</vxe-button
+                        >
                       </template>
                     </vxe-column>
                   </vxe-table>
-                  <Button class="mt10" v-if="isEdit" type="primary" @click="insertEvent('resTable')">添加参数</Button>
-                </FormItem>
-              </Col>
-            </Row>
-            <Row :gutter="24" type="flex">
-              <Col span="24">
+                  <el-button class="mt10" v-if="isEdit" type="primary" v-db-click @click="insertEvent('resTable')"
+                    >添加参数</el-button
+                  >
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="24">
+              <el-col :span="24">
                 <div class="title">调用示例</div>
-                <FormItem label="请求数据示例：" prop="request_example">
-                  <Input
+                <el-form-item label="请求数据示例：" prop="request_example">
+                  <el-input
                     v-if="isEdit"
                     class="perW20"
                     type="textarea"
@@ -304,9 +314,9 @@
                     placeholder="请输入"
                   />
                   <span v-else class="text-area">{{ formValidate.request_example || '' }}</span>
-                </FormItem>
-                <FormItem label="返回数据示例：" prop="return_example">
-                  <Input
+                </el-form-item>
+                <el-form-item label="返回数据示例：" prop="return_example">
+                  <el-input
                     v-if="isEdit"
                     class="perW20"
                     type="textarea"
@@ -315,8 +325,8 @@
                     placeholder="请输入"
                   />
                   <span v-else class="text-area">{{ formValidate.return_example || '' }}</span>
-                </FormItem>
-                <FormItem label="错误码：">
+                </el-form-item>
+                <el-form-item label="错误码：">
                   <vxe-table
                     resizable
                     show-overflow
@@ -350,60 +360,80 @@
                     </vxe-column>
                     <vxe-column title="操作" v-if="isEdit">
                       <template #default="{ row }">
-                        <vxe-button type="text" status="primary" @click="removeRow(row, 'codeTable')">删除</vxe-button>
+                        <vxe-button type="text" status="primary" v-db-click @click="removeRow(row, 'codeTable')"
+                          >删除</vxe-button
+                        >
                       </template>
                     </vxe-column>
                   </vxe-table>
-                  <Button class="mt10" v-if="isEdit" type="primary" @click="insertEvent('codeTable')">添加参数</Button>
-                </FormItem>
-              </Col>
-            </Row>
-            <!-- <Row :gutter="24" type="flex">
-              <Col span="24">
-                <FormItem>
-                  <Button type="primary" class="submission" @click="handleSubmit('formValidate')">保存</Button>
-                </FormItem>
-              </Col>
-            </Row> -->
-          </Form>
+                  <el-button class="mt10" v-if="isEdit" type="primary" v-db-click @click="insertEvent('codeTable')"
+                    >添加参数</el-button
+                  >
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <!-- <el-row :gutter="24" >
+              <el-col :span="24">
+                <el-form-item>
+                  <el-button type="primary" class="submission" v-db-click @click="handleSubmit('formValidate')">保存</el-button>
+                </el-form-item>
+              </el-col>
+            </el-row> -->
+          </el-form>
         </div>
         <!-- <div v-else class="nothing">
-          <div class="box" @click="clickMenu(4)">
+          <div class="box" v-db-click @click="clickMenu(4)">
             <div class="icon">
               <Icon type="ios-folder" />
             </div>
             <div class="text">新建文件</div>
           </div>
-          <div class="box" @click="clickMenu(1)">
+          <div class="box" v-db-click @click="clickMenu(1)">
             <div class="icon">
               <Icon type="logo-linkedin" />
             </div>
             <div class="text">新建接口</div>
           </div>
         </div> -->
-      </Card>
+      </el-card>
     </div>
-    <Modal v-model="nameModal" title="分组名称" :loading="loading" @on-ok="asyncOK">
+    <el-dialog :visible.sync="nameModal" width="470px" title="分组名称" @on-ok="asyncOK">
       <label>分组名称：</label>
-      <Input v-model="value" placeholder="请输入分组名称" style="width: 85%" />
-    </Modal>
+      <el-input v-model="value" placeholder="请输入分组名称" style="width: 85%" />
+      <span slot="footer" class="dialog-footer">
+        <el-button v-db-click @click="nameModal = false">取 消</el-button>
+        <el-button type="primary" v-db-click @click="asyncOK">确 定</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog :visible.sync="debuggingModal" :title="formValidate.name" width="1000px">
+      <debugging
+        v-if="debuggingModal"
+        :formValidate="formValidate"
+        :typeList="typeList"
+        :requestTypeList="requestTypeList"
+      />
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import { interfaceList, interfaceDet, interfaceSave, interfaceEditName, interfaceDel } from '@/api/systemOutAccount';
 import { VueTreeList, Tree, TreeNode } from 'vue-tree-list';
+import debugging from './debugging.vue';
 import { mapState } from 'vuex';
+import { storageStatusApi } from '@api/setting';
 export default {
   name: 'systemOutInterface',
   components: {
     VueTreeList,
+    debugging,
   },
   data() {
     return {
       value: '',
       isEdit: false,
       nameModal: false,
+      debuggingModal: false,
       formValidate: {},
       grid: {
         xl: 7,
@@ -494,7 +524,7 @@ export default {
   computed: {
     ...mapState('media', ['isMobile']),
     labelWidth() {
-      return this.isMobile ? undefined : 50;
+      return this.isMobile ? undefined : '50px';
     },
     labelPosition() {
       return this.isMobile ? 'top' : 'right';
@@ -504,9 +534,10 @@ export default {
     this.getInterfaceList('one');
   },
   methods: {
-    onClicksss(e) {
-      console.log(e);
+    debugging() {
+      this.debuggingModal = true;
     },
+    onClicksss(e) {},
     methodsColor(newVal) {
       let method = newVal.toUpperCase();
       if (method == 'GET') {
@@ -519,15 +550,9 @@ export default {
         return '#f93e3e';
       }
     },
-    insertBefore(params) {
-      console.log(params);
-    },
-    insertAfter(params) {
-      console.log(params);
-    },
-    moveInto(params) {
-      console.log(params);
-    },
+    insertBefore(params) {},
+    insertAfter(params) {},
+    moveInto(params) {},
     async addTableData() {
       const { row: data } = await $table.insertAt(newRow, -1);
       await $table.setActiveCell(data, 'name');
@@ -535,7 +560,6 @@ export default {
     getInterfaceList(disk_type) {
       interfaceList()
         .then((res) => {
-          console.log(res);
           res.data[0].expand = false;
           this.treeData = new Tree(res.data);
 
@@ -546,44 +570,40 @@ export default {
           }
         })
         .catch((err) => {
-          this.$Message.error(err);
+          this.$message.error(err);
         });
     },
     onClick(params) {
-      console.log(params);
       if (params.method) {
         this.isEdit = false;
         interfaceDet(params.id)
           .then((res) => {
-            console.log(res);
             this.formValidate = res.data;
-            console.log(this.formValidate);
           })
           .catch((err) => {
-            this.$Message.error(err);
+            this.$message.error(err);
           });
       }
     },
     async handleSubmit() {
       if (!this.formValidate.name) {
-        return this.$Message.warning('请输入接口名称');
+        return this.$message.warning('请输入接口名称');
       } else if (!this.formValidate.method) {
-        return this.$Message.warning('请选择请求类型');
+        return this.$message.warning('请选择请求类型');
       } else if (!this.formValidate.url) {
-        return this.$Message.warning('请输入调用方式');
+        return this.$message.warning('请输入调用方式');
       }
       this.formValidate.request_params = await this.$refs.xTable.getTableData().tableData;
       this.formValidate.return_params = await this.$refs.resTable.getTableData().tableData;
       this.formValidate.error_code = await this.$refs.codeTable.getTableData().tableData;
       await interfaceSave(this.formValidate)
         .then((res) => {
-          console.log(res);
           this.isEdit = false;
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.getInterfaceList();
         })
         .catch((err) => {
-          this.$Message.error(err);
+          this.$message.error(err);
         });
     },
     async insertEvent(type) {
@@ -609,7 +629,6 @@ export default {
           solution: '',
         };
       }
-      console.log();
       // $table.insert(newRow).then(({ row }) => $table.setEditRow(row, -1));
       const { row: data } = await $table.insertAt(newRow, -1);
       await $table.setActiveCell(data, 'name');
@@ -679,7 +698,6 @@ export default {
     },
 
     addFac(params) {
-      console.log('1111');
       this.formValidate = {
         id: params ? params.id : 0,
       };
@@ -693,16 +711,15 @@ export default {
       };
       interfaceSave(data)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.getInterfaceList();
         })
         .catch((err) => {
-          this.$Message.error(err);
+          this.$message.error(err);
         });
     },
     //侧边栏右键点击事件
     handleContextMenu(data, event, position) {
-      console.log('右键');
       position.left = Number(position.left.slice(0, -2)) + 75 + 'px';
       this.contextData = data;
     },
@@ -787,31 +804,31 @@ export default {
     onMouseOver(root, node, data, e, d) {
       console.log(root, node, data);
     },
-    onMouseOver(root, node, data, e, d) {
-      console.log(root, node, data, e, d);
-    },
     //
     onDel(node) {
-      console.log(node.id);
-      this.$Modal.confirm({
-        title: '警告',
-        content: '<p>删除后无法恢复，请确认后删除！</p>',
-        onOk: () => {
+      this.$msgbox({
+        title: '提示',
+        message: '删除后无法恢复，请确认后删除！',
+        showCancelButton: true,
+        cancelButtonText: '取消',
+        confirmButtonText: '确定',
+        iconClass: 'el-icon-warning',
+        confirmButtonClass: 'btn-custom-cancel',
+      })
+        .then(() => {
           interfaceDel(node.id)
             .then((res) => {
-              this.$Message.success(res.msg);
+              this.$message.success(res.msg);
               node.remove();
             })
             .catch((err) => {
-              this.$Message.error(err);
+              this.$message.error(err);
             });
-        },
-        onCancel: () => {},
-      });
+        })
+        .catch(() => {});
     },
 
     onChangeName(params) {
-      console.log(params);
       if (params.eventType == 'blur') {
         let data = {
           name: params.newName,
@@ -819,16 +836,15 @@ export default {
         };
         interfaceEditName(data)
           .then((res) => {
-            this.$Message.success(res.msg);
+            this.$message.success(res.msg);
           })
           .catch((err) => {
-            this.$Message.error(err);
+            this.$message.error(err);
           });
       }
     },
 
     onAddNode(params) {
-      console.log(params);
       // this.$router.push({
       //   path: '/admin/setting/system_out_interface/add',
       //   query: {
@@ -869,42 +885,42 @@ export default {
 };
 </script>
 
-<style lang="stylus" scoped>
+<style lang="scss" scoped>
 .reset {
   margin-left: 10px;
 }
 .card-tree {
-   height: 72px;
-   box-sizing: border-box;
-   overflow-x: scroll; /* 设置溢出滚动 */
-   white-space: nowrap;
-   overflow-y: hidden;
-   /* 隐藏滚动条 */
-   scrollbar-width: none; /* firefox */
-   -ms-overflow-style: none; /* IE 10+ */
+  height: 72px;
+  box-sizing: border-box;
+  overflow-x: scroll; /* 设置溢出滚动 */
+  white-space: nowrap;
+  overflow-y: hidden;
+  /* 隐藏滚动条 */
+  scrollbar-width: none; /* firefox */
+  -ms-overflow-style: none; /* IE 10+ */
 }
 .card-tree::-webkit-scrollbar {
-    display: none; /* Chrome Safari */
+  display: none; /* Chrome Safari */
 }
 .main {
   width: 100%;
   display: flex;
-  .main-btn {}
-  .card-tree{
+  .main-btn {
+  }
+  .card-tree {
     width: 270px;
-    height: calc(100vh - 190px);
+    height: calc(100vh - 115px);
     overflow-y: scroll;
   }
-  >>> .tree {
-    .tree-list{
-      margin-left:10px;
-
+  ::v-deep .tree {
+    .tree-list {
+      margin-left: 10px;
     }
-    .vtl-caret{
+    .vtl-caret {
       padding-right: 2px;
     }
     .req-method {
-      display:block;
+      display: block;
       padding: 0px 2px;
       font-size: 12px;
       margin-right: 5px;
@@ -912,45 +928,38 @@ export default {
 
       text-transform: uppercase;
     }
-
     .tree-node {
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
-      // width:200px;
+
       padding: 3px 7px 3px 0;
     }
-    .node{
-      padding:7px 2px 7px 0px;
+    .node {
+      padding: 7px 2px 7px 0px;
     }
     .open {
-      // background-color: #fff1ef;
       font-weight: 500;
       color: #333;
     }
   }
-
-  >>> .vtl-node-main .vtl-operation {
+  ::v-deep .vtl-node-main .vtl-operation {
     position: absolute;
     right: 20px;
   }
-
-  >>> .vtl-node-content {
+  ::v-deep .vtl-node-content {
     width: 100%;
   }
-
   .pop-menu {
     display: flex;
     justify-content: space-between;
   }
-
-  >>> .vtl-node-content .add {
+  ::v-deep .vtl-node-content .add {
     display: none;
     margin-right: 10px;
   }
-
-  >>> .vtl-node-content:hover .add {
+  ::v-deep .vtl-node-content:hover .add {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -958,88 +967,76 @@ export default {
     width: 20px;
     height: 20px;
   }
-
-  >>> .vtl-node-content:hover .add:hover {
+  ::v-deep .vtl-node-content:hover .add:hover {
     background-color: #fff;
-
     .pop-menu {
       font-size: 16px;
     }
   }
-  >>> .vtl-node-main{
-    padding:0;
+  ::v-deep .vtl-node-main {
+    padding: 0;
   }
-  >>> .line1 {
+  ::v-deep .line1 {
     display: table-caption;
     white-space: nowrap;
     width: 120px;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  >>> .ivu-form-item{
+  ::v-deep .ivu-form-item {
     margin-bottom: 10px;
   }
   .right-card {
     flex: 1;
-    max-height: calc(100vh - 190px);
+    max-height: calc(100vh - 115px);
     overflow-y: scroll;
   }
-
   .data {
     flex: 1;
-
     .req-method {
       text-transform: uppercase;
       border-radius: 4px;
       color: #fff;
       padding: 3px 7px;
     }
-
     .eidt-sub {
       display: flex;
       justify-content: space-between;
-
       .name {
         font-size: 20px;
         font-weight: 500;
       }
     }
-
     .title {
       font-size: 16px;
       font-weight: 500;
       margin-bottom: 15px;
     }
-
     .perW20 {
       width: 500px;
     }
-
     .text-area {
       white-space: pre-wrap;
+      word-break: break-word;
     }
   }
-
-  >>> .ivu-tree-title {
+  ::v-deep .ivu-tree-title {
     width: 100% !important;
   }
-  >>> .vtl-tree-margin{
+  ::v-deep .vtl-tree-margin {
     margin-left: 5px;
   }
-  >>> .ivu-btn-icon-only.ivu-btn-small {
+  ::v-deep .ivu-btn-icon-only.ivu-btn-small {
     width: 28px;
   }
-
   .nothing {
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 800px;
-
     .box:hover {
       border: 1px solid pink;
     }
-
     .box {
       display: flex;
       align-items: center;
@@ -1052,7 +1049,6 @@ export default {
       cursor: pointer;
       overflow: hidden;
       border: 1px solid #fff;
-
       .icon {
         display: flex;
         align-items: center;
@@ -1063,7 +1059,6 @@ export default {
         color: #2d8cf0;
         background: #f1f1f1;
       }
-
       .text {
         width: 100%;
         height: 50px;

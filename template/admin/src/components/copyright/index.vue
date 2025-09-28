@@ -1,17 +1,19 @@
 <template>
-  <div class="ivu-global-footer i-copyright">
-    <div class="ivu-global-footer-links">
+  <div class="ivu-global-footer i-copyright" v-if="isShow">
+    <div class="ivu-global-footer-links" v-if="!copyright">
       <a :href="item.href" target="_blank" v-for="(item, index) in links" :key="index">{{ item.title }}</a>
     </div>
     <div class="ivu-global-footer-copyright" v-if="copyright">{{ copyright }}</div>
     <div class="ivu-global-footer-copyright" v-else>
-      Copyright © 2014-2023
+      Copyright © 2014-2025
       <a href="https://www.crmeb.com" target="_blank">{{ version }}</a>
     </div>
   </div>
 </template>
 <script>
 import { getCrmebCopyRight } from '@/api/system';
+import { Session } from '@/utils/storage.js';
+
 export default {
   name: 'i-copyright',
   data() {
@@ -33,8 +35,9 @@ export default {
           href: 'http://doc.crmeb.com',
         },
       ],
-      copyright: 'Copyright © 2014-2023',
+      copyright: '',
       version: '',
+      isShow: false,
     };
   },
   created() {
@@ -45,13 +48,17 @@ export default {
       this.version = this.$store.state.userInfo.version;
       getCrmebCopyRight().then((res) => {
         this.copyright = res.data.copyrightContext;
+        Session.set('copyright', res.data.copyrightContext);
+        this.isShow = true;
       });
     },
   },
 };
 </script>
-<style lang="less">
+<style lang="scss">
 .ivu-global-footer {
+  /* margin: 48px 0 24px 0; */
+  /* padding: 0 16px; */
   margin: 5px 0px;
   text-align: center;
   box-sizing: border-box;

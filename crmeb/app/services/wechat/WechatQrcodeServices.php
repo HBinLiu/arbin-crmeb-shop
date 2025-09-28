@@ -14,6 +14,7 @@ use app\services\user\UserServices;
 use crmeb\exceptions\AdminException;
 use app\services\other\UploadService;
 use crmeb\services\app\WechatService;
+use think\facade\Config;
 
 /**
  * Class WechatQrcodeServices
@@ -46,9 +47,10 @@ class WechatQrcodeServices extends BaseServices
         $list = $this->dao->getList($where, $page, $limit);
         foreach ($list as &$item) {
             $item['y_follow'] = $item['y_follow'] ?? 0;
-            $item['stop'] = $item['end_time'] ? $item['end_time'] > time() ? 1 : -1 : 0;
+            $item['stop'] = $item['end_time'] ? ($item['end_time'] > time() ? 1 : -1) : 0;
             $item['label_name'] = $userLabel->getColumn([['id', 'in', $item['label_id']]], 'label_name');
             $item['end_time'] = date('Y-m-d H:i:s', $item['end_time']);
+            $item['add_time'] = date('Y-m-d H:i:s', $item['add_time']);
         }
         $count = $this->dao->count($where);
         return compact('list', 'count');
@@ -153,7 +155,7 @@ class WechatQrcodeServices extends BaseServices
             }
             if (!$res) throw new AdminException(400237);
             $imageInfo = $this->downloadImage($resCode['url'], $name);
-            $systemAttachment->attachmentAdd($name, $imageInfo['size'], $imageInfo['type'], $imageInfo['att_dir'], $imageInfo['att_dir'], 1, $imageInfo['image_type'], time(), 2);
+            $systemAttachment->attachmentAdd($name, $imageInfo['size'], $imageInfo['type'], $imageInfo['att_dir'], $imageInfo['att_dir'], 1, $imageInfo['image_type'], time(), 1);
         }
         return strpos($imageInfo['att_dir'], 'http') === false ? $siteUrl . $imageInfo['att_dir'] : $imageInfo['att_dir'];
     }
@@ -171,6 +173,18 @@ class WechatQrcodeServices extends BaseServices
     public function downloadImage($url = '', $name = '', $type = 0, $timeout = 30, $w = 0, $h = 0)
     {
         if (!strlen(trim($url))) return '';
+        if (!strlen(trim($name))) {
+            //TODO 获取要下载的文件名称
+            $downloadImageInfo = $this->getImageExtname($url);
+            $ext = $downloadImageInfo['ext_name'];
+            $name = $downloadImageInfo['file_name'];
+            if (!strlen(trim($name))) return '';
+        } else {
+            $ext = $this->getImageExtname($name)['ext_name'];
+        }
+        if (!in_array($ext, Config::get('upload.fileExt'))) {
+            throw new AdminException(400558);
+        }
         //TODO 获取远程文件所采用的方法
         if ($type) {
             $ch = curl_init();
@@ -211,6 +225,27 @@ class WechatQrcodeServices extends BaseServices
     }
 
     /**
+     * 获取即将要下载的图片扩展名
+     * @param string $url
+     * @param string $ex
+     * @return array|string[]
+     */
+    public function getImageExtname($url = '', $ex = 'jpg')
+    {
+        $_empty = ['file_name' => '', 'ext_name' => $ex];
+        if (!$url) return $_empty;
+        if (strpos($url, '?')) {
+            $_tarr = explode('?', $url);
+            $url = trim($_tarr[0]);
+        }
+        $arr = explode('.', $url);
+        if (!is_array($arr) || count($arr) <= 1) return $_empty;
+        $ext_name = trim($arr[count($arr) - 1]);
+        $ext_name = !$ext_name ? $ex : $ext_name;
+        return ['file_name' => md5($url) . '.' . $ext_name, 'ext_name' => $ext_name];
+    }
+
+    /**
      * 扫码完成后方法
      * @param $qrcodeInfo
      * @param $userInfo
@@ -218,7 +253,7 @@ class WechatQrcodeServices extends BaseServices
      * @param int $isFollow
      * @return mixed
      */
-    public function wechatQrcodeRecord($qrcodeInfo, $userInfo, $spreadInfo, $isFollow = 0)
+    public function wechatQrcodeRecord($qrcodeInfo, $userInfo, $spreadInfo, $isFollow = 1)
     {
         $response = $this->transaction(function () use ($qrcodeInfo, $userInfo, $spreadInfo, $isFollow) {
 

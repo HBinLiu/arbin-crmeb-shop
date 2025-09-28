@@ -8,6 +8,7 @@
           :class="{ on: label.disabled }"
           v-for="(label, j) in item.label"
           :key="j"
+          v-db-click
           @click="selectLabel(label)"
         >
           {{ label.label_name }}
@@ -15,8 +16,8 @@
       </div>
     </div>
     <div class="footer">
-      <Button type="primary" class="btns" @click="subBtn">确定</Button>
-      <Button type="primary" class="btns" ghost @click="cancel">取消</Button>
+      <el-button type="primary" class="btns" v-db-click @click="subBtn">确定</el-button>
+      <el-button type="primary" class="btns" ghost v-db-click @click="cancel">取消</el-button>
     </div>
   </div>
 </template>
@@ -78,11 +79,11 @@ export default {
         un_label_ids: unLaberids,
       })
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.$emit('editLabel');
         })
         .catch((error) => {
-          this.$Message.error(error.msg);
+          this.$message.error(error.msg);
         });
     },
     cancel() {
@@ -92,31 +93,42 @@ export default {
 };
 </script>
 
-<style lang="stylus" scoped>
-.label-wrapper
-    .list
-        display flex
-        flex-wrap wrap
-        .label-item
-            margin 10px 8px 10px 0
-            padding: 3px 8px;
-            background #EEEEEE
-            color #333333
-            border-radius 2px
-            cursor pointer
-            font-size 12px
-            &.on
-                color #fff
-                background #1890FF
-    .footer
-        display flex
-        justify-content flex-end
-        margin-top 40px
-        button
-            margin-left 10px
-.btn
-    width 60px
-    height 24px
-.title
-    font-size 13px
+<style lang="scss" scoped>
+.label-wrapper {
+  .list {
+    display: flex;
+    flex-wrap: wrap;
+    .label-item {
+      margin: 10px 8px 10px 0;
+      padding: 3px 8px;
+      background: #eeeeee;
+      color: #333333;
+      border-radius: 2px;
+      cursor: pointer;
+      font-size: 12px;
+      &.on {
+        color: #fff;
+        background: var(--prev-color-primary);
+      }
+    }
+  }
+  .footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 40px;
+    button {
+      margin-left: 10px;
+    }
+  }
+  .label-box {
+    margin-bottom: 10px;
+  }
+}
+.btn {
+  width: 60px;
+  height: 24px;
+}
+.title {
+  font-size: 13px;
+}
 </style>

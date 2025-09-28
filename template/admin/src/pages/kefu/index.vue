@@ -14,18 +14,22 @@
             <div class="page-account-top">
               <div class="page-account-top-logo">客服登录</div>
             </div>
-            <Form ref="formInline" :model="formInline" :rules="ruleInline" @keyup.enter="handleSubmit('formInline')">
-              <FormItem prop="username">
-                <Input type="text" v-model="formInline.username" placeholder="请输入用户名" size="large" />
-              </FormItem>
-              <FormItem prop="password">
-                <Input type="password" v-model="formInline.password" placeholder="请输入密码" size="large" />
-              </FormItem>
-              <FormItem>
-                <Button type="primary" long size="large" @click="handleSubmit('formInline')" class="btn">登录 </Button>
-              </FormItem>
-            </Form>
-            <div class="qh_box" v-if="!isMobile" @click="bindScan"><span class="iconfont iconerweima2"></span></div>
+            <el-form ref="formInline" :model="formInline" :rules="ruleInline" @keyup.enter="handleSubmit('formInline')">
+              <el-form-item class="mb20" prop="username">
+                <el-input type="text" v-model="formInline.username" placeholder="请输入用户名" size="large" />
+              </el-form-item>
+              <el-form-item class="mb20" prop="password">
+                <el-input type="password" v-model="formInline.password" placeholder="请输入密码" size="large" />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" size="large" v-db-click @click="handleSubmit('formInline')" class="btn"
+                  >登录
+                </el-button>
+              </el-form-item>
+            </el-form>
+            <div class="qh_box" v-if="!isMobile" v-db-click @click="bindScan">
+              <span class="iconfont iconerweima2"></span>
+            </div>
           </div>
           <div :style="{ display: loginType ? 'block' : 'none' }">
             <div class="page-account-top">
@@ -35,24 +39,17 @@
               <div class="qrcode" ref="qrCodeUrl"></div>
               <div class="rxpired-box" v-show="rxpired">
                 <p>已过期</p>
-                <Button type="primary" @click="bindRefresh">点击刷新</Button>
+                <el-button type="primary" v-db-click @click="bindRefresh">点击刷新</el-button>
               </div>
             </div>
-            <div class="qh_box" @click="loginType = 0"><span class="iconfont iconzhanghaomima"></span></div>
+            <div class="qh_box" v-db-click @click="loginType = 0"><span class="iconfont iconzhanghaomima"></span></div>
           </div>
         </div>
       </div>
-      <!--            <Modal v-model="modals" scrollable footer-hide closable title="请完成安全校验" :mask-closable="false" :z-index="2"-->
-      <!--                   width="342">-->
-      <!--                <div class="captchaBox">-->
-      <!--                    <div id="captcha" style="position: relative" ref="captcha"></div>-->
-      <!--                    <div id="msg"></div>-->
-      <!--                </div>-->
-      <!--            </Modal>-->
     </div>
     <div class="foot-box" v-if="copyright">{{ copyright }}</div>
     <div class="foot-box" v-else>
-      Copyright © 2014-2023 <a href="https://www.crmeb.com" target="_blank">{{ version }}</a>
+      Copyright © 2014-2025 <a href="https://www.crmeb.com" target="_blank">{{ version }}</a>
     </div>
   </div>
 </template>
@@ -172,19 +169,14 @@ export default {
     },
     // 关闭模态框
     closeModel() {
-      let msg = this.$Message.loading({
-        content: '登录中...',
-        duration: 0,
-      });
       AccountLogin({
         account: this.formInline.username,
         password: this.formInline.password,
         imgcode: this.formInline.code,
       })
         .then(async (res) => {
-          msg();
           let expires = this.getExpiresTime(res.data.exp_time);
-          // 记录用户登陆信息
+          // 记录用户登录信息
           setCookies('kefu_uuid', res.data.kefuInfo.uid, expires);
           setCookies('kefu_token', res.data.token, expires);
           setCookies('kefu_expires_time', res.data.exp_time, expires);
@@ -202,11 +194,10 @@ export default {
           }
         })
         .catch((res) => {
-          msg();
           let data = res === undefined ? {} : res;
           this.errorNum++;
           this.captchas();
-          this.$Message.error(data.msg || '登录失败');
+          this.$message.error(data.msg || '登录失败');
           if (this.jigsaw) this.jigsaw.reset();
         });
     },
@@ -217,7 +208,7 @@ export default {
     },
     closefail() {
       if (this.jigsaw) this.jigsaw.reset();
-      this.$Message.error('校验错误');
+      this.$message.error('校验错误');
     },
     handleResize(event) {
       this.fullWidth = document.documentElement.clientWidth;
@@ -253,7 +244,7 @@ export default {
           this.timeNum = 0;
           window.clearInterval(this.scanTime);
           this.rxpired = true;
-          this.$Message.error(error.msg);
+          this.$message.error(error.msg);
         });
     },
     // 扫码登录情况
@@ -273,7 +264,7 @@ export default {
           if (res.data.status == 3) {
             window.clearInterval(this.scanTime);
             let expires = this.getExpiresTime(res.data.exp_time);
-            // 记录用户登陆信息
+            // 记录用户登录信息
             setCookies('kefu_uuid', res.data.kefuInfo.uid, expires);
             setCookies('kefu_token', res.data.token, expires);
             setCookies('kefu_expires_time', res.data.exp_time, expires);
@@ -290,10 +281,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.$Modal.error({
-            title: '提示',
-            content: error.msg,
-          });
+          this.$message.error(error.msg);
           this.timeNum = 0;
           window.clearInterval(this.scanTime);
           this.rxpired = true;
@@ -316,7 +304,7 @@ export default {
   },
 };
 </script>
-<style scoped lang="stylus">
+<style lang="scss" scoped>
 .page-account {
   display: flex;
   width: 100%;
@@ -327,19 +315,15 @@ export default {
   align-items: center;
   height: 100vh;
   overflow: auto;
-
   .content {
     height: 400px;
     margin-right: 100px;
-
     .desc {
       color: #fff;
-
       .tit {
         font-size: 40px;
         font-weight: 600;
       }
-
       .kefu {
         margin-top: 30px;
         font-weight: 500;
@@ -353,22 +337,19 @@ export default {
     }
   }
 }
-
 .code-box {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-
   .qrcode {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 180px;
     height: 180px;
-    border: 1px solid #E5E5E6;
+    border: 1px solid #e5e5e6;
   }
-
   .rxpired-box {
     display: flex;
     flex-direction: column;
@@ -389,17 +370,14 @@ export default {
     }
   }
 }
-
 .page-account-top-logo {
   color: #000000;
   font-size: 21px;
 }
-
 .wrapper-box {
   display: flex;
   flex-direction: column;
   height: 100vh;
-
   .foot-box {
     padding: 20px 20px;
     font-size: 14px;
@@ -413,36 +391,31 @@ export default {
     }
   }
 }
-
 .page-account {
   display: flex;
   flex: 1;
 }
-
 .page-account .code {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
 .page-account .code .pictrue {
   height: 40px;
 }
-
 .swiperPross {
   border-radius: 6px 0px 0px 6px;
 }
-
-.swiperPross, .swiperPic, .swiperPic img {
+.swiperPross,
+.swiperPic,
+.swiperPic img {
   width: 510px;
   height: 100%;
 }
-
 .swiperPic img {
   width: 100%;
   height: 100%;
 }
-
 .container {
   height: 400px !important;
   padding: 0 !important;
@@ -451,13 +424,11 @@ export default {
   z-index: 1;
   display: flex;
 }
-
 .containerSamll {
   width: 384px !important;
-  // margin-left: 30%;
+
   background: #fff !important;
 }
-
 .containerBig {
   width: 90%;
   padding-bottom: 20px;
@@ -466,7 +437,6 @@ export default {
   height: auto !important;
   box-shadow: 0px 3px 20px rgba(0, 20, 41, 0.06);
 }
-
 .index_from {
   position: relative;
   padding: 40px 40px 32px 40px;
@@ -474,39 +444,33 @@ export default {
   width: 100%;
   box-sizing: border-box;
 }
-
 .containerBig .index_from {
   padding: 20px;
   height: auto !important;
 }
-
 .index_from .qh_box {
   position: absolute;
   right: 12px;
   top: 0;
   cursor: pointer;
-
   .iconfont {
-    color: #265BED;
+    color: #265bed;
     font-size: 36px;
   }
 }
-
 .page-account-top {
   padding: 20px 0 50px !important;
   box-sizing: border-box !important;
   display: flex;
   justify-content: center;
 }
-
 .page-account-container {
   border-radius: 0px 6px 6px 0px;
 }
-
 .btn {
-  background: #265BED;
+  width: 100%;
+  background: #265bed;
 }
-
 .captchaBox {
   width: 310px;
 }
@@ -530,12 +494,14 @@ input {
   text-align: center;
 }
 
-a:link, a:visited, a:hover, a:active {
+a:link,
+a:visited,
+a:hover,
+a:active {
   margin-left: 100px;
-  color: #0366D6;
+  color: #0366d6;
 }
-
-.index_from >>> .ivu-input-large {
+.index_from ::v-deep .ivu-input-large {
   font-size: 14px !important;
 }
 </style>
@@ -548,7 +514,9 @@ a:link, a:visited, a:hover, a:active {
     background-position: left top !important;
     display: flex;
   }
-
+  .wrapper-box .foot-box {
+    text-align: center !important;
+  }
   .content {
     display: none;
   }

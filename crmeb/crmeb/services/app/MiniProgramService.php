@@ -11,15 +11,21 @@
 
 namespace crmeb\services\app;
 
+use app\services\order\StoreOrderTakeServices;
+use app\services\pay\PayServices;
+use app\services\system\SystemPemServices;
 use crmeb\exceptions\AdminException;
+use crmeb\services\CacheService;
+use crmeb\services\easywechat\orderShipping\MiniOrderService;
 use crmeb\services\SystemConfigService;
 use app\services\pay\PayNotifyServices;
 use crmeb\services\easywechat\Application;
 use EasyWeChat\Payment\Order;
+use think\facade\Env;
+use think\facade\Event;
 use think\facade\Log;
-use think\facade\Route as Url;
 use crmeb\utils\Hook;
-use think\facade\Cache;
+use think\Response;
 
 /**
  * 微信小程序接口
@@ -91,7 +97,7 @@ class MiniProgramService
      */
     public static function options()
     {
-        $wechat = SystemConfigService::more(['wechat_app_appsecret', 'wechat_app_appid', 'site_url', 'routine_appId', 'routine_appsecret']);
+        $wechat = SystemConfigService::more(['wechat_app_appsecret', 'wechat_app_appid', 'site_url', 'routine_appId', 'routine_appsecret', 'routine_token', 'routine_encodingaeskey']);
         $payment = SystemConfigService::more(['pay_weixin_mchid', 'pay_weixin_key', 'pay_weixin_client_cert', 'pay_weixin_client_key', 'pay_weixin_open', 'pay_new_weixin_open', 'pay_new_weixin_mchid']);
         $config = [];
         if (request()->isApp()) {
@@ -101,21 +107,46 @@ class MiniProgramService
             $appId = isset($wechat['routine_appId']) ? trim($wechat['routine_appId']) : '';
             $appsecret = isset($wechat['routine_appsecret']) ? trim($wechat['routine_appsecret']) : '';
         }
+        $config = [
+            'token' => isset($wechat['routine_token']) ? trim($wechat['routine_token']) : '',
+            'aes_key' => isset($wechat['routine_encodingaeskey']) ? trim($wechat['routine_encodingaeskey']) : '',
+        ];
         $config['mini_program'] = [
             'app_id' => $appId,
             'secret' => $appsecret,
-            'token' => isset($wechat['wechat_token']) ? trim($wechat['wechat_token']) : '',
-            'aes_key' => isset($wechat['wechat_encodingaeskey']) ? trim($wechat['wechat_encodingaeskey']) : ''
+            'token' => isset($wechat['routine_token']) ? trim($wechat['routine_token']) : '',
+            'aes_key' => isset($wechat['routine_encodingaeskey']) ? trim($wechat['routine_encodingaeskey']) : ''
         ];
         $config['payment'] = [
             'app_id' => $appId,
             'merchant_id' => empty($payment['pay_new_weixin_open']) ? trim($payment['pay_weixin_mchid']) : trim($payment['pay_new_weixin_mchid']),
             'key' => trim($payment['pay_weixin_key']),
-            'cert_path' => substr(public_path(parse_url($payment['pay_weixin_client_cert'])['path']), 0, strlen(public_path(parse_url($payment['pay_weixin_client_cert'])['path'])) - 1),
-            'key_path' => substr(public_path(parse_url($payment['pay_weixin_client_key'])['path']), 0, strlen(public_path(parse_url($payment['pay_weixin_client_key'])['path'])) - 1),
-            'notify_url' => trim($wechat['site_url']) . Url::buildUrl('/api/routine/notify')
+            'cert_path' => self::getPemPath('pay_weixin_client_cert'),
+            'key_path' => self::getPemPath('pay_weixin_client_key'),
+            'notify_url' => trim($wechat['site_url']) . '/api/pay/notify/routine'
         ];
+//        if (Env::get('cache.driver', 'file') == 'redis') {
+//            $cache = new \Doctrine\Common\Cache\RedisCache();
+//            $cache->setRedis(\think\facade\Cache::store('redis')->handler());
+//            $config['cache'] = $cache;
+//        }
         return $config;
+    }
+
+    public static function getPemPath(string $name)
+    {
+        $systemPemServices = app()->make(SystemPemServices::class);
+        $path = $systemPemServices->getPemPath($name);
+        if ($path) return $path;
+        $path = sys_config($name);
+        if (strstr($path, 'http://') || strstr($path, 'https://')) {
+            $path = parse_url($path)['path'] ?? '';
+        }
+        $path = root_path('runtime/pem') . ltrim($path, '/');
+        if (!file_exists($path)) {
+            $path = public_path('uploads') . ltrim($path, '/');
+        }
+        return $path;
     }
 
     /**
@@ -360,14 +391,14 @@ class MiniProgramService
     public static function paymentPrepare($openid, $out_trade_no, $total_fee, $attach, $body, $detail = '', $trade_type = 'JSAPI', $options = [])
     {
         $key = 'pay_' . $out_trade_no;
-        $result = Cache::get($key);
+        $result = CacheService::get($key);
         if ($result) {
             return $result;
         } else {
             $order = self::paymentOrder($openid, $out_trade_no, $total_fee, $attach, $body, $detail, $trade_type, $options);
             $result = self::paymentService()->prepare($order);
             if ($result->return_code == 'SUCCESS' && $result->result_code == 'SUCCESS') {
-                Cache::set($key, $result->prepay_id, 7000);
+                CacheService::set($key, $result->prepay_id, 7000);
                 return $result->prepay_id;
             } else {
                 if ($result->return_code == 'FAIL') {
@@ -397,14 +428,14 @@ class MiniProgramService
     public static function newPaymentPrepare($openid, $out_trade_no, $total_fee, $attach, $body, $detail = '', $options = [])
     {
         $key = 'pay_' . $out_trade_no;
-        $result = Cache::get($key);
+        $result = CacheService::get($key);
         if ($result) {
             return $result;
         } else {
             $order = self::paymentOrder($openid, $out_trade_no, $total_fee, $attach, $body, $detail, $options);
             $result = self::application()->minipay->createorder($order);
             if ($result->errcode === 0) {
-                Cache::set($key, $result->payment_params, 7000);
+                CacheService::set($key, $result->payment_params, 7000);
                 return $result->payment_params;
             } else {
                 exception('微信支付错误返回：' . '[' . $result->errcode . ']' . $result->errmsg);
@@ -848,5 +879,99 @@ class MiniProgramService
             }
         }
         return $message ?: self::MSG_CODE[$e->getCode()] ?? $e->getMessage();
+    }
+
+
+    /**
+     * @return Response
+     * @throws \EasyWeChat\Server\BadRequestException
+     */
+    public static function serve(): Response
+    {
+        $wechat = self::application(true);
+        $server = $wechat->server;
+        self::hook($server);
+        $response = $server->serve();
+        return response($response->getContent());
+    }
+
+    private static function hook($server)
+    {
+        $server->setMessageHandler(function ($message) {
+            switch ($message->MsgType) {
+                case 'event':
+                    switch (strtolower($message->Event)) {
+                        case 'funds_order_pay':  // 小程序支付管理的
+                            if (($count = strpos($message['order_info']['trade_no'], '_')) !== false) {
+                                $trade_no = substr($message['order_info']['trade_no'], $count + 1);
+                            } else {
+                                $trade_no = $message['order_info']['trade_no'];
+                            }
+                            $prefix = substr($trade_no, 0, 2);
+                            //处理一下参数
+                            switch ($prefix) {
+                                case 'cp':
+                                    $data['attach'] = 'Product';
+                                    break;
+                                case 'hy':
+                                    $data['attach'] = 'Member';
+                                    break;
+                                case 'cz':
+                                    $data['attach'] = 'UserRecharge';
+                                    break;
+                            }
+                            $data['out_trade_no'] = $message['order_info']['trade_no'];
+                            $data['transaction_id'] = $message['order_info']['transaction_id'];
+                            $data['opneid'] = $message['FromUserName'];
+                            if (Event::until('NotifyListener', [$data, PayServices::WEIXIN_PAY])) {
+                                $response = 'success';
+                            } else {
+                                $response = 'faild';
+                            }
+                            Log::error(['data' => $data, 'res' => $response, 'message' => $message]);
+                            break;
+                        case 'trade_manage_remind_access_api':  // 小程序完成账期授权时  小程序产生第一笔交易时 已产生交易但从未发货的小程序，每天一次
+                            break;
+                        case 'trade_manage_remind_shipping':   // 曾经发过货的小程序，订单超过48小时未发货时
+                            break;
+                        case 'trade_manage_order_settlement':     // 订单完成发货时  订单结算时
+                            if (isset($message['confirm_receive_method'])) {  // 订单结算时
+                                /** @var StoreOrderTakeServices $StoreOrderTakeServices */
+                                $storeOrderTakeServices = app()->make(StoreOrderTakeServices::class);
+                                $storeOrderTakeServices->miniOrderTakeOrder($message['merchant_trade_no']);
+                            }
+                            break;
+                    };
+                    break;
+            };
+        });
+    }
+
+    public static function getUrlScheme($jumpWxa = [], $expireType = -1, $expireNum = 0)
+    {
+        try {
+            $res = self::miniprogram()->mini_scheme->getUrlScheme($jumpWxa, $expireType, $expireNum);
+            if (isset($res['errcode']) && $res['errcode'] == 0) {
+                return $res['openlink'];
+            } else {
+                return '';
+            }
+        } catch (\Throwable $e) {
+            return $e->getMessage();
+        }
+    }
+
+    public static function getUrlLink($jumpWxa = [])
+    {
+        try {
+            $res = self::miniprogram()->mini_scheme->getUrlLink($jumpWxa);
+            if (isset($res['errcode']) && $res['errcode'] == 0) {
+                return $res['url_link'];
+            } else {
+                return '';
+            }
+        } catch (\Throwable $e) {
+            return $e->getMessage();
+        }
     }
 }

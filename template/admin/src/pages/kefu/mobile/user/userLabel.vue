@@ -3,7 +3,7 @@
     <div class="labelChange" :class="change === true ? 'on' : ''">
       <div class="priceTitle cor32">
         用户标签
-        <span class="iconfontYI icon-guanbi" @click="close"></span>
+        <span class="iconfontYI icon-guanbi" v-db-click @click="close"></span>
       </div>
       <div class="label-wrapper">
         <div class="label-box" v-for="(item, index) in labelList" :key="index">
@@ -14,6 +14,7 @@
               :class="{ on: label.disabled }"
               v-for="(label, j) in item.label"
               :key="j"
+              v-db-click
               @click="selectLabel(label)"
             >
               {{ label.label_name }}
@@ -22,7 +23,7 @@
         </div>
       </div>
       <div class="footer">
-        <Button type="primary" class="btn" @click="subBtn">确定</Button>
+        <el-button type="primary" class="btn" v-db-click @click="subBtn">确定</el-button>
       </div>
     </div>
     <div class="maskModel" @touchmove.prevent v-show="change === true"></div>
@@ -84,11 +85,11 @@ export default {
         un_label_ids: unLaberids,
       })
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.$emit('editLabel', false);
         })
         .catch((error) => {
-          this.$Message.error(error.msg);
+          this.$message.error(error.msg);
         });
     },
     close: function () {
@@ -97,43 +98,54 @@ export default {
   },
 };
 </script>
-<style lang="stylus" scoped>
-.label-wrapper
-    height 9rem
-    overflow: scroll;
-    .list
-        display flex
-        flex-wrap wrap
-        .label-item
-            margin: 0.2rem 0.3rem 0.1rem 0;
-            padding: 0 0.2rem;
-            background #EEEEEE
-            color #282828
-            border-radius 6px
-            cursor pointer
-            font-size 0.28rem
-            height 0.56rem
-            line-height 0.56rem
-            &.on
-                color #fff
-                background #3875EA
-.footer
-    margin-top: 0.25rem;
-.btn
-    width 100%
-    height 0.76rem
-    border-radius: 43px;
-    background #3875EA
-.title
-    font-size 0.32rem
-    color #282828
+<style lang="scss" scoped>
+.label-wrapper {
+  height: 9rem;
+  overflow: scroll;
+  .list {
+    display: flex;
+    flex-wrap: wrap;
+    .label-item {
+      margin: 0.2rem 0.3rem 0.1rem 0;
+      padding: 0 0.2rem;
+      background: #eeeeee;
+      color: #282828;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.28rem;
+      height: 0.56rem;
+      line-height: 0.56rem;
+      &.on {
+        color: #fff;
+        background: #3875ea;
+      }
+    }
+  }
+}
+.footer {
+  margin-top: 0.25rem;
+}
+.btn {
+  width: 100%;
+  height: 0.76rem;
+  border-radius: 43px;
+  background: #3875ea;
+}
+.title {
+  font-size: 0.32rem;
+  color: #282828;
+}
 </style>
-<style scoped lang="less">
+<style scoped lang="scss">
 .label {
   &-title {
     margin-bottom: 0.25rem;
   }
 }
+.label-box {
+  margin-bottom: 10px;
+}
+
 .priceTitle {
   position: relative;
   text-align: center;
@@ -148,10 +160,10 @@ export default {
   }
 }
 .labelCheck {
-  /deep/.ivu-checkbox {
+  ::v-deep .ivu-checkbox {
     display: none !important;
   }
-  /deep/.ivu-checkbox-wrapper-checked.ivu-checkbox-border {
+  ::v-deep .ivu-checkbox-wrapper-checked.ivu-checkbox-border {
     background: #3875ea;
     color: #fff;
   }

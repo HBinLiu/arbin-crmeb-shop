@@ -13,11 +13,13 @@
 						</label>
 					</radio-group>
 				</view>
-				<view class="acea-row row-middle">
+				<view class="acea-row row-middle" v-if="basicConfigData.special_invoice_status === '1' && header_type === '2'">
 					<view>{{$t(`发票类型`)}}</view>
-					<input name="type" :value="type === '2' && header_type === '2' ? $t(`增值税电子专用发票`) : $t(`增值税电子普通发票`)" disabled
-						@click="callType" />
-					<text class="iconfont icon-xiangyou"></text>
+					<text class="w-fill" @click="callType">
+						<text>{{ type === '2' ? $t(`增值税电子专用发票`) : $t(`增值税电子普通发票`) }} </text>
+						<text class="iconfont icon-xiangyou"></text>
+					</text>
+
 				</view>
 				<view class="acea-row row-middle">
 					<view>{{$t(`发票抬头`)}}</view>
@@ -130,7 +132,8 @@
 				urlQuery: '',
 				from: '',
 				specialInvoice: true,
-				order_id: ''
+				order_id: '',
+				basicConfigData: uni.getStorageSync('BASIC_CONFIG') || ''
 			};
 		},
 		computed: {
@@ -142,11 +145,17 @@
 					default:
 						return '/pages/users/user_invoice_list/index?from=invoice_form';
 						break;
-
 				}
 			}
 		},
+		onHide() {
+			this.from = ''
+		},
 		onLoad(options) {
+
+			if (options.id) uni.setNavigationBarTitle({
+				title: '编辑发票'
+			})
 			for (let key in options) {
 				switch (key) {
 					case 'couponTitle':
@@ -366,6 +375,7 @@
 				}
 				formData.is_default = formData.is_default.length;
 				formData.id = this.id;
+
 				uni.showLoading({
 					title: that.$t(`保存中`)
 				});
@@ -373,39 +383,38 @@
 					uni.showToast({
 						title: res.msg,
 						icon: 'success',
-						success() {
-							switch (that.from) {
-								case 'order_confirm':
-									if (that.id) {
-										uni.navigateTo({
-											url: `/pages/goods/order_confirm/index${that.urlQuery}&invoice_id=${that.id}&invoice_type=${formData.type}`
-										})
-									} else {
-										uni.navigateTo({
-											url: `/pages/goods/order_confirm/index${that.urlQuery}&invoice_id=${res.data.id}&invoice_type=${formData.type}`
-										})
-									}
-									break;
-								case 'order_details':
-									if (that.id) {
-										uni.navigateTo({
-											url: `/pages/goods/order_details/index?order_id=${that.order_id}&invoice_id=${that.id}`
-										})
-									} else {
-										uni.navigateTo({
-											url: `/pages/goods/order_details/index?order_id=${that.order_id}&invoice_id=${res.data.id}`
-										})
-									}
-									break;
-								default:
-									uni.navigateTo({
-										url: '/pages/users/user_invoice_list/index?from=invoice_form'
-									});
-									break;
-							}
-
-						}
 					});
+					setTimeout(e => {
+						switch (that.from) {
+							case 'order_confirm':
+								if (that.id) {
+									uni.navigateTo({
+										url: `/pages/goods/order_confirm/index${that.urlQuery}&invoice_id=${that.id}&invoice_type=${formData.type}&header_type=${this.header_type}`
+									})
+								} else {
+									uni.navigateTo({
+										url: `/pages/goods/order_confirm/index${that.urlQuery}&invoice_id=${res.data.id}&invoice_type=${formData.type}&header_type=${this.header_type}`
+									})
+								}
+								break;
+							case 'order_details':
+								if (that.id) {
+									uni.navigateTo({
+										url: `/pages/goods/order_details/index?order_id=${that.order_id}&invoice_id=${that.id}&header_type=${this.header_type}`
+									})
+								} else {
+									uni.navigateTo({
+										url: `/pages/goods/order_details/index?order_id=${that.order_id}&invoice_id=${res.data.id}&header_type=${this.header_type}`
+									})
+								}
+								break;
+							default:
+								uni.navigateTo({
+									url: '/pages/users/user_invoice_list/index?from=invoice_form'
+								});
+								break;
+						}
+					}, 1000)
 				}).catch(err => {
 					uni.showToast({
 						title: err,
@@ -415,7 +424,14 @@
 			},
 			// 调起发票类型弹窗
 			callType() {
-				this.popupType = true;
+				if (this.header_type == 2) {
+					this.popupType = true;
+				} else {
+					uni.showToast({
+						title: this.$t(`个人仅支持普通发票`),
+						icon: 'none'
+					});
+				}
 			},
 			// 选择发票类型
 			changeType(e) {
@@ -441,7 +457,7 @@
 	}
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 	/deep/.disabled .uni-radio-input {
 		background-color: #F8F8F8;
 	}
@@ -482,6 +498,11 @@
 		padding-right: 30rpx;
 		padding-left: 30rpx;
 		background-color: #FFFFFF;
+
+		.w-fill {
+			margin-left: auto;
+			font-size: 26rpx;
+		}
 	}
 
 	.panel~.panel {
@@ -502,7 +523,7 @@
 	}
 
 	.icon-xiangyou {
-		margin-left: 25rpx;
+		margin-left: 5rpx;
 		font-size: 26rpx;
 		color: #BFBFBF;
 		margin-top: 2rpx;
@@ -570,7 +591,6 @@
 		transform: translateY(-50%);
 		font-size: 30rpx;
 		color: #707070;
-		cursor: pointer;
 	}
 
 	.popup .text .acea-row {

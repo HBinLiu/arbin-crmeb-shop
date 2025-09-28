@@ -37,7 +37,7 @@
 			<image src="/static/images/line.jpg" />
 		</view>
 		<view class="pos-order-goods">
-			<navigator :url="`/pages/goods_details/index?id=${item.productInfo.id}`" hover-class="none"
+			<navigator :url="`/pages/goods_details/index?id=${item.productInfo.product_id ? item.productInfo.product_id : item.productInfo.id}`" hover-class="none"
 				class="goods acea-row row-between-wrapper" v-for="(item, index) in orderInfo.cartInfo" :key="index">
 				<view class="picTxt acea-row row-between-wrapper">
 					<view class="pictrue">
@@ -53,7 +53,8 @@
 				<view class="money">
 					<view class="x-money">{{$t(`￥`)}}{{ item.productInfo.price }}</view>
 					<view class="num">x{{ item.cart_num }}</view>
-					<view class="y-money">{{$t(`￥`)}}{{ item.productInfo.ot_price }}</view>
+					<view class="y-money" v-if='item.productInfo.attrInfo'>{{$t(`￥`)}}{{ item.productInfo.attrInfo.ot_price }}</view>
+					<view class="y-money" v-else>{{$t(`￥`)}}{{ item.productInfo.ot_price }}</view>
 				</view>
 			</navigator>
 		</view>
@@ -110,21 +111,33 @@
 			</view>
 		</view>
 		<view class="wrapper">
-			<view class="item acea-row row-between">
-				<view>{{$t(`支付金额`)}}：</view>
-				<view class="conter">{{$t(`￥`)}}{{ orderInfo.total_price || 0 }}</view>
+			<view class='item acea-row row-between'>
+				<view>{{$t(`商品总价`)}}：</view>
+				<view class='conter'>
+					{{$t(`￥`)}}{{(parseFloat(orderInfo.total_price || 0)+parseFloat(orderInfo.vip_true_price || 0)).toFixed(2)}}
+				</view>
 			</view>
-			<view class="item acea-row row-between">
+			<view class='item acea-row row-between' v-if="orderInfo.pay_postage > 0">
+				<view>{{$t(`配送运费`)}}：</view>
+				<view class='conter'>{{$t(`￥`)}}{{parseFloat(orderInfo.pay_postage).toFixed(2)}}</view>
+			</view>
+			<view v-if="orderInfo.levelPrice > 0" class='item acea-row row-between'>
+				<view>{{$t(`用户等级优惠`)}}：</view>
+				<view class='conter'>-{{$t(`￥`)}}{{parseFloat(orderInfo.levelPrice).toFixed(2)}}</view>
+			</view>
+			<view v-if="orderInfo.memberPrice > 0" class='item acea-row row-between'>
+				<view>{{$t(`付费会员优惠`)}}：</view>
+				<view class='conter'>-{{$t(`￥`)}}{{parseFloat(orderInfo.memberPrice).toFixed(2)}}</view>
+			</view>
+			<view class='item acea-row row-between' v-if='orderInfo.coupon_price > 0'>
 				<view>{{$t(`优惠券抵扣`)}}：</view>
-				<view class="conter">-{{$t(`￥`)}}{{ orderInfo.coupon_price || 0 }}</view>
+				<view class='conter'>-{{$t(`￥`)}}{{parseFloat(orderInfo.coupon_price).toFixed(2)}}</view>
 			</view>
-			<view class="item acea-row row-between">
-				<view>{{$t(`运费`)}}：</view>
-				<view class="conter">{{$t(`￥`)}}{{ orderInfo.pay_postage || 0 }}</view>
+			<view class='item acea-row row-between' v-if="orderInfo.use_integral > 0">
+				<view>{{$t(`积分抵扣`)}}：</view>
+				<view class='conter'>-{{$t(`￥`)}}{{parseFloat(orderInfo.deduction_price).toFixed(2)}}</view>
 			</view>
-			<view class="actualPay acea-row row-right">
-				{{$t(`实付款`)}}：<span class="money">{{$t(`￥`)}}{{ orderInfo.pay_price || 0 }}</span>
-			</view>
+			<view class='actualPay acea-row row-right'>{{$t(`实付款`)}}：<text class='money'>{{$t(`￥`)}}{{parseFloat(orderInfo.pay_price || 0).toFixed(2)}}</text></view>
 		</view>
 
 		<view class="wrapper" v-if="
@@ -175,6 +188,11 @@
 				@click="offlinePay">
 				{{$t(`确认付款`)}}
 			</view>
+			<navigator class='bnt cancel'
+				v-if="orderInfo.delivery_type == 'express' && orderInfo.status==1"
+				hover-class='none' :url="'/pages/goods/goods_logistics/index?is_admin=1&orderId='+ orderInfo.order_id">
+				{{$t(`查看物流`)}}
+			</navigator>
 			<navigator class="bnt delivery"
 				v-if="types == 1 && orderInfo.shipping_type === 1 && (orderInfo.pinkStatus === null || orderInfo.pinkStatus === 2)"
 				:url="'/pages/admin/delivery/index?id='+orderInfo.order_id">{{$t(`去发货`)}}</navigator>
@@ -705,7 +723,6 @@
 
 	.order-details .wrapper .item .conter {
 		color: #868686;
-		width: 500upx;
 		text-align: right;
 	}
 
@@ -778,7 +795,7 @@
 	}
 
 	.pos-order-goods .goods {
-		height: 185upx;
+		min-height: 185upx;
 	}
 
 	.pos-order-goods .goods~.goods {
@@ -805,7 +822,8 @@
 		display: flex;
 		justify-content: space-between;
 		flex-direction: column;
-		height: 130upx;
+		flex-wrap: nowrap;
+		/* height: 132upx; */
 	}
 
 	.pos-order-goods .goods .picTxt .text .info {
@@ -817,9 +835,7 @@
 		font-size: 24upx;
 		color: #999;
 		width: 100%;
-		overflow: hidden;
-		white-space: nowrap;
-		text-overflow: ellipsis;
+		word-break: break-all;
 	}
 
 	.pos-order-goods .goods .money {

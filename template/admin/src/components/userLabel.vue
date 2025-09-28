@@ -9,16 +9,16 @@
           :class="{ on: label.disabled }"
           v-for="(label, j) in item.label"
           :key="j"
+          v-db-click
           @click="selectLabel(label)"
         >
           {{ label.label_name }}
         </div>
       </div>
     </div>
-
-    <div class="footer">
-      <Button type="primary" class="btns" @click="subBtn">确定</Button>
-      <Button type="primary" class="btns" ghost @click="cancel">取消</Button>
+    <div class="acea-row row-right mt20">
+      <el-button v-db-click @click="cancel">取 消</el-button>
+      <el-button type="primary" v-db-click @click="subBtn">确 定</el-button>
     </div>
   </div>
 </template>
@@ -30,7 +30,7 @@ export default {
   props: {
     uid: {
       type: String | Number,
-      default: '',
+      default: 0,
     },
     only_get: {
       default: false,
@@ -64,7 +64,7 @@ export default {
   },
   methods: {
     getList() {
-      getUserLabel(this.uid).then((res) => {
+      getUserLabel(this.uid || 0).then((res) => {
         if (this.selectDataLabel && this.selectDataLabel.length) {
           this.selectDataLabel.map((el) => {
             res.data.map((re) => {
@@ -126,11 +126,11 @@ export default {
           this.$emit('onceGetList');
           this.activeIds = [];
           this.unLaberids = [];
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.$emit('close');
         })
         .catch((error) => {
-          this.$Message.error(error.msg);
+          this.$message.error(error.msg);
         });
     },
     cancel() {
@@ -142,7 +142,7 @@ export default {
 };
 </script>
 
-<style lang="stylus" scoped>
+<style lang="scss" scoped>
 .label-wrapper {
   .list {
     display: flex;
@@ -151,7 +151,7 @@ export default {
     .label-item {
       margin: 10px 8px 10px 0;
       padding: 3px 8px;
-      background: #EEEEEE;
+      background: #eeeeee;
       color: #333333;
       border-radius: 2px;
       cursor: pointer;
@@ -159,7 +159,7 @@ export default {
 
       &.on {
         color: #fff;
-        background: #1890FF;
+        background: var(--prev-color-primary);
       }
     }
   }
@@ -174,7 +174,9 @@ export default {
     }
   }
 }
-
+.label-box {
+  margin-bottom: 10px;
+}
 .btn {
   width: 60px;
   height: 24px;

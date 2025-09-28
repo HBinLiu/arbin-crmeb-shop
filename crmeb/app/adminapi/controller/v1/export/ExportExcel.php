@@ -72,7 +72,8 @@ class ExportExcel extends AuthController
             ['label_id', ''],
             ['now_money', 'normal'],
             ['field_key', ''],
-            ['isMember', '']
+            ['isMember', ''],
+            ['ids', []]
         ]);
         return app('json')->success($this->service->exportUserList($where));
     }
@@ -95,10 +96,23 @@ class ExportExcel extends AuthController
             ['pay_type', ''],
             ['order', ''],
             ['field_key', ''],
+            ['ids', []],
         ]);
         $where['is_system_del'] = 0;
         $where['pid'] = 0;
         return app('json')->success($this->service->exportOrderList($where));
+    }
+
+    /**
+     * 发货订单列表导出
+     * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     */
+    public function orderDeliveryList()
+    {
+        return app('json')->success($this->service->exportOrderDeliveryList());
     }
 
     /**
@@ -110,7 +124,8 @@ class ExportExcel extends AuthController
         $where = $this->request->getMore([
             ['store_name', ''],
             ['cate_id', ''],
-            ['type', 1]
+            ['type', 1],
+            ['ids', []]
         ]);
         return app('json')->success($this->service->exportProductList($where));
     }
@@ -206,6 +221,7 @@ class ExportExcel extends AuthController
             ['price_max', ''],
             ['price_min', ''],
             ['excel', '1'],
+            ['time', ''],
         ]);
         $data = $services->getCommissionList($where, false);
         return app('json')->success($this->service->userCommission($data['list'] ?? []));

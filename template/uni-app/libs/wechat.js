@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -213,7 +213,7 @@ class AuthWechat {
 	}
 
 	/**
-	 * 授权登陆获取token
+	 * 授权登录获取token
 	 * @param {Object} code
 	 */
 	auth(code) {
@@ -241,37 +241,26 @@ class AuthWechat {
 	 * @param {Object} appId
 	 */
 	getAuthUrl(appId, snsapiBase, backUrl) {
-		if (backUrl) {
-			let backUrlArr = backUrl.split('&');
-			let newUrlArr = backUrlArr.filter(item => {
-				if (item.indexOf('code=') === -1) {
-					return item;
-				}
-			});
-			backUrl = newUrlArr.join('&');
-		}
+		// if (backUrl) {
+		// 	let backUrlArr = backUrl.split('&');
+		// 	let newUrlArr = backUrlArr.filter(item => {
+		// 		if (item.indexOf('code=') === -1) {
+		// 			return item;
+		// 		}
+		// 	});
+		// 	backUrl = newUrlArr.join('&');
+		// }
 
-		let url = `${location.origin}${backUrl}`
-		if (url.indexOf('?') === -1) {
-			url = url + '?'
-		} else {
-			url = url + '&'
-		}
-		const redirect_uri = encodeURIComponent(
-			`${url}scope=${snsapiBase}&back_url=` +
-			encodeURIComponent(
-				encodeURIComponent(
-					uni.getStorageSync(BACK_URL) ?
-					uni.getStorageSync(BACK_URL) :
-					location.pathname + location.search
-				)
-			)
-		);
+		// let url = `${location.origin}${backUrl}`
+		// if (url.indexOf('?') === -1) {
+		// 	url = url + '?'
+		// } else {
+		// 	url = url + '&'
+		// }
+		const redirect_uri = encodeURIComponent(location.href);
+		const state = Cache.get('login_back_url') || '/pages/user/index';
+		// uni.setStorageSync(STATE_KEY, state);
 		uni.removeStorageSync(BACK_URL);
-		const state = encodeURIComponent(
-			("" + Math.random()).split(".")[1] + "authorizestate"
-		);
-		uni.setStorageSync(STATE_KEY, state);
 		if (snsapiBase === 'snsapi_base') {
 			return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_base&state=${state}&connect_redirect=1#wechat_redirect`;
 		} else {
@@ -281,7 +270,7 @@ class AuthWechat {
 	}
 
 	/**
-	 * 跳转自动登陆
+	 * 跳转自动登录
 	 */
 	toAuth(snsapiBase, backUrl) {
 		let that = this;

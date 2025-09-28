@@ -10,7 +10,7 @@
           'margin-bottom': vSpace + 'px',
         }"
       >
-        <div v-show="showRefresh" class="verify-refresh" style="z-index: 3" @click="refresh">
+        <div v-show="showRefresh" class="verify-refresh" style="z-index: 3" v-db-click @click="refresh">
           <i class="iconfont icon-refresh" />
         </div>
         <img
@@ -18,6 +18,7 @@
           :src="pointBackImgBase ? 'data:image/png;base64,' + pointBackImgBase : defaultImg"
           alt=""
           style="width: 100%; height: 100%; display: block"
+          v-db-click
           @click="bindingClick ? canvasClick($event) : undefined"
         />
 
@@ -266,7 +267,6 @@ export default {
         const y = Math.round((155 * p.y) / parseInt(imgSize.imgHeight));
         return { x, y };
       });
-      // console.log(newPointArr,"newPointArr");
       return newPointArr;
     },
   },

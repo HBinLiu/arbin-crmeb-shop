@@ -42,31 +42,41 @@
           <div class="item"><span>推广人：</span>{{ orderDetail.userInfo.spread_name }}</div>
         </div>
         <div class="msg-item">
-          <div class="item"><span>商家备注：</span>{{ orderDetail.orderInfo.mark }}</div>
+          <div class="item"><span>商家备注：</span>{{ orderDetail.orderInfo.remark }}</div>
         </div>
       </div>
     </div>
     <div class="goods-box">
-      <Table :columns="columns1" :data="orderList">
-        <template slot-scope="{ row, index }" slot="id">
-          {{ row.productInfo.id }}
-        </template>
-        <template slot-scope="{ row, index }" slot="name">
-          <div class="product_info">
-            <img :src="row.productInfo.image" alt="" />
-            <p>{{ row.productInfo.store_name }}</p>
-          </div>
-        </template>
-        <template slot-scope="{ row, index }" slot="className">
-          {{ row.class_name }}
-        </template>
-        <template slot-scope="{ row, index }" slot="price">
-          {{ row.productInfo.attrInfo.price }}
-        </template>
-        <template slot-scope="{ row, index }" slot="total_num">
-          {{ row.cart_num }}
-        </template>
-      </Table>
+      <el-table :data="orderList">
+        <el-table-column label="商品ID" width="80">
+          <template slot-scope="scope">
+            <span>{{ scope.row.productInfo.id }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="商品名称" min-width="130">
+          <template slot-scope="scope">
+            <div class="product_info">
+              <img :src="scope.row.productInfo.image" alt="" />
+              <p>{{ scope.row.productInfo.store_name }}</p>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="商品分类" min-width="130">
+          <template slot-scope="scope">
+            <span>{{ scope.row.class_name }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="商品售价" min-width="130">
+          <template slot-scope="scope">
+            <span>{{ scope.row.productInfo.attrInfo.price }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="商品数量" min-width="130">
+          <template slot-scope="scope">
+            <span>{{ scope.row.cart_num }}</span>
+          </template>
+        </el-table-column>
+      </el-table>
     </div>
   </div>
 </template>
@@ -85,30 +95,6 @@ export default {
     return {
       orderDetail: {},
       orderList: [],
-      columns1: [
-        {
-          title: '商品ID',
-          slot: 'id',
-          maxWidth: 80,
-        },
-        {
-          title: '商品名称',
-          slot: 'name',
-          minWidth: 160,
-        },
-        {
-          title: '商品分类',
-          slot: 'className',
-        },
-        {
-          title: '商品售价',
-          slot: 'price',
-        },
-        {
-          title: '商品数量',
-          slot: 'total_num',
-        },
-      ],
     };
   },
   mounted() {
@@ -126,32 +112,46 @@ export default {
 };
 </script>
 
-<style lang="stylus" scoped>
-.order_detail
-    .msg-box
-        border-bottom 1px solid #E8EAED
-        .box-title
-            padding-top 20px
-            font-size 16px
-            color #333
-        .msg-wrapper
-            margin-top 15px
-            padding-bottom 10px
-            .msg-item
-                display flex
-                .item
-                    flex 1
-                    margin-bottom 15px
-                    span
-                        color #333
-        &:first-child .box-title
-            padding-top 0
-    .product_info
-        display flex
-        align-items center
-        img
-            width 36px
-            height 36px
-            border-radius 4px
-            margin-right 10px
+<style lang="scss" scoped>
+.order_detail {
+  .msg-box {
+    border-bottom: 1px solid #e8eaed;
+    .box-title {
+      padding-top: 20px;
+      font-size: 16px;
+      color: #333;
+    }
+    .msg-wrapper {
+      margin-top: 15px;
+      padding-bottom: 10px;
+      .msg-item {
+        display: flex;
+        .item {
+          flex: 1;
+          margin-bottom: 15px;
+          color: #606266;
+          font-size: 13px;
+          span {
+            font-size: 13px;
+            font-weight: 400;
+            color: #909399;
+          }
+        }
+      }
+    }
+    &:first-child .box-title {
+      padding-top: 0;
+    }
+  }
+  .product_info {
+    display: flex;
+    align-items: center;
+    img {
+      width: 36px;
+      height: 36px;
+      border-radius: 4px;
+      margin-right: 10px;
+    }
+  }
+}
 </style>

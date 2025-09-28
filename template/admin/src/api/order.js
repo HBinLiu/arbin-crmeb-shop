@@ -26,10 +26,11 @@ export function orderList(data) {
  * @description 发票头部统计
  * @param {Object} param data {Object} 传值参数
  */
-export function orderInvoiceChart() {
+export function orderInvoiceChart(data) {
   return request({
     url: 'order/invoice/chart',
     method: 'get',
+    params: data,
   });
 }
 
@@ -149,6 +150,17 @@ export function getRefundFrom(id) {
     method: 'get',
   });
 }
+/**
+ * @description 退款
+ * @param {Number} param id {Number} 订单id
+ */
+export function refundPrice(id, data) {
+  return request({
+    url: `/order/refund/${id}`,
+    method: 'put',
+    data,
+  });
+}
 
 /**
  * @description 新版-获取退款表单数据
@@ -166,7 +178,7 @@ export function getNewRefundFrom(id) {
  */
 export function getExpressData(status) {
   return request({
-    url: `/order/express_list?status=` + status,
+    url: `/order/express_list?status=${status || ''}`,
     method: 'get',
   });
 }
@@ -502,6 +514,28 @@ export function otherBatchDelivery(data) {
   });
 }
 /**
+ * @description 商家寄件金额计算
+ * @param {Object} param data {Object} 传值参数
+ */
+export function orderPrice(data) {
+  return request({
+    url: 'order/price',
+    method: 'post',
+    data,
+  });
+}
+/**
+ * @description 取消商家寄件
+ * @param {Object} param data {Object} 传值参数
+ */
+export function shipmentCancelOrder(id, data) {
+  return request({
+    url: `order/shipment_cancel_order/${id}`,
+    method: 'post',
+    data: data,
+  });
+}
+/**
  * @description 重新执行
  * @param {Object} param data {Object} 传值参数
  */
@@ -534,6 +568,17 @@ export function stopWrongQueue(id) {
 }
 
 /**
+ * @description 上架寄件快递列表
+ * @param {Object} param data {Object} 传值参数
+ */
+export function kuaidiComsList() {
+  return request({
+    url: `order/kuaidi_coms`,
+    method: 'get',
+  });
+}
+
+/**
  * @description 修改退款订单备注信息
  * @param {Number} param data.id {Number} 订单id
  * @param {String} param data.remark {String} 备注信息
@@ -543,5 +588,100 @@ export function putRefundRemarkData(data) {
     url: `/refund/remark/${data.id}`,
     method: 'put',
     data: data.remark,
+  });
+}
+
+/**
+ * @description 导入发货单
+ */
+export function importExpress(data) {
+  return request({
+    url: '/order/delivery/import_express',
+    method: 'get',
+    params: data,
+  });
+}
+
+/**
+ * @description 配货单-打印
+ * @param id  订单id
+ */
+export function distributionOrder(id) {
+  return request({
+    url: `/order/print/shipping/${id}`,
+    method: 'get',
+  });
+}
+/**
+ * @description 发票管理
+ * @param id  发票id
+ */
+export function invoiceIssuanceUrl(id) {
+  return request({
+    url: `/order/invoice_issuance_url/${id}`,
+    method: 'get',
+  });
+}
+/**
+ * @description 发票下载
+ * @param id  发票id
+ */
+export function downInvoice(id) {
+  return request({
+    url: `/order/down_invoice/${id}`,
+    method: 'get',
+  });
+}
+/**
+ * @description 开具负数发票
+ * @param id  发票id
+ */
+export function redInvoiceIssuance(id) {
+  return request({
+    url: `/order/red_invoice_issuance/${id}`,
+    method: 'get',
+  });
+}
+/**
+ * @description 发票状态修改
+ * @param id  发票id
+ * @param data  发票信息
+ */
+export function saveInvoiceInfo(id, data) {
+  return request({
+    url: `/order/save_invoice_info/${id}`,
+    method: 'post',
+    data: data,
+  });
+}
+/**
+ * @description 发票分类搜索
+ * @param name  发票分类名称
+ */
+export function invoiceCategory(name) {
+  return request({
+    url: `/order/invoice_category`,
+    method: 'get',
+    params: name,
+  });
+}
+/**
+ * @description 提交电子发票配置
+ * @param data  发票信息
+ */
+export function saveBasics(data) {
+  return request({
+    url: `/marketing/integral_config/save_basics`,
+    method: 'post',
+    data,
+  });
+}
+/**
+ * @description 获取电子发票配置
+ */
+export function invoiceConfig() {
+  return request({
+    url: `/order/elec_invoice_config`,
+    method: 'get',
   });
 }

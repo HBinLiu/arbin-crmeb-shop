@@ -1,21 +1,18 @@
 <template>
   <div>
-    <div class="i-layout-page-header">
-      <div class="i-layout-page-header">
-        <span class="ivu-page-header-title">{{ $route.meta.title }}</span>
-      </div>
+    <div class="i-layout-page-header header-title">
+      <span class="ivu-page-header-title">{{ $route.meta.title }}</span>
     </div>
-    <Card :bordered="false" dis-hover class="ivu-mt">
-      <Form :label-width="80" @submit.native.prevent>
-        <FormItem label="协议内容：">
+    <el-card :bordered="false" shadow="never" class="ivu-mt">
+      <el-form label-width="85px" @submit.native.prevent v-loading="spinShow">
+        <el-form-item label="协议内容：">
           <WangEditor :content="agreement.content" @editorContent="getEditorContent"></WangEditor>
-        </FormItem>
-        <FormItem>
-          <Button type="primary" @click="memberAgreementSave">保存</Button>
-        </FormItem>
-      </Form>
-      <Spin fix v-if="spinShow"></Spin>
-    </Card>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" v-db-click @click="memberAgreementSave">保存</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
   </div>
 </template>
 
@@ -31,7 +28,7 @@ export default {
         autoHeightEnabled: false,
         initialFrameHeight: 500,
         initialFrameWidth: '100%',
-        UEDITOR_HOME_URL: '/admin/UEditor/',
+        UEDITOR_HOME_URL: '/UEditor/',
         serverUrl: '',
       },
       agreement: {
@@ -58,30 +55,27 @@ export default {
           this.agreement.id = id || 0;
         })
         .catch((err) => {
-          this.$Message.error(err);
+          this.$message.error(err.msg);
           this.spinShow = false;
         });
     },
     // 保存
     memberAgreementSave() {
-      this.$Spin.show();
       agentAgreementSave(this.agreement)
         .then((res) => {
-          this.$Spin.hide();
-          this.$Message.success('保存成功');
+          this.$message.success('保存成功');
           this.memberAgreement();
         })
         .catch((err) => {
-          this.$Spin.hide();
-          this.$Message.error(err);
+          this.$message.error(err.msg);
         });
     },
   },
 };
 </script>
 
-<style scoped lang="stylus">
-/deep/.ivu-form-item-content {
+<style lang="scss" scoped>
+::v-deep .ivu-form-item-content {
   line-height: unset !important;
 }
 </style>

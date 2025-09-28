@@ -49,7 +49,13 @@ class StoreOrderWriteOffServices extends BaseServices
      */
     public function writeOffOrder(string $code, int $confirm, int $uid = 0)
     {
-        $orderInfo = $this->dao->getOne(['verify_code' => $code, 'paid' => 1, 'refund_status' => 0, 'is_del' => 0]);
+        $orderInfo = $this->dao->getOne([
+            ['verify_code', '=', $code],
+            ['paid', '=', 1],
+            ['refund_status', '=', 0],
+            ['is_del', '=', 0],
+            ['pid', '>=', 0]
+        ]);
         if (!$orderInfo) {
             throw new ApiException(410173);
         }
@@ -72,7 +78,13 @@ class StoreOrderWriteOffServices extends BaseServices
                 case 2://自提订单
                     /** @var SystemStoreStaffServices $storeStaffServices */
                     $storeStaffServices = app()->make(SystemStoreStaffServices::class);
-                    $isAuth = $storeStaffServices->getCount(['uid' => $uid, 'verify_status' => 1, 'status' => 1]) > 0;
+                    $staffInfo = $storeStaffServices->get(['uid' => $uid, 'verify_status' => 1, 'status' => 1]);
+                    if ($staffInfo) {
+                        $isAuth = true;
+                        $orderInfo->store_id = $staffInfo->store_id;
+                    } else {
+                        $isAuth = false;
+                    }
                     break;
             }
             if (!$isAuth) {
@@ -112,11 +124,14 @@ class StoreOrderWriteOffServices extends BaseServices
             }
         }
         if ($orderInfo->save()) {
-            /** @var StoreOrderTakeServices $storeOrdeTask */
-            $storeOrdeTask = app()->make(StoreOrderTakeServices::class);
-            $re = $storeOrdeTask->storeProductOrderUserTakeDelivery($orderInfo);
+            /** @var StoreOrderTakeServices $storeOrderTask */
+            $storeOrderTask = app()->make(StoreOrderTakeServices::class);
+            $re = $storeOrderTask->storeProductOrderUserTakeDelivery($orderInfo);
             if (!$re) {
                 throw new ApiException(410272);
+            }
+            if ($orderInfo['shipping_type'] == 2) {
+                event('OrderShippingListener', ['product', $orderInfo, 4, '', '']);
             }
             return $orderInfo->toArray();
         } else {

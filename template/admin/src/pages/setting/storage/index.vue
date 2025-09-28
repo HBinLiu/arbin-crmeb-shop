@@ -1,73 +1,99 @@
 <template>
-  <div class="message">
-    <div class="table-box" style="padding-bottom: 0">
-      <Card :bordered="false" dis-hover class="">
-        <div class="mb20">
-          <Tabs v-model="currentTab" @on-click="changeTab">
-            <TabPane
+  <div>
+    <div class="message">
+      <el-card :bordered="false" shadow="never" :body-style="{ padding: '0 20px 20px' }">
+        <div class="">
+          <el-tabs v-model="currentTab" @tab-click="changeTab">
+            <el-tab-pane
               :label="item.label"
               :name="item.value.toString()"
               v-for="(item, index) in headerList"
               :key="index"
             />
-          </Tabs>
+          </el-tabs>
         </div>
-        <h3>使用说明</h3>
-        <template v-if="currentTab == 1">
-          <p>上传图片时会生成缩略图</p>
-          <p>未设置按照系统默认生成，系统默认：大图800*800，中图300*300，小图150*150</p>
-          <p>水印只在上传图片时生成，原图，大中小缩略图上都按照比例存在。</p>
-          <p>若上传图片时未开启水印，则该图在开启水印之后依旧无水印效果。</p>
-        </template>
-        <template v-else>
-          <p v-if="currentTab == 2">
-            七牛云开通方法：<a href="https://doc.crmeb.com/web/single/crmeb_v4/987" target="_blank">点击查看</a>
-          </p>
-          <p v-if="currentTab == 3">
-            阿里云oss开通方法：<a href="https://doc.crmeb.com/web/single/crmeb_v4/985" target="_blank">点击查看</a>
-          </p>
-          <p v-if="currentTab == 4">
-            腾讯云cos开通方法：<a href="https://doc.crmeb.com/web/single/crmeb_v4/986" target="_blank">点击查看</a>
-          </p>
-          <p>第一步： 添加【存储空间】（空间名称不能重复）</p>
-          <p>第二步： 开启【使用状态】</p>
-          <template v-if="currentTab == 2">
-            <p>第三步（必选）： 选择云存储空间列表上的修改【空间域名操作】</p>
-            <p>第四步（必选）： 选择云存储空间列表上的修改【CNAME配置】，打开后复制记录值到对应的平台解析</p>
+        <el-alert closable v-if="currentTab == 1">
+          <template slot="title">
+            <p>上传图片时会生成缩略图</p>
+            <p>未设置按照系统默认生成，系统默认：大图800*800，中图300*300，小图150*150</p>
+            <p>水印只在上传图片时生成，原图，大中小缩略图上都按照比例存在。</p>
+            <p>若上传图片时未开启水印，则该图在开启水印之后依旧无水印效果。</p>
           </template>
-          <template v-else>
-            <p>第三步（可选）： 选择云存储空间列表上的修改【空间域名操作】</p>
-            <p>第四步（可选）： 选择云存储空间列表上的修改【CNAME配置】，打开后复制记录值到对应的平台解析</p>
+        </el-alert>
+        <el-alert closable v-else>
+          <template slot="title">
+            <p v-if="currentTab == 2">
+              七牛云开通方法：<a href="https://doc.crmeb.com/single/v5/7792" target="_blank">点击查看</a>
+            </p>
+            <p v-if="currentTab == 3">
+              阿里云oss开通方法：<a href="https://doc.crmeb.com/single/v5/7790" target="_blank">点击查看</a>
+            </p>
+            <p v-if="currentTab == 4">
+              腾讯云cos开通方法：<a href="https://doc.crmeb.com/single/v5/7791" target="_blank">点击查看</a>
+            </p>
+            <p v-if="currentTab == 5">
+              京东云cos开通方法：<a href="https://doc.crmeb.com/single/v5/8522" target="_blank">点击查看</a>
+            </p>
+            <p v-if="currentTab == 6">
+              华为云cos开通方法：<a href="https://doc.crmeb.com/single/v5/8523" target="_blank">点击查看</a>
+            </p>
+            <p v-if="currentTab == 7">
+              天翼云cos开通方法：<a href="https://doc.crmeb.com/single/v5/8524" target="_blank">点击查看</a>
+            </p>
+            <p>第一步： 添加【存储空间】（空间名称不能重复）</p>
+            <p>第二步： 开启【使用状态】</p>
+            <template v-if="currentTab == 2">
+              <p>第三步（必选）： 选择云存储空间列表上的修改【空间域名操作】</p>
+              <p>第四步（必选）： 选择云存储空间列表上的修改【CNAME配置】，打开后复制记录值到对应的平台解析</p>
+            </template>
+            <template v-else>
+              <p>第三步（可选）： 选择云存储空间列表上的修改【空间域名操作】</p>
+              <p>第四步（可选）： 选择云存储空间列表上的修改【CNAME配置】，打开后复制记录值到对应的平台解析</p>
+            </template>
           </template>
-        </template>
-      </Card>
+        </el-alert>
+      </el-card>
     </div>
-    <div class="table-box" style="padding-top: 10px" v-if="currentTab == 1">
-      <Card :bordered="false" dis-hover class="ivu-mt">
-        <Row type="flex">
-          <Col span="24">
+    <div class="pt16" v-if="currentTab == 1">
+      <el-card :bordered="false" shadow="never" class="ivu-mt">
+        <el-row>
+          <el-col :span="24">
             <span class="save-type"> 存储方式： </span>
-            <RadioGroup v-model="formValidate.upload_type" @on-change="changeSave">
-              <Radio label="1">本地存储</Radio>
-              <Radio label="2">七牛云存储</Radio>
-              <Radio label="3">阿里云存储</Radio>
-              <Radio label="4">腾讯云存储</Radio>
-            </RadioGroup>
-            <!-- <i-switch
+            <el-radio-group v-model="formValidate.upload_type" @input="changeSave">
+              <el-radio label="1">本地存储</el-radio>
+              <el-radio label="2">七牛云存储</el-radio>
+              <el-radio label="3">阿里云存储</el-radio>
+              <el-radio label="4">腾讯云存储</el-radio>
+              <el-radio label="5">京东云存储</el-radio>
+              <el-radio label="6">华为云存储</el-radio>
+              <el-radio label="7">天翼云存储</el-radio>
+            </el-radio-group>
+            <!-- <el-switch :active-value="1"  :inactive-value="0"
               v-model="localStorage"
               size="large"
-              @on-change="addSwitch"
+              @change="addSwitch"
             >
               <span slot="open">开启</span>
               <span slot="close">关闭</span>
-            </i-switch> -->
-          </Col>
-        </Row>
-      </Card>
-      <Card :bordered="false" dis-hover class="ivu-mt">
-        <Form ref="formValidate" :model="formValidate" :rules="ruleValidate">
+             </el-switch> -->
+          </el-col>
+        </el-row>
+      </el-card>
+      <el-card :bordered="false" shadow="never" class="ivu-mt">
+        <el-form ref="formValidate" :model="formValidate" :rules="ruleValidate">
           <div class="abbreviation">
-            <div class="top">
+            <el-form-item label="是否开启缩略图：" label-width="110px">
+              <el-switch
+                :active-value="1"
+                :inactive-value="0"
+                v-model="formValidate.image_thumb_status"
+                size="large"
+              >
+                <span slot="open">开启</span>
+                <span slot="close">关闭</span>
+              </el-switch>
+            </el-form-item>
+            <div class="top" v-if="formValidate.image_thumb_status == 1">
               <div class="topBox">
                 <div class="topLeft">
                   <div class="img">
@@ -76,26 +102,26 @@
                   <div>缩略大图</div>
                 </div>
                 <div class="topRight">
-                  <FormItem label="宽：">
-                    <Input
+                  <el-form-item label="宽：">
+                    <el-input
                       class="topIput"
                       type="number"
                       v-model="formValidate.thumb_big_width"
                       placeholder="请输入宽度"
                     >
                       <span slot="append">px</span>
-                    </Input>
-                  </FormItem>
-                  <FormItem label="高：">
-                    <Input
+                    </el-input>
+                  </el-form-item>
+                  <el-form-item label="高：">
+                    <el-input
                       class="topIput"
                       type="number"
                       v-model="formValidate.thumb_big_height"
                       placeholder="请输入高度"
                     >
                       <span slot="append">px</span>
-                    </Input>
-                  </FormItem>
+                    </el-input>
+                  </el-form-item>
                 </div>
               </div>
               <div class="topBox">
@@ -106,26 +132,26 @@
                   <div>缩略中图</div>
                 </div>
                 <div class="topRight">
-                  <FormItem label="宽：">
-                    <Input
+                  <el-form-item label="宽：">
+                    <el-input
                       class="topIput"
                       type="number"
                       v-model="formValidate.thumb_mid_width"
                       placeholder="请输入宽度"
                     >
                       <span slot="append">px</span>
-                    </Input>
-                  </FormItem>
-                  <FormItem label="高：">
-                    <Input
+                    </el-input>
+                  </el-form-item>
+                  <el-form-item label="高：">
+                    <el-input
                       type="number"
                       class="topIput"
                       v-model="formValidate.thumb_mid_height"
                       placeholder="请输入高度"
                     >
                       <span slot="append">px</span>
-                    </Input>
-                  </FormItem>
+                    </el-input>
+                  </el-form-item>
                 </div>
               </div>
               <div class="topBox">
@@ -136,77 +162,82 @@
                   <div>缩略小图</div>
                 </div>
                 <div class="topRight">
-                  <FormItem label="宽：">
-                    <Input
+                  <el-form-item label="宽：">
+                    <el-input
                       class="topIput"
                       type="number"
                       v-model="formValidate.thumb_small_width"
                       placeholder="请输入宽度"
                     >
                       <span slot="append">px</span>
-                    </Input>
-                  </FormItem>
-                  <FormItem label="高：">
-                    <Input
+                    </el-input>
+                  </el-form-item>
+                  <el-form-item label="高：">
+                    <el-input
                       class="topIput"
                       type="number"
                       v-model="formValidate.thumb_small_height"
                       placeholder="请输入高度"
                     >
                       <span slot="append">px</span>
-                    </Input>
-                  </FormItem>
+                    </el-input>
+                  </el-form-item>
                 </div>
               </div>
             </div>
-            <Divider />
-            <div class="content">
-              <FormItem label="是否开启水印：">
-                <i-switch v-model="formValidate.image_watermark_status" size="large">
+            <el-divider />
+            <div class="content mt20">
+              <el-form-item label="是否开启水印：" label-width="110px">
+                <el-switch
+                  :active-value="1"
+                  :inactive-value="0"
+                  v-model="formValidate.image_watermark_status"
+                  size="large"
+                >
                   <span slot="open">开启</span>
                   <span slot="close">关闭</span>
-                </i-switch>
-              </FormItem>
+                </el-switch>
+              </el-form-item>
               <div v-if="formValidate.image_watermark_status == 1">
-                <FormItem label="水印类型：">
-                  <RadioGroup v-model="formValidate.watermark_type">
-                    <Radio :label="1">图片</Radio>
-                    <Radio :label="2">文字</Radio>
-                  </RadioGroup>
-                </FormItem>
+                <el-form-item label="类型：" label-width="110px">
+                  <el-radio-group v-model="formValidate.watermark_type">
+                    <el-radio :label="1">图片</el-radio>
+                    <el-radio :label="2">文字</el-radio>
+                  </el-radio-group>
+                </el-form-item>
                 <div v-if="formValidate.watermark_type == 1">
                   <div class="flex">
-                    <FormItem class="contentIput" label="水印透明度：" prop="name">
-                      <Input
+                    <el-form-item class="contentIput" label="透明度：" prop="name" label-width="110px">
+                      <el-input
                         class="topIput"
                         type="number"
                         v-model="formValidate.watermark_opacity"
                         placeholder="请输入水印透明度"
                       >
-                      </Input>
-                    </FormItem>
-                    <FormItem class="contentIput" label="水印倾斜度：" prop="mail">
-                      <Input
+                      </el-input>
+                    </el-form-item>
+                    <el-form-item class="contentIput" label="倾斜度：" prop="mail" label-width="110px">
+                      <el-input
                         class="topIput"
                         type="number"
                         v-model="formValidate.watermark_rotate"
                         placeholder="请输入水印倾斜度"
                       >
-                      </Input>
-                    </FormItem>
+                      </el-input>
+                    </el-form-item>
                   </div>
                   <div class="flex">
-                    <FormItem class="contentIput" label="水印图片：" prop="name">
-                      <div class="picBox" @click="modalPicTap('单选')">
+                    <el-form-item class="contentIput" label="图片：" prop="name" label-width="110px">
+                      <div class="picBox" v-db-click @click="modalPicTap('单选')">
                         <div class="pictrue" v-if="formValidate.watermark_image">
                           <img :src="formValidate.watermark_image" />
                         </div>
                         <div class="upLoad acea-row row-center-wrapper" v-else>
-                          <Icon type="ios-camera-outline" size="24" />
+                          <i class="el-icon-picture-outline" style="font-size: 24px"></i>
                         </div>
                       </div>
-                    </FormItem>
-                    <FormItem class="contentIput" label="水印位置：" prop="mail">
+                    </el-form-item>
+                    <el-form-item class="contentIput" label="位置：" prop="mail" label-width="110px">
                       <div class="conents">
                         <div class="positionBox">
                           <div
@@ -214,58 +245,61 @@
                             :class="positionId == item.id ? 'on' : ''"
                             v-for="(item, index) in boxs"
                             :key="index"
+                            v-db-click
                             @click="bindbox(item)"
                           ></div>
                         </div>
                         <div class="title">{{ positiontlt }}</div>
                       </div>
-                    </FormItem>
+                    </el-form-item>
                   </div>
                   <div class="flex">
-                    <FormItem class="contentIput" label="水印横坐标偏移量：" width="200" prop="name">
-                      <Input
+                    <el-form-item class="contentIput" label="横坐标偏移量：" label-width="110px" prop="name">
+                      <el-input
                         class="topIput"
                         type="number"
                         v-model="formValidate.watermark_x"
                         placeholder="请输入水印横坐标偏移量"
+                        style="width: 240px"
                       >
                         <span slot="append">px</span>
-                      </Input>
-                    </FormItem>
-                    <FormItem class="contentIput" label="水印纵坐标偏移量：" prop="mail">
-                      <Input
+                      </el-input>
+                    </el-form-item>
+                    <el-form-item class="contentIput" label="纵坐标偏移量：" label-width="110px" prop="mail">
+                      <el-input
                         class="topIput"
                         type="number"
                         v-model="formValidate.watermark_y"
                         placeholder="请输入水印纵坐标偏移量"
+                        style="width: 240px"
                       >
                         <span slot="append">px</span>
-                      </Input>
-                    </FormItem>
+                      </el-input>
+                    </el-form-item>
                   </div>
                 </div>
                 <!-- 水印类型为文字 -->
                 <div v-else>
                   <div class="flex">
-                    <FormItem class="contentIput" label="水印文字：" prop="name">
-                      <Input class="topIput" v-model="formValidate.watermark_text" placeholder="请输入水印文字">
-                      </Input>
-                    </FormItem>
-                    <FormItem class="contentIput" label="水印文字大小：">
-                      <Input
+                    <el-form-item class="contentIput" label="文字：" label-width="110px" prop="name">
+                      <el-input class="topIput" v-model="formValidate.watermark_text" placeholder="请输入水印文字">
+                      </el-input>
+                    </el-form-item>
+                    <el-form-item class="contentIput" label="文字大小：" label-width="110px">
+                      <el-input
                         class="topIput"
                         type="number"
                         v-model="formValidate.watermark_text_size"
                         placeholder="请输入水印文字大小"
                       >
-                      </Input>
-                    </FormItem>
+                      </el-input>
+                    </el-form-item>
                   </div>
                   <div class="flex">
-                    <FormItem class="contentIput" label="水印字体颜色：" prop="name">
-                      <ColorPicker v-model="formValidate.watermark_text_color" />
-                    </FormItem>
-                    <FormItem class="contentIput" label="水印位置：" prop="mail">
+                    <el-form-item class="contentIput" label="字体颜色：" prop="name" label-width="110px">
+                      <el-color-picker v-model="formValidate.watermark_text_color"></el-color-picker>
+                    </el-form-item>
+                    <el-form-item class="contentIput" label="位置：" prop="mail" label-width="110px">
                       <div class="conents">
                         <div class="positionBox">
                           <div
@@ -273,132 +307,150 @@
                             :class="positionId == item.id ? 'on' : ''"
                             v-for="(item, index) in boxs"
                             :key="index"
+                            v-db-click
                             @click="bindbox(item)"
                           ></div>
                         </div>
                         <div class="title">{{ positiontlt }}</div>
                       </div>
-                    </FormItem>
+                    </el-form-item>
                   </div>
                   <div class="flex">
-                    <FormItem class="contentIput" label="水印字体旋转角度：">
-                      <Input
+                    <el-form-item class="contentIput" label="字体旋转角度：" label-width="110px">
+                      <el-input
                         class="topIput"
                         type="number"
                         v-model="formValidate.watermark_text_angle"
                         placeholder="请输入水印字体旋转角度"
                       >
-                      </Input>
-                    </FormItem>
-                    <FormItem class="contentIput" label="水印横坐标偏移量：">
-                      <Input
+                      </el-input>
+                    </el-form-item>
+                    <el-form-item class="contentIput" label="横坐标偏移量：" label-width="110px">
+                      <el-input
                         class="topIput"
                         type="number"
                         v-model="formValidate.watermark_x"
                         placeholder="请输入水印横坐标偏移量"
                       >
                         <span slot="append">px</span>
-                      </Input>
-                    </FormItem>
+                      </el-input>
+                    </el-form-item>
                   </div>
-                  <FormItem class="contentIput" label="水印横坐纵偏移量：" prop="mail">
-                    <Input
+                  <el-form-item class="contentIput" label="纵坐标偏移量：" prop="mail" label-width="110px">
+                    <el-input
                       class="topIput"
                       type="number"
                       v-model="formValidate.watermark_y"
-                      placeholder="请输入水印横坐纵偏移量"
+                      placeholder="请输入水印纵坐标偏移量"
                     >
                       <span slot="append">px</span>
-                    </Input>
-                  </FormItem>
+                    </el-input>
+                  </el-form-item>
                 </div>
               </div>
             </div>
-            <FormItem>
-              <Button type="primary" @click="handleSubmit('formValidate')">保存</Button>
-            </FormItem>
+            <el-form-item>
+              <el-button type="primary" v-db-click @click="handleSubmit('formValidate')">保存</el-button>
+            </el-form-item>
           </div>
-        </Form>
-      </Card>
+        </el-form>
+      </el-card>
     </div>
     <!-- 缩略图配置 -->
-    <div class="table-box" style="padding-top: 10px" v-else-if="currentTab == 5"></div>
-    <div class="table-box" style="padding-top: 10px" v-else>
-      <Card :bordered="false" dis-hover class="ivu-mt">
-        <Row type="flex" class="mb20">
-          <Col span="24">
-            <Button type="primary" @click="addStorageBtn">添加存储空间</Button>
-            <Button type="success" @click="synchro" style="margin-left: 20px">同步存储空间</Button>
-            <Button @click="addConfigBtn" style="float: right">修改配置信息</Button>
-          </Col>
-        </Row>
-        <Table
-          :columns="columns"
+    <div class="pt10" v-else-if="currentTab == 10"></div>
+    <div class="pt10" v-else>
+      <el-card :bordered="false" shadow="never" class="ivu-mt">
+        <el-row class="mb20">
+          <el-col :span="24">
+            <el-button type="primary" v-db-click @click="addStorageBtn">添加存储空间</el-button>
+            <el-button type="success" v-db-click @click="synchro" style="margin-left: 20px">同步存储空间</el-button>
+            <el-button v-db-click @click="addConfigBtn" style="float: right">修改配置信息</el-button>
+          </el-col>
+        </el-row>
+        <el-table
           :data="levelLists"
           ref="table"
-          class="mt25"
-          :loading="loading"
-          highlight-row
+          class="mt14"
+          v-loading="loading"
+          highlight-current-row
           no-userFrom-text="暂无数据"
           no-filtered-userFrom-text="暂无筛选结果"
         >
-          <template slot-scope="{ row, index }" slot="status">
-            <!-- {{row}}{{index}} -->
-            <i-switch
-              v-model="row.status"
-              :value="row.status"
-              :true-value="1"
-              :false-value="0"
-              @on-change="changeSwitch(row, index)"
-              size="large"
-            >
-              <span slot="open">开启</span>
-              <span slot="close">关闭</span>
-            </i-switch>
-          </template>
-          <template slot-scope="{ row, index }" slot="action">
-            <template v-if="row.domain && row.domain != row.cname">
-              <span class="btn" @click="config(row)">CNAME配置</span>
-              <Divider type="vertical" />
+          <el-table-column label="储存空间名称" min-width="120">
+            <template slot-scope="scope">
+              <span>{{ scope.row.name }}</span>
             </template>
-            <span class="btn" @click="edit(row)">修改空间域名</span>
-            <Divider type="vertical" />
-            <span class="btn" @click="del(row, '删除该数据', index)">删除</span>
-          </template>
-        </Table>
+          </el-table-column>
+          <el-table-column label="区域" min-width="90">
+            <template slot-scope="scope">
+              <span>{{ scope.row._region }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="空间域名" min-width="130">
+            <template slot-scope="scope">
+              <span>{{ scope.row.domain }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="使用状态" min-width="90">
+            <template slot-scope="scope">
+              <el-switch
+                class="defineSwitch"
+                :active-value="1"
+                :inactive-value="0"
+                v-model="scope.row.status"
+                :value="scope.row.status"
+                @change="changeSwitch(scope.row, index)"
+                size="large"
+                active-text="开启"
+                inactive-text="关闭"
+              >
+              </el-switch>
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间" min-width="130">
+            <template slot-scope="scope">
+              <span>{{ scope.row._add_time }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="更新时间" min-width="130">
+            <template slot-scope="scope">
+              <span>{{ scope.row._update_time }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" fixed="right" width="220">
+            <template slot-scope="scope">
+              <template v-if="scope.row.domain && scope.row.domain != scope.row.cname">
+                <span class="btn" v-db-click @click="config(scope.row)">CNAME配置</span>
+                <el-divider direction="vertical"></el-divider>
+              </template>
+              <span class="btn" v-db-click @click="edit(scope.row)">修改空间域名</span>
+              <el-divider direction="vertical"></el-divider>
+              <span class="btn" v-db-click @click="del(scope.row, '删除该数据', scope.$index)">删除</span>
+            </template>
+          </el-table-column>
+        </el-table>
         <div class="acea-row row-right page">
-          <Page
+          <pagination
+            v-if="total"
             :total="total"
-            :current="list.page"
-            show-elevator
-            show-total
-            @on-change="pageChange"
-            :page-size="list.limit"
+            :page.sync="list.page"
+            :limit.sync="list.limit"
+            @pagination="getlist"
           />
         </div>
-      </Card>
+      </el-card>
     </div>
-    <Modal v-model="configuModal" title="CNAME配置">
+    <el-dialog :visible.sync="configuModal" title="CNAME配置" width="570px">
       <div>
         <div class="confignv"><span class="configtit">主机记录：</span>{{ configData.domain }}</div>
         <div class="confignv"><span class="configtit">记录类型：</span>CNAME</div>
         <div class="confignv">
           <span class="configtit">记录值：</span>{{ configData.cname }}
-          <span class="copy copy-data" :data-clipboard-text="configData.cname">复制</span>
+          <span class="copy copy-data" v-db-click @click="insertCopy(configData.cname)">复制</span>
         </div>
       </div>
-      <div slot="footer"></div>
-    </Modal>
-    <Modal
-      v-model="modalPic"
-      width="950px"
-      scrollable
-      footer-hide
-      closable
-      title="上传商品图"
-      :mask-closable="false"
-      :z-index="888"
-    >
+    </el-dialog>
+    <el-dialog :visible.sync="modalPic" width="950px" title="上传商品图" :close-on-click-modal="false">
       <uploadPictures
         :isChoice="isChoice"
         @getPic="getPic"
@@ -406,7 +458,7 @@
         :gridPic="gridPic"
         v-if="modalPic"
       ></uploadPictures>
-    </Modal>
+    </el-dialog>
   </div>
 </template>
 
@@ -451,13 +503,14 @@ export default {
       positionId: 1,
       positiontlt: '',
       formValidate: {
+        image_thumb_status: 0,
         thumb_big_height: '',
         thumb_big_width: '',
         thumb_mid_width: '',
         thumb_mid_height: '',
         thumb_small_height: '',
         thumb_small_width: '',
-        image_watermark_status: false,
+        image_watermark_status: 0,
         watermark_type: 1,
         watermark_opacity: '',
         watermark_rotate: '',
@@ -482,52 +535,12 @@ export default {
         { label: '七牛云储存', value: '2' },
         { label: '阿里云储存', value: '3' },
         { label: '腾讯云储存', value: '4' },
-        // { label: "缩略图配置", value: "5" },
+        { label: '京东云储存', value: '5' },
+        { label: '华为云储存', value: '6' },
+        { label: '天翼云储存', value: '7' },
+        // { label: "缩略图配置", value: "10" },
       ],
-      columns: [
-        {
-          title: '储存空间名称',
-          key: 'name',
-          align: 'center',
-          minWidth: 200,
-        },
-        {
-          title: '区域',
-          key: '_region',
-          align: 'center',
-          minWidth: 100,
-        },
-        {
-          title: '空间域名',
-          key: 'domain',
-          align: 'center',
-          minWidth: 200,
-        },
-        {
-          title: '使用状态',
-          slot: 'status',
-          align: 'center',
-          width: 90,
-        },
-        {
-          title: '创建时间',
-          key: '_add_time',
-          align: 'center',
-          minWidth: 150,
-        },
-        {
-          title: '更新时间',
-          key: '_update_time',
-          align: 'center',
-          minWidth: 150,
-        },
-        {
-          title: '操作',
-          slot: 'action',
-          width: 210,
-          align: 'center',
-        },
-      ],
+
       total: 0,
       list: {
         page: 1,
@@ -556,25 +569,27 @@ export default {
         this.localStorage = true;
       }
       this.formValidate.upload_type = res.data.type;
-      this.changeTab(res.data.type.toString());
-    });
-  },
-  mounted: function () {
-    this.$nextTick(function () {
-      const clipboard = new ClipboardJS('.copy-data');
-      clipboard.on('success', () => {
-        this.$Message.success('复制成功');
-      });
+      this.currentTab = res.data.type.toString();
+      this.changeTab();
     });
   },
   methods: {
+    insertCopy(text) {
+      this.$copyText(text)
+        .then((message) => {
+          this.$message.success('复制成功');
+        })
+        .catch((err) => {
+          this.$message.error('复制失败');
+        });
+    },
     changeSave(type) {
       saveType(type)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
         })
         .catch((err) => {
-          this.$Message.error(err.msg);
+          this.$message.error(err.msg);
         });
     },
     bindbox(item) {
@@ -584,16 +599,11 @@ export default {
     },
     handleSubmit(name) {
       if (this.formValidate.image_watermark_status) {
-        this.formValidate.image_watermark_status = 1;
-      } else {
-        this.formValidate.image_watermark_status = 0;
-      }
-      if (this.formValidate.image_watermark_status) {
         this.$refs[name].validate((valid) => {
           if (valid) {
             this.postMessage(this.formValidate);
           } else {
-            this.$Message.error('Fail!');
+            this.$message.error('Fail!');
           }
         });
       } else {
@@ -604,10 +614,10 @@ export default {
     postMessage(data) {
       positionPostApi(data)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
         })
         .catch((err) => {
-          this.$Message.error(err.msg);
+          this.$message.error(err.msg);
         });
     },
     // 选择图片
@@ -627,11 +637,11 @@ export default {
     synchro() {
       storageSynchApi(this.currentTab)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.getlist();
         })
         .catch((err) => {
-          this.$Message.error(err.msg);
+          this.$message.error(err.msg);
         });
     },
     // 添加存储空间
@@ -654,25 +664,26 @@ export default {
     },
     changeSwitch(row, item) {
       return new Promise((resolve) => {
-        this.$Modal.confirm({
+        this.$msgbox({
           title: '切换状态',
-          content: '您确认要切换使用状态吗？',
-          onOk: () => {
-            // resolve();
+          message: '您确认要切换使用状态吗',
+          showCancelButton: true,
+          cancelButtonText: '取消',
+          confirmButtonText: '确定',
+          iconClass: 'el-icon-warning',
+          confirmButtonClass: 'btn-custom-cancel',
+        })
+          .then(() => {
             storageStatusApi(row.id)
               .then((res) => {
-                this.$Message.success(res.msg);
+                this.$message.success(res.msg);
                 this.getlist();
               })
               .catch((err) => {
-                this.$Message.error(err.msg);
+                this.$message.error(err.msg);
               });
-          },
-          onCancel: () => {
-            this.$Message.info('已取消');
-            this.getlist();
-          },
-        });
+          })
+          .catch(() => {});
       });
     },
     getlist() {
@@ -683,11 +694,10 @@ export default {
         this.loading = false;
       });
     },
-    changeTab(data) {
-      this.currentTab = data;
-      this.list.type = data;
+    changeTab() {
+      this.list.type = this.currentTab;
       this.list.page = 1;
-      if (data == 1) {
+      if (this.currentTab == 1) {
         this.getposition();
       } else {
         this.getlist();
@@ -697,11 +707,6 @@ export default {
       let that = this;
       positionInfoApi().then((res) => {
         this.formValidate = res.data;
-        if (res.data.image_watermark_status == 1) {
-          that.formValidate.image_watermark_status = true;
-        } else {
-          that.formValidate.image_watermark_status = false;
-        }
         this.positionId = res.data.watermark_position;
         for (var i = 0; i < this.boxs.length; i++) {
           if (this.boxs[i].id == res.data.watermark_position) {
@@ -716,11 +721,11 @@ export default {
       }
       storageSwitchApi({ type: this.localStorage })
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.getlist();
         })
         .catch((err) => {
-          this.$Message.error(err.msg);
+          this.$message.error(err.msg);
         });
     },
     // 删除
@@ -734,30 +739,30 @@ export default {
       };
       this.$modalSure(delfromData)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.getlist();
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
-    },
-    pageChange(index) {
-      this.list.page = index;
-      this.getlist();
     },
   },
 };
 </script>
-<style scoped lang="less">
+<style scoped lang="scss">
+::v-deep .el-tabs__item {
+  height: 54px !important;
+  line-height: 54px !important;
+}
 .ivu-input-group > .ivu-input:last-child,
-/deep/.ivu-input-group-append {
+::v-deep .ivu-input-group-append {
   background: none;
   color: #999999;
 }
-/deep/.ivu-input-group .ivu-input {
+::v-deep .ivu-input-group .ivu-input {
   border-right: 0px !important;
 }
-.content /deep/.ivu-form .ivu-form-item-label {
+.content ::v-deep .ivu-form .ivu-form-item-label {
   width: 133px;
 }
 .topIput {
@@ -801,8 +806,8 @@ export default {
     }
   }
   .content {
-    /deep/.ivu-form-item-label {
-      width: 120px;
+    ::v-deep .ivu-form-item-label {
+      width: 96px;
     }
     .flex {
       display: flex;
@@ -842,14 +847,14 @@ export default {
 }
 </style>
 <style scoped>
-.message /deep/ .ivu-table-header thead tr th {
+.message ::v-deep .ivu-table-header thead tr th {
   padding: 8px 16px;
 }
 .ivu-radio-wrapper {
   margin-right: 15px;
   font-size: 12px !important;
 }
-.message /deep/ .ivu-tabs-tab {
+.message ::v-deep .ivu-tabs-tab {
   border-radius: 0 !important;
 }
 .table-box {
@@ -863,7 +868,7 @@ export default {
 .btn {
   cursor: pointer;
   color: #2d8cf0;
-  font-size: 10px;
+  font-size: 12px;
 }
 .is-switch-close {
   background-color: #504444;
@@ -883,7 +888,7 @@ export default {
 }
 .configtit {
   display: inline-block;
-  width: 60px;
+  width: 90px;
   text-align: right;
 }
 .copy {
@@ -928,6 +933,6 @@ h3 {
   margin-bottom: 10px;
 }
 .save-type {
-  font-size: 13px;
+  font-size: 12px;
 }
 </style>

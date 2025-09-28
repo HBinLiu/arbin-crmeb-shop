@@ -1,99 +1,92 @@
 <template>
   <div>
-    <div class="i-layout-page-header header_top">
-      <div class="i-layout-page-header fl_header">
-        <router-link :to="{ path: '/admin/system/config/system_group/index' }"
-          ><Button icon="ios-arrow-back" size="small" type="text">返回</Button></router-link
+    <!--    <div class="i-layout-page-header header-title">-->
+    <!--      <div class="fl_header">-->
+    <!--        <router-link v-if="$route.params.id != 49" :to="{ path: $routeProStr + '/system/config/system_group/index' }"-->
+    <!--          ><el-button size="small" type="text">返回</el-button></router-link-->
+    <!--        >-->
+    <!--        <el-divider direction="vertical" v-if="$route.params.id != 49" />-->
+    <!--        <span class="ivu-page-header-title mr20" style="padding: 0" v-text="$route.meta.title"></span>-->
+    <!--      </div>-->
+    <!--    </div>-->
+    <pages-header class="mb16" ref="pageHeader" :title="$route.meta.title"></pages-header>
+    <el-card :bordered="false" shadow="never" class="ivu-mt" :body-style="{ padding: 0 }">
+      <div class="padding-add">
+        <el-form
+          ref="formValidate"
+          :model="formValidate"
+          :label-width="labelWidth"
+          :label-position="labelPosition"
+          @submit.native.prevent
+          inline
         >
-        <Divider type="vertical" />
-        <span class="ivu-page-header-title mr20" style="padding: 0" v-text="$route.meta.title"></span>
+          <el-form-item label="是否显示：">
+            <el-select
+              v-model="formValidate.status"
+              placeholder="请选择"
+              clearable
+              @change="userSearchs"
+              class="form_content_width"
+            >
+              <el-option value="1" label="显示"></el-option>
+              <el-option value="0" label="不显示"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-form>
       </div>
-    </div>
-    <Card :bordered="false" dis-hover class="ivu-mt">
-      <Row class="ivu-mt box-wrapper">
-        <Col :xs="24" :sm="24" :md="6" :lg="4" class="left-wrapper" v-if="!$route.params.id && groupAll.length">
-          <Menu :theme="theme3" :active-name="sortName" width="auto">
-            <MenuGroup>
-              <MenuItem
-                :name="item.id"
-                class="menu-item"
-                v-for="(item, index) in groupAll"
-                :key="index"
-                @click.native="bindMenuItem(item, index)"
+    </el-card>
+    <el-card :bordered="false" shadow="never" class="ivu-mt mt14">
+      <el-button type="primary" v-db-click @click="groupAdd('添加数据')" class="mr20">添加数据</el-button>
+      <el-table
+        :data="tabList"
+        ref="table"
+        class="mt14"
+        v-loading="loading"
+        highlight-current-row
+        no-userFrom-text="暂无数据"
+        no-filtered-userFrom-text="暂无筛选结果"
+      >
+        <el-table-column :label="item.title" :min-width="item.minWidth" v-for="(item, index) in columns1" :key="index">
+          <template slot-scope="scope">
+            <template v-if="item.key">
+              <div v-if="item.type !== 'img'">
+                <span>{{ scope.row[item.key] }}</span>
+              </div>
+              <div v-else>
+                <div class="tabBox_img" v-viewer>
+                  <img v-lazy="scope.row[item.key][0]" />
+                </div>
+              </div>
+            </template>
+            <template v-else-if="item.slot === 'status'">
+              <el-switch
+                :active-value="1"
+                :inactive-value="0"
+                v-model="scope.row.status"
+                :value="scope.row.status"
+                @change="onchangeIsShow(scope.row)"
+                size="large"
               >
-                {{ item.name }}
-              </MenuItem>
-            </MenuGroup>
-          </Menu>
-        </Col>
-        <Col :xs="24" :sm="24" :md="$route.params.id ? 24 : 17" :lg="$route.params.id ? 24 : 20" ref="rightBox">
-          <Card :bordered="false" dis-hover>
-            <Form
-              ref="formValidate"
-              :model="formValidate"
-              :label-width="labelWidth"
-              :label-position="labelPosition"
-              @submit.native.prevent
-            >
-              <Row type="flex" :gutter="24">
-                <Col v-bind="grid">
-                  <FormItem label="是否显示：">
-                    <Select v-model="formValidate.status" placeholder="请选择" clearable @on-change="userSearchs">
-                      <Option value="1">显示</Option>
-                      <Option value="0">不显示</Option>
-                    </Select>
-                  </FormItem>
-                </Col>
-              </Row>
-              <Row type="flex">
-                <Col v-bind="grid">
-                  <Button type="primary" icon="md-add" @click="groupAdd('添加数据')" class="mr20">添加数据</Button>
-                </Col>
-              </Row>
-            </Form>
-            <Table
-              :columns="columns1"
-              :data="tabList"
-              ref="table"
-              class="mt25"
-              :loading="loading"
-              highlight-row
-              no-userFrom-text="暂无数据"
-              no-filtered-userFrom-text="暂无筛选结果"
-            >
-              <template slot-scope="{ row, index }" slot="status">
-                <i-switch
-                  v-model="row.status"
-                  :value="row.status"
-                  :true-value="1"
-                  :false-value="0"
-                  @on-change="onchangeIsShow(row)"
-                  size="large"
-                >
-                  <span slot="open">显示</span>
-                  <span slot="close">隐藏</span>
-                </i-switch>
-              </template>
-              <template slot-scope="{ row, index }" slot="action">
-                <a @click="edit(row, '编辑')">编辑</a>
-                <Divider type="vertical" />
-                <a @click="del(row, '删除这条信息', index)">删除</a>
-              </template>
-            </Table>
-            <div class="acea-row row-right page">
-              <Page
-                :total="total"
-                :current="formValidate.page"
-                show-elevator
-                show-total
-                @on-change="pageChange"
-                :page-size="formValidate.limit"
-              />
-            </div>
-          </Card>
-        </Col>
-      </Row>
-    </Card>
+              </el-switch>
+            </template>
+            <template v-else-if="item.slot === 'action'">
+              <a v-db-click @click="edit(scope.row, '编辑')">编辑</a>
+              <el-divider direction="vertical"></el-divider>
+              <a v-db-click @click="del(scope.row, '删除这条信息', scope.$index)">删除</a>
+            </template>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="acea-row row-right page">
+        <pagination
+          v-if="total"
+          :total="total"
+          :page.sync="formValidate.page"
+          :limit.sync="formValidate.limit"
+          @pagination="getList"
+        />
+      </div>
+    </el-card>
   </div>
 </template>
 
@@ -113,6 +106,7 @@ export default {
   components: { editFrom },
   data() {
     return {
+      treeId: '',
       grid: {
         xl: 7,
         lg: 7,
@@ -142,7 +136,7 @@ export default {
   computed: {
     ...mapState('media', ['isMobile']),
     labelWidth() {
-      return this.isMobile ? undefined : 75;
+      return this.isMobile ? undefined : '80px';
     },
     labelPosition() {
       return this.isMobile ? 'top' : 'right';
@@ -183,12 +177,12 @@ export default {
           this.getList();
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     // 返回
     back() {
-      this.$router.push({ path: '/admin/system/config/system_group/index' });
+      this.$router.push({ path: this.$routeProStr + '/system/config/system_group/index' });
     },
     getUrl(type) {
       let url = 'setting/group_data' + type;
@@ -220,7 +214,7 @@ export default {
         })
         .catch((res) => {
           this.loading = false;
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     // 表格头部
@@ -280,12 +274,8 @@ export default {
         })
         .catch((res) => {
           this.loading = false;
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
-    },
-    pageChange(index) {
-      this.formValidate.page = index;
-      this.getList();
     },
     // 表格搜索
     userSearchs() {
@@ -305,11 +295,11 @@ export default {
     onchangeIsShow(row) {
       groupDataSetApi(this.getUrl(`/set_status/${row.id}/${row.status}`))
         .then(async (res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.getList();
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     // 编辑
@@ -330,57 +320,63 @@ export default {
       };
       this.$modalSure(delfromData)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.tabList.splice(num, 1);
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
   },
 };
 </script>
 
-<style scoped lang="stylus">
-/deep/ .ivu-menu-vertical .ivu-menu-item-group-title{
+<style lang="scss" scoped>
+::v-deep .ivu-menu-vertical .ivu-menu-item-group-title {
+  display: none;
+}
+::v-deep .ivu-menu-vertical.ivu-menu-light:after {
+  display: none;
+}
+.left-wrapper {
+  height: 904px;
+  background: #fff;
+  border-right: 1px solid #dcdee2;
+}
+.menu-item {
+  z-index: 50;
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  word-break: break-all;
+  .icon-box {
+    z-index: 3;
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
     display: none;
+  }
+  &:hover .icon-box {
+    display: block;
+  }
+  .right-menu {
+    z-index: 10;
+    position: absolute;
+    right: -106px;
+    top: -11px;
+    width: auto;
+    min-width: 121px;
+  }
 }
-/deep/ .ivu-menu-vertical.ivu-menu-light:after{
-    display none
+.tabBox_img {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  cursor: pointer;
+  img {
+    width: 100%;
+    height: 100%;
+  }
 }
-
-.left-wrapper
-    height 904px
-    background #fff
-    border-right 1px solid #dcdee2
-.menu-item
-    z-index 50
-    position: relative;
-    display flex
-    justify-content space-between
-    word-break break-all
-    .icon-box
-        z-index 3
-        position absolute
-        right 20px
-        top 50%
-        transform translateY(-50%)
-        display none
-    &:hover .icon-box
-        display block
-    .right-menu
-        z-index 10
-        position absolute
-        right: -106px;
-        top: -11px;
-        width auto
-        min-width: 121px;
-.tabBox_img
-    width 36px
-    height 36px
-    border-radius:4px
-    cursor pointer
-    img
-        width 100%
-        height 100%
 </style>

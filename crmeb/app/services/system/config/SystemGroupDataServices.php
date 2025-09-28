@@ -74,9 +74,10 @@ class SystemGroupDataServices extends BaseServices
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
      */
-    public function getGroupDataList(array $where)
+    public function getGroupDataList(array $where, $type = 'limit')
     {
         [$page, $limit] = $this->getPageValue();
+        if ($type == 'all') $page = $limit = 0;
         $list = $this->dao->getGroupDataList($where, $page, $limit);
         $count = $this->dao->count($where);
         $type = '';
@@ -204,7 +205,7 @@ class SystemGroupDataServices extends BaseServices
                     } else {
                         $image = '';
                     }
-                    $f[] = Form::frameImage($value["title"], $value["name"], $this->url('admin/widget.images/index', ['fodder' => $value["title"], 'big' => 1], true), $image)->icon('ios-image')->width('950px')->height('505px')->modal(['footer-hide' => true]);
+                    $f[] = Form::frameImage($value["title"], $value["name"], $this->url(config('app.admin_prefix', 'admin') . '/widget.images/index', ['fodder' => $value["title"], 'big' => 1], true), $image)->icon('el-icon-picture-outline')->width('950px')->height('560px')->props(['footer' => false]);
                     break;
                 case 'uploads':
                     if ($fvalue) {
@@ -213,7 +214,7 @@ class SystemGroupDataServices extends BaseServices
                     } else {
                         $images = [];
                     }
-                    $f[] = Form::frameImages($value["title"], $value["name"], $this->url('admin/widget.images/index', ['fodder' => $value["title"], 'big' => 1, 'type' => 'many', 'maxLength' => 5], true), $images)->maxLength(5)->icon('ios-images')->width('950px')->height('505px')->modal(['footer-hide' => true])->spin(0);
+                    $f[] = Form::frameImages($value["title"], $value["name"], $this->url(config('app.admin_prefix', 'admin') . '/widget.images/index', ['fodder' => $value["title"], 'big' => 1, 'type' => 'many', 'maxLength' => 5], true), $images)->maxLength(5)->icon('el-icon-picture-outline')->width('950px')->height('560px')->props(['footer' => false])->spin(0);
                     break;
                 default:
                     $f[] = Form::input($value["title"], $value["name"], $fvalue);
@@ -282,7 +283,7 @@ class SystemGroupDataServices extends BaseServices
     {
         $systemGroup = [];
         if (!empty($ids)) {
-            $systemGroupData = $this->dao->idByGroupList($ids);
+            $systemGroupData = $this->dao->idByGroupList($ids, '*');
             if (!empty($systemGroupData))
                 $systemGroup = array_combine(array_column($systemGroupData, 'id'), $systemGroupData);
         }

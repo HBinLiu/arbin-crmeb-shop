@@ -14,7 +14,6 @@ use think\facade\Route;
  * 文件下载、导出相关路由
  */
 Route::group(function () {
-
     //下载备份记录表
     Route::get('backup/download', 'v1.system.SystemDatabackup/downloadFile')->option(['real_name' => '下载表备份记录']);
     //首页统计数据
@@ -23,9 +22,9 @@ Route::group(function () {
     Route::get('home/order', 'Common/orderChart')->option(['real_name' => '首页订单图表']);
     //首页用户图表
     Route::get('home/user', 'Common/userChart')->option(['real_name' => '首页用户图表']);
-    //
+    //首页交易额排行
     Route::get('home/rank', 'Common/purchaseRanking')->option(['real_name' => '首页交易额排行']);
-    // 消息提醒
+    //消息提醒
     Route::get('jnotice', 'Common/jnotice')->option(['real_name' => '消息提醒']);
     //验证授权
     Route::get('check_auth', 'Common/auth')->option(['real_name' => '验证授权']);
@@ -43,10 +42,12 @@ Route::group(function () {
     Route::get('copyright', 'Common/copyright')->option(['real_name' => '申请版权']);
     //保存版权
     Route::post('copyright', 'Common/saveCopyright')->option(['real_name' => '保存版权']);
+    //后台菜单搜索
+    Route::post('menusSearch', 'Common/menusSearch')->option(['real_name' => '后台菜单搜索']);
 })->middleware([
     \app\http\middleware\AllowOriginMiddleware::class,
     \app\adminapi\middleware\AdminAuthTokenMiddleware::class,
     \app\adminapi\middleware\AdminCheckRoleMiddleware::class,
     \app\adminapi\middleware\AdminLogMiddleware::class
-]);
+])->option(['mark' => 'common', 'mark_name' => '系统数据']);
 

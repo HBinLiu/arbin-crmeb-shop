@@ -12,14 +12,14 @@
 namespace crmeb\services;
 
 use Alipay\EasySDK\Payment\Wap\Models\AlipayTradeWapPayResponse;
-use crmeb\utils\Hook;
+use app\services\pay\PayServices;
+use app\services\system\SystemPemServices;
 use think\facade\Event;
 use think\facade\Log;
 use think\facade\Route as Url;
 use Alipay\EasySDK\Kernel\Config;
 use Alipay\EasySDK\Kernel\Factory;
 use crmeb\exceptions\PayException;
-use app\services\pay\PayNotifyServices;
 use Alipay\EasySDK\Kernel\Util\ResponseChecker;
 
 /**
@@ -39,6 +39,9 @@ class AliPayService
         'alipayPublicKey' => '',//支付宝公钥
         'notifyUrl' => '',//可设置异步通知接收服务地址
         'encryptKey' => '',//可设置AES密钥，调用AES加解密相关接口时需要（可选）
+        'alipayCertPath' => '',//支付宝证书路径(可选)
+        'alipayRootCertPath' => '',//支付宝根证书路径(可选)
+        'merchantCertPath' => '',//商户证书路径(可选)
     ];
 
     /**
@@ -63,11 +66,30 @@ class AliPayService
                 'merchantPrivateKey' => sys_config('alipay_merchant_private_key'),
                 'alipayPublicKey' => sys_config('alipay_public_key'),
                 'notifyUrl' => sys_config('site_url') . Url::buildUrl('/api/pay/notify/alipay'),
+                'alipayCertPath' => $this->getPemPath('alipay_cert_path'),
+                'alipayRootCertPath' => $this->getPemPath('alipay_root_cert_path'),
+                'merchantCertPath' => $this->getPemPath('merchant_cert_path'),
             ];
         }
         $this->config = array_merge($this->config, $config);
         $this->initialize();
         $this->response = new ResponseChecker();
+    }
+
+    public function getPemPath(string $name)
+    {
+        $systemPemServices = app()->make(SystemPemServices::class);
+        $path = $systemPemServices->getPemPath($name);
+        if ($path) return $path;
+        $path = sys_config($name);
+        if (strstr($path, 'http://') || strstr($path, 'https://')) {
+            $path = parse_url($path)['path'] ?? '';
+        }
+        $path = root_path('runtime/pem') . ltrim($path, '/');
+        if (!file_exists($path)) {
+            $path = public_path('uploads') . ltrim($path, '/');
+        }
+        return $path;
     }
 
     /**
@@ -105,8 +127,17 @@ class AliPayService
         $options->appId = $this->config['appId'];
         // 为避免私钥随源码泄露，推荐从文件中读取私钥字符串而不是写入源码中
         $options->merchantPrivateKey = $this->config['merchantPrivateKey'];
-        //注：如果采用非证书模式，则无需赋值上面的三个证书路径，改为赋值如下的支付宝公钥字符串即可
-        $options->alipayPublicKey = $this->config['alipayPublicKey'];
+
+        if (sys_config('alipay_sign_type') == 0) {
+            // 密钥模式
+            $options->alipayPublicKey = $this->config['alipayPublicKey'];
+        } else {
+            // 证书模式
+            $options->alipayCertPath = $this->config['alipayCertPath'];
+            $options->alipayRootCertPath = $this->config['alipayRootCertPath'];
+            $options->merchantCertPath = $this->config['merchantCertPath'];
+            $options->alipayPublicKey = '';
+        }
         //可设置异步通知接收服务地址（可选）
         $options->notifyUrl = $this->config['notifyUrl'];
         //可设置AES密钥，调用AES加解密相关接口时需要（可选）
@@ -124,11 +155,11 @@ class AliPayService
      * @param string $totalAmount 支付金额
      * @param string $passbackParams 备注
      * @param string $quitUrl 同步跳转地址
-     * @param string $siteUrl
+     * @param string $returnUrl
      * @param bool $isCode
      * @return AlipayTradeWapPayResponse
      */
-    public function create(string $title, string $orderId, string $totalAmount, string $passbackParams, string $quitUrl = '', string $siteUrl = '', bool $isCode = false)
+    public function create(string $title, string $orderId, string $totalAmount, string $passbackParams, string $quitUrl = '', string $returnUrl = '', bool $isCode = false)
     {
         $title = trim($title);
         try {
@@ -140,7 +171,7 @@ class AliPayService
                 $result = Factory::payment()->app()->optional('passback_params', $passbackParams)->pay($title, $orderId, $totalAmount);
             } else {
                 //h5支付
-                $result = Factory::payment()->wap()->optional('passback_params', $passbackParams)->pay($title, $orderId, $totalAmount, $quitUrl, $siteUrl);
+                $result = Factory::payment()->wap()->optional('passback_params', $passbackParams)->pay($title, $orderId, $totalAmount, $quitUrl, $returnUrl);
             }
             if ($this->response->success($result)) {
                 return $result->body ?? $result;
@@ -201,15 +232,16 @@ class AliPayService
     {
         return self::instance()->notify(function ($notify) {
             if (isset($notify->out_trade_no)) {
-                if (isset($notify->attach) && $notify->attach) {
-                    if (($count = strpos($notify->out_trade_no, '_')) !== false) {
-                        $notify->trade_no = $notify->out_trade_no;
-                        $notify->out_trade_no = substr($notify->out_trade_no, $count + 1);
-                    }
-                    return (new Hook(PayNotifyServices::class, 'aliyun'))->listen($notify->attach, $notify->out_trade_no, $notify->trade_no);
-                }
-                return false;
+
+                $data = [
+                    'attach' => $notify->attach,
+                    'out_trade_no' => $notify->out_trade_no,
+                    'transaction_id' => $notify->trade_no
+                ];
+
+                return Event::until('NotifyListener', [$data, PayServices::ALIAPY_PAY]);
             }
+            return false;
         });
     }
 
@@ -221,35 +253,10 @@ class AliPayService
     public function notify(callable $notifyFn)
     {
         app()->request->filter(['trim']);
-        $paramInfo = app()->request->postMore([
-            ['gmt_create', ''],
-            ['charset', ''],
-            ['seller_email', ''],
-            ['subject', ''],
-            ['sign', ''],
-            ['buyer_id', ''],
-            ['invoice_amount', ''],
-            ['notify_id', ''],
-            ['fund_bill_list', ''],
-            ['notify_type', ''],
-            ['trade_status', ''],
-            ['receipt_amount', ''],
-            ['buyer_pay_amount', ''],
-            ['app_id', ''],
-            ['seller_id', ''],
-            ['sign_type', ''],
-            ['gmt_payment', ''],
-            ['notify_time', ''],
-            ['passback_params', ''],
-            ['version', ''],
-            ['out_trade_no', ''],
-            ['total_amount', ''],
-            ['trade_no', ''],
-            ['auth_app_id', ''],
-            ['buyer_logon_id', ''],
-            ['point_amount', ''],
-        ], false, false);
-
+        $paramInfo = app()->request->param();
+        if (isset($paramInfo['type'])) {
+            unset($paramInfo['type']);
+        }
         //商户订单号
         $postOrder['out_trade_no'] = $paramInfo['out_trade_no'] ?? '';
         //支付宝交易号
@@ -285,4 +292,32 @@ class AliPayService
         }
         return false;
     }
+
+    /**
+     * 商家支付接口
+     *
+     * @param array $bizParams 业务参数
+     * @return mixed|false 支付结果或者false
+     * @throws PayException 支付异常
+     */
+    public function merchantPay(array $bizParams, $alipaySignType = 0)
+    {
+        try {
+            // 调用工厂类的通用方法执行支付宝转账操作
+            $method = $alipaySignType == 0 ? 'alipay.fund.trans.toaccount.transfer' : 'alipay.fund.trans.uni.transfer';
+            $result = Factory::util()->generic()->execute($method, [], $bizParams);
+            // 判断支付是否成功
+            if ($this->response->success($result)) {
+                return $result;
+            } else {
+                Log::error('支付宝转账失败，失败原因:' . $result->msg . ' | ' . $result->subCode . ' | ' . $result->subMsg);
+                return false;
+            }
+        } catch (\Exception $e) {
+            // 记录日志并返回false
+            Log::error('支付宝转账失败，失败原因:' . $e->getMessage());
+            return false;
+        }
+    }
+
 }

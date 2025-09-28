@@ -48,7 +48,7 @@ class ProductCopyJob extends BaseJobs
                 $d_image = 'http://' . ltrim($image, '\//');
             }
             $description_cache = CacheService::get('desc_images_' . $id);
-            if ($description_cache === null) {
+            if ($description_cache === null || $description_cache === '') {
                 $description_cache = $description;
                 CacheService::set('desc_images_count' . $id, 0);
             }
@@ -64,7 +64,7 @@ class ProductCopyJob extends BaseJobs
                 CacheService::set('desc_images_count' . $id, $desc_count);
             }
         } catch (\Throwable $e) {
-            Log::error('下载商品详情图片失败，失败原因:' . $e->getMessage());
+            Log::error('下载商品详情图片失败，失败原因:' . $e->getMessage() . '_' . $e->getFile() . '_' . $e->getLine());
         }
         return true;
     }
@@ -81,14 +81,12 @@ class ProductCopyJob extends BaseJobs
             $copyTaobao = app()->make(CopyTaobaoServices::class);
             /** @var StoreProductServices $StoreProductServices */
             $StoreProductServices = app()->make(StoreProductServices::class);
-            /** @var StoreProductAttrValueServices $StoreProductAttrValueServices */
-            $StoreProductAttrValueServices = app()->make(StoreProductAttrValueServices::class);
             //下载图片
             $res = $copyTaobao->downloadCopyImage($image);
             //获取缓存中的轮播图
-            $slider_images = CacheService::get('slider_images_' . $id);
+            $slider_images = CacheService::get('slider_images_' . $id) ?? [];
             //缓存为null则赋值[]
-            if ($slider_images === null) $slider_images = [];
+            if ($slider_images === null || $slider_images === '') $slider_images = [];
             //将下载的图片插入数组
             array_push($slider_images, $res);
             //如果$slider_images中图片数量和传入的$count相等，说明已经下载完成，写入商品表，如果不等则继续插入缓存
@@ -97,12 +95,33 @@ class ProductCopyJob extends BaseJobs
                 $image = $slider_images[0];
                 $slider_images = $slider_images ? json_encode($slider_images) : '';
                 $StoreProductServices->update($id, ['slider_image' => $slider_images, 'image' => $image]);
-                $StoreProductAttrValueServices->update(['product_id' => $id], ['image' => $image]);
             } else {
                 CacheService::set('slider_images_' . $id, $slider_images);
             }
         } catch (\Throwable $e) {
-            Log::error('下载商品轮播图片失败，失败原因:' . $e->getMessage());
+            Log::error('下载商品轮播图片失败，失败原因:' . $e->getMessage() . '_' . $e->getFile() . '_' . $e->getLine());
+        }
+        return true;
+    }
+
+    /**
+     * 下载商品规格图片
+     * @param $value_id
+     * @param $value_image
+     * @return bool
+     */
+    public function copyAttrImage($value_id, $value_image)
+    {
+        try {
+            /** @var CopyTaobaoServices $copyTaobao */
+            $copyTaobao = app()->make(CopyTaobaoServices::class);
+            /** @var StoreProductAttrValueServices $StoreProductAttrValueServices */
+            $StoreProductAttrValueServices = app()->make(StoreProductAttrValueServices::class);
+            //下载图片
+            $res = $copyTaobao->downloadCopyImage($value_image);
+            $StoreProductAttrValueServices->update($value_id, ['image' => $res]);
+        } catch (\Throwable $e) {
+            Log::error('下载商品规格图片失败，失败原因:' . $e->getMessage() . '_' . $e->getFile() . '_' . $e->getLine());
         }
         return true;
     }

@@ -15,6 +15,7 @@ namespace app\services\activity\combination;
 use app\dao\activity\combination\StorePinkDao;
 use app\jobs\PinkJob;
 use app\services\BaseServices;
+use app\services\order\StoreOrderDeliveryServices;
 use app\services\order\StoreOrderRefundServices;
 use app\services\order\StoreOrderServices;
 use app\services\other\PosterServices;
@@ -56,6 +57,9 @@ class StorePinkServices extends BaseServices
     /**
      * @param array $where
      * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function systemPage(array $where)
     {
@@ -78,8 +82,8 @@ class StorePinkServices extends BaseServices
     public function getStatistics()
     {
         $res = [
-            ['col' => 6, 'count' => $this->dao->count(), 'name' => '参与人数(人)', 'className' => 'ios-speedometer-outline'],
-            ['col' => 6, 'count' => $this->dao->count(['k_id' => 0, 'status' => 2]), 'name' => '成团数量(个)', 'className' => 'md-rose'],
+            ['col' => 6, 'count' => $this->dao->count(), 'name' => '参与人数(人)', 'className' => 'iconfaqirenshu'],
+            ['col' => 6, 'count' => $this->dao->count(['k_id' => 0, 'status' => 2]), 'name' => '成团数量(个)', 'className' => 'iconshengyukucun'],
         ];
         return compact('res');
     }
@@ -88,16 +92,22 @@ class StorePinkServices extends BaseServices
      * 参团人员
      * @param int $id
      * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function getPinkMember(int $id)
     {
-        return $this->dao->getList(['k_id' => $id, 'is_refund' => 0]);
+        return $this->dao->getList(['k_id' => $id]);
     }
 
     /**
      * 拼团退款
-     * @param $id
+     * @param $order
      * @return bool
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function setRefundPink($order)
     {
@@ -121,18 +131,16 @@ class StorePinkServices extends BaseServices
                 $res11 = $this->dao->update($id, ['k_id' => $kCount['id']], 'k_id');
                 $res12 = $this->dao->update($kCount['id'], ['stop_time' => $count['add_time'] + 86400, 'k_id' => 0]);
                 $res1 = $res11 && $res12;
-                $res2 = $this->dao->update($id, ['stop_time' => time() - 1, 'k_id' => 0, 'is_refund' => $kCount['id'], 'status' => 3]);
+                $res2 = $this->dao->update($id, ['stop_time' => time() - 1, 'k_id' => $kCount['id'], 'is_refund' => $kCount['id'], 'status' => 3]);
+                $res3 = app()->make(StoreOrderServices::class)->update(['pink_id' => $id], ['pink_id' => $kCount['id']]);
             } else {
-                $res1 = true;
-                $res2 = $this->dao->update($id, ['stop_time' => time() - 1, 'k_id' => 0, 'is_refund' => $id, 'status' => 3]);
+                $res1 = $res3 = true;
+                $res2 = $this->dao->update($id, ['stop_time' => time() - 1, 'is_refund' => $id, 'status' => 3]);
             }
             //修改结束时间为前一秒  团长ID为0
-            $res = $res1 && $res2;
+            $res = $res1 && $res2 && $res3;
         } else if ($countY) {//团员
-            $res = $this->dao->update($countY['id'], ['stop_time' => time() - 1, 'k_id' => 0, 'is_refund' => $id, 'status' => 3]);
-        }
-        if ($res) {
-            CacheService::setStock(md5((string)$id), 1, 3, false);
+            $res = $this->dao->update($countY['id'], ['stop_time' => time() - 1, 'is_refund' => $id, 'status' => 3]);
         }
         return $res;
     }
@@ -151,8 +159,24 @@ class StorePinkServices extends BaseServices
         $where['cid'] = $id;
         $where['k_id'] = 0;
         $where['is_refund'] = 0;
-        $list = $this->dao->pinkList($where);
-        $ids = array_column($list, 'id');
+        $where['status'] = 1;
+        $pinkList = $this->dao->pinkList($where);
+        $ids = array_column($pinkList, 'id');
+        $orderIdKey = array_column($pinkList, 'order_id_key');
+        $refunList = [];
+        if ($orderIdKey) {
+            $refunList = app()->make(StoreOrderRefundServices::class)->getColumn([['store_order_id', 'in', $orderIdKey]], 'id', 'store_order_id');
+        }
+        if ($refunList) {
+            $list = [];
+            foreach ($pinkList as $item) {
+                if (!isset($refunList[$item['order_id_key']])) {
+                    $list[] = $item;
+                }
+            }
+        } else {
+            $list = $pinkList;
+        }
         $counts = $this->dao->getPinkPeopleCount($ids);
         if ($type) {
             $pinkAll = [];
@@ -163,6 +187,7 @@ class StorePinkServices extends BaseServices
                 $v['s'] = date('s', (int)$v['stop_time']);
                 $pinkAll[] = $v['id'];//开团团长ID
                 $v['stop_time'] = (int)$v['stop_time'];
+                $v['avatar'] = set_file_url($v['avatar']);
             }
             return [$list, $pinkAll];
         }
@@ -199,10 +224,10 @@ class StorePinkServices extends BaseServices
     {
         //查找拼团团员和团长
         if ($pink['k_id']) {
-            $pinkAll = $this->dao->getPinkUserList(['k_id' => $pink['k_id'], 'is_refund' => 0]);
+            $pinkAll = $this->dao->getPinkUserList(['k_id' => $pink['k_id']]);
             $pinkT = $this->dao->getPinkUserOne($pink['k_id']);
         } else {
-            $pinkAll = $this->dao->getPinkUserList(['k_id' => $pink['id'], 'is_refund' => 0]);
+            $pinkAll = $this->dao->getPinkUserList(['k_id' => $pink['id']]);
             $pinkT = $pink;
         }
         $count = count($pinkAll) + 1;
@@ -285,9 +310,9 @@ class StorePinkServices extends BaseServices
     {
         $pink = $this->dao->getOne([['id|k_id', '=', $pid], ['uid', '=', $uid]], '*', ['getProduct']);
         if ($isRemove) {
-            event('notice.notice', [['uid' => $uid, 'pink' => $pink, 'user_type' => $channel], 'send_order_pink_clone']);
+            event('NoticeListener', [['uid' => $uid, 'pink' => $pink, 'user_type' => $channel], 'send_order_pink_clone']);
         } else {
-            event('notice.notice', [['uid' => $uid, 'pink' => $pink, 'user_type' => $channel], 'send_order_pink_fial']);
+            event('NoticeListener', [['uid' => $uid, 'pink' => $pink, 'user_type' => $channel], 'send_order_pink_fial']);
         }
         $this->dao->update([['id|k_id', '=', $pid]], ['status' => 3, 'stop_time' => time()]);
     }
@@ -375,7 +400,7 @@ class StorePinkServices extends BaseServices
         foreach ($pinkList as $item) {
             $item['nickname'] = $pinkT_name;
             //用户发送消息
-            event('notice.notice', [
+            event('NoticeListener', [
                 [
                     'list' => $item,
                     'title' => $title,
@@ -384,6 +409,18 @@ class StorePinkServices extends BaseServices
                 ], 'order_user_groups_success']);
         }
         $this->dao->update([['uid', 'in', $uidAll], ['id|k_id', '=', $pid]], ['is_tpl' => 1]);
+
+        //拼团卡密和优惠券商品，成团后发放
+        $orderInfos = $orderService->getColumn([['order_id', 'in', $order_ids]], '*', 'order_id');
+        foreach ($orderInfos as $orderInfo) {
+            if (in_array($orderInfo['virtual_type'], [1, 2])) {
+                $orderInfo['cart_id'] = json_decode($orderInfo['cart_id'], true);
+                /** @var StoreOrderDeliveryServices $orderDeliveryServices */
+                $orderDeliveryServices = app()->make(StoreOrderDeliveryServices::class);
+                $orderDeliveryServices->virtualSend($orderInfo);
+            }
+        }
+        return true;
     }
 
     /**
@@ -424,7 +461,7 @@ class StorePinkServices extends BaseServices
                 $res = $this->save($pink);
             }
             // 拼团团成功发送模板消息
-            event('notice.notice', [['orderInfo' => $orderInfo, 'title' => $product['title'], 'pink' => $pink], 'can_pink_success']);
+            event('NoticeListener', [['orderInfo' => $orderInfo, 'title' => $product['title'], 'pink' => $pink], 'can_pink_success']);
 
             //处理拼团完成
             list($pinkAll, $pinkT, $count, $idAll, $uidAll) = $this->getPinkMemberAndPinkK($pink);
@@ -463,12 +500,9 @@ class StorePinkServices extends BaseServices
                 $pink['id'] = $res1['id'];
             }
 
-            $number = (int)bcsub((string)$pink['people'], '1', 0);
-            if ($number) CacheService::setStock(md5($pink['id']), $number, 3);
-
             PinkJob::dispatchSecs((int)(($product->effective_time * 3600) + 60), [$pink['id']]);
             // 开团成功发送模板消息
-            event('notice.notice', [['orderInfo' => $orderInfo, 'title' => $product['title'], 'pink' => $pink], 'open_pink_success']);
+            event('NoticeListener', [['orderInfo' => $orderInfo, 'title' => $product['title'], 'pink' => $pink], 'open_pink_success']);
 
             if ($res) return true;
             else return false;
@@ -766,7 +800,7 @@ class StorePinkServices extends BaseServices
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
      */
-    public function virtualCombination($pinkId)
+    public function virtualCombination($pinkId, $operator = 'auto')
     {
         $pinkInfo = $this->dao->get($pinkId);
         $people = $pinkInfo['people'];
@@ -775,7 +809,7 @@ class StorePinkServices extends BaseServices
         /** @var StoreCombinationServices $services */
         $services = app()->make(StoreCombinationServices::class);
         $percent2 = $services->value(['id' => $pinkInfo['cid']], 'virtual');
-        if ($percent1 >= $percent2) {
+        if ($percent1 >= $percent2 || $operator == 'admin') {
             $time = time();
             $num = $people - $count;
             $data = [];

@@ -1,79 +1,97 @@
 <template>
   <div>
-    <Row class="ivu-mt box-wrapper">
-      <Col span="3" class="left-wrapper">
-        <Menu :theme="theme3" :active-name="sortName" width="auto">
-          <MenuGroup>
-            <MenuItem
-              :name="item.id"
-              class="menu-item"
-              :class="index === current ? 'showOn' : ''"
-              v-for="(item, index) in labelSort"
-              :key="index"
-              @click.native="bindMenuItem(item, index)"
-            >
-              {{ item.name }}
-              <div class="icon-box" v-if="index != 0">
-                <Icon type="ios-more" size="24" @click.stop="showMenu(item)" />
-              </div>
-              <div class="right-menu ivu-poptip-inner" v-show="item.status" v-if="index != 0">
-                <div class="ivu-poptip-body" @click="labelEdit(item)">
-                  <div class="ivu-poptip-body-content">
-                    <div class="ivu-poptip-body-content-inner">编辑</div>
+    <el-row class="ivu-mt box-wrapper">
+      <el-col v-bind="grid1" class="left-wrapper">
+        <div class="tree_tit" v-db-click @click="addSort">
+          <i class="el-icon-circle-plus"></i>
+          添加分类
+        </div>
+        <div class="tree">
+          <el-tree
+            :data="labelSort"
+            node-key="id"
+            default-expand-all
+            highlight-current
+            :expand-on-click-node="false"
+            @node-click="bindMenuItem"
+            :current-node-key="treeId"
+          >
+            <span class="custom-tree-node" slot-scope="{ data }">
+              <div class="file-name">
+                <img v-if="!data.pid" class="icon" src="@/assets/images/file.jpg" />
+                <el-tooltip class="item" effect="dark" :content="data.name" placement="top">
+                  <div class="text line1">
+                    {{ data.name }}
                   </div>
-                </div>
-                <div class="ivu-poptip-body" @click="deleteSort(item, '删除分类', index)">
-                  <div class="ivu-poptip-body-content">
-                    <div class="ivu-poptip-body-content-inner">删除</div>
-                  </div>
-                </div>
+                </el-tooltip>
               </div>
-            </MenuItem>
-          </MenuGroup>
-        </Menu>
-      </Col>
-      <Col span="21" ref="rightBox">
-        <Card :bordered="false" dis-hover>
-          <Row type="flex">
-            <Col v-bind="grid">
-              <Button v-auth="['admin-user-label_add']" type="primary" icon="md-add" @click="add">添加标签</Button>
-              <Button
-                v-auth="['admin-user-label_add']"
-                type="success"
-                icon="md-add"
-                @click="addSort"
-                style="margin-left: 10px"
-                >添加分类</Button
-              >
-            </Col>
-          </Row>
-          <Table
-            :columns="columns1"
+              <span v-if="data.id">
+                <el-dropdown @command="(command) => clickMenu(data, command)">
+                  <i class="el-icon-more el-icon--right"></i>
+                  <template slot="dropdown">
+                    <el-dropdown-menu>
+                      <el-dropdown-item command="1">编辑分类</el-dropdown-item>
+                      <el-dropdown-item v-if="data.id" command="2">删除分类</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+              </span>
+            </span>
+          </el-tree>
+        </div>
+      </el-col>
+      <el-col v-bind="grid2" ref="rightBox">
+        <el-card :bordered="false" shadow="never" class="left-radius-none">
+          <el-row>
+            <el-col>
+              <el-button v-auth="['admin-user-label_add']" type="primary" v-db-click @click="add">添加标签</el-button>
+              <!-- <el-button v-auth="['admin-user-label_add']" type="success" v-db-click @click="addSort">添加分类</el-button> -->
+            </el-col>
+          </el-row>
+          <el-table
             :data="labelLists"
             ref="table"
-            class="mt25"
-            :loading="loading"
-            highlight-row
+            class="mt14"
+            v-loading="loading"
+            highlight-current-row
             no-userFrom-text="暂无数据"
             no-filtered-userFrom-text="暂无筛选结果"
           >
-            <template slot-scope="{ row, index }" slot="icons">
-              <div class="tabBox_img" v-viewer>
-                <img v-lazy="row.icon" />
-              </div>
-            </template>
-            <template slot-scope="{ row, index }" slot="action">
-              <a @click="edit(row.id)">修改</a>
-              <Divider type="vertical" />
-              <a @click="del(row, '删除分组', index)">删除</a>
-            </template>
-          </Table>
+            <el-table-column label="ID" width="80">
+              <template slot-scope="scope">
+                <span>{{ scope.row.id }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="标签名称" width="80">
+              <template slot-scope="scope">
+                <span>{{ scope.row.label_name }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="分类名称" min-width="80">
+              <template slot-scope="scope">
+                <span>{{ scope.row.cate_name }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column fixed="right" label="操作" width="100">
+              <template slot-scope="scope">
+                <a v-db-click @click="edit(scope.row.id)">修改</a>
+                <el-divider direction="vertical"></el-divider>
+                <a v-db-click @click="del(scope.row, '删除分类', scope.$index)">删除</a>
+              </template>
+            </el-table-column>
+          </el-table>
           <div class="acea-row row-right page">
-            <Page :total="total" show-elevator show-total @on-change="pageChange" :page-size="labelFrom.limit" />
+            <pagination
+              v-if="total"
+              :total="total"
+              :page.sync="labelFrom.page"
+              :limit.sync="labelFrom.limit"
+              @pagination="getList"
+            />
           </div>
-        </Card>
-      </Col>
-    </Row>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -84,38 +102,23 @@ export default {
   name: 'user_label',
   data() {
     return {
-      grid: {
-        xl: 7,
-        lg: 7,
-        md: 12,
-        sm: 24,
+      treeId: '',
+      grid1: {
+        xl: 4,
+        lg: 4,
+        md: 6,
+        sm: 8,
+        xs: 0,
+      },
+      grid2: {
+        xl: 20,
+        lg: 20,
+        md: 18,
+        sm: 16,
         xs: 24,
       },
+
       loading: false,
-      columns1: [
-        {
-          title: 'ID',
-          key: 'id',
-          align: 'center',
-          width: 120,
-        },
-        {
-          title: '分类名称',
-          key: 'cate_name',
-          align: 'center',
-        },
-        {
-          title: '标签名称',
-          key: 'label_name',
-          align: 'center',
-        },
-        {
-          title: '操作',
-          slot: 'action',
-          fixed: 'right',
-          width: 120,
-        },
-      ],
       labelFrom: {
         page: 1,
         limit: 15,
@@ -132,7 +135,7 @@ export default {
   computed: {
     ...mapState('media', ['isMobile']),
     labelWidth() {
-      return this.isMobile ? undefined : 75;
+      return this.isMobile ? undefined : '80px';
     },
     labelPosition() {
       return this.isMobile ? 'top' : 'right';
@@ -158,12 +161,8 @@ export default {
         })
         .catch((res) => {
           this.loading = false;
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
-    },
-    pageChange(index) {
-      this.labelFrom.page = index;
-      this.getList();
     },
     // 修改
     edit(id) {
@@ -180,13 +179,12 @@ export default {
       };
       this.$modalSure(delfromData)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.labelLists.splice(num, 1);
-          this.labelFrom.page = 1;
           this.getList();
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
     },
     // 标签分类
@@ -226,7 +224,10 @@ export default {
     addSort() {
       this.$modalForm(userLabelCreate()).then(() => this.getUserLabelAll());
     },
-    deleteSort(row, tit, num) {
+    deleteSort(row, tit) {
+      let num = this.labelSort.findIndex((e) => {
+        return e.id == row.id;
+      });
       let delfromData = {
         title: tit,
         num: num,
@@ -236,14 +237,21 @@ export default {
       };
       this.$modalSure(delfromData)
         .then((res) => {
-          this.$Message.success(res.msg);
+          this.$message.success(res.msg);
           this.labelSort.splice(num, 1);
           this.labelSort = [];
           this.getUserLabelAll();
         })
         .catch((res) => {
-          this.$Message.error(res.msg);
+          this.$message.error(res.msg);
         });
+    },
+    clickMenu(data, name) {
+      if (name == 1) {
+        this.labelEdit(data);
+      } else if (name == 2) {
+        this.deleteSort(data, '删除分类');
+      }
     },
     bindMenuItem(name, index) {
       this.labelFrom.page = 1;
@@ -258,25 +266,29 @@ export default {
 };
 </script>
 
-<style lang="stylus" scoped>
+<style lang="scss" scoped>
 .showOn {
   color: #2d8cf0;
   background: #f0faff;
   z-index: 2;
 }
-
-/deep/ .ivu-menu-vertical .ivu-menu-item-group-title {
+::v-deep .ivu-menu-vertical .ivu-menu-item-group-title {
   display: none;
 }
-
-/deep/ .ivu-menu-vertical.ivu-menu-light:after {
+::v-deep .ivu-menu-vertical.ivu-menu-light:after {
   display: none;
 }
-
 .left-wrapper {
-  height: 904px;
   background: #fff;
-  border-right: 1px solid #dcdee2;
+  border-right: 1px solid #f2f2f2;
+  .tree {
+    // height: 100%;
+    height: calc(-220px + 100vh);
+    overflow-y: scroll;
+  }
+  .tree::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .menu-item {
@@ -285,7 +297,6 @@ export default {
   display: flex;
   justify-content: space-between;
   word-break: break-all;
-
   .icon-box {
     z-index: 3;
     position: absolute;
@@ -294,11 +305,9 @@ export default {
     transform: translateY(-50%);
     display: none;
   }
-
   &:hover .icon-box {
     display: block;
   }
-
   .right-menu {
     z-index: 10;
     position: absolute;

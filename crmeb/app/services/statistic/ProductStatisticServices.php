@@ -13,6 +13,7 @@ namespace app\services\statistic;
 
 
 use app\services\BaseServices;
+use app\services\order\StoreOrderRefundServices;
 use app\services\other\export\ExportServices;
 use app\services\order\StoreCartServices;
 use app\services\order\StoreOrderServices;
@@ -35,12 +36,12 @@ class ProductStatisticServices extends BaseServices
     public function getBasic($where)
     {
         $time = explode('-', $where['time']);
-        if (count($time) != 2) throw new AdminException(100100);
+        if (count($time) != 2) throw new AdminException('请选择时间');
         //当前数据
         $now = $this->basicInfo($where, $time);
 
         //环比数据
-        $dayNum = (strtotime($time[1]) - strtotime($time[0])) / 86400 + 1;
+        $dayNum = bcadd(bcdiv(bcsub(strtotime($time[1]), strtotime($time[0])), '86400'), '1');
         $lastTime = array(
             date("Y/m/d", strtotime("-$dayNum days", strtotime($time[0]))),
             date("Y/m/d", strtotime("-1 days", strtotime($time[0])))
@@ -114,7 +115,7 @@ class ProductStatisticServices extends BaseServices
     {
         $time = explode('-', $where['time']);
         if (count($time) != 2) throw new AdminException(100100);
-        $dayCount = (strtotime($time[1]) - strtotime($time[0])) / 86400 + 1;
+        $dayCount = bcadd(bcdiv(bcsub(strtotime($time[1]), strtotime($time[0])), '86400'), '1');
         $data = [];
         if ($dayCount == 1) {
             $data = $this->trend($time, 0, $excel);
@@ -137,8 +138,8 @@ class ProductStatisticServices extends BaseServices
      */
     public function trend($time, $num, $excel = false)
     {
-        /** @var StoreVisitServices $storeVisit */
-        $storeVisit = app()->make(StoreVisitServices::class);
+        /** @var StoreOrderRefundServices $orderRefund */
+        $orderRefund = app()->make(StoreOrderRefundServices::class);
         /** @var StoreOrderServices $storeOrder */
         $storeOrder = app()->make(StoreOrderServices::class);
         /** @var StoreCartServices $storeCart */
@@ -167,27 +168,14 @@ class ProductStatisticServices extends BaseServices
         $browse = array_column($productLog->getProductTrend($time, $timeType, 'sum(visit_num)'), 'num', 'days');
         $user = array_column($productLog->getProductTrend($time, $timeType, 'count(distinct(uid))'), 'num', 'days');
         $pay = array_column($storeOrder->getProductTrend($time, $timeType, 'pay_time', 'sum(pay_price)'), 'num', 'days');
-        $refundList = $storeOrder->getProductTrend($time, $timeType, 'refund_reason_time', 'sum(pay_price)');
-        $refund = array_column($refundList, 'num', 'days');
+        $refund = array_column($orderRefund->getProductTrend($time, $timeType, 'refunded_time', 'sum(refunded_price)'), 'num', 'days');
         if ($excel) {
             $cart = array_column($storeCart->getProductTrend($time, $timeType, 'sum(cart_num)'), 'num', 'days');
             $order = array_column($storeOrder->getProductTrend($time, $timeType, 'add_time', 'sum(total_num)'), 'num', 'days');
             $payNum = array_column($storeOrder->getProductTrend($time, $timeType, 'pay_time', 'sum(total_num)'), 'num', 'days');
             $payCountNum = array_column($storeOrder->getProductTrend($time, $timeType, 'pay_time', 'count(distinct(uid))'), 'num', 'days');
             $cost = array_column($storeOrder->getProductTrend($time, $timeType, 'pay_time', 'sum(cost)'), 'num', 'days');
-            $orderIds = array_column($refundList, 'link_ids');
-            $ids = implode(',', $orderIds);
-            $totalNumList = $storeOrder->column(['refund_id' => $ids], 'total_num', 'id');
-            $refundNum = array_column($refundList, 'link_ids', 'days');
-            foreach ($refundNum as &$i) {
-                $oIds = explode(',', $i);
-                $i = array_map(function ($o) use ($totalNumList) {
-                    if (isset($totalNumList[$o])) {
-                        return $totalNumList[$o];
-                    }
-                }, $oIds);
-                $i = array_sum($i);
-            }
+            $refundNum = array_column($orderRefund->getProductTrend($time, $timeType, 'refunded_time', 'sum(refund_num)'), 'num', 'days');
             $data = [];
             foreach ($xAxis as &$item) {
                 if (isset($user[$item]) && isset($payCountNum[$item])) {

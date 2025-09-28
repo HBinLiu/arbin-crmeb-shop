@@ -1,6 +1,6 @@
 <template>
   <div class="chat-room">
-    <div class="room" :class="{ win: !chatOptions.popup }" @click="roomClick">
+    <div class="room" :class="{ win: !chatOptions.popup }" v-db-click @click="roomClick">
       <div v-drag class="head">
         <div class="image">
           <img v-lazy="serviceData && serviceData.avatar" />
@@ -8,18 +8,15 @@
         <div class="name">{{ serviceData && serviceData.nickname }}</div>
         <div
           :class="['iconfont', muted ? 'icon-shengyinjingyinxianxing' : 'icon-shengyinyinliang']"
+          v-db-click
           @click.stop="muted = !muted"
         ></div>
-        <div class="iconfont icon-guanbi5" @click.stop="close"></div>
+        <div class="iconfont icon-guanbi5" v-db-click @click.stop="close"></div>
       </div>
       <div class="main">
         <div class="chat">
           <div class="record" @scroll="onScroll" ref="record">
-            <div id="chat_scroll" ref="scrollBox">
-              <Spin v-show="loading">
-                <Icon type="ios-loading" size="18" class="demo-spin-icon-load"></Icon>
-                <div>Loading</div>
-              </Spin>
+            <div id="chat_scroll" ref="scrollBox" v-loading="loading">
               <ul>
                 <template v-for="item in records">
                   <li :key="item.id" :class="{ right: item.uid === serviceData.tourist_uid }" :id="`chat_${item.id}`">
@@ -49,11 +46,18 @@
                           </div>
                           <div class="attr">
                             <span>库存：{{ item.productInfo.stock }}</span>
-                            <span>销量：{{ item.productInfo.sales }}</span>
+                            <span
+                              >销量：{{
+                                parseInt(item.productInfo.sales) +
+                                parseInt(item.productInfo.ficti ? item.productInfo.ficti : 0)
+                              }}</span
+                            >
                           </div>
                           <div class="group">
                             <div class="money">￥{{ item.productInfo.price }}</div>
-                            <span style="cursor: pointer" @click.stop="onLook(item.productInfo.id)">查看商品 ></span>
+                            <span style="cursor: pointer" v-db-click @click.stop="onLook(item.productInfo.id)"
+                              >查看商品 ></span
+                            >
                           </div>
                         </div>
                       </div>
@@ -88,26 +92,26 @@
           <div class="editor">
             <div class="editor-hd">
               <div>
-                <button class="emoji-btn" title="表情" @click.stop="emojiSwitch">
+                <button class="emoji-btn" title="表情" v-db-click @click.stop="emojiSwitch">
                   <span class="iconfont iconbiaoqing1"></span>
                 </button>
                 <button title="图片" v-if="kufuToken">
-                  <Upload
-                    :show-upload-list="false"
+                  <el-upload
+                    :show-file-list="false"
                     :action="uploadAction"
                     :before-upload="beforeUpload"
-                    :format="['jpg', 'jpeg', 'png', 'gif']"
+                    accept="image/*"
                     :on-format-error="handleFormatError"
                     :data="uploadData"
                     :on-success="uploadSuccess"
                     :on-error="uploadError"
                   >
                     <span class="iconfont icontupian1"></span>
-                  </Upload>
+                  </el-upload>
                 </button>
               </div>
               <!--                            <div>-->
-              <!--                                <button class="end" @click="chatEnd">-->
+              <!--                                <button class="end" v-db-click @click="chatEnd">-->
               <!--                                    <i class="iconfont icon-guanji"></i>结束-->
               <!--                                </button>-->
               <!--                            </div>-->
@@ -116,6 +120,7 @@
                 <i
                   class="em"
                   :class="emoji"
+                  v-db-click
                   @click.stop="selectEmoji(emoji)"
                   v-for="(emoji, index) in emojiList"
                   :key="index"
@@ -126,14 +131,15 @@
               <textarea v-model="chatCont" placeholder="请输入文字内容" @keydown.enter="ctrlEnter"></textarea>
             </div>
             <div class="editor-ft">
-              <button :disabled="!chatCont" @click.stop="sendMessage">发送</button>
+              <button :disabled="!chatCont" v-db-click @click.stop="sendMessage">发送</button>
             </div>
           </div>
         </div>
         <div class="notice">
           <div v-if="notice" class="rich" v-html="notice"></div>
           <div class="copy">
-            <a href="http://www.crmeb.com/" target="_blank">CRMEB提供技术支持</a>
+            <span v-if="copyright">{{ copyright }}</span>
+            <a v-else href="http://www.crmeb.com/" target="_blank">CRMEB提供技术支持</a>
           </div>
         </div>
       </div>
@@ -151,6 +157,9 @@ import Setting from '@/setting';
 import Cookies from 'js-cookie';
 import { chatListApi, serviceListApi, getAdvApi, serviceList, getOrderApi, productApi } from '@/api/kefu';
 import feedBack from './feedback';
+import { isPicUpload } from '@/utils';
+import { Session } from '@/utils/storage.js';
+
 const chunk = function (arr, num) {
   num = num * 1 || 1;
   var ret = [];
@@ -244,6 +253,7 @@ export default {
       tourist_uid: '', //游客id
       toUid: '', //客服id
       kufuToken: '', // token
+      copyright: Session.get('copyright') || '',
     };
   },
   watch: {
@@ -310,10 +320,10 @@ export default {
         });
       });
       ws.$on('socket_error', () => {
-        this.$Message.error('连接失败');
+        this.$message.error('连接失败');
       });
       ws.$on('err_tip', (data) => {
-        this.$Message.error(data.msg);
+        this.$message.error(data.msg);
       });
       ws.$on('success', (data) => {
         this.is_tourist = 0;
@@ -374,7 +384,7 @@ export default {
           }
         })
         .catch((err) => {
-          this.$Message.error(err.msg);
+          this.$message.error(err.msg);
           this.change = true;
         });
     },
@@ -456,7 +466,7 @@ export default {
           });
         })
         .catch((err) => {
-          this.$Message.error(err.msg);
+          this.$message.error(err.msg);
           this.loading = false;
         });
     },
@@ -549,31 +559,33 @@ export default {
       });
     },
     beforeUpload(file) {
-      this.uploadData = {
-        filename: file,
-        token: this.kufuToken,
-      };
-      let promise = new Promise((resolve) => {
-        this.$nextTick(function () {
-          resolve(true);
+      if (isPicUpload(file)) {
+        this.uploadData = {
+          filename: file,
+          token: this.kufuToken,
+        };
+        let promise = new Promise((resolve) => {
+          this.$nextTick(function () {
+            resolve(true);
+          });
         });
-      });
-      return promise;
+        return promise;
+      }
     },
     handleFormatError(file) {
-      this.$Message.error('上传图片只能是 jpg、jpg、jpeg、gif 格式!');
+      this.$message.error('上传图片只能是 jpg、jpg、jpeg、gif 格式!');
     },
     uploadSuccess(res) {
       this.sendMsg(res.data.url, 3);
     },
     uploadError(error) {
-      this.$Message.error(error);
+      this.$message.error(error);
     },
   },
 };
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 @import '../../../styles/emoji-awesome/css/google.min.css';
 li {
   list-style-type: none;
@@ -606,7 +618,7 @@ li {
       height: 50px;
       padding-right: 15px;
       padding-left: 20px;
-      background: linear-gradient(270deg, #1890ff 0%, #3875ea 100%);
+      background: linear-gradient(270deg, var(--prev-color-primary) 0%, #3875ea 100%);
 
       .image {
         width: 36px;
@@ -812,7 +824,7 @@ li {
 
             a {
               font-size: 12px;
-              color: #1890ff;
+              color: var(--prev-color-primary);
             }
           }
         }
@@ -844,10 +856,10 @@ li {
           }
 
           &:hover {
-            color: #1890ff;
+            color: var(--prev-color-primary);
 
             .iconfont {
-              color: #1890ff;
+              color: var(--prev-color-primary);
             }
           }
         }
@@ -965,11 +977,11 @@ li {
             display: none;
           }
 
-          /deep/ img {
+          ::v-deepimg {
             width: 100%;
           }
 
-          /deep/ video {
+          ::v-deepvideo {
             width: 100%;
           }
         }
@@ -979,10 +991,8 @@ li {
           padding-bottom: 15px;
           font-size: 12px;
           text-align: center;
-          a {
-            color: #cccccc !important;
-            text-decoration: none;
-          }
+          color: #cccccc !important;
+          text-decoration: none;
         }
       }
     }

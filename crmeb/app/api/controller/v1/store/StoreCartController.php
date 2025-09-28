@@ -87,6 +87,7 @@ class StoreCartController
         } elseif ($where['advanceId']) {
             $type = 6;
         }
+        if ($type == 0) $cartService->checkVipGoodsBuy($request->user(), $where['productId']);
         $res = $cartService->setCart($request->uid(), $where['productId'], $where['cartNum'], $where['uniqueId'], $type, $new, $where['combinationId'], $where['secKillId'], $where['bargainId'], $where['advanceId']);
         if (!$res) return app('json')->fail(100022);
         else  return app('json')->success(['cartId' => $res]);
@@ -124,7 +125,8 @@ class StoreCartController
             ['id', 0],//购物车编号
             ['number', 0],//购物车编号
         ]);
-        if (!$where['id'] || !$where['number'] || !is_numeric($where['id']) || !is_numeric($where['number'])) return app('json')->fail(100100);
+        if (!$where['id'] || !is_numeric($where['id'])) return app('json')->fail(100100);
+        if (!$where['number'] || !is_numeric($where['number'])) return app('json')->fail(100007);
         $res = $this->services->changeUserCartNum($where['id'], $where['number'], $request->uid());
         if ($res) return app('json')->success(100001);
         else return app('json')->fail(100007);

@@ -1,16 +1,16 @@
 <template>
   <div>
-    <Modal v-model="addressModal" title="选择可配送区域" width="50%" class="modal" :mask="true">
-      <Row :gutter="24" type="flex">
-        <Col :xl="24" :lg="24" :md="24" :sm="24" :xs="24" class="item">
+    <el-dialog :visible.sync="addressModal" title="选择可配送区域" width="50%" class="modal">
+      <el-row :gutter="24">
+        <el-col :xl="24" :lg="24" :md="24" :sm="24" :xs="24" class="item">
           <div class="acea-row row-right row-middle">
-            <Checkbox v-model="iSselect" @on-change="allCheckbox">全选</Checkbox>
-            <div class="empty" @click="empty">清空</div>
+            <el-checkbox v-model="iSselect" @change="allCheckbox">全选</el-checkbox>
+            <div class="empty" v-db-click @click="empty">清空</div>
           </div>
-        </Col>
-      </Row>
-      <Row :gutter="24" type="flex" :loading="loading">
-        <Col
+        </el-col>
+      </el-row>
+      <el-row :gutter="24" v-loading="loading">
+        <el-col
           :xl="6"
           :lg="6"
           :md="6"
@@ -21,37 +21,38 @@
           :key="index"
           v-if="item.isShow"
         >
-          <div @mouseenter="enter(index)" @mouseleave="leave()">
-            <Checkbox v-model="item.checked" :label="item.name" @on-change="checkedClick(index)">{{
-              item.name
-            }}</Checkbox
-            ><span class="red">({{ (item.count || 0) + '/' + item.childNum }})</span>
-            <div class="city" v-show="activeCity === index">
-              <div class="checkBox">
-                <div class="arrow"></div>
-                <div>
-                  <Checkbox
-                    v-model="city.checked"
-                    :label="city.name"
-                    @on-change="primary(index, indexn)"
-                    class="itemn"
-                    v-for="(city, indexn) in item.children"
-                    :key="indexn"
-                    v-show="city.isShow"
-                    >{{ city.name }}</Checkbox
-                  >
+          <el-popover placement="top-start" width="600" trigger="hover" :open-delay="600">
+            <div>
+              <div class="city">
+                <div class="checkBox">
+                  <div class="arrow"></div>
+                  <div>
+                    <el-checkbox
+                      v-model="city.checked"
+                      :label="city.name"
+                      @change="primary(index, indexn)"
+                      class="itemn"
+                      v-for="(city, indexn) in item.children"
+                      :key="indexn"
+                      v-show="city.isShow"
+                      >{{ city.name }}</el-checkbox
+                    >
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </Col>
-      </Row>
+            <el-checkbox slot="reference" v-model="item.checked" :label="item.name" @change="checkedClick(index)">{{
+              item.name
+            }}</el-checkbox
+            ><span class="red">({{ (item.count || 0) + '/' + item.childNum }})</span>
+          </el-popover>
+        </el-col>
+      </el-row>
       <div slot="footer">
-        <Button @click="close">取消</Button>
-        <Button type="primary" @click="confirm">确定</Button>
+        <el-button v-db-click @click="close">取消</el-button>
+        <el-button type="primary" v-db-click @click="confirm">确定</el-button>
       </div>
-      <Spin size="large" fix v-if="loading"></Spin>
-    </Modal>
+    </el-dialog>
   </div>
 </template>
 
@@ -123,6 +124,7 @@ export default {
           el.childNum = oldNum;
         });
         this.cityList = res.data;
+        this.iSselect = false;
       });
     },
     /**
@@ -222,7 +224,7 @@ export default {
         }
       });
       if (selectList.length === 0) {
-        return that.$Message.error('至少选择一个省份或者城市');
+        return that.$message.error('至少选择一个省份或者城市');
       } else {
         this.$emit('selectCity', selectList, this.type);
         that.addressModal = false;
@@ -240,14 +242,14 @@ export default {
   mounted() {
     // this.getCityList();
   },
+  beforeDestroy() {},
 };
 </script>
 
-<style scoped lang="stylus">
+<style lang="scss" scoped>
 .modal .item {
   margin-bottom: 20px;
 }
-
 .modal .item .city {
   position: absolute;
   z-index: 9;
@@ -255,7 +257,6 @@ export default {
   width: 100%;
   padding-top: 18px;
 }
-
 .modal .item .city .checkBox {
   width: 97%;
   padding: 10px;
@@ -265,7 +266,6 @@ export default {
   overflow-x: hidden;
   overflow-y: auto;
 }
-
 .modal .item .city .checkBox .arrow {
   position: absolute;
   top: 3px;
@@ -274,7 +274,6 @@ export default {
   border: 8px solid transparent;
   border-bottom-color: #ddd;
 }
-
 .modal .item .city .checkBox .arrow:before {
   position: absolute;
   bottom: -8px;
@@ -285,21 +284,22 @@ export default {
   border: 7px solid transparent;
   border-bottom-color: #fff;
 }
-
 .modal .item .city .checkBox .itemn {
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
-
 .radio {
   padding: 5px 0;
   font-size: 14px !important;
 }
-
 .red {
   color: #ff0000;
 }
-
 .empty {
   cursor: pointer;
+  font-size: 12px;
+  margin-left: 10px;
+  line-height: 19px;
+  color: var(--prev-color-text-primary);
+  font-weight: 500;
 }
 </style>

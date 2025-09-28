@@ -30,9 +30,19 @@ class ArticleDao extends BaseDao
         return Article::class;
     }
 
-    public function search(array $where = [])
+    /**
+     * 文章搜索
+     * @param array $where
+     * @param bool $search
+     * @return \crmeb\basic\BaseModel
+     * @throws \ReflectionException
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/03/20
+     */
+    public function search(array $where = [], bool $search = false)
     {
-        return parent::search($where)->when(isset($where['ids']) && count($where['ids']), function ($query) use ($where) {
+        return parent::search($where, $search)->when(isset($where['ids']) && count($where['ids']), function ($query) use ($where) {
             $query->whereNotIn('id', $where['ids']);
         });
     }
@@ -43,6 +53,10 @@ class ArticleDao extends BaseDao
      * @param int $page
      * @param int $limit
      * @return mixed
+     * @throws \ReflectionException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function getList(array $where, int $page, int $limit)
     {
@@ -53,6 +67,10 @@ class ArticleDao extends BaseDao
      * 获取一条数据
      * @param $id
      * @return mixed
+     * @throws \ReflectionException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function read($id)
     {
@@ -63,41 +81,25 @@ class ArticleDao extends BaseDao
     }
 
     /**
-     * @param array $where
-     * @param int $page
-     * @param int $limit
-     * @param string $field
-     * @return array
+     * 新闻分类下的文章
+     * @param $new_id
+     * @return mixed
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
-     */
-    public function cidByArticleList(array $where, int $page, int $limit, string $field = '*')
-    {
-        return $this->search(['status' => 1, 'hide' => 0])
-            ->when(isset($where['cid']) && $where['cid'], function ($query) use ($where) {
-                $query->where('cid', $where['cid']);
-            })->when(isset($where['is_hot']) && $where['is_hot'], function ($query) use ($where) {
-                $query->where('is_hot', $where['is_hot']);
-            })->when(isset($where['is_banner']) && $where['is_banner'], function ($query) use ($where) {
-                $query->where('is_banner', $where['is_banner']);
-            })->when($page != 0, function ($query) use ($page, $limit) {
-                $query->page($page, $limit);
-            })->order('add_time desc')->field($field)->select()->toArray();
-    }
-
-    /**新闻分类下的文章
-     * @param $new_id
-     * @return mixed
      */
     public function articleLists($new_id)
     {
         return $this->getModel()->where('hide', 0)->where('id', 'in', $new_id)->select();
     }
 
-    /**图文详情
+    /**
+     * 图文详情
      * @param $new_id
      * @return mixed
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function articleContentList($new_id)
     {

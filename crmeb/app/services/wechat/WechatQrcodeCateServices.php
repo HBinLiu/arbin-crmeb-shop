@@ -39,8 +39,8 @@ class WechatQrcodeCateServices extends BaseServices
     {
         $info = $this->dao->get($id);
         $f[] = Form::hidden('id', $id);
-        $f[] = Form::input('cate_name', '分类名称', $info['cate_name'] ?? '')->maxlength(30)->required();
-        return create_form('添加分类', $f, Url::buildUrl('/app/wechat_qrcode/cate/save'), 'POST');
+        $f[] = Form::input('cate_name', '分组名称', $info['cate_name'] ?? '')->maxlength(10)->required();
+        return create_form($id ? '修改分组' : '添加分组', $f, Url::buildUrl('/app/wechat_qrcode/cate/save'), 'POST');
     }
 
     /**
@@ -69,6 +69,8 @@ class WechatQrcodeCateServices extends BaseServices
      */
     public function delCate($id = 0)
     {
+        $count = app()->make(WechatQrcodeServices::class)->count(['cate_id' => $id]);
+        if ($count) throw new AdminException(400454);
         if (!$id) throw new AdminException(100100);
         $res = $this->dao->update($id, ['is_del' => 1]);
         if (!$res) throw new AdminException(100008);

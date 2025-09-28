@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -15,7 +15,7 @@ export default {
   state: {
     configName: '',
     pageTitle: '',
-    pageName: '',
+    pageName: '模版名称1',
     pageShow: 1,
     pageColor: 0,
     pagePic: 0,
@@ -25,14 +25,103 @@ export default {
     // 已知组件列表默认数据 数组
     defaultArray: {},
     pageFooter: {
+      cname: '底部导航',
       name: 'pageFoot',
       setUp: {
         tabVal: 0,
       },
-      status: {
-        title: '是否自定义',
-        name: 'status',
-        status: false,
+      titleLeft: '展示设置',
+      titleNav: '导航内容',
+      titleRight: '颜色设置',
+      titleCurrency: '通用样式',
+      effectConfig: {
+        title: '展示效果',
+        tabVal: 1,
+        tabList: [
+          {
+            name: '系统默认',
+          },
+          {
+            name: '自定义',
+          },
+        ],
+      },
+      navConfig: {
+        title: '导航类型',
+        tabVal: 0,
+        tabList: [
+          {
+            name: '底部固定',
+          },
+          {
+            name: '底部悬浮',
+          },
+        ],
+      },
+      navStyleConfig: {
+        title: '导航样式',
+        tabVal: 0,
+        tabList: [
+          {
+            name: '图片+文字',
+          },
+          {
+            name: '文字',
+          },
+          {
+            name: '图片',
+          },
+        ],
+      },
+      toneConfig: {
+        title: '色调',
+        tabVal: 1,
+        tabList: [
+          {
+            name: '跟随主题风格',
+          },
+          {
+            name: '自定义',
+          },
+        ],
+      },
+      topConfig: {
+        title: '上边距',
+        val: 0,
+        min: 0,
+      },
+      bottomConfig: {
+        title: '下边距',
+        val: 0,
+        min: 0,
+      },
+      prConfig: {
+        title: '左右边距',
+        val: 10,
+        min: 0,
+      },
+      mbConfig: {
+        title: '页面下间距',
+        val: 25,
+        min: 0,
+      },
+      fillet: {
+        title: '背景圆角',
+        type: 0,
+        list: [
+          {
+            val: '全部',
+            icon: 'iconcaozuo-zhengti',
+          },
+          {
+            val: '单个',
+            icon: 'iconcaozuo-bianjiao',
+          },
+        ],
+        valName: '圆角值',
+        val: 30,
+        min: 0,
+        valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
       },
       txtColor: {
         title: '文字颜色',
@@ -51,6 +140,18 @@ export default {
         name: 'bgColor',
         default: [{ item: '#fff' }],
         color: [{ item: '#fff' }],
+      },
+      bgColor2: {
+        title: '背景颜色',
+        name: 'bgColor2',
+        default: [{ item: 'rgba(255,255,255,0.8)' }],
+        color: [{ item: 'rgba(255,255,255,0.8)' }],
+      },
+
+      status: {
+        title: '是否自定义',
+        name: 'status',
+        status: false,
       },
 
       menuList: [
@@ -79,7 +180,7 @@ export default {
   },
   mutations: {
     FOOTER(state, data) {
-      state.pageFooter.status.title = data.title;
+      // state.pageFooter.status.title = data.title;
       state.pageFooter.menuList[2] = data.name;
     },
     /**
@@ -136,13 +237,6 @@ export default {
             }
           });
         });
-        // if(index2>index1){
-        //     arr[index2].timestamp = (parseInt(arr[index1].timestamp) -1).toString()
-        // }else{
-        //     arr[index2].timestamp = (parseInt(arr[index1].timestamp) +1).toString()
-        // }
-
-        // arr[index1] = arr.splice(index2, 1, arr[index1])[0];
         return arr;
       }
       if (data.oldIndex != undefined) {
@@ -225,7 +319,15 @@ export default {
      * @param {string} data
      */
     footStatus(state, data) {
-      state.pageFooter.status.status = data;
+      // state.pageFooter.status.status = data
+    },
+    // 更新导航类型
+    footType(state, data) {
+      state.pageFooter.navConfig.tabVal = data;
+    },
+    //底部导航下边距；
+    footBottom(state, data) {
+      state.pageFooter.mbConfig.val = data;
     },
     /**
      * @description 更新foot配置

@@ -102,3 +102,34 @@ export function fileDelApi(ids) {
     data: ids,
   });
 }
+/**
+ * @description 网络图片上传
+ */
+export function onlineUpload(data) {
+  return request({
+    url: 'file/online_upload',
+    method: 'post',
+    data,
+  });
+}
+
+/**
+ * @description 清除扫码上传 code
+ */
+export function scanUploadCode() {
+  return request({
+    url: 'file/scan_upload/qrcode ',
+    method: 'delete',
+  });
+}
+
+/**
+ * @description 素材管理-视频上传
+ */
+export function videoCloudUpload(data) {
+  return request({
+    url: 'file/video_data_save',
+    method: 'post',
+    data,
+  });
+}

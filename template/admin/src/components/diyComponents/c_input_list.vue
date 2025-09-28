@@ -2,22 +2,24 @@
   <div class="numbox" v-if="datas[name]">
     <div class="c_row-item" v-for="(item, index) in datas[name].list" :key="index">
       <div class="dif" v-if="item.title === '链接'">
-        <Col class="label" span="4">
+        <el-col class="label" :span="4">
           <span>{{ item.title }}</span>
-        </Col>
-        <Col span="19" class="slider-box">
-          <div class="input-box" @click="getLink(index)">
-            <Input v-model="item.val" :placeholder="item.pla" :maxlength="item.max" icon="ios-arrow-forward" readonly />
+        </el-col>
+        <el-col :span="19" class="slider-box">
+          <div class="input-box" v-db-click @click="getLink(index)">
+            <el-input v-model="item.val" :placeholder="item.pla" :maxlength="item.max">
+              <i class="el-icon-link" slot="suffix" @click="getLink(index)" />
+            </el-input>
           </div>
-        </Col>
+        </el-col>
       </div>
       <div class="dif" v-else>
-        <Col class="label" span="4">
+        <el-col class="label" :span="4">
           <span>{{ item.title }}</span>
-        </Col>
-        <Col span="19" class="slider-box">
-          <Input v-model="item.val" :placeholder="item.pla" :maxlength="item.max" style="text-align: right" />
-        </Col>
+        </el-col>
+        <el-col :span="19" class="slider-box">
+          <el-input v-model="item.val" :placeholder="item.pla" :maxlength="item.max" style="text-align: right" />
+        </el-col>
       </div>
     </div>
     <linkaddress ref="linkaddres" @linkUrl="linkUrl"></linkaddress>
@@ -73,7 +75,7 @@ export default {
 };
 </script>
 
-<style scoped lang="stylus">
+<style lang="scss" scoped>
 .numbox {
   margin: 20px 0 10px 0;
 
@@ -82,20 +84,16 @@ export default {
     color: #999;
   }
 }
-
 .c_row-item {
   width: 100%;
-
-  &~.c_row-item {
+  & ~ .c_row-item {
     margin-top: 20px;
   }
 }
-
 .dif {
   display: flex;
   align-items: center;
 }
-
 .slider-box {
   margin-left: 10px;
   width: 350px;

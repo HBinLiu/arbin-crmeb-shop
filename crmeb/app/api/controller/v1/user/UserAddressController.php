@@ -12,6 +12,7 @@ namespace app\api\controller\v1\user;
 
 use app\Request;
 use app\services\user\UserAddressServices;
+use app\services\wechat\WechatUserServices;
 
 /**
  * 用户地址类
@@ -39,10 +40,13 @@ class UserAddressController
      */
     public function address(Request $request, $id)
     {
+        $uid = (int)$request->uid();
         if (!$id) {
             return app('json')->fail(100100);
         }
-        return app('json')->success($this->services->address((int)$id));
+        $info = $this->services->address((int)$id);
+        if ($info['uid'] != $uid) return app('json')->fail(100026);
+        return app('json')->success($info);
     }
 
     /**
@@ -67,6 +71,8 @@ class UserAddressController
         if (!$id || !is_numeric($id)) return app('json')->fail(100100);
         $uid = (int)$request->uid();
         $res = $this->services->setDefault($uid, (int)$id);
+        $province = $this->services->value(['id' => $id], 'province');
+        app()->make(WechatUserServices::class)->update(['uid' => $uid], ['province' => $province]);
         if (!$res)
             return app('json')->fail(410150);
         else
@@ -114,6 +120,7 @@ class UserAddressController
         $uid = (int)$request->uid();
         $res = $this->services->editAddress($uid, $addressInfo);
         if ($res) {
+            app()->make(WechatUserServices::class)->update(['uid' => $uid], ['province' => $addressInfo['address']['province']]);
             return app('json')->success($res['type'] == 'edit' ? 100001 : $res['data']);
         } else {
             return app('json')->fail(100007);

@@ -2,35 +2,6 @@
 	<view>
 		<form @submit="formSubmit">
 			<view class='personal-data' :style="colorStyle">
-				<!-- <view class="wrapper">
-					<view class="title">管理我的账号</view>
-					<view class="wrapList">
-						<view class="item acea-row row-between-wrapper" :class="item.uid === userInfo.uid ? 'on' : ''" v-for="(item,index) in switchUserInfo"
-						 :key="index" @click='switchAccounts(index)'>
-							<view class="picTxt acea-row row-between-wrapper">
-								<view class="pictrue" @click.stop='uploadpic' v-if='item.uid === userInfo.uid'>
-									<image :src='item.avatar'></image>
-									<image src='../../../static/images/alter.png' class="alter"></image>
-								</view>
-								<view class="pictrue" v-else>
-									<image :src='item.avatar'></image>
-								</view>
-								<view class="text">
-									<view class="name line1">{{ item.nickname }}</view>
-									<view class="phone" v-if="item.phone && item.user_type !='h5'">绑定手机号：{{ item.phone }}</view>
-									<view class="phone" v-else-if="item.phone && item.user_type =='h5'">账号：{{ item.phone }}</view>
-									<view class="phone" v-else>暂未绑定手机号</view>
-								</view>
-							</view>
-							<view class="currentBnt acea-row row-center-wrapper font-color" v-if='item.uid === userInfo.uid'>
-								当前账号
-							</view>
-							<view class="bnt font-color acea-row row-center-wrapper" v-else>
-								使用账号
-							</view>
-						</view>
-					</view>
-				</view> -->
 				<view class='list'>
 					<view class='item acea-row row-between-wrapper'>
 						<view>{{$t(`头像`)}}</view>
@@ -43,25 +14,43 @@
 					</view>
 					<view class='item acea-row row-between-wrapper'>
 						<view>{{$t(`昵称`)}}</view>
-						<view class='input'><input type='nickname' name='nickname' :maxlength="16" :value='userInfo.nickname'></input>
+						<view class='input'><input type='nickname' name='nickname' :maxlength="10"
+								:value='userInfo.nickname'></input>
 						</view>
 					</view>
 					<view class='item acea-row row-between-wrapper'>
 						<view>{{$t(`手机号码`)}}</view>
+						<!-- #ifdef MP -->
+						<button class="input" open-type="getPhoneNumber" @getphonenumber="getphonenumber"
+							v-if="!userInfo.phone">{{$t(`点击绑定手机号`)}}
+							<text class="iconfont icon-xiangyou"></text>
+						</button>
+						<!-- #endif -->
+						<!-- #ifndef MP -->
 						<navigator url="/pages/users/user_phone/index" hover-class="none" class="input"
 							v-if="!userInfo.phone">
 							{{$t(`点击绑定手机号`)}}<text class="iconfont icon-xiangyou"></text>
 						</navigator>
+						<!-- #endif -->
+
 						<view class='input acea-row row-between-wrapper' v-else>
-							<input type='text' disabled='true' name='phone' :value='userInfo.phone' class='id'></input>
-							<text class='iconfont icon-suozi'></text>
+							<view class=""></view>
+							<view class="acea-row row-middle">
+								<input type='text' disabled='true' name='phone' :value='userInfo.phone'
+									class='id'></input>
+								<text class='iconfont icon-suozi'></text>
+							</view>
+
 						</view>
 					</view>
 					<view class='item acea-row row-between-wrapper'>
 						<view>{{$t(`ID号`)}}</view>
 						<view class='input acea-row row-between-wrapper'>
-							<input type='text' :value='userInfo.uid' disabled='true' class='id'></input>
-							<text class='iconfont icon-suozi'></text>
+							<view class=""></view>
+							<view class="">
+								<text>{{userInfo.uid}}</text>
+								<text class='iconfont icon-suozi'></text>
+							</view>
 						</view>
 					</view>
 					<!-- #ifdef MP -->
@@ -133,6 +122,18 @@
 							{{$t(`注销后无法恢复`)}}<text class="iconfont icon-xiangyou"></text>
 						</navigator>
 					</view>
+					<view class="item acea-row row-between-wrapper">
+						<view>{{$t(`用户协议`)}}</view>
+						<navigator url="/pages/users/privacy/index?type=4" hover-class="none" class="input">
+							{{$t(`点击查看`)}}<text class="iconfont icon-xiangyou"></text>
+						</navigator>
+					</view>
+					<view class="item acea-row row-between-wrapper">
+						<view>{{$t(`隐私协议`)}}</view>
+						<navigator url="/pages/users/privacy/index?type=3" hover-class="none" class="input">
+							{{$t(`点击查看`)}}<text class="iconfont icon-xiangyou"></text>
+						</navigator>
+					</view>
 
 				</view>
 
@@ -160,7 +161,8 @@
 		userEdit,
 		getLogout,
 		getLangList,
-		getLangJson
+		getLangJson,
+		mpBindingPhone
 	} from '@/api/user.js';
 	import {
 		switchH5Login,
@@ -174,6 +176,7 @@
 	import dayjs from "@/plugin/dayjs/dayjs.min.js";
 	// #ifdef MP
 	import authorize from '@/components/Authorize';
+	import Routine from '@/libs/routine';
 	// #endif
 	import Cache from '@/utils/cache';
 	import colors from '@/mixins/color.js';
@@ -244,6 +247,32 @@
 					title: this.$t(`当前为最新版本`)
 				});
 			},
+			getphonenumber(e) {
+				if (e.detail.errMsg == 'getPhoneNumber:ok') {
+					Routine.getCode()
+						.then(code => {
+							let data = {
+								code,
+								iv: e.detail.iv,
+								encryptedData: e.detail.encryptedData,
+							}
+							mpBindingPhone(data).then(res => {
+								this.getUserInfo()
+								this.$util.Tips({
+									title: res.msg,
+									icon: 'success'
+								});
+							}).catch(err => {
+								return this.$util.Tips({
+									title: err
+								});
+							})
+						})
+						.catch(error => {
+							uni.hideLoading();
+						});
+				}
+			},
 			setLang() {
 				this.array.map((item, i) => {
 					if (this.$i18n.locale == item.value) {
@@ -261,7 +290,6 @@
 					this.$nextTick(e => {
 						this.$i18n.locale = this.array[this.setIndex].value;
 					})
-					Cache.set('localeSet', true, 600)
 				})
 			},
 
@@ -509,6 +537,12 @@
 		border: 1px solid var(--view-theme);
 	}
 
+	.personal-data {
+		padding-bottom: 50rpx;
+		padding-bottom: calc(50rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+		padding-bottom: calc(50rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
+	}
+
 	.personal-data .wrapper {
 		margin: 10rpx 0;
 		background-color: #fff;
@@ -519,6 +553,10 @@
 		margin-bottom: 30rpx;
 		font-size: 32rpx;
 		color: #282828;
+	}
+
+	/deep/ .uni-input-input {
+		font-size: 28rpx;
 	}
 
 	.personal-data .wrapper .wrapList .item {
@@ -637,10 +675,16 @@
 	}
 
 	.personal-data .list .item .input {
-		max-width: 400rpx;
+		flex: 1;
 		text-align: right;
 		color: #868686;
-		.icon-suozi{
+		font-size: 28rpx;
+
+		input {
+			padding-right: 10rpx;
+		}
+
+		.icon-suozi {
 			margin-left: 10rpx;
 		}
 	}

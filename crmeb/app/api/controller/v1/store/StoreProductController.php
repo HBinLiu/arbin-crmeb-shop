@@ -15,6 +15,9 @@ use app\services\product\product\StoreCategoryServices;
 use app\services\product\product\StoreProductReplyServices;
 use app\services\product\product\StoreProductServices;
 use app\services\user\UserServices;
+use think\db\exception\DataNotFoundException;
+use think\db\exception\DbException;
+use think\db\exception\ModelNotFoundException;
 
 /**
  * 商品类
@@ -39,9 +42,9 @@ class StoreProductController
      * @param Request $request
      * @param StoreCategoryServices $services
      * @return mixed
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function lst(Request $request, StoreCategoryServices $services)
     {
@@ -52,11 +55,13 @@ class StoreProductController
             ['priceOrder', ''],
             ['salesOrder', ''],
             [['news', 'd'], 0, '', 'is_new'],
-            [['type', 0], 0],
+            [['type', 'd'], 0],
             ['ids', ''],
-            ['selectId', ''],
-            ['productId', ''],
-            ['coupon_category_id', '']
+            [['selectId', 'd'], 0],
+            [['productId', 'd'], 0],
+            [['coupon_category_id', 'd'], 0],
+            ['cate_id', ''],
+            ['store_label_id', ''],
         ]);
         if ($where['selectId'] && (!$where['sid'] || !$where['cid'])) {
             if ($services->value(['id' => $where['selectId']], 'pid')) {
@@ -75,6 +80,22 @@ class StoreProductController
         if (!$where['ids']) {
             unset($where['ids']);
         }
+        if ($where['cate_id'] !== '') {
+            $where['cate_id'] = explode(',', $where['cate_id']);
+            foreach ($where['cate_id'] as $keys => &$items) {
+                $where['cate_id'][$keys] = (int)$items;
+            }
+        } else {
+            $where['cate_id'] = [];
+        }
+        if ($where['store_label_id'] !== '') {
+            $where['store_label_id'] = explode(',', $where['store_label_id']);
+            foreach ($where['store_label_id'] as $keys => &$items) {
+                $where['store_label_id'][$keys] = (int)$items;
+            }
+        } else {
+            $where['store_label_id'] = [];
+        }
         $type = 'big';
         $field = ['image', 'recommend_image'];
         $list = $this->services->getGoodsList($where, (int)$request->uid());
@@ -89,7 +110,12 @@ class StoreProductController
      */
     public function code(Request $request, $id)
     {
-        $code = $this->services->getCode((int)$id, $request->get('user_type', 'wechat'), $request->user());
+        if ($request->uid()) {
+            $user = $request->user();
+        } else {
+            $user = ['uid' => 0, 'is_promoter' => 0];
+        }
+        $code = $this->services->getCode((int)$id, $request->get('user_type', 'wechat'), $user);
         return app('json')->success(['code' => $code]);
     }
 
@@ -99,9 +125,9 @@ class StoreProductController
      * @param $id
      * @param int $type
      * @return mixed
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function detail(Request $request, $id, $type = 0)
     {
@@ -113,9 +139,9 @@ class StoreProductController
      * 为你推荐
      * @param Request $request
      * @return mixed
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function product_hot(Request $request)
     {
@@ -129,9 +155,9 @@ class StoreProductController
      * @param Request $request
      * @param $type
      * @return mixed
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function groom_list(Request $request, $type)
     {
@@ -173,9 +199,9 @@ class StoreProductController
      * @param Request $request
      * @param $id
      * @return mixed
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
     public function reply_list(Request $request, $id)
     {
@@ -201,4 +227,20 @@ class StoreProductController
         return app('json')->success($this->services->getAdvanceList($where));
     }
 
+    /**
+     * 获取商品实时价格
+     * @param Request $request
+     * @param $id
+     * @param $unique
+     * @return \think\Response
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2025/2/5
+     */
+    public function realPrice(Request $request, $id, $unique)
+    {
+        $uid = $request->uid() ?? 0;
+        if (!$id || !$unique) return app('json')->fail('缺少参数');
+        return app('json')->success($this->services->realPrice($uid, $id, $unique));
+    }
 }

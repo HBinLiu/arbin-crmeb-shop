@@ -8,30 +8,9 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
 
-import BasicLayout from '@/components/main';
-
-// export default {
-//   path: '/',
-//   name: 'home',
-//   redirect: '/admin/home',
-//   component: BasicLayout,
-//   meta: {
-//     hideInMenu: true,
-//     notCache: true,
-//     auth: true
-//   },
-//   children: [
-//     {
-//       path: 'admin/home',
-//       name: 'home',
-//       meta: {
-//         title: '首页',
-//         auth: ['admin-index-index']
-//       },
-//       component: () => import('@/pages/index/index')
-//     }
-//   ]
-// }
+import LayoutMain from '@/layout';
+import setting from '@/setting';
+let routePre = setting.routePre;
 
 const meta = {
   auth: true,
@@ -40,23 +19,23 @@ const meta = {
 const pre = 'home_';
 
 export default {
-  path: '/',
+  path: routePre + '/home',
   name: 'home',
   header: 'home',
   redirect: {
     name: `${pre}index`,
   },
   meta,
-  component: BasicLayout,
+  component: LayoutMain,
   children: [
     {
-      path: 'admin/home/',
+      path: routePre + '/index',
       name: `${pre}index`,
       header: 'home',
       meta: {
         auth: ['admin-index-index'],
         title: '主页',
-        affix: true,
+        isAffix: false,
       },
       component: () => import('@/pages/index/index'),
     },

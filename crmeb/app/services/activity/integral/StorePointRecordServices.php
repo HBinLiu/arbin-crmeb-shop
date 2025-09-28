@@ -107,7 +107,7 @@ class StorePointRecordServices extends BaseServices
     public function getTrend($where)
     {
         $time = explode('-', $where['time']);
-        if (count($time) != 2) throw new AdminException(100100);
+        if (count($time) != 2) throw new AdminException('请选择时间');
         $dayCount = (strtotime($time[1]) - strtotime($time[0])) / 86400 + 1;
         $data = [];
         if ($dayCount == 1) {
@@ -190,7 +190,7 @@ class StorePointRecordServices extends BaseServices
             $list[] = [
                 'name' => $item['name'],
                 'value' => $item['value'],
-                'percent' => $count != 0 ? bcmul((string)bcdiv((string)$item['value'], (string)$count, 4), '100', 1) : 0,
+                'percent' => $count != 0 ? round(bcmul((string)bcdiv((string)$item['value'], (string)$count, 4), '100', 2), 1) : 0,
             ];
         }
         array_multisort(array_column($list, 'value'), SORT_DESC, $list);
@@ -222,7 +222,7 @@ class StorePointRecordServices extends BaseServices
             $list[] = [
                 'name' => $item['name'],
                 'value' => $item['value'],
-                'percent' => $count != 0 ? bcmul((string)bcdiv((string)$item['value'], (string)$count, 4), '100', 1) : 0,
+                'percent' => $count != 0 ? round(bcmul((string)bcdiv((string)$item['value'], (string)$count, 4), '100', 2), 1) : 0,
             ];
         }
         array_multisort(array_column($list, 'value'), SORT_DESC, $list);

@@ -100,20 +100,30 @@ class StoreBargainServices extends BaseServices
         /** @var StoreBargainUserHelpServices $storeBargainUserHelpServices */
         $storeBargainUserHelpServices = app()->make(StoreBargainUserHelpServices::class);
         $countHelpAll = $storeBargainUserHelpServices->getHelpAllCount([['bargain_id', 'in', $ids]]);
+        $stopIds = [];
         foreach ($list as &$item) {
             $item['count_people_all'] = $countAll[$item['id']] ?? 0;//参与人数
             $item['count_people_help'] = $countHelpAll[$item['id']] ?? 0;//帮忙砍价人数
             $item['count_people_success'] = $countSuccess[$item['id']] ?? 0;//砍价成功人数
             $item['stop_status'] = $item['stop_time'] < time() ? 1 : 0;
             if ($item['status']) {
-                if ($item['start_time'] > time())
+                if ($item['start_time'] > time()) {
                     $item['start_name'] = '未开始';
-                else if ($item['stop_time'] < time())
+                } else if ($item['stop_time'] < time()) {
                     $item['start_name'] = '已结束';
-                else if ($item['stop_time'] > time() && $item['start_time'] < time()) {
+                    $item['status'] = 0;
+                    $stopIds[] = $item['id'];
+                } else if ($item['stop_time'] > time() && $item['start_time'] < time()) {
                     $item['start_name'] = '进行中';
                 }
-            } else $item['start_name'] = '已结束';
+            } else {
+                $item['start_name'] = '已结束';
+            }
+            $item['start_time'] = $item['start_time'] ? date('Y-m-d H:i:s', $item['start_time']) : '';
+            $item['stop_time'] = $item['stop_time'] ? date('Y-m-d 23:59:59', $item['stop_time']) : '';
+        }
+        if ($stopIds) {
+            $this->dao->batchUpdate($stopIds, ['status' => 0]);
         }
         return compact('list', 'count');
     }
@@ -130,7 +140,7 @@ class StoreBargainServices extends BaseServices
         $items = $data['items'];
         $data['start_time'] = strtotime($data['section_time'][0]);
         $data['stop_time'] = strtotime($data['section_time'][1]);
-        $data['image'] = $data['images'][0];
+        $data['image'] = $data['image'];
         $data['images'] = json_encode($data['images']);
         $data['stock'] = $detail[0]['stock'];
         $data['quota'] = $detail[0]['quota'];
@@ -161,22 +171,15 @@ class StoreBargainServices extends BaseServices
                 $valueGroup = $storeProductAttrServices->saveProductAttr($skuList, (int)$id, 2);
                 if (!$res) throw new AdminException(100007);
             } else {
-                if (!$storeProductServices->getOne(['is_show' => 1, 'is_del' => 0, 'id' => $data['product_id']])) {
-                    throw new AdminException(400091);
+                if (!$storeProductServices->getOne(['is_del' => 0, 'id' => $data['product_id']])) {
+                    throw new AdminException('无法添加回收站商品');
                 }
                 $data['add_time'] = time();
                 $res = $this->dao->save($data);
                 $storeDescriptionServices->saveDescription((int)$res->id, $description, 2);
-                $skuList = $storeProductServices->validateProductAttr($items, $detail, (int)$res->id, 2);
+                $skuList = $storeProductServices->validateProductAttr($items, $detail, (int)$res->id, 2, 1, true);
                 $valueGroup = $storeProductAttrServices->saveProductAttr($skuList, (int)$res->id, 2);
                 if (!$res) throw new AdminException(100022);
-            }
-            $res = true;
-            foreach ($valueGroup->toArray() as $item) {
-                $res = $res && CacheService::setStock($item['unique'], (int)$item['quota_show'], 2);
-            }
-            if (!$res) {
-                throw new AdminException(400092);
             }
         });
     }
@@ -236,9 +239,11 @@ class StoreBargainServices extends BaseServices
             foreach ($bargainAttr as &$sv) {
                 if ($pv['detail'] == $sv['detail']) {
                     $productAttr[$pk] = $sv;
+                    $productAttr[$pk]['r_price'] = $pv['price'];
                 }
             }
             $productAttr[$pk]['detail'] = json_decode($productAttr[$pk]['detail']);
+            $productAttr[$pk]['r_price'] = $productAttr[$pk]['r_price'] ?? $productAttr[$pk]['price'];
         }
         $attrs['items'] = $items;
         $attrs['value'] = $productAttr;
@@ -249,12 +254,13 @@ class StoreBargainServices extends BaseServices
         $header[] = ['title' => '砍价起始金额', 'slot' => 'price', 'align' => 'center', 'minWidth' => 80];
         $header[] = ['title' => '砍价最低价', 'slot' => 'min_price', 'align' => 'center', 'minWidth' => 80];
         $header[] = ['title' => '成本价', 'key' => 'cost', 'align' => 'center', 'minWidth' => 80];
-        $header[] = ['title' => '原价', 'key' => 'ot_price', 'align' => 'center', 'minWidth' => 80];
+        $header[] = ['title' => '日常售价', 'key' => 'r_price', 'align' => 'center', 'minWidth' => 80];
         $header[] = ['title' => '库存', 'key' => 'stock', 'align' => 'center', 'minWidth' => 80];
         $header[] = ['title' => '限量', 'slot' => 'quota', 'align' => 'center', 'minWidth' => 80];
         $header[] = ['title' => '重量(KG)', 'key' => 'weight', 'align' => 'center', 'minWidth' => 80];
         $header[] = ['title' => '体积(m³)', 'key' => 'volume', 'align' => 'center', 'minWidth' => 80];
-        $header[] = ['title' => '商品编号', 'key' => 'bar_code', 'align' => 'center', 'minWidth' => 80];
+        $header[] = ['title' => '商品编码', 'key' => 'bar_code', 'align' => 'center', 'minWidth' => 80];
+        $header[] = ['title' => '条形码', 'key' => 'bar_code_number', 'align' => 'center', 'minWidth' => 80];
         $attrs['header'] = $header;
         return $attrs;
     }
@@ -281,7 +287,7 @@ class StoreBargainServices extends BaseServices
         foreach ($value as $suk) {
             $detail = explode(',', $suk);
 
-            $sukValue = $storeProductAttrValueServices->getColumn(['product_id' => $id, 'type' => $type, 'suk' => $suk], 'bar_code,cost,price,ot_price,stock,image as pic,weight,volume,brokerage,brokerage_two,quota', 'suk');
+            $sukValue = $storeProductAttrValueServices->getColumn(['product_id' => $id, 'type' => $type, 'suk' => $suk], 'bar_code,bar_code_number,cost,price,ot_price,stock,image as pic,weight,volume,brokerage,brokerage_two,quota', 'suk');
             if (count($sukValue)) {
                 foreach ($detail as $k => $v) {
                     $valueNew[$count]['value' . ($k + 1)] = $v;
@@ -295,6 +301,7 @@ class StoreBargainServices extends BaseServices
                 $valueNew[$count]['stock'] = $sukValue[$suk]['stock'] ? intval($sukValue[$suk]['stock']) : 0;
                 $valueNew[$count]['quota'] = $sukValue[$suk]['quota'] ? intval($sukValue[$suk]['quota']) : 0;
                 $valueNew[$count]['bar_code'] = $sukValue[$suk]['bar_code'] ?? '';
+                $valueNew[$count]['bar_code_number'] = $sukValue[$suk]['bar_code_number'] ?? '';
                 $valueNew[$count]['weight'] = $sukValue[$suk]['weight'] ? floatval($sukValue[$suk]['weight']) : 0;
                 $valueNew[$count]['volume'] = $sukValue[$suk]['volume'] ? floatval($sukValue[$suk]['volume']) : 0;
                 $valueNew[$count]['brokerage'] = $sukValue[$suk]['brokerage'] ? floatval($sukValue[$suk]['brokerage']) : 0;
@@ -370,6 +377,7 @@ class StoreBargainServices extends BaseServices
         foreach ($list as &$item) {
             $item['people'] = $bargainUserService->getUserIdList($item['id']);
             $item['price'] = floatval($item['price']);
+            $item['product_price'] = floatval($item['product_price']);
         }
         return $list;
     }
@@ -503,9 +511,10 @@ class StoreBargainServices extends BaseServices
         }
         $data['userBargainInfo'] = $userBargainInfo;
         $data['bargain']['price'] = bcsub($data['bargain']['price'], (string)$userBargainInfo['alreadyPrice'], 2);
+        $data['bargain']['product_is_show'] = app()->make(StoreProductServices::class)->value($data['bargain']['product_id'], 'is_show');
 
         //用户访问事件
-        event('user.userVisit', [$user['uid'], $id, 'bargain', $bargain['product_id'], 'view']);
+        event('UserVisitListener', [$user['uid'], $id, 'bargain', $bargain['product_id'], 'view']);
 
         //浏览记录
         ProductLogJob::dispatch(['visit', ['uid' => $user['uid'], 'product_id' => $bargain['product_id']]]);
@@ -638,7 +647,7 @@ class StoreBargainServices extends BaseServices
         $userHelpService = app()->make(StoreBargainUserHelpServices::class);
         /** @var StoreBargainUserServices $bargainUserService */
         $bargainUserService = app()->make(StoreBargainUserServices::class);
-        $bargainUserTableId = $bargainUserService->getBargainUserTableId($bargainId, $bargainUserUid);
+        $bargainUserTableId = $bargainUserService->getBargainUserTableId((int)$bargainId, (int)$bargainUserUid);
         if (!$bargainUserTableId) throw new ApiException(410301);
         $bargainUserInfo = $bargainUserService->get($bargainUserTableId)->toArray();
         $count = $userHelpService->isBargainUserHelpCount($bargainId, $bargainUserTableId, $uid);
@@ -646,7 +655,7 @@ class StoreBargainServices extends BaseServices
         $price = $userHelpService->setBargainRecord($uid, $bargainUserInfo, $bargainInfo);
         if ($price) {
             if (!$bargainUserService->getSurplusPrice($bargainUserTableId, 1)) {
-                event('notice.notice', [['uid' => $bargainUserUid, 'bargainInfo' => $bargainInfo, 'bargainUserInfo' => $bargainUserInfo,], 'bargain_success']);
+                event('NoticeListener', [['uid' => $bargainUserUid, 'bargainInfo' => $bargainInfo, 'bargainUserInfo' => $bargainUserInfo,], 'bargain_success']);
             }
         }
         return ['bargainUserInfo' => $bargainUserInfo, 'price' => $price];
@@ -878,7 +887,7 @@ class StoreBargainServices extends BaseServices
         }
         /** @var StoreBargainUserServices $services */
         $services = app()->make(StoreBargainUserServices::class);
-        $bargainUser = $services->get(['bargain_id' => $bargainId, 'uid' => $user['uid']], ['price', 'bargain_price_min']);
+        $bargainUser = $services->get(['bargain_id' => $bargainId, 'uid' => $user['uid'], 'status' => 1], ['price', 'bargain_price_min']);
         if (!$bargainUser) {
             throw new ApiException(410304);
         }
@@ -1003,8 +1012,8 @@ class StoreBargainServices extends BaseServices
         $spread_count = $bargainUserHelp->count(['bargain_id' => $id, 'type' => 0]);
         $start_count = $bargainUser->count(['bargain_id' => $id]);
         $success_count = $bargainUser->count(['bargain_id' => $id, 'status' => 3]);
-        $pay_price = $orderServices->sum(['bargain_id' => $id, 'paid' => 1], 'pay_price', true);
-        $pay_count = $orderServices->count(['bargain_id' => $id, 'paid' => 1]);
+        $pay_price = $orderServices->sum([['bargain_id', '=', $id], ['paid', '=', 1], ['refund_type', 'in', [0, 3]], ['is_del', '=', 0]], 'pay_price', false);
+        $pay_count = $orderServices->getDistinctCount([['bargain_id', '=', $id], ['paid', '=', 1], ['refund_type', 'in', [0, 3]], ['is_del', '=', 0]], 'uid', false);
         $pay_rate = $start_count > 0 ? bcmul(bcdiv((string)$pay_count, (string)$start_count, 2), '100', 2) : 0;
         return compact('people_count', 'spread_count', 'start_count', 'success_count', 'pay_price', 'pay_count', 'pay_rate');
     }
@@ -1034,9 +1043,9 @@ class StoreBargainServices extends BaseServices
         /** @var StoreOrderServices $orderServices */
         $orderServices = app()->make(StoreOrderServices::class);
         [$page, $limit] = $this->getPageValue();
+        $where = $where + ['paid' => 1, 'refund_status' => 0, 'is_del' => 0];
         $list = $orderServices->bargainStatisticsOrder($id, $where, $page, $limit);
-        $where['bargain_id'] = $id;
-        $count = $orderServices->count($where);
+        $count = $orderServices->bargainStatisticsOrderCount($id, $where);
         foreach ($list as &$item) {
             if ($item['status'] == 0) {
                 if ($item['paid'] == 0) {

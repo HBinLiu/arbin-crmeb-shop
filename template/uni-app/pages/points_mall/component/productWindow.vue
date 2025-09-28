@@ -33,7 +33,7 @@
 						</view>
 					</view>
 				</view>
-				<view class="cart acea-row row-between-wrapper">
+				<!-- <view class="cart acea-row row-between-wrapper">
 					<view class="title">{{$t(`数量`)}}</view>
 					<view class="carnum acea-row row-left">
 						<view class="item reduce acea-row row-center-wrapper"
@@ -49,7 +49,7 @@
 							:class='(attr.productSelect.stock >= attr.productSelect.cart_num)? "on":""'
 							@click='CartNumAdd'>+</view>
 					</view>
-				</view>
+				</view> -->
 			</view>
 
 		</view>
@@ -182,7 +182,7 @@
 		transform: translate3d(0, 100%, 0);
 		transition: all .3s cubic-bezier(.25, .5, .5, .9);
 		padding-bottom: 140rpx;
-		padding-bottom: calc(140rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+		padding-bottom: calc(140rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
 		padding-bottom: calc(140rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
 	}
 
