@@ -127,18 +127,51 @@ class PublicController
         ];
         if (function_exists('exec')) {
             $workermanOutput = $timerOutput = $queueOutput = [];
-            exec("ps aux | grep 'php think workerman' | grep -v grep", $workermanOutput);
-            exec("ps aux | grep 'php think timer' | grep -v grep", $timerOutput);
-            exec("ps aux | grep 'php think queue' | grep -v grep", $queueOutput);
+            // exec("ps aux | grep 'php think workerman' | grep -v grep", $workermanOutput);
+            $targetPort = config('workerman.chat.port');
+            $thinkPath = root_path(); // think 文件的绝对路径
+            $checkService = function($service) {
+                if($service === 'queue'){
+                    $command = 'queue:listen'; 
+                    // 执行 ps 命令查找队列进程
+                    exec("ps aux | grep '{$command}' | grep -v grep", $output);
+                    
+                    // 若输出不为空，说明进程存在
+                    return !empty($output);
+                } else {
+                    $pidFile = root_path('runtime') . $service . '.pid';
+                    // 优先检查PID文件
+                    if (!file_exists($pidFile)) {
+                        return false;
+                    }
+                    
+                    // 如果PID文件存在，尝试获取进程状态
+                    $pid = trim(file_get_contents($pidFile));
+                    if ($pid && is_numeric($pid)) {
+                        if (function_exists('posix_kill') && posix_kill($pid, 0)) {
+                            return true;
+                        }
+                        // 备用检查方法
+                        if (function_exists('exec')) {
+                            $output = [];
+                            exec("ps -ef | grep " . escapeshellarg($pid) . " | grep -v grep", $output);
+                            // 判断是否有非 grep 进程的输出
+                            return !empty($output);
+                        }
+                    }
+                }
+            };
+        
             $info['process'] = [
-                ['name' => '长链接', 'require' => '开启', 'value' => count($workermanOutput) > 0],
-                ['name' => '定时任务', 'require' => '开启', 'value' => count($timerOutput) > 0],
-                ['name' => '消息队列', 'require' => '开启', 'value' => count($queueOutput) > 0],
+                ['name' => '长链接', 'require' => '开启', 'value' => $checkService('workerman')],
+                ['name' => '定时任务', 'require' => '开启', 'value' => $checkService('timer')],
+                ['name' => '消息队列', 'require' => '开启', 'value' => $checkService('queue')],
             ];
+            
         } else {
             $info['process'] = [
                 ['name' => '长链接', 'require' => '开启', 'value' => file_exists(root_path('runtime') . 'workerman.pid')],
-                ['name' => '定时任务', 'require' => '开启', 'value' => file_exists(root_path('runtime') . '.timer')],
+                ['name' => '定时任务', 'require' => '开启', 'value' => file_exists(root_path('runtime') . 'timer.pid')],
                 ['name' => '消息队列', 'require' => '开启', 'value' => file_exists(root_path('runtime') . '.queue')],
             ];
         }
