@@ -204,10 +204,12 @@ class UserWechatUserDao extends BaseDao
         if (isset($where['label_id']) && $where['label_id']) {
             $model = $model->whereIn($userAlias . 'uid', function ($query) use ($where) {
                 if (is_array($where['label_id'])) {
-                    $query->name('user_label_relation')->whereIn('label_id', $where['label_id'])->field('uid')->select();
+                    $label_ids = array_map('intval', $where['label_id']);
+                    $query->name('user_label_relation')->whereIn('label_id', $label_ids)->field('uid')->select();
                 } else {
                     if (strpos($where['label_id'], ',') !== false) {
-                        $query->name('user_label_relation')->whereIn('label_id', explode(',', $where['label_id']))->field('uid')->select();
+                        $label_ids = array_map('intval', explode(',', $where['label_id']));
+                        $query->name('user_label_relation')->whereIn('label_id', $label_ids)->field('uid')->select();
                     } else {
                         $query->name('user_label_relation')->where('label_id', (int)$where['label_id'])->field('uid')->select();
                     }

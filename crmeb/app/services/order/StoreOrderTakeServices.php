@@ -431,9 +431,10 @@ class StoreOrderTakeServices extends BaseServices
             return $this->backOrderBrokerageTwo($orderInfo, $userInfo, $isSelfBrokerage);
         }
         $brokeragePrice = $orderInfo['one_brokerage'] ?? 0;
-        // 返佣金额小于等于0 直接返回不返佣金
+        // 一级返佣金额小于等于0 直接跳转二级返佣逻辑
         if ($brokeragePrice <= 0) {
-            return true;
+            $frozen_time = time() + intval(sys_config('extract_time')) * 86400;
+            return $this->backOrderBrokerageTwo($orderInfo, $userInfo, $isSelfBrokerage, $frozen_time);
         }
         // 获取上级推广员信息
         $spreadPrice = $userServices->value(['uid' => $one_spread_uid], 'brokerage_price');

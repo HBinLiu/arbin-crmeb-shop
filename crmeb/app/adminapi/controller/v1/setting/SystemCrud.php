@@ -538,9 +538,9 @@ class SystemCrud extends AuthController
         if (!$tableName) {
             return app('json')->fail('缺少表名');
         }
-//        if (in_array($tableName, SystemCrudServices::NOT_CRUD_TABANAME)) {
-//            return app('json')->fail('不允许查看当前表明细');
-//        }
+        if (in_array($tableName, SystemCrudServices::NOT_CRUD_TABANAME)) {
+            return app('json')->fail('不允许查看当前表明细');
+        }
         $tableInfo = $this->services->getColumnNamesList($tableName);
 
         $data = [];

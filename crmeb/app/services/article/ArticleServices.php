@@ -68,7 +68,7 @@ class ArticleServices extends BaseServices
     {
         /** @var ArticleContentServices $articleContentService */
         $articleContentService = app()->make(ArticleContentServices::class);
-        $content['content'] = $data['content'];
+        $content['content'] = htmlspecialchars($data['content']);
         $id = $data['id'];
         unset($data['content'], $data['id']);
         $info = $this->transaction(function () use ($id, $data, $articleContentService, $content) {
@@ -105,6 +105,7 @@ class ArticleServices extends BaseServices
     {
         $info = $this->dao->read($id);
         $info['cid'] = (int)$info['cid'];
+        $info['content'] = htmlspecialchars_decode($info['content']);
         return compact('info');
     }
 
@@ -166,6 +167,7 @@ class ArticleServices extends BaseServices
             $info = $info->toArray();
             $info['visit'] = (int)$info['visit'];
             $info['add_time'] = date('Y-m-d', $info['add_time']);
+            $info['content'] = htmlspecialchars_decode($info['content']);
         }
         return $info;
     }
