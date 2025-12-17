@@ -68,6 +68,12 @@ class FlowStatistic extends AuthController
             ['type', 'day'],
             ['time', '']
         ]);
+
+        // 当$where['time']不为空，且格式不是2025/12/01-2025/12/15时，重置$where['time']为空
+        if ($where['time'] != '' && !preg_match('/^\d{4}\/\d{2}\/\d{2}-\d{4}\/\d{2}\/\d{2}$/', $where['time'])) {
+            $where['time'] = '';
+        }
+
         $data = $this->services->getFlowRecord($where);
         return app('json')->success($data);
     }
