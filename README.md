@@ -271,7 +271,7 @@ docker-compose一键部署：https://doc.crmeb.com/single_open/open_v54/20145
 
 ###  📞 CRMEB互动
 #### CRMEB开源技术交流群（扫码进群可领取开源版接口文档、产品功能清单、高清UI设计图、思维脑图！）
-![输入图片说明](readme/pic/开源群.jpg)
+![输入图片说明](readme/pic/开源群php.jpg)
 #### 技术社区！找方法、提bug、看官方消息、拿活跃大奖！都在 <a href="https://www.crmeb.com/ask" target="_blank">CRMEB 技术社区</a> 应有尽有
 
 
