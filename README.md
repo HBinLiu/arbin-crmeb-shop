@@ -5,7 +5,7 @@
 
 <div align="center" style="font-size: 15px;">
 
-CRMEB开源商城系统（PHP版）
+CRMEB高品质开源商城系统（PHP版）
 
 </div>
 
@@ -36,7 +36,7 @@ CRMEB开源商城系统（PHP版）
 
 
 [官网](https://www.crmeb.com/) |
-[在线体验](http://v4.crmeb.net/admin/) |
+[在线体验](http://v5.crmeb.net/admin/) |
 [帮助文档](https://doc.crmeb.com/single_open) |
 [应用市场](https://www.crmeb.com/market/) |
 [技术社区](https://www.crmeb.com/ask/thread/list/147) |
