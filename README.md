@@ -13,7 +13,7 @@ CRMEB高品质开源商城系统（PHP版）
     <a href='https://gitee.com/ZhongBangKeJi/CRMEB/stargazers'>
        <img src='https://gitee.com/ZhongBangKeJi/CRMEB/badge/star.svg?theme=gvp' alt='star'></img>
     </a>
-    <a href="http://www.crmeb.com">
+    <a href="http://www.crmeb.com/?from=giteephp">
         <img src="https://img.shields.io/badge/Licence-apache2.0-green.svg?style=flat" />
     </a>
     <a href="http://www.crmeb.com">
@@ -35,10 +35,10 @@ CRMEB高品质开源商城系统（PHP版）
 <div align="center">
 
 
-[官网](https://www.crmeb.com/) |
+[官网](https://www.crmeb.com/?from=giteephp) |
 [在线体验](http://v5.crmeb.net/admin/) |
 [帮助文档](https://doc.crmeb.com/single_open) |
-[应用市场](https://www.crmeb.com/market/) |
+[应用市场](https://www.crmeb.com/market?from=giteephp) |
 [技术社区](https://www.crmeb.com/ask/thread/list/147) |
 [宽屏预览](https://gitee.com/ZhongBangKeJi/CRMEB/blob/master/README.md)
 
@@ -272,7 +272,7 @@ docker-compose一键部署：https://doc.crmeb.com/single_open/open_v54/20145
 ###  📞 CRMEB互动
 #### CRMEB开源技术交流群（扫码进群可领取开源版接口文档、产品功能清单、高清UI设计图、思维脑图！）
 ![输入图片说明](readme/pic/开源群php.jpg)
-#### 技术社区！找方法、提bug、看官方消息、拿活跃大奖！都在 <a href="https://www.crmeb.com/ask" target="_blank">CRMEB 技术社区</a> 应有尽有
+#### 技术社区！找方法、提bug、看官方消息、拿活跃大奖！都在 <a href="https://www.crmeb.com/ask/?from=giteephp" target="_blank">CRMEB 技术社区</a> 应有尽有
 
 
 
@@ -281,13 +281,13 @@ docker-compose一键部署：https://doc.crmeb.com/single_open/open_v54/20145
 
 ###  📕 CRMEB PRO版
 
-[![输入图片说明](readme/pic/PRO版2.jpg)](https://www.crmeb.com/index/pro)
+[![输入图片说明](readme/pic/PRO版2.jpg)](https://www.crmeb.com/index/pro?from=giteephp)
 
 
 
 ###  📕 CRMEB 多商户版
 
-[![输入图片说明](readme/pic/duoshanghu2.jpg)](https://www.crmeb.com/index/merchant)
+[![输入图片说明](readme/pic/duoshanghu2.jpg)](https://www.crmeb.com/index/merchant?from=giteephp)
 
 ---
 
