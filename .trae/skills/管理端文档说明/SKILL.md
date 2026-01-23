@@ -1,6 +1,6 @@
 ---
 name: 管理端前端说明
-description: 管理端前端开发说明
+description: 管理端前端开发skill说明
 ---
 
 # 管理端前端说明
