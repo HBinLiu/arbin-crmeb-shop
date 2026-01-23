@@ -1,7 +1,7 @@
 # CRMEB 项目专属 Chat 规则
 
 ## 1. 项目概述
-- **名称**: CRMEB 开源商城系统（PHP版）
+- **名称**: CRMEB 开源商城系统（PHP版） 
 - **技术栈**: ThinkPHP 6 + ElementUI + UniApp
 - **版本**: 5.6.4
 - **许可证**: Apache-2.0
