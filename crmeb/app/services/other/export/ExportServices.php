@@ -279,7 +279,7 @@ class ExportServices extends BaseServices
         if (isset($where['cate_id']) && $where['cate_id']) {
             /** @var StoreCategoryServices $storeCategory */
             $storeCategory = app()->make(StoreCategoryServices::class);
-            $cateIds = $storeCategory->getColumn(['pid' => $where['cate_id']], 'id');
+            $cateIds = $storeCategory->getColumn(['pid' => (int)$where['cate_id']], 'id');
         }
         if ($cateIds) {
             $cateIds[] = $where['cate_id'];
