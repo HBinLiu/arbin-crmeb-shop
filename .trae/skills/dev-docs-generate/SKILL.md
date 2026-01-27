@@ -1,6 +1,6 @@
 ---
-name: docs规范
-description: 文档写作规范
+name: dev-docs-generate
+description: 开发文档生成规范，快速生成开发文档，自动放到docs目录下，方便技术快速了解项目，能快速入手开发
 ---
 
 # CRMEB 项目文档写作规范
@@ -10,11 +10,11 @@ description: 文档写作规范
 ### 0.1 触发条件
 
 - **目录浏览时**：当浏览文档相关目录时自动调用
-  - 打开 `docs/` 目录时触发
-  - 打开 `docs/phpapi/` 目录时触发
-  - 打开 `docs/admin/` 目录时触发
-  - 打开 `docs/uniapp/` 目录时触发
-  - 打开 `docs/nuxt/` 目录时触发
+  - 打开 `dev-docs/` 目录时触发
+  - 打开 `dev-docs/phpapi/` 目录时触发
+  - 打开 `dev-docs/admin/` 目录时触发
+  - 打开 `dev-docs/uniapp/` 目录时触发
+  - 打开 `dev-docs/nuxt/` 目录时触发
 - **文档创建时**：当创建新的 Markdown 文档文件时自动调用
 - **文档编辑时**：当编辑现有文档文件时自动调用
 - **关键词触发**：当文档内容包含以下关键词时自动调用
@@ -87,11 +87,11 @@ description: 文档写作规范
 
 ### 2.5 文档存放目录
 
-- 文档保存到 `docs` 目录中
-- 后端接口文档存放 `docs/phpapi` 目录中
-- 后端前端 ElementUI（Admin）文档存放 `docs/admin` 目录中
-- 移动端前端 UniApp（移动端）文档存放 `docs/uniapp` 目录中
-- PC 端 Nuxt（PC）文档存放 `docs/nuxt` 目录中
+- 文档保存到 `dev-docs` 目录中
+- 后端接口文档存放 `dev-docs/phpapi` 目录中
+- 后端前端 ElementUI（Admin）文档存放 `dev-docs/admin` 目录中
+- 移动端前端 UniApp（移动端）文档存放 `dev-docs/uniapp` 目录中
+- PC 端 Nuxt（PC）文档存放 `dev-docs/nuxt` 目录中
 
 ## 3. 内容要求
 

@@ -448,3 +448,11 @@ src/
 - **代码托管**: 使用代码托管平台
 - **CI/CD**: 持续集成/持续部署
 - **文档协作**: 团队文档协作工具
+
+### 14 其他资源
+- 开发流程文档 /references/development_flow.md
+- 代码规范文档 /references/code_style.md
+- 项目部署文档 /references/deploy.md
+- 目录结构文档 /references/directory_structure.md
+- 接口请求流程文档 /references/api_flow.md
+- 系统配置文档 /references/system_config.md

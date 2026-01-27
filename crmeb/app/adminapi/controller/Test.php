@@ -10,7 +10,9 @@ class Test
 {
     public function index()
     {
-
+        json(['code' => 0, 'msg' => '支付成功']);
+        app('json')->success('支付成功');
     }
 }
+
 
