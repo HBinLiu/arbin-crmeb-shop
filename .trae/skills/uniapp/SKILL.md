@@ -447,6 +447,11 @@ pages/
 - [Stack Overflow](https://stackoverflow.com/)
 - [掘金](https://juejin.cn/)
 
+### 12.4 本地参考文档
+- [UniApp 目录结构文档](./references/directory_structure.md)
+- [UniApp API 开发流程文档](./references/api_flow.md)
+- [UniApp 代码规范文档](./references/code_style.md)
+
 ## 13. 团队协作
 
 ### 13.1 协作流程
