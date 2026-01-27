@@ -38,7 +38,34 @@ if (!function_exists('crmebLog')) {
         Log::write($msg, 'crmeb');
     }
 }
-
+if (!function_exists('success')) {
+    /**
+     * 响应助手函数
+     * @param mixed $msg 响应消息
+     * @param array|null $data 响应数据
+     * @param array|null $replace 消息替换数组
+     * @return \think\Response
+     * @see \crmeb\utils\Json::success()
+     */
+    function success($msg = 'success', ?array $data = null, ?array $replace = [])
+    {
+        return app('json')->success($msg, $data, $replace);
+    }
+}
+if (!function_exists('fail')) {
+    /**
+     * 失败响应助手函数
+     * @param mixed $msg 响应消息
+     * @param array|null $data 响应数据
+     * @param array|null $replace 消息替换数组
+     * @return \think\Response
+     * @see \crmeb\utils\Json::fail()
+     */
+    function fail($msg = 'fail', ?array $data = null, ?array $replace = [])
+    {
+        return app('json')->fail($msg, $data, $replace);
+    }
+}
 if (!function_exists('getWorkerManUrl')) {
 
     /**
@@ -287,14 +314,27 @@ if (!function_exists('set_http_type')) {
      * @param int $type 0 返回https 1 返回 http
      * @return string
      */
-    function set_http_type($url, $type = 0)
+    function set_http_type(string $url, int $type = 0): string
     {
-        $domainTop = substr($url, 0, 5);
-        if ($type) {
-            if ($domainTop == 'https') $url = 'http' . substr($url, 5, strlen($url));
-        } else {
-            if ($domainTop != 'https') $url = 'https:' . substr($url, 5, strlen($url));
+        // 基本验证
+        if (empty($url)) {
+            return $url;
         }
+        
+        // 检查是否是完整 URL
+        $is_full_url = (strpos($url, '://') !== false);
+        
+        if ($is_full_url) {
+            // 处理完整 URL
+            if ($type) {
+                // 转换为 HTTP
+                $url = preg_replace('/^https:/i', 'http:', $url);
+            } else {
+                // 转换为 HTTPS
+                $url = preg_replace('/^http:/i', 'https:', $url);
+            }
+        } 
+        
         return $url;
     }
 
