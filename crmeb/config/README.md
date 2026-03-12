@@ -1,27 +1,67 @@
-crmeb/config目录用来存放项目的配置文件。
+# config 目录结构说明
 
-在PHP项目开发中,配置文件扮演着非常重要的角色:
+## 目录结构
 
-- 放置各种系统级参数和设置,如数据库连接信息等
-- 分离软件代码和运行环境设置,方便部署
-- 运行时根据配置加载系统服务和组件
-- 参数可在不修改代码的情况下进行变更
+```
+:.
+├── ajcaptcha.php            # 滑块验证码配置
+├── app.php                 # 应用基础配置
+├── cache.php               # 缓存配置
+├── captcha.php             # 验证码配置
+├── console.php             # 命令行配置
+├── cookie.php              # Cookie配置
+├── database.php            # 数据库配置
+├── filesystem.php          # 文件系统配置
+├── lang.php                # 多语言配置
+├── log.php                 # 日志配置
+├── pay.php                 # 支付配置
+├── plat.php                # 对接平台配置
+├── printer.php             # 小票打印机配置
+├── qrcode.php              # 二维码配置
+├── queue.php               # 队列配置
+├── route.php               # 路由配置
+├── session.php             # Session配置
+├── sms.php                 # 短信配置
+├── trace.php               # 调试配置
+├── upload.php              # 上传配置
+├── view.php                # 模板配置
+├── workerman.php           # Workerman配置
+└── README.md              # 目录说明文件
+```
 
-CRMEB项目中config目录负责:
+## 文件说明
 
-- 放置如数据库、本地缓存、第三方开放API等系统配置
-- 定义项目组件自动加载机制
-- 路由和URL重写规则
-- 错误和日志输出级别
-- 各环境参数差异配置隔离
+- **ajcaptcha.php** - 滑块验证码配置，用于行为验证
+- **app.php** - 应用基础配置，包括时区、字符集、应用模式等
+- **cache.php** - 缓存驱动配置，支持Redis、Memcached、文件等
+- **captcha.php** - 验证码生成和验证配置
+- **console.php** - 命令行应用配置
+- **cookie.php** - Cookie配置，包括域名、路径、有效期等
+- **database.php** - 数据库连接和查询配置，支持MySQL、SQLite等
+- **filesystem.php** - 本地存储和云存储配置
+- **lang.php** - 多语言配置，默认语言、语言包路径等
+- **log.php** - 日志配置，记录方式、级别、路径等
+- **pay.php** - 支付接口配置，包括微信支付、支付宝等
+- **plat.php** - 对接平台配置，如小程序、公众号等
+- **printer.php** - 小票打印机配置，连接方式、打印模板等
+- **qrcode.php** - 二维码生成配置
+- **queue.php** - 消息队列配置，支持Redis、数据库、Sync驱动
+- **route.php** - 路由配置，URL路由规则、域名部署等
+- **session.php** - Session配置，驱动、过期时间等
+- **sms.php** - 短信服务配置，支持腾讯云、阿里云等
+- **trace.php** - 调试配置，页面Trace显示
+- **upload.php** - 文件上传配置，大小限制、保存路径等
+- **view.php** - 模板引擎配置，模板路径、缓存配置等
+- **workerman.php** - Workerman WebSocket服务配置
 
-项目在运行时会加载并解析这些配置:
+## 功能说明
 
-- 初始化系统服务如数据库连接
-- 注册组件到容器
-- 根据配置加载运行环境
-- 提供参数和变量给其它模块
+config目录包含系统所有的配置文件：
 
-所以该目录定义了项目的系统架构和运行环境,对项目有重要影响。
+- **应用配置** - 定义应用的基础运行参数
+- **数据存储** - 数据库、缓存、文件存储配置
+- **第三方服务** - 支付、短信、验证码配置
+- **路由与安全** - 路由规则、跨域、认证配置
+- **开发调试** - 日志、调试、Trace配置
 
-它通过配置实现项目的可配置性和扩展性。
+修改配置文件后需要清除缓存或重启服务生效。
