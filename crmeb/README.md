@@ -1,9 +1,33 @@
 CRMEB v5 后端程序目录
 ===============
 
-> 运行环境要求PHP7.1-7.4。
+## docker一键运行
+
+### 快速启动
+
+```bash
+# 拉取镜像
+docker pull ccr.ccs.tencentyun.com/crmebky_php/crmebky:latest
+
+# 运行容器
+docker run -d --name crmeb \
+  -p 8080:80 \
+  -p 3306:3306 \
+  -p 6379:6379 \
+  ccr.ccs.tencentyun.com/crmebky_php/crmebky:latest
+```
+
+### 访问服务
+- **网站**: http://localhost:8080 
+- **后台**: http://localhost:8080/admin （账号: admin，密码: crmeb.com）
+- **MySQL**: localhost:3306（账号: root，密码: 123456）
+- **Redis**: localhost:6379
+> 详细说明请到 [帮助文档](https://gitee.com/ZhongBangKeJi/CRMEB/blob/master/help/docker/README.md) 查看。
+
 
 ## 安装
+
+> 运行环境要求PHP7.1-7.4。
 
 ## 一键安装
 上传你的代码，站点入口目录设置/public
@@ -268,16 +292,12 @@ ThinkPHP6.0遵循PSR-2命名规范和PSR-4自动加载规范，并且注意如�
 [TP6开发手册](https://www.kancloud.cn/manual/thinkphp6_0/content)
 
 
-## 参与开发
-
-请参阅 [CRMEB](https://github.com/crmeb/CRMEB)。
-
 ## 版权信息
 
 
 本项目包含的第三方源码和二进制文件之版权信息另行标注。
 
-版权所有Copyright © 2017-2023 by CRMEB (http://www.crmeb.com)
+版权所有Copyright © 2017-2026 by CRMEB (http://www.crmeb.com)
 
 All rights reserved。
 
