@@ -128,13 +128,13 @@ docker run -d --name crmeb -p 8080:80 ccr.ccs.tencentyun.com/crmebky_php/crmebky
 
 ###  📖 系统功能
 
-![输入图片说明](help/readme/pic/核心功能.jpg)
+![输入图片说明](help/resource/pic/核心功能.jpg)
 
 ---
 
 ###  📖 UI界面展示
 
-![输入图片说明](help/readme/pic/PHP_06.jpg)
+![输入图片说明](help/resource/pic/PHP_06.jpg)
 
 
 
@@ -142,7 +142,7 @@ docker run -d --name crmeb -p 8080:80 ccr.ccs.tencentyun.com/crmebky_php/crmebky
 
 ###  📖 后台界面展示
 
-![输入图片说明](help/readme/pic/PHP_05.jpg)
+![输入图片说明](help/resource/pic/PHP_05.jpg)
 
 
 ---
@@ -150,7 +150,7 @@ docker run -d --name crmeb -p 8080:80 ccr.ccs.tencentyun.com/crmebky_php/crmebky
 
 ###  📱 系统演示
 
-![输入图片说明](help/readme/pic/contact2.jpg)
+![输入图片说明](help/resource/pic/contact2.jpg)
 
 管理后台： http://v5.crmeb.net/admin
 
@@ -288,7 +288,7 @@ docker-compose一键部署：https://doc.crmeb.com/single_open/open_v54/20145
 
 ###  📞 CRMEB互动
 #### CRMEB开源技术交流群（扫码进群可领取开源版接口文档、产品功能清单、思维脑图！）
-![输入图片说明](help/readme/pic/开源群php.jpg)
+![输入图片说明](help/resource/pic/开源群php.jpg)
 #### 技术社区！找方法、提bug、看官方消息、拿活跃大奖！都在 <a href="https://www.crmeb.com/ask/?from=giteephp" target="_blank">CRMEB 技术社区</a> 应有尽有
 
 
@@ -298,13 +298,13 @@ docker-compose一键部署：https://doc.crmeb.com/single_open/open_v54/20145
 
 ###  📕 CRMEB PRO版
 
-[![输入图片说明](help/readme/pic/PRO版2.jpg)](https://www.crmeb.com/index/pro?from=giteephp)
+[![输入图片说明](help/resource/pic/PRO版2.jpg)](https://www.crmeb.com/index/pro?from=giteephp)
 
 
 
 ###  📕 CRMEB 多商户版
 
-[![输入图片说明](help/readme/pic/duoshanghu2.jpg)](https://www.crmeb.com/index/merchant?from=giteephp)
+[![输入图片说明](help/resource/pic/duoshanghu2.jpg)](https://www.crmeb.com/index/merchant?from=giteephp)
 
 ---
 
