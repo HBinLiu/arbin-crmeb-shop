@@ -85,6 +85,21 @@ CRMEB开源商城系统代码100%开源，基于 **Apache-2.0协议** 免费商�
 
 ---
 
+# docker一键体验
+```
+# 拉取并运行CRMEB Docker镜像
+docker run -d --name crmeb -p 8080:80 ccr.ccs.tencentyun.com/crmebky_php/crmebky:latest
+
+```
+
+### 访问服务
+- **网站**: http://localhost:8080 
+- **后台**: http://localhost:8080/admin （账号: admin，密码: crmeb.com）
+- **MySQL**: localhost:3306（账号: root，密码: 123456）
+- **Redis**: localhost:6379
+> 详细说明在 'crmeb/help/docker/docker.md' 文件中
+---
+
 ### 🫧 技术特点
 
 ~~~
