@@ -96,7 +96,7 @@ docker run -d --name crmeb -p 8080:80 ccr.ccs.tencentyun.com/crmebky_php/crmebky
 - **后台**: http://localhost:8080/admin （账号: admin，密码: crmeb.com）
 - **MySQL**: localhost:3306（账号: root，密码: 123456）
 - **Redis**: localhost:6379
-> 详细说明点击查看 [帮助文档](/crmeb/help/docker/docker.md)。
+> 详细说明点击查看 [帮助文档](/help/docker/docker.md)。
 ---
 
 ### 🫧 技术特点
