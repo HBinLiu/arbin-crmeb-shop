@@ -158,9 +158,13 @@ clean-lock:
 # 清理 MySQL 数据
 clean-mysql:
 	@echo -e "$(YELLOW)清理 MySQL 数据...$(NC)"
-	@if [ -d "mysql/data" ] && [ -n "$(ls -A mysql/data 2>/dev/null)" ]; then \
+	@if [ -d "mysql/data" ] && [ -n "$$(ls -A mysql/data 2>/dev/null)" ]; then \
 		rm -rf mysql/data/*; \
 		echo "已清空 MySQL 数据目录"; \
+	fi
+	@if [ -d "mysql/log" ] && [ -n "$$(ls -A mysql/log 2>/dev/null)" ]; then \
+		rm -rf mysql/log/*; \
+		echo "已清空 MySQL 日志目录"; \
 	fi
 
 # 清理 runtime 缓存
@@ -175,10 +179,10 @@ clean-runtime:
 set-permission:
 	@echo -e "$(YELLOW)设置目录权限...$(NC)"
 	@chmod -R 777 $(PHP_RUNTIME_LOCAL) 2>/dev/null || true
-	@chmod -R 777 $(PHP_APP_LOCAL)/public 2>/dev/null || true
-	@chmod 777 $(PHP_APP_LOCAL)/.env 2>/dev/null || true
-	@chmod 777 $(PHP_APP_LOCAL)/.version 2>/dev/null || true
-	@chmod 777 $(PHP_APP_LOCAL)/.constant 2>/dev/null || true
+	@chmod -R 777 $(PHP_APP_LOCAL)/public/uploads 2>/dev/null || true
+	@chmod 666 $(PHP_APP_LOCAL)/.env 2>/dev/null || true
+	@chmod 666 $(PHP_APP_LOCAL)/.version 2>/dev/null || true
+	@chmod 666 $(PHP_APP_LOCAL)/.constant 2>/dev/null || true
 
 # 清理网络
 clean-network:
@@ -239,8 +243,21 @@ delete:
 	@echo -e "$(YELLOW)删除容器和数据...$(NC)"
 	@$(COMPOSE_COMMAND) down -v
 	@rm -rf $(MYSQL_DATA_LOCAL)/* 2>/dev/null || true
+	@rm -rf $(MYSQL_LOG_LOCAL)/* 2>/dev/null || true
 	@rm -rf $(PHP_RUNTIME_LOCAL)/* 2>/dev/null || true
 	@rm -f $(PHP_APP_LOCAL)/public/install.lock 2>/dev/null || true
+	@echo -e "$(YELLOW)还原文件权限...$(NC)"
+	@if [ -d "$(PHP_APP_LOCAL)/.git" ] || [ -d "$(PHP_APP_LOCAL)/../.git" ]; then \
+		git -C $(PHP_APP_LOCAL) restore -SW . 2>/dev/null || true; \
+	else \
+		chmod 644 $(PHP_APP_LOCAL)/.env 2>/dev/null || true; \
+		chmod 644 $(PHP_APP_LOCAL)/.version 2>/dev/null || true; \
+		chmod 644 $(PHP_APP_LOCAL)/.constant 2>/dev/null || true; \
+		find $(PHP_APP_LOCAL)/public/uploads -type d -exec chmod 755 {} \; 2>/dev/null || true; \
+		find $(PHP_APP_LOCAL)/public/uploads -type f -exec chmod 644 {} \; 2>/dev/null || true; \
+		find $(PHP_APP_LOCAL)/public/static -type d -exec chmod 755 {} \; 2>/dev/null || true; \
+		find $(PHP_APP_LOCAL)/public/static -type f -exec chmod 644 {} \; 2>/dev/null || true; \
+	fi
 	@echo -e "$(GREEN)=== 已删除 ===$(NC)"
 
 # 查看日志

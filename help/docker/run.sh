@@ -137,10 +137,12 @@ cleanup() {
     # 设置目录权限为 777
     echo "设置目录权限..."
     [ -n "$PHP_RUNTIME_LOCAL" ] && chmod -R 777 "$PHP_RUNTIME_LOCAL" 2>/dev/null
-    [ -n "$PHP_APP_LOCAL" ] && chmod -R 777 "$PHP_APP_LOCAL/public" 2>/dev/null
-    [ -n "$PHP_APP_LOCAL" ] && chmod 777 "$PHP_APP_LOCAL/.env" 2>/dev/null
-    [ -n "$PHP_APP_LOCAL" ] && chmod 777 "$PHP_APP_LOCAL/.version" 2>/dev/null
-    [ -n "$PHP_APP_LOCAL" ] && chmod 777 "$PHP_APP_LOCAL/.constant" 2>/dev/null
+    # 只设置需要写入的 public 子目录权限
+    [ -n "$PHP_APP_LOCAL" ] && chmod -R 777 "$PHP_APP_LOCAL/public/uploads" 2>/dev/null
+    # 配置文件设置为可写（不改变可执行位）
+    [ -n "$PHP_APP_LOCAL" ] && chmod 666 "$PHP_APP_LOCAL/.env" 2>/dev/null
+    [ -n "$PHP_APP_LOCAL" ] && chmod 666 "$PHP_APP_LOCAL/.version" 2>/dev/null
+    [ -n "$PHP_APP_LOCAL" ] && chmod 666 "$PHP_APP_LOCAL/.constant" 2>/dev/null
 }
 
 # 清理网络
@@ -217,8 +219,22 @@ do_delete() {
     echo -e "${YELLOW}=== 删除容器和数据 ===${NC}"
     docker-compose -f "$COMPOSE_FILE" down -v
     [ -n "$MYSQL_DATA_LOCAL" ] && rm -rf "$MYSQL_DATA_LOCAL"/* 2>/dev/null
+    [ -n "$MYSQL_LOG_LOCAL" ] && rm -rf "$MYSQL_LOG_LOCAL"/* 2>/dev/null
     [ -n "$PHP_RUNTIME_LOCAL" ] && rm -rf "$PHP_RUNTIME_LOCAL"/* 2>/dev/null
     [ -n "$PHP_APP_LOCAL" ] && rm -f "$PHP_APP_LOCAL/public/install.lock" 2>/dev/null
+    # 还原文件权限
+    echo "还原文件权限..."
+    if [ -d "$PHP_APP_LOCAL/.git" ] || [ -d "$PHP_APP_LOCAL/../.git" ]; then
+        git -C "$PHP_APP_LOCAL" restore -SW .
+    else
+        [ -n "$PHP_APP_LOCAL" ] && chmod 644 "$PHP_APP_LOCAL/.env" 2>/dev/null
+        [ -n "$PHP_APP_LOCAL" ] && chmod 644 "$PHP_APP_LOCAL/.version" 2>/dev/null
+        [ -n "$PHP_APP_LOCAL" ] && chmod 644 "$PHP_APP_LOCAL/.constant" 2>/dev/null
+        [ -n "$PHP_APP_LOCAL" ] && find "$PHP_APP_LOCAL/public/uploads" -type d -exec chmod 755 {} \; 2>/dev/null
+        [ -n "$PHP_APP_LOCAL" ] && find "$PHP_APP_LOCAL/public/uploads" -type f -exec chmod 644 {} \; 2>/dev/null
+        [ -n "$PHP_APP_LOCAL" ] && find "$PHP_APP_LOCAL/public/static" -type d -exec chmod 755 {} \; 2>/dev/null
+        [ -n "$PHP_APP_LOCAL" ] && find "$PHP_APP_LOCAL/public/static" -type f -exec chmod 644 {} \; 2>/dev/null
+    fi
     echo -e "${GREEN}=== 已删除 ===${NC}"
 }
 
