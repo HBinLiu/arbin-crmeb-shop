@@ -47,11 +47,10 @@ services:
       REDIS_PASSWORD: 123456
       APP_DEBUG: true
       DEFAULT_TIMEZONE: Asia/Shanghai
-    # ports:
-      # - "9000:9000"
-      # - "40001:40001"
-      # - "40002:40002"
-      # - "40003:40003"
+    ports:
+      - "9000:9000"
+      - "40001:40001"
+      - "40002:40002"
     working_dir: /var/www
     volumes:
       - ../../crmeb:/var/www
