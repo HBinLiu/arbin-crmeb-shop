@@ -227,6 +227,7 @@ class ComposerStaticInitf16474ac994ccc25392f403933800b79
         ),
         'C' => 
         array (
+            'Crmeb\\Easypay\\' => 14,
             'Complex\\' => 8,
             'Channel\\' => 8,
             'Carbon\\' => 7,
@@ -546,6 +547,10 @@ class ComposerStaticInitf16474ac994ccc25392f403933800b79
         'Darabonba\\GatewaySpi\\' => 
         array (
             0 => __DIR__ . '/..' . '/alibabacloud/gateway-spi/src',
+        ),
+        'Crmeb\\Easypay\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/crmeb/easypay/src',
         ),
         'Complex\\' => 
         array (

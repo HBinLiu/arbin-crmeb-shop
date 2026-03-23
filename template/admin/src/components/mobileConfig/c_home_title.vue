@@ -21,8 +21,8 @@ import toolCom from '@/components/mobileConfigRight/index.js';
 import rightBtn from '@/components/rightBtn/index.vue';
 import { mapState, mapMutations, mapActions } from 'vuex';
 export default {
-  name: 'c_home_bargain',
-  componentsName: 'home_bargain',
+  name: 'c_home_title',
+  componentsName: 'home_title',
   components: {
     ...toolCom,
     rightBtn,
@@ -121,36 +121,8 @@ export default {
       ],
       currencyStyle: [
         {
-          components: toolCom.c_title,
-          configNme: 'titleCurrency',
-        },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'titleColor',
-        },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'bottomBgColor',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'topConfig',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'bottomConfig',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'prConfig',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'mbConfig',
-        },
-        {
-          components: toolCom.c_fillet,
-          configNme: 'fillet',
+          components: toolCom.c_common_style,
+          configNme: 'commonStyle',
         },
       ],
       setUp: 0,
@@ -160,7 +132,7 @@ export default {
   watch: {
     num(nVal) {
       let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[nVal]));
-      this.configObj = value;
+      this.configObj = this.patchConfig(value);
     },
     configObj: {
       handler(nVal, oVal) {
@@ -218,10 +190,41 @@ export default {
   mounted() {
     this.$nextTick(() => {
       let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[this.num]));
-      this.configObj = value;
+      this.configObj = this.patchConfig(value);
     });
   },
   methods: {
+    patchConfig(data) {
+      if (!data) return data;
+      if (!data.paddingConfig) {
+        this.$set(data, 'paddingConfig', {
+          title: '内边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+        if (data.topConfig) data.paddingConfig.valList[0].val = data.topConfig.val;
+        if (data.prConfig) {
+          data.paddingConfig.valList[1].val = data.prConfig.val;
+          data.paddingConfig.valList[3].val = data.prConfig.val;
+        }
+        if (data.bottomConfig) data.paddingConfig.valList[2].val = data.bottomConfig.val;
+      }
+      if (!data.marginConfig) {
+        this.$set(data, 'marginConfig', {
+          title: '外边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+        if (data.mbConfig) data.marginConfig.valList[0].val = data.mbConfig.val;
+      }
+      return data;
+    },
     // 获取组件参数
     getConfig(data) {},
   },

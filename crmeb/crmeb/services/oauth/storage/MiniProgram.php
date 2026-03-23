@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -48,7 +48,7 @@ class MiniProgram extends BaseStorage implements OAuthInterface
     public function oauth(string $code = null, array $options = [])
     {
         if (!$code) {
-            throw new OAuthException(100104);
+            throw new OAuthException('缺少code');
         }
 
         try {
@@ -59,7 +59,7 @@ class MiniProgram extends BaseStorage implements OAuthInterface
         }
 
         if (!isset($userInfoCong['openid'])) {
-            throw new OAuthException(410075);
+            throw new OAuthException('openid获取失败');
         }
 
         //是否静默授权
@@ -68,7 +68,7 @@ class MiniProgram extends BaseStorage implements OAuthInterface
         }
 
         if (empty($options['iv']) || empty($options['encryptedData'])) {
-            throw new OAuthException(100100);
+            throw new OAuthException('参数错误');
         }
 
         try {
@@ -76,7 +76,7 @@ class MiniProgram extends BaseStorage implements OAuthInterface
             $userInfo = MiniProgramService::encryptor($session_key, $options['iv'], $options['encryptedData']);
         } catch (\Exception $e) {
             if ($e->getCode() == '-41003') {
-                throw new OAuthException(410077);
+                throw new OAuthException('获取会话密匙失败');
             }
         }
 

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -93,10 +93,10 @@ class StoreProductReplyServices extends BaseServices
         $data['status'] = 1;
         unset($data['image']);
         if ($data['add_time'] > $time) {
-            throw new AdminException(400567);
+            throw new AdminException('评论时间应小于当前时间');
         }
         $res = $this->dao->save($data);
-        if (!$res) throw new AdminException(400568);
+        if (!$res) throw new AdminException('添加虚拟评论失败');
     }
 
     /**
@@ -106,12 +106,12 @@ class StoreProductReplyServices extends BaseServices
      */
     public function setReply(int $id, string $content)
     {
-        if ($content == '') throw new AdminException(400234);
+        if ($content == '') throw new AdminException('请输入回复内容');
         $save['merchant_reply_content'] = $content;
         $save['merchant_reply_time'] = time();
         $save['is_reply'] = 1;
         $res = $this->dao->update($id, $save);
-        if (!$res) throw new AdminException(400569);
+        if (!$res) throw new AdminException('回复失败');
     }
 
     /**
@@ -121,7 +121,7 @@ class StoreProductReplyServices extends BaseServices
     public function del(int $id)
     {
         $res = $this->dao->update($id, ['is_del' => 1]);
-        if (!$res) throw new AdminException(100008);
+        if (!$res) throw new AdminException('删除失败');
     }
 
     /**

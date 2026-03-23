@@ -59,7 +59,7 @@ export default {
 			// #ifdef MP
 			if (options.scene) {
 				let value = this.$util.getUrlParams(decodeURIComponent(options.scene));
-				if (value.order_id) options.id = value.id;
+				if (value.id) this.order_id = value.id;
 				//记录推广人uid
 				if (value.pid) app.globalData.spid = value.pid;
 			}

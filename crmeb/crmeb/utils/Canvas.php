@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -263,7 +263,7 @@ class Canvas
             }
 
             if (make_path($path, 4, true) === '') {
-                throw new \RuntimeException(400555);
+                throw new \RuntimeException('无法创建文件夹，请检查您的上传目录权限');
             }
 
             $save_file = $this->path . $this->fileName . '.' . $this->imageType;

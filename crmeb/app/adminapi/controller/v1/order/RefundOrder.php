@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -81,7 +81,7 @@ class RefundOrder extends AuthController
     public function agreeExpress($id)
     {
         $this->services->agreeExpress($id);
-        return app('json')->success(100010);
+        return app('json')->success('操作成功');
     }
 
     /**
@@ -97,7 +97,7 @@ class RefundOrder extends AuthController
         [$remark] = $this->request->postMore([['remark', '']], true);
 
         $this->services->updateRemark((int)$id, $remark);
-        return app('json')->success(100024);
+        return app('json')->success('备注成功');
     }
 
     /**
@@ -108,7 +108,7 @@ class RefundOrder extends AuthController
      */
     public function refund($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         return app('json')->success($this->services->refundOrderForm((int)$id));
     }
 
@@ -129,21 +129,21 @@ class RefundOrder extends AuthController
             ['type', 1]
         ]);
         if (!$id) {
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         }
         $orderRefund = $this->services->get($id);
         if (!$orderRefund) {
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         }
         if ($orderRefund['is_cancel'] == 1) {
-            return app('json')->fail(400118);
+            return app('json')->fail('订单不存在');
         }
         $order = $services->get((int)$orderRefund['store_order_id']);
         if (!$order) {
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         }
         if (!in_array($orderRefund['refund_type'], [1, 5])) {
-            return app('json')->fail(400144);
+            return app('json')->fail('售后订单状态不支持该操作');
         }
 
         if ($data['type'] == 1 || $data['type'] == 5) {
@@ -156,17 +156,17 @@ class RefundOrder extends AuthController
         //拒绝退款
         if ($type == 2) {
             $this->services->refuseRefund((int)$id, $data, $orderRefund);
-            return app('json')->success(400145);
+            return app('json')->success('修改退款状态成功');
         } else {
             //0元退款
             if ($orderRefund['refund_price'] == 0 && in_array($orderRefund['refund_type'], [1, 5])) {
                 $refund_price = 0;
             } else {
                 if (!$data['refund_price']) {
-                    return app('json')->fail(400146);
+                    return app('json')->fail('请输入退款金额');
                 }
                 if ($orderRefund['refund_price'] == $orderRefund['refunded_price']) {
-                    return app('json')->fail(400147);
+                    return app('json')->fail('已退完支付金额，不能再退款了');
                 }
                 $refund_price = $data['refund_price'];
             }
@@ -174,7 +174,7 @@ class RefundOrder extends AuthController
             $data['refunded_price'] = bcadd($data['refund_price'], $orderRefund['refunded_price'], 2);
             $bj = bccomp((string)$orderRefund['refund_price'], (string)$data['refunded_price'], 2);
             if ($bj < 0) {
-                return app('json')->fail(400148);
+                return app('json')->fail('退款金额大于支付金额，请修改退款金额');
             }
 
             unset($data['type']);
@@ -195,10 +195,10 @@ class RefundOrder extends AuthController
             unset($data['refund_price']);
             if ($this->services->agreeRefund($id, $refund_data)) {
                 $this->services->update($id, $data);
-                return app('json')->success(400149);
+                return app('json')->success('退款成功');
             } else {
                 $this->services->storeProductOrderRefundYFasle((int)$id, $refund_price);
-                return app('json')->fail(400150);
+                return app('json')->fail('退款失败');
             }
         }
     }
@@ -211,7 +211,7 @@ class RefundOrder extends AuthController
      */
     public function noRefund($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         return app('json')->success($this->services->noRefundForm((int)$id));
     }
 
@@ -227,6 +227,6 @@ class RefundOrder extends AuthController
     {
         [$refund_reason] = $this->request->postMore([['refund_reason', '']], true);
         $this->services->refuse($id, $refund_reason);
-        return app('json')->success(100010);
+        return app('json')->success('操作成功');
     }
 }

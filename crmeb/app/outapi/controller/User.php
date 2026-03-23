@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -66,9 +66,9 @@ class User extends AuthController
         ]);
         $uid = $this->services->saveUser(0, $data);
         if (!$uid) {
-            return app('json')->fail(100022);
+            return app('json')->fail('添加失败');
         }
-        return app('json')->success(100021, ['uid' => $uid]);
+        return app('json')->success('添加成功', ['uid' => $uid]);
     }
 
     /**
@@ -88,9 +88,9 @@ class User extends AuthController
             ['is_promoter', 0],
             ['status', 1]
         ]);
-        if (!$uid) return app('json')->fail(100100);
+        if (!$uid) return app('json')->fail('参数错误');
         $this->services->saveUser((int)$uid, $data);
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }
 
     /**
@@ -112,11 +112,11 @@ class User extends AuthController
             ['days', 0],
             ['coupon', 0]
         ]);
-        if (!$uid) return app('json')->fail(100100);
+        if (!$uid) return app('json')->fail('参数错误');
         if (!$this->services->otherGive((int)$uid, $data)) {
-            return app('json')->fail(100005);
+            return app('json')->fail('操作失败');
         }
-        return app('json')->success(100010);
+        return app('json')->success('操作成功');
     }
 
     /**
@@ -129,7 +129,7 @@ class User extends AuthController
      */
     public function info($uid)
     {
-        if (!$uid) return app('json')->fail(100100);
+        if (!$uid) return app('json')->fail('参数错误');
         $data = $this->services->userInfo($uid);
         return app('json')->success(compact('data'));
     }
@@ -153,11 +153,11 @@ class User extends AuthController
             ['days', 0],
             ['coupon', 0]
         ]);
-        if (!$uid) return app('json')->fail(100100);
+        if (!$uid) return app('json')->fail('参数错误');
         if (!$this->services->otherGive((int)$uid, $data)) {
-            return app('json')->fail(100005);
+            return app('json')->fail('操作失败');
         }
-        return app('json')->success(100010);
+        return app('json')->success('操作成功');
     }
 
     /**
@@ -179,11 +179,11 @@ class User extends AuthController
             ['days', 0],
             ['coupon', 0]
         ]);
-        if (!$uid) return app('json')->fail(100100);
+        if (!$uid) return app('json')->fail('参数错误');
         if (!$this->services->otherGive((int)$uid, $data)) {
-            return app('json')->fail(100005);
+            return app('json')->fail('操作失败');
         }
-        return app('json')->success(100010);
+        return app('json')->success('操作成功');
     }
 
     /**
@@ -199,7 +199,7 @@ class User extends AuthController
         [$money] = $this->request->postMore([
             ['money', 0],
         ], true);
-        if (!$uid) return app('json')->fail(100100);
+        if (!$uid) return app('json')->fail('参数错误');
         $this->services->changeUserData((int)$uid, $money, 'now_money');
         return app('json')->success('修改成功');
     }
@@ -217,7 +217,7 @@ class User extends AuthController
         [$integral] = $this->request->postMore([
             ['integral', 0],
         ], true);
-        if (!$uid) return app('json')->fail(100100);
+        if (!$uid) return app('json')->fail('参数错误');
         $this->services->changeUserData((int)$uid, $integral, 'integral');
         return app('json')->success('修改成功');
     }

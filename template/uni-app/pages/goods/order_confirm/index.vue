@@ -562,8 +562,48 @@
 				uni.$off('handClick');
 			})
 
+			// 如果当前是门店自提模式，重新获取定位以确保门店列表准确
+			if (this.shippingType == 1) {
+				this.refreshLocationAndStores();
+			}
+
 		},
 		methods: {
+			/**
+			 * 刷新定位并更新门店列表
+			 */
+			refreshLocationAndStores() {
+				let that = this;
+				// #ifdef H5
+				if (that.$wechat.isWeixin()) {
+					that.$wechat.location().then(res => {
+						uni.setStorageSync('user_latitude', res.latitude);
+						uni.setStorageSync('user_longitude', res.longitude);
+						this.getList()
+					}).catch(err => {
+						// 如果获取定位失败，仍然尝试用缓存的定位获取门店列表
+						this.getList()
+					})
+				} else {
+					// #endif
+					uni.getLocation({
+						type: 'wgs84',
+						success: (res) => {
+							uni.setStorageSync('user_latitude', res.latitude);
+							uni.setStorageSync('user_longitude', res.longitude);
+						},
+						fail: (err) => {
+							// 获取定位失败时的处理，仍然使用缓存定位
+							console.log('获取定位失败:', err);
+						},
+						complete: () => {
+							this.getList()
+						}
+					})
+					// #ifdef H5
+				}
+				// #endif
+			},
 			checkShipping() {
 				let that = this;
 				checkShipping(that.cartId, that.news).then(res => {
@@ -869,7 +909,6 @@
 				getGiftOrderDetail(this.orderId).then(res => {
 					this.giftData = res.data
 					this.$set(this, 'cartInfo', res.data.cartInfo);
-					this.virtual_type = res.data.type
 					this.store_self_mention = res.data.store_self_mention
 					if (res.data.type == 0) {
 						this.is_shipping = true;
@@ -1260,7 +1299,8 @@
 					})
 				}).catch(err => {
 					uni.showToast({
-						title: err.msg
+						icon: 'none',
+						title: err
 					})
 				})
 			},

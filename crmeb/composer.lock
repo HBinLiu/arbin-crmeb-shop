@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d5a12373e3f01b9e99002289863830c9",
+    "content-hash": "811b1384d855a195194130a727ad2e79",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -812,6 +812,58 @@
                 "source": "https://github.com/aws/aws-sdk-php/tree/3.173.19"
             },
             "time": "2021-03-01T19:15:59+00:00"
+        },
+        {
+            "name": "crmeb/easypay",
+            "version": "v1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/crmeb/easypay.git",
+                "reference": "e9eda5760ad640c8b2f8b27ce77d8bd492077613"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/crmeb/easypay/zipball/e9eda5760ad640c8b2f8b27ce77d8bd492077613",
+                "reference": "e9eda5760ad640c8b2f8b27ce77d8bd492077613",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "guzzlehttp/guzzle": "^7.0|^6.0",
+                "php": ">=7.1",
+                "psr/container": "^1.0|^2.0",
+                "psr/log": "^1.0|^2.0|^3.0",
+                "psr/simple-cache": "^1.0|^2.0|^3.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "8.5.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Crmeb\\Easypay\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "liaofei",
+                    "email": "136327134@qq.com"
+                },
+                {
+                    "name": "wuhaotian",
+                    "email": "442384644@qq.com"
+                }
+            ],
+            "description": "easypay 包含银联商务、支付宝、微信等支付",
+            "support": {
+                "issues": "https://github.com/crmeb/easypay/issues",
+                "source": "https://github.com/crmeb/easypay/tree/v1.0.1"
+            },
+            "time": "2026-01-26T10:29:07+00:00"
         },
         {
             "name": "danielstjules/stringy",
@@ -5507,16 +5559,18 @@
     ],
     "packages-dev": [],
     "aliases": [],
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "stability-flags": [],
-    "prefer-stable": false,
+    "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": ">=7.1.0",
         "ext-json": "*",
         "ext-curl": "*",
         "ext-bcmath": "*",
-        "ext-mbstring": "*"
+        "ext-mbstring": "*",
+        "ext-zip": "*",
+        "ext-simplexml": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.3.0"

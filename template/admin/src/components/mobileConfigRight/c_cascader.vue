@@ -43,7 +43,6 @@ export default {
     this.$nextTick(() => {
       this.defaults = this.configObj;
       this.configData = this.configObj[this.configNme];
-      console.log(this.configData.list, 'configData.list');
     });
   },
   watch: {

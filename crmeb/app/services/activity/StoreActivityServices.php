@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\services\activity;
 
 use app\dao\activity\StoreActivityDao;
@@ -34,13 +42,23 @@ class StoreActivityServices extends BaseServices
             $endTime = sprintf("%02d:00", $time + $continued);
             $resultArray[$id] = $startTime . '-' . $endTime;
         }
+        $endIds = [];
         foreach ($list as &$item) {
             $item['start_day'] = date('Y-m-d H:i:s', $item['start_day']);
+            if (bcadd($item['end_day'], '86400') < time()) {
+                $endIds[] = $item['id'];
+                $item['status'] = 0;
+            }
             $item['end_day'] = date('Y-m-d 23:59:59', $item['end_day']);
             $item['add_time'] = date('Y-m-d H:i:s', $item['add_time']);
             $item['product_count'] = count($item['seckill']);
             foreach (explode(',', $item['time_ids']) as $timeId) {
-                $item['times_list'][] = $resultArray[$timeId];
+                $item['times_list'][] = $resultArray[$timeId] ?? [];
+            }
+        }
+        if (count($endIds)) {
+            foreach ($endIds as $endId) {
+                $this->activityStatus($endId, 0, 1);
             }
         }
         $count = $this->dao->activityCount($where);
@@ -123,6 +141,11 @@ class StoreActivityServices extends BaseServices
     public function activityStatus($id, $status, $type)
     {
         if (!$id) throw new AdminException('缺少参数');
+        $info = $this->dao->get(['id' => $id]);
+        if (!$info) throw new AdminException('数据不存在');
+        if (bcadd($info['end_day'], '86400') < time() && $status == 1) {
+            throw new AdminException('活动已结束，无法操作');
+        }
         $this->dao->update($id, ['status' => $status]);
         if ($type == 1) {
             /** @var StoreSeckillServices $storeSeckillServices */

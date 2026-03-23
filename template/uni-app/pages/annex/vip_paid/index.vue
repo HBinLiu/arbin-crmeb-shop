@@ -44,7 +44,7 @@
 				</view>
 			</view>
 		</view>
-		<view class="type-section" id="card" v-if="!userInfo.is_ever_level">
+		<view class="type-section" id="card" v-if="!userInfo.is_ever_level && memberType.length > 0">
 			<view class="title">
 				<view class="bold">{{ userInfo.is_money_level ? $t(`续费会员`) : $t(`开通会员`) }}</view>
 				<view>

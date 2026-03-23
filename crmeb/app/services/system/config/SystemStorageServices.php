@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -188,10 +188,10 @@ class SystemStorageServices extends BaseServices
     {
         $storageInfo = $this->dao->get(['is_delete' => 0, 'id' => $id]);
         if (!$storageInfo) {
-            throw new AdminException(400608);
+            throw new AdminException('删除的云存储不存在');
         }
         if ($storageInfo->status) {
-            throw new AdminException(400609);
+            throw new AdminException('云存储正在使用中,需要启动其他空间才能删除');
         }
 
         try {
@@ -277,7 +277,7 @@ class SystemStorageServices extends BaseServices
         //保存配置信息
         $this->saveConfig($type, $data);
         if ($this->dao->count(['name' => $data['name']])) {
-            throw new AdminException(400610);
+            throw new AdminException('云空间名称不能重复');
         }
         //保存云存储
         $data['type'] = $type;
@@ -540,7 +540,7 @@ class SystemStorageServices extends BaseServices
     {
         $info = $this->dao->get($id);
         if (!$info) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         if ($info->domain != $domain) {
             $info->domain = $domain;

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -103,7 +103,7 @@ class OutStoreOrderRefundServices extends BaseServices
             $where = ['order_id' => $orderId];
         }
         $refund = $this->dao->get($where, $field, ['orderData']);
-        if (!$refund) throw new ApiException(410173);
+        if (!$refund) throw new ApiException('订单不存在');
         $refund = $refund->toArray();
 
         //核算优惠金额
@@ -152,7 +152,7 @@ class OutStoreOrderRefundServices extends BaseServices
     {
         $order = $this->dao->get(['order_id' => $orderId]);
         if (!$order) {
-            throw new ApiException(410173);
+            throw new ApiException('订单不存在');
         }
         /** @var StoreOrderRefundServices $refundServices */
         $refundServices = app()->make(StoreOrderRefundServices::class);
@@ -172,18 +172,18 @@ class OutStoreOrderRefundServices extends BaseServices
     {
         $orderRefund = $this->dao->get(['order_id' => $orderId]);
         if (!$orderRefund) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
         if ($orderRefund['is_cancel'] == 1) {
-            throw new ApiException(400118);
+            throw new ApiException('订单不存在');
         }
 
         $order = $this->storeOrderServices->get((int)$orderRefund['store_order_id']);
         if (!$order) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
         if (!in_array($orderRefund['refund_type'], [1, 5])) {
-            throw new ApiException(400144);
+            throw new ApiException('售后订单状态不支持该操作');
         }
 
         $data['refund_type'] = 6;
@@ -197,16 +197,16 @@ class OutStoreOrderRefundServices extends BaseServices
             $refundPrice = 0;
         } else {
             if (!$refundPrice) {
-                throw new ApiException(400146);
+                throw new ApiException('请输入退款金额');
             }
             if ($orderRefund['refund_price'] == $orderRefund['refunded_price']) {
-                throw new ApiException(400147);
+                throw new ApiException('已退完支付金额，不能再退款了');
             }
 
             $data['refunded_price'] = bcadd($refundPrice, $orderRefund['refunded_price'], 2);
             $bj = bccomp((string)$orderRefund['refund_price'], $data['refunded_price'], 2);
             if ($bj < 0) {
-                throw new ApiException(400148);
+                throw new ApiException('退款金额大于支付金额，请修改退款金额');
             }
         }
 
@@ -223,7 +223,7 @@ class OutStoreOrderRefundServices extends BaseServices
             return true;
         } else {
             $refundServices->storeProductOrderRefundYFasle((int)$orderRefund['id'], $refundPrice);
-            throw new ApiException(400150);
+            throw new ApiException('退款失败');
         }
     }
 
@@ -239,7 +239,7 @@ class OutStoreOrderRefundServices extends BaseServices
     {
         $orderRefund = $this->dao->get(['order_id' => $orderId]);
         if (!$orderRefund) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
 
         /** @var StoreOrderRefundServices $refundServices */
@@ -260,7 +260,7 @@ class OutStoreOrderRefundServices extends BaseServices
     {
         $orderRefund = $this->dao->get(['order_id' => $orderId]);
         if (!$orderRefund) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
 
         /** @var StoreOrderRefundServices $refundServices */
@@ -282,7 +282,7 @@ class OutStoreOrderRefundServices extends BaseServices
         $orderServices = app()->make(OutStoreOrderServices::class);
         $orderInfo = $orderServices->get($refundInfo['store_order_id'], ['id', 'order_id']);
         if (!$orderInfo) {
-            throw new AdminException(400118);
+            throw new AdminException('订单不存在');
         }
         $refundInfo['order'] = $orderInfo->toArray();
         return out_push($pushUrl, $refundInfo, '售后单');
@@ -301,7 +301,7 @@ class OutStoreOrderRefundServices extends BaseServices
         $orderServices = app()->make(OutStoreOrderServices::class);
         $orderInfo = $orderServices->get($refundInfo['store_order_id'], ['id', 'order_id']);
         if (!$orderInfo) {
-            throw new AdminException(400118);
+            throw new AdminException('订单不存在');
         }
         $refundInfo['order'] = $orderInfo->toArray();
         return out_push($pushUrl, $refundInfo, '取消售后单');

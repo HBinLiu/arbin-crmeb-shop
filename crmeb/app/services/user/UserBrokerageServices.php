@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -341,7 +341,7 @@ class UserBrokerageServices extends BaseServices
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
         if (!$userServices->getUserInfo($uid)) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
         /** @var UserExtractServices $userExtract */
         $userExtract = app()->make(UserExtractServices::class);
@@ -394,18 +394,21 @@ class UserBrokerageServices extends BaseServices
         $where['uid'] = $uid;
         [$page, $limit] = $this->getPageValue();
         if ($type == 4) {
-            $where['type'] = ['extract', 'extract_money', 'extract_fail'];
+            $where['type'] = ['extract', 'extract_money'];
+        }
+        if ($type == 3) {
+            $where['not_type'] = ['extract_fail'];
         }
         /** @var UserExtractServices $userExtractService */
         $userExtractService = app()->make(UserExtractServices::class);
-        $userExtract = $userExtractService->getColumn(['uid' => $uid], 'fail_msg,extract_type,state,wechat_order_id', 'id');
+        $userExtract = $userExtractService->getColumn(['uid' => $uid], 'fail_msg,extract_type,state,wechat_order_id,status', 'id');
         $list = $this->dao->getList($where, '*', $page, $limit);
         $count = $this->dao->count($where);
         $times = [];
         if ($list) {
             foreach ($list as &$item) {
                 $item['time'] = $item['time_key'] = $item['add_time'] ? date('Y-m', (int)$item['add_time']) : '';
-                $item['add_time'] = $item['add_time'] ? date('Y-m-d H:i', (int)$item['add_time']) : '';
+                $item['add_time'] = $item['add_time'] ? date('Y-m-d H:i:s', (int)$item['add_time']) : '';
                 $item['fail_msg'] = $item['type'] == 'extract_fail' ? $userExtract[$item['link_id']]['fail_msg'] : '';
                 if ($type == 4) {
                     $extract_type = $userExtract[$item['link_id']]['extract_type'] ?? '';
@@ -419,10 +422,16 @@ class UserBrokerageServices extends BaseServices
                         $item['extract_type'] = '余额';
                     }
                     $item['state'] = $userExtract[$item['link_id']]['state'] ?? '';
+                    $item['fail_msg'] = $userExtract[$item['link_id']]['fail_msg'] ?? '';
+                    $item['extract_status'] = $userExtract[$item['link_id']]['status'] ?? '';
                     $item['wechat_order_id'] = $userExtract[$item['link_id']]['wechat_order_id'] ?? '';
                 } else {
+                    $item['fail_msg'] = $userExtract[$item['link_id']]['fail_msg'] ?? '';
+                    $item['extract_status'] = $userExtract[$item['link_id']]['status'] ?? '';
                     $item['extract_type'] = '';
                 }
+                $item['is_frozen'] = $item['frozen_time'] > time() ? 1 : 0;
+                $item['frozen_time'] = $item['frozen_time'] ? date('Y-m-d H:i:s', (int)$item['frozen_time']) : '';
             }
             $times = array_merge(array_unique(array_column($list, 'time_key')));
         }
@@ -443,7 +452,7 @@ class UserBrokerageServices extends BaseServices
         /** @var UserServices $userService */
         $userService = app()->make(UserServices::class);
         if (!$userService->getUserInfo($uid)) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
         return [
             'rank' => $this->brokerageRankList($type),

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -23,6 +23,11 @@ use crmeb\services\SystemConfigService;
 
 class MemberCardServices extends BaseServices
 {
+    /**
+     * @var MemberCardDao
+     */
+    protected $dao;
+
     /** 初始化，获得dao层句柄
      * MemberCardServices constructor.
      * @param MemberCardDao $memberCardDao
@@ -70,10 +75,10 @@ class MemberCardServices extends BaseServices
     public function addCard(array $data)
     {
         if (!isset($data['card_batch_id']) || !$data['card_batch_id'] || $data['card_batch_id'] == 0 || !isset($data['total_num']) || !$data['total_num'] || $data['total_num'] == 0) {
-            throw new AdminException(100100);
+            throw new AdminException('参数错误');
         }
         try {
-            if (!isset($data['total_num'])) throw new AdminException(100100);
+            if (!isset($data['total_num'])) throw new AdminException('参数错误');
             $num = $data['total_num'];
             unset($data['total_num']);
             $res = [];
@@ -91,7 +96,7 @@ class MemberCardServices extends BaseServices
             }
             return true;
         } catch (\Exception $exception) {
-            throw new AdminException(400620);
+            throw new AdminException('生成卡失败');
         }
     }
 
@@ -126,32 +131,32 @@ class MemberCardServices extends BaseServices
      */
     public function drawMemberCard(array $data, int $uid)
     {
-        if (!$uid || !$data) throw new ApiException(100100);
+        if (!$uid || !$data) throw new ApiException('参数错误');
         $isOpenMember = $this->isOpenMemberCard();
-        if (!$isOpenMember) throw new ApiException(400621);
-        if (!isset($data['member_card_code']) || !$data['member_card_code']) throw new ApiException(400622);
-        if (!isset($data['member_card_code']) || !$data['member_card_pwd']) throw new ApiException(400623);
+        if (!$isOpenMember) throw new ApiException('会员功能暂未开启');
+        if (!isset($data['member_card_code']) || !$data['member_card_code']) throw new ApiException('请输入会员卡号');
+        if (!isset($data['member_card_code']) || !$data['member_card_pwd']) throw new ApiException('请输入领取卡密');
         $card_info = $this->dao->getOneByWhere(['card_number' => trim($data['member_card_code'])]);
-        if (!$card_info) throw new ApiException(400624);
+        if (!$card_info) throw new ApiException('会员卡不存在');
         /** @var MemberCardBatchServices $memberBatchServices */
         $memberBatchServices = app()->make(MemberCardBatchServices::class);
         $batch_info = $memberBatchServices->getOne($card_info['card_batch_id']);
-        if (!$batch_info) throw new ApiException(400625);
-        if ($batch_info->status != 1) throw new ApiException(400625);
-        if ($card_info['status'] == 0) throw new ApiException(400625);
-        if ($card_info['card_password'] != trim($data['member_card_pwd'])) throw new ApiException(400626);
-        if ($card_info['use_uid'] && $card_info['use_time']) throw new ApiException(400627);
+        if (!$batch_info) throw new ApiException('会员卡未激活，暂无法使用');
+        if ($batch_info->status != 1) throw new ApiException('会员卡未激活，暂无法使用');
+        if ($card_info['status'] == 0) throw new ApiException('会员卡未激活，暂无法使用');
+        if ($card_info['card_password'] != trim($data['member_card_pwd'])) throw new ApiException('会员卡密码有误');
+        if ($card_info['use_uid'] && $card_info['use_time']) throw new ApiException('会员卡已使用');
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
         $user_info = $userServices->getUserInfo($uid);
-        if (!$user_info) throw new ApiException(400214);
-        if ($user_info->is_money_level > 0 && $user_info->is_ever_level == 1) throw new ApiException(400628);
+        if (!$user_info) throw new ApiException('用户不存在');
+        if ($user_info->is_money_level > 0 && $user_info->is_ever_level == 1) throw new ApiException('您已是永久会员，无需再领取，可以将此卡转送亲朋好友，一起享受优惠');
 
 
         /**
          * 批次卡具体使用期限，业务需要打开即可，勿删。
          */
-        if ($card_info->status != 1) throw new ApiException(400625);
+        if ($card_info->status != 1) throw new ApiException('会员卡未激活，暂无法使用');
         $this->transaction(function () use ($card_info, $user_info, $batch_info, $memberBatchServices, $userServices, $data) {
             $res1 = $this->dao->update($card_info->id, ['use_uid' => $user_info->uid, 'use_time' => time(), 'update_time' => time()], 'id');
             if ($res1) {
@@ -203,7 +208,7 @@ class MemberCardServices extends BaseServices
     public function checkmemberType(string $member_type)
     {
         $member_type_arr = $this->getMemberTypeInfo();
-        if (!array_key_exists($member_type, $member_type_arr)) throw new ApiException(400629);
+        if (!array_key_exists($member_type, $member_type_arr)) throw new ApiException('暂无此类型会员卡');
         return true;
     }
 
@@ -220,7 +225,10 @@ class MemberCardServices extends BaseServices
                 $v['title'] = $v['show_title'];
                 $v['pic'] = $v['image'];
                 $v['right'] = $v['explain'];
-//                $v['number'] = $v['number'];
+                if ($v['right_type'] == 'offline') $v['explain'] = '线下支付打' . floatval(bcdiv((string)$v['number'], '10', 1)) . '折';
+                if ($v['right_type'] == 'sign') $v['explain'] = '签到多得' . (int)$v['number'] . '倍积分';
+                if ($v['right_type'] == 'express') $v['explain'] = '运费打' . floatval(bcdiv((string)$v['number'], '10', 1)) . '折';
+                if ($v['right_type'] == 'integral') $v['explain'] = '消费多返' . (int)$v['number'] . '倍积分';
             }
         }
 
@@ -359,6 +367,11 @@ class MemberCardServices extends BaseServices
      */
     public function setStatus($id, $status)
     {
+        $card_batch_id = $this->dao->value(['id' => $id], 'card_batch_id');
+        $card_batch_status = app()->make(MemberCardBatchServices::class)->value(['id' => $card_batch_id], 'status');
+        if ($card_batch_status == 0) {
+            throw new AdminException('批次未激活，暂无法使用');
+        }
         $res = $this->dao->update($id, ['status' => $status]);
         if ($res) return true;
         return false;

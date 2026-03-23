@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -77,10 +77,10 @@ class LuckLotteryServices extends BaseServices
             if ($item['start_time'] > time()) {
                 $item['status_name'] = '未开始';
                 $item['lottery_status'] = 0;
-            } else if ($item['end_time'] < time()) {
+            } else if (bcadd((string)$item['end_time'], '86400') < time()) {
                 $item['status_name'] = '已结束';
                 $item['lottery_status'] = 2;
-            } else if ($item['end_time'] > time() && $item['start_time'] < time()) {
+            } else {
                 $item['status_name'] = '进行中';
                 $item['lottery_status'] = 1;
             }
@@ -113,7 +113,7 @@ class LuckLotteryServices extends BaseServices
     {
         $lottery = $this->dao->getLottery($id, '*', ['prize']);
         if (!$lottery) {
-            throw new ApiException(410057);
+            throw new ApiException('活动不存在或已删除');
         }
         $lottery = $lottery->toArray();
         if (isset($lottery['prize']) && $lottery['prize']) {
@@ -198,14 +198,14 @@ class LuckLotteryServices extends BaseServices
         }
         $prize_num = $this->lottery_type[1];
         if (count($prizes) != $prize_num) {
-            throw new AdminException(400535);
+            throw new AdminException('请添加商品');
         }
         unset($data['prize']);
         return $this->transaction(function () use ($data, $prizes) {
             $time = time();
             $data['add_time'] = $time;
             if (!$lottery = $this->dao->save($data)) {
-                throw new AdminException(400536);
+                throw new AdminException('添加抽奖活动失败');
             }
             if ($data['status']) {
                 $this->setStatus((int)$lottery->id, $data['status']);
@@ -229,7 +229,7 @@ class LuckLotteryServices extends BaseServices
                 throw new AdminException('必须设置至少一个未中奖');
             }
             if (!$luckPrizeServices->saveAll($data)) {
-                throw new AdminException(400536);
+                throw new AdminException('添加抽奖活动失败');
             }
             return true;
         });
@@ -248,7 +248,7 @@ class LuckLotteryServices extends BaseServices
     {
         $lottery = $this->dao->getLottery($id);
         if (!$lottery) {
-            throw new AdminException(400537);
+            throw new AdminException('抽奖活动不存在');
         }
         $newPrizes = $data['prize'];
         $percentArr = array_column($newPrizes, 'percent');
@@ -262,7 +262,7 @@ class LuckLotteryServices extends BaseServices
         unset($data['prize'], $data['id']);
         $prize_num = $this->lottery_type[1];
         if (count($newPrizes) != $prize_num) {
-            throw new AdminException(400535);
+            throw new AdminException('请添加商品');
         }
         if ($data['attends_user'] == 1) {
             $data['user_label'] = $data['user_level'] = [];
@@ -285,10 +285,10 @@ class LuckLotteryServices extends BaseServices
                 $prize['sort'] = $sort;
                 if (isset($prize['id']) && $prize['id']) {
                     if (!$prize['lottery_id']) {
-                        throw new AdminException(100100);
+                        throw new AdminException('参数错误');
                     }
                     if (!$luckPrizeServices->update($prize['id'], $prize, 'id')) {
-                        throw new AdminException(100007);
+                        throw new AdminException('修改失败');
                     }
                 } else {
                     unset($prize['id']);
@@ -304,16 +304,16 @@ class LuckLotteryServices extends BaseServices
             }
             if ($insert) {
                 if (!$luckPrizeServices->saveAll($insert)) {
-                    throw new AdminException(100022);
+                    throw new AdminException('添加失败');
                 }
             }
             if ($delIds) {
                 if (!$luckPrizeServices->update([['id', 'in', $delIds]], ['is_del' => 1])) {
-                    throw new AdminException(100008);
+                    throw new AdminException('删除失败');
                 }
             }
             if (!$this->dao->update($id, $data)) {
-                throw new AdminException(100007);
+                throw new AdminException('修改失败');
             }
             //上架
             if (!$lottery['status'] && $data['status']) {
@@ -343,13 +343,13 @@ class LuckLotteryServices extends BaseServices
             $userInfo = $userServices->getUserInfo($uid);
         }
         if (!$userInfo) {
-            throw new ApiException(410032);
+            throw new ApiException('用户不存在');
         }
         if (!$lottery) {
             $lottery = $this->dao->getLottery($lottery_id, '*', [], true);
         }
         if (!$lottery) {
-            throw new ApiException(410057);
+            throw new ApiException('活动不存在或已删除');
         }
         //抽奖类型：1:积分2：余额3：下单支付成功4：订单评价5：拉新人
         switch ($lottery['factor']) {
@@ -367,7 +367,7 @@ class LuckLotteryServices extends BaseServices
             case 5:
                 return $userInfo['spread_lottery'] ?? 0;
             default:
-                throw new ApiException(410058);
+                throw new ApiException('暂未有该类型活动');
         }
     }
 
@@ -390,19 +390,19 @@ class LuckLotteryServices extends BaseServices
             $userInfo = $userServices->getUserInfo($uid);
         }
         if (!$userInfo) {
-            throw new ApiException(410032);
+            throw new ApiException('用户不存在');
         }
         if (!$lottery) {
             $lottery = $this->dao->getLottery($lottery_id, '*', [], true);
         }
         if (!$lottery) {
-            throw new ApiException(410057);
+            throw new ApiException('活动不存在或已删除');
         }
         //部分用户参与
         if ($lottery['attends_user'] == 2) {
             //用户等级
             if ($lottery['user_level'] && !in_array($userInfo['level'], $lottery['user_level'])) {
-                throw new ApiException(410059);
+                throw new ApiException('您暂时无法参与该活动');
             }
             //用户标签
             if ($lottery['user_label']) {
@@ -410,13 +410,13 @@ class LuckLotteryServices extends BaseServices
                 $userlableRelation = app()->make(UserLabelRelationServices::class);
                 $user_labels = $userlableRelation->getUserLabels($uid);
                 if (!array_intersect($lottery['user_label'], $user_labels)) {
-                    throw new ApiException(410059);
+                    throw new ApiException('您暂时无法参与该活动');
                 }
             }
             //是否是付费会员
             if ($lottery['is_svip'] != -1) {
                 if (($lottery['is_svip'] == 1 && $userInfo['is_money_level'] <= 0) || ($lottery['is_svip'] == 0 && $userInfo['is_money_level'] > 0)) {
-                    throw new ApiException(410059);
+                    throw new ApiException('您暂时无法参与该活动');
                 }
             }
         }
@@ -439,11 +439,11 @@ class LuckLotteryServices extends BaseServices
         $userServices = app()->make(UserServices::class);
         $userInfo = $userServices->getUserInfo($uid);
         if (!$userInfo) {
-            throw new ApiException(410032);
+            throw new ApiException('用户不存在');
         }
         $lottery = $this->dao->getLottery($lottery_id, '*', [], true);
         if (!$lottery) {
-            throw new ApiException(410057);
+            throw new ApiException('活动不存在或已删除');
         }
         $userInfo = $userInfo->toArray();
         $lottery = $lottery->toArray();
@@ -454,23 +454,23 @@ class LuckLotteryServices extends BaseServices
         $lotteryPrizeServices = app()->make(LuckPrizeServices::class);
         $lotteryPrize = $lotteryPrizeServices->getPrizeList($lottery_id);
         if (!$lotteryPrize) {
-            throw new ApiException(410060);
+            throw new ApiException('活动状态有误，请联系管理员');
         }
         if ($this->getLotteryNum($uid, $lottery_id, $userInfo, $lottery) < 1) {
             //抽奖类型：1:积分2：余额3：下单支付成功4：订单评价5：拉新人
             switch ($lottery['factor']) {
                 case 1:
-                    throw new ApiException(410061);
+                    throw new ApiException('可用积分不足，没有更多抽奖次数');
                 case 2:
-                    throw new ApiException(410062);
+                    throw new ApiException('余额不足，没有更多抽奖次数');
                 case 3:
-                    throw new ApiException(410063);
+                    throw new ApiException('购买商品之后获得更多抽奖次数');
                 case 4:
-                    throw new ApiException(410064);
+                    throw new ApiException('订单完成评价之后获得更多抽奖次数');
                 case 5:
-                    throw new ApiException(410065);
+                    throw new ApiException('邀请更多好友获取抽奖次数');
                 default:
-                    throw new ApiException(410058);
+                    throw new ApiException('暂未有该类型活动');
             }
         }
         return $this->transaction(function () use ($uid, $lotteryPrize, $userInfo, $lottery, $channel_type) {
@@ -479,7 +479,7 @@ class LuckLotteryServices extends BaseServices
             //随机抽奖
             $prize = $luckPrizeServices->getLuckPrize($lotteryPrize);
             if (!$prize) {
-                throw new ApiException(410060);
+                throw new ApiException('活动状态有误，请联系管理员');
             }
             //中奖扣除积分、余额
             $this->lotteryFactor($uid, $userInfo, $lottery);
@@ -535,14 +535,14 @@ class LuckLotteryServices extends BaseServices
                 $userBillServices = app()->make(UserBillServices::class);
                 $userBillServices->income('lottery_use_integral', $uid, $lottery['factor_num'], $integral, $lottery['id']);
                 if (!$userServices->update($uid, ['integral' => $integral], 'uid')) {
-                    throw new ApiException(410066);
+                    throw new ApiException('抽奖扣除用户积分失败');
                 }
                 break;
             case 2:
                 if ($userInfo['now_money'] >= $lottery['factor_num']) {
                     $now_money = bcsub((string)$userInfo['now_money'], (string)$lottery['factor_num'], 2);
                 } else {
-                    throw new ApiException(410067);
+                    throw new ApiException('抽奖失败，余额不足');
                 }
                 /** @var UserServices $userServices */
                 $userServices = app()->make(UserServices::class);
@@ -550,7 +550,7 @@ class LuckLotteryServices extends BaseServices
                 $userMoneyServices = app()->make(UserMoneyServices::class);
                 $userMoneyServices->income('lottery_use_money', $uid, $lottery['factor_num'], $now_money, $lottery['id']);
                 if (!$userServices->update($uid, ['now_money' => $now_money], 'uid')) {
-                    throw new ApiException(410068);
+                    throw new ApiException('抽奖扣除用户余额失败');
                 }
                 break;
             case 3:
@@ -566,11 +566,11 @@ class LuckLotteryServices extends BaseServices
                     $spread_lottery = $userInfo['spread_lottery'] - 1;
                 }
                 if (!$userServices->update($uid, ['spread_lottery' => $spread_lottery], 'uid')) {
-                    throw new ApiException(410069);
+                    throw new ApiException('抽奖扣除用户推广获取抽奖次数失败');
                 }
                 break;
             default:
-                throw new ApiException(410058);
+                throw new ApiException('暂未有该类型活动');
         }
         return true;
     }
@@ -589,7 +589,7 @@ class LuckLotteryServices extends BaseServices
         if ($lottery) {
             $res = $this->dao->update(['id' => $id], ['is_del' => 1]);
             if (!$res) {
-                throw new AdminException(100008);
+                throw new AdminException('删除失败');
             }
         }
         return true;

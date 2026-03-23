@@ -7,7 +7,15 @@
           <span slot="open">开启</span>
           <span slot="close">关闭</span>
         </el-switch>
-        <div class="tips-info">开启后仅付费会员可以看见并购买此商品</div>
+      </el-form-item>
+    </el-col>
+    <el-col :span="24" v-if="formValidate.vip_product">
+      <el-form-item>
+        <!-- 0仅付费会员可见 1仅付费会员可购买 -->
+        <el-radio-group v-model="formValidate.vip_product_type">
+          <el-radio :label="0">仅付费会员可见</el-radio>
+          <el-radio :label="1">仅付费会员可购买</el-radio>
+        </el-radio-group>
       </el-form-item>
     </el-col>
     <el-col :span="24">

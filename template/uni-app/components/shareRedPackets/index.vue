@@ -68,7 +68,7 @@
 		position: fixed;
 		left: 30rpx;
 		bottom: 200rpx;
-		z-index: 5;
+		z-index: 15;
 		transition: all 0.3s ease-in-out 0s;
 		opacity: 1;
 		transform: scale(1);

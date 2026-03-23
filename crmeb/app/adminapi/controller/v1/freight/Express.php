@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -70,9 +70,9 @@ class Express extends AuthController
             'code',
             ['sort', 0],
             ['is_show', 0]]);
-        if (!$data['name']) return app('json')->fail(400400);
+        if (!$data['name']) return app('json')->fail('请输入公司名称');
         $this->services->save($data);
-        return app('json')->success(400401);
+        return app('json')->success('添加公司成功');
     }
 
     /**
@@ -102,18 +102,18 @@ class Express extends AuthController
             ['code_name', ''],
             ['sort', 0],
             ['is_show', 0]]);
-        if (!$expressInfo = $this->services->get($id)) return app('json')->fail(100026);
+        if (!$expressInfo = $this->services->get($id)) return app('json')->fail('数据不存在');
         if ($expressInfo['net'] == 1 && !$data['net_name']) {
-            return app('json')->fail(400404);
+            return app('json')->fail('请输入取件网点');
         }
         if ($expressInfo['check_man'] == 1 && !$data['courier_name']) {
-            return app('json')->fail(500001);
+            return app('json')->fail('请输入承载快递员名');
         }
         if ($expressInfo['partner_name'] == 1 && !$data['customer_name']) {
-            return app('json')->fail(500002);
+            return app('json')->fail('请输入客户账户名称');
         }
         if ($expressInfo['is_code'] == 1 && !$data['code_name']) {
-            return app('json')->fail(500003);
+            return app('json')->fail('请输入电子面单承载编号');
         }
         $expressInfo->account = $data['account'];
         $expressInfo->key = $data['key'];
@@ -125,7 +125,7 @@ class Express extends AuthController
         $expressInfo->is_show = $data['is_show'];
         $expressInfo->status = 1;
         $expressInfo->save();
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }
 
     /**
@@ -135,12 +135,12 @@ class Express extends AuthController
      */
     public function delete($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         $res = $this->services->delete($id);
         if (!$res)
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
         else
-            return app('json')->success(100002);
+            return app('json')->success('删除成功');
     }
 
     /**
@@ -151,9 +151,9 @@ class Express extends AuthController
      */
     public function set_status($id = 0, $status = '')
     {
-        if ($status == '' || $id == 0) return app('json')->fail(100100);
+        if ($status == '' || $id == 0) return app('json')->fail('参数错误');
         $this->services->update($id, ['is_show' => $status]);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -163,6 +163,6 @@ class Express extends AuthController
     public function syncExpress()
     {
         $this->services->syncExpress();
-        return app('json')->success(100038);
+        return app('json')->success('同步成功');
     }
 }

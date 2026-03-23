@@ -2,8 +2,8 @@
     "name" : "CRMEB标准版",
     "appid" : "__UNI__A3F1ED4",
     "description" : "CRMEB标准版",
-    "versionName" : "5.6.2",
-    "versionCode" : 562,
+    "versionName" : "6.0.0",
+    "versionCode" : 600,
     "transformPx" : false,
     "sassImplementationName" : "node-sass",
     /* 5+App特有相关 */
@@ -66,7 +66,8 @@
                 },
                 "permissionPhoneState" : {
                     "request" : "none" //拨打电话权限关闭
-                }
+                },
+                "targetSdkVersion" : 30
             },
             /* ios打包配置 */
             "ios" : {

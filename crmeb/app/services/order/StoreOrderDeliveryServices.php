@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -54,19 +54,19 @@ class StoreOrderDeliveryServices extends BaseServices
     {
         $orderInfo = $this->dao->get($id, ['*'], ['pink']);
         if (!$orderInfo) {
-            throw new AdminException(400470);
+            throw new AdminException('订单未能查到,不能发货');
         }
         if ($orderInfo->is_del) {
-            throw new AdminException(400471);
+            throw new AdminException('订单已删除,不能发货');
         }
         if ($orderInfo->status) {
-            throw new AdminException(400472);
+            throw new AdminException('订单已发货请勿重复操作');
         }
         if ($orderInfo->shipping_type == 2) {
-            throw new AdminException(400473);
+            throw new AdminException('核销订单不能发货');
         }
         if (isset($orderInfo['pinkStatus']) && $orderInfo['pinkStatus'] != 2) {
-            throw new AdminException(400474);
+            throw new AdminException('拼团未完成暂不能发货');
         }
 
         if ($data['type'] == 1) {
@@ -74,14 +74,14 @@ class StoreOrderDeliveryServices extends BaseServices
             /** @var ExpressServices $expressServices */
             $expressServices = app()->make(ExpressServices::class);
             if (!$expressServices->be(['code' => $data['delivery_code']])) {
-                throw new AdminException(410324);
+                throw new AdminException('请核对快递公司编码');
             }
         }
 
         /** @var StoreOrderRefundServices $storeOrderRefundServices */
         $storeOrderRefundServices = app()->make(StoreOrderRefundServices::class);
         if ($storeOrderRefundServices->count(['store_order_id' => $id, 'refund_type' => [1, 2, 4, 5], 'is_cancel' => 0, 'is_del' => 0])) {
-            throw new AdminException(400475);
+            throw new AdminException('订单有售后申请请先处理');
         }
         return $this->doDelivery($id, $orderInfo, $data);
     }
@@ -96,24 +96,24 @@ class StoreOrderDeliveryServices extends BaseServices
         /** @var StoreOrderCartInfoServices $orderInfoServices */
         $orderInfoServices = app()->make(StoreOrderCartInfoServices::class);
         if (!$data['delivery_name']) {
-            throw new AdminException(400007);
+            throw new AdminException('请选择快递公司');
         }
         $data['delivery_type'] = 'express';
         if ($data['express_record_type'] == 2) {//电子面单
             if (!$data['delivery_code']) {
-                throw new AdminException(400476);
+                throw new AdminException('快递公司编缺失');
             }
             if (!$data['express_temp_id']) {
-                throw new AdminException(400527);
+                throw new AdminException('请选择电子面单模板');
             }
             if (!$data['to_name']) {
-                throw new AdminException(400008);
+                throw new AdminException('请填写寄件人姓名');
             }
             if (!$data['to_tel']) {
-                throw new AdminException(400477);
+                throw new AdminException('请填写寄件人电话');
             }
             if (!$data['to_addr']) {
-                throw new AdminException(400478);
+                throw new AdminException('请填写寄件人地址');
             }
             /** @var ServeServices $expressService */
             $expressService = app()->make(ServeServices::class);
@@ -130,7 +130,7 @@ class StoreOrderDeliveryServices extends BaseServices
             $expData['cargo'] = $orderInfoServices->getCarIdByProductTitle((int)$orderInfo->id, true);
             $expData['order_id'] = $orderInfo->order_id;
             if (!sys_config('config_export_open', 0)) {
-                throw new AdminException(400528);
+                throw new AdminException('电子面单已关闭，请选择其他发货方式');
             }
             $dump = $expressService->express()->dump($expData);
             $orderInfo->delivery_id = $dump['kuaidinum'];
@@ -145,7 +145,7 @@ class StoreOrderDeliveryServices extends BaseServices
             $data['delivery_id'] = $dump['kuaidinum'];
         } else {
             if (!$data['delivery_id']) {
-                throw new AdminException(400531);
+                throw new AdminException('请输入快递单号');
             }
             $orderInfo->delivery_id = $data['delivery_id'];
         }
@@ -164,7 +164,7 @@ class StoreOrderDeliveryServices extends BaseServices
                     'change_message' => '已发货 快递公司：' . $data['delivery_name'] . ' 快递单号：' . $data['delivery_id']
                 ]);
             if (!$res) {
-                throw new AdminException(400529);
+                throw new AdminException('发货失败');
             }
         });
         return true;
@@ -189,16 +189,16 @@ class StoreOrderDeliveryServices extends BaseServices
         $data['verify_code'] = $storeOrderCreateService->getStoreCode();
         unset($data['sh_delivery_name'], $data['sh_delivery_id'], $data['sh_delivery_uid']);
         if (!$data['delivery_name']) {
-            throw new AdminException(400523);
+            throw new AdminException('请输入送货人姓名');
         }
         if (!$data['delivery_id']) {
-            throw new AdminException(400524);
+            throw new AdminException('请输入送货人电话号码');
         }
         if (!$data['delivery_uid']) {
-            throw new AdminException(400525);
+            throw new AdminException('请输入送货人信息');
         }
         if (!preg_match("/^1[3456789]{1}\d{9}$/", $data['delivery_id'])) {
-            throw new AdminException(400526);
+            throw new AdminException('请输入正确的送货人电话号码');
         }
         $data['status'] = 1;
         $orderInfo->delivery_type = $data['delivery_type'];
@@ -253,7 +253,7 @@ class StoreOrderDeliveryServices extends BaseServices
     public function distributionForm(int $id)
     {
         if (!$orderInfo = $this->dao->get($id))
-            throw new AdminException(400118);
+            throw new AdminException('订单不存在');
 
         $f[] = Form::input('order_id', '订单号', $orderInfo->getData('order_id'))->disabled(1);
 
@@ -281,23 +281,23 @@ class StoreOrderDeliveryServices extends BaseServices
     {
         $order = $this->dao->get($id);
         if (!$order) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         switch ($order['delivery_type']) {
             case 'send':
                 if (!$data['delivery_name']) {
-                    throw new AdminException(400523);
+                    throw new AdminException('请输入送货人姓名');
                 }
                 if (!$data['delivery_id']) {
-                    throw new AdminException(400524);
+                    throw new AdminException('请输入送货人电话号码');
                 }
                 if (!preg_match("/^1[3456789]{1}\d{9}$/", $data['delivery_id'])) {
-                    throw new AdminException(400526);
+                    throw new AdminException('请输入正确的送货人电话号码');
                 }
                 break;
             case 'express':
                 if (!$data['delivery_id']) {
-                    throw new AdminException(400531);
+                    throw new AdminException('请输入快递单号');
                 }
                 // 检测快递公司编码
                 /** @var ExpressServices $expressServices */
@@ -305,14 +305,14 @@ class StoreOrderDeliveryServices extends BaseServices
                 if ($name = $expressServices->value(['code' => $data['delivery_code']], 'name')) {
                     $data['delivery_name'] = $name;
                 } else {
-                    throw new AdminException(410324);
+                    throw new AdminException('请核对快递公司编码');
                 }
                 break;
             case 'fictitious':
-                throw new AdminException(400479);
+                throw new AdminException('虚拟发货，无需修改发货信息');
                 break;
             default:
-                throw new AdminException(400480);
+                throw new AdminException('未发货，请先发货再修改配送信息');
                 break;
         }
         /** @var StoreOrderStatusServices $statusService */
@@ -332,24 +332,24 @@ class StoreOrderDeliveryServices extends BaseServices
      */
     public function orderDump($orderId, $type = 'order')
     {
-        if (!$orderId) throw new AdminException(10100);
+        if (!$orderId) throw new AdminException('订单不存在');
 //        /** @var StoreOrderServices $orderService */
 //        $orderService = app()->make(StoreOrderServices::class);
 //        $orderInfo = $orderService->getOne(['id' => $orderId]);
-if ($type == 'order') {
-    /** @var StoreOrderServices $orderService */
-    $orderService = app()->make(StoreOrderServices::class);
-    $orderInfo = $orderService->getOne(['id' => $orderId]);
-} else {
-    /** @var StoreIntegralOrderServices $integralOrderService */
-    $integralOrderService = app()->make(StoreIntegralOrderServices::class);
-    $orderInfo = $integralOrderService->getOne(['id' => $orderId]);
-}
-        if (!$orderInfo) throw new AdminException(400118);
-        if ($orderInfo->shipping_type != 1) throw new AdminException(400481);
-        if (!$orderInfo->express_dump) throw new AdminException(400482);
+        if ($type == 'order') {
+            /** @var StoreOrderServices $orderService */
+            $orderService = app()->make(StoreOrderServices::class);
+            $orderInfo = $orderService->getOne(['id' => $orderId]);
+        } else {
+            /** @var StoreIntegralOrderServices $integralOrderService */
+            $integralOrderService = app()->make(StoreIntegralOrderServices::class);
+            $orderInfo = $integralOrderService->getOne(['id' => $orderId]);
+        }
+        if (!$orderInfo) throw new AdminException('订单不存在');
+        if ($orderInfo->shipping_type != 1) throw new AdminException('自提订单无法打印');
+        if (!$orderInfo->express_dump) throw new AdminException('请先发货');
         if (!sys_config('config_export_open', 0)) {
-            throw new AdminException(400483);
+            throw new AdminException('请先在系统设置中打开单子面单打印开关');
         }
         $dumpInfo = json_decode($orderInfo->express_dump, true);
         /** @var ServeServices $expressService */
@@ -375,7 +375,6 @@ if ($type == 'order') {
      * 订单拆单发货
      * @param int $id
      * @param array $data
-     * @return bool
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
@@ -387,21 +386,21 @@ if ($type == 'order') {
     {
         $orderInfo = $this->dao->get($id, ['*'], ['pink']);
         if (!$orderInfo) {
-            throw new AdminException(400470);
+            throw new AdminException('订单未能查到,不能发货');
         }
         if ($orderInfo->is_del) {
-            throw new AdminException(400471);
+            throw new AdminException('订单已删除,不能发货');
         }
         if ($orderInfo->shipping_type == 2) {
-            throw new AdminException(400473);
+            throw new AdminException('核销订单不能发货');
         }
         if (isset($orderInfo['pinkStatus']) && $orderInfo['pinkStatus'] != 2) {
-            throw new AdminException(400474);
+            throw new AdminException('拼团未完成暂不能发货');
         }
         /** @var StoreOrderRefundServices $storeOrderRefundServices */
         $storeOrderRefundServices = app()->make(StoreOrderRefundServices::class);
         if ($storeOrderRefundServices->count(['store_order_id' => $id, 'refund_type' => [1, 2, 4, 5], 'is_cancel' => 0, 'is_del' => 0])) {
-            throw new AdminException(400475);
+            throw new AdminException('订单有售后申请请先处理');
         }
 
         if ($data['type'] == 1 && $delivery_code) {
@@ -409,13 +408,13 @@ if ($type == 'order') {
             /** @var ExpressServices $expressServices */
             $expressServices = app()->make(ExpressServices::class);
             if (!$expressServices->be(['code' => $data['delivery_code']])) {
-                throw new AdminException(410324);
+                throw new AdminException('请核对快递公司编码');
             }
         }
 
         $cart_ids = $data['cart_ids'];
         unset($data['cart_ids']);
-        $this->transaction(function () use ($id, $cart_ids, $orderInfo, $data) {
+        return $this->transaction(function () use ($id, $cart_ids, $orderInfo, $data) {
             /** @var StoreOrderSplitServices $storeOrderSplitServices */
             $storeOrderSplitServices = app()->make(StoreOrderSplitServices::class);
             //订单拆单
@@ -423,7 +422,7 @@ if ($type == 'order') {
             if ($splitOrderInfo) {
                 $splitOrderInfo['refund_status'] = 0;
                 //拆分订单执行发货
-                $this->doDelivery((int)$splitOrderInfo->id, $splitOrderInfo, $data);
+                $res = $this->doDelivery((int)$splitOrderInfo->id, $splitOrderInfo, $data);
                 /** @var StoreOrderStatusServices $services */
                 $services = app()->make(StoreOrderStatusServices::class);
                 //记录原订单状态
@@ -432,10 +431,10 @@ if ($type == 'order') {
                 $status_data['change_message'] = '已拆分发货';
                 $services->save($status_data);
             } else {
-                $this->doDelivery($id, $orderInfo, $data);
+                $res = $this->doDelivery($id, $orderInfo, $data);
             }
+            return $res;
         });
-        return true;
     }
 
     /**
@@ -493,7 +492,7 @@ if ($type == 'order') {
                 $this->orderVirtualDelivery($id, $data, $orderInfo, $storeName);
                 break;
             default:
-                throw new AdminException(400522);
+                throw new AdminException('暂时不支持其他发货类型');
         }
         if (!$data['delivery_id'] && !empty($res['kuaidinum'])) {
             $data['delivery_id'] = $res['kuaidinum'];
@@ -531,25 +530,25 @@ if ($type == 'order') {
         /** @var StoreOrderCartInfoServices $orderInfoServices */
         $orderInfoServices = app()->make(StoreOrderCartInfoServices::class);
         if (!$data['delivery_name']) {
-            throw new AdminException(400007);
+            throw new AdminException('请选择快递公司');
         }
         $dump = [];
         $data['delivery_type'] = 'express';
         if ($data['express_record_type'] == 2) {//电子面单
             if (!$data['delivery_code']) {
-                throw new AdminException(400476);
+                throw new AdminException('快递公司编缺失');
             }
             if (!$data['express_temp_id']) {
-                throw new AdminException(400527);
+                throw new AdminException('请选择电子面单模板');
             }
             if (!$data['to_name']) {
-                throw new AdminException(400008);
+                throw new AdminException('请填写寄件人姓名');
             }
             if (!$data['to_tel']) {
-                throw new AdminException(400477);
+                throw new AdminException('请填写寄件人电话');
             }
             if (!$data['to_addr']) {
-                throw new AdminException(400478);
+                throw new AdminException('请填写寄件人地址');
             }
             /** @var ServeServices $expressService */
             $expressService = app()->make(ServeServices::class);
@@ -567,7 +566,7 @@ if ($type == 'order') {
             $expData['cargo'] = $orderInfoServices->getCarIdByProductTitle((int)$orderInfo->id, true);
             $expData['order_id'] = $orderInfo->order_id;
             if (!sys_config('config_export_open', 0)) {
-                throw new AdminException(400528);
+                throw new AdminException('电子面单已关闭，请选择其他发货方式');
             }
             $dump = $expressService->express()->dump($expData);
             $orderInfo->delivery_id = $dump['kuaidinum'];
@@ -586,19 +585,19 @@ if ($type == 'order') {
         } else if ($data['express_record_type'] == 3) {
             //商家寄件
             if (!$data['delivery_code']) {
-                throw new AdminException(400476);
+                throw new AdminException('快递公司编缺失');
             }
             if (!$data['express_temp_id']) {
-                throw new AdminException(400527);
+                throw new AdminException('请选择电子面单模板');
             }
             if (!$data['to_name']) {
-                throw new AdminException(400008);
+                throw new AdminException('请填写寄件人姓名');
             }
             if (!$data['to_tel']) {
-                throw new AdminException(400477);
+                throw new AdminException('请填写寄件人电话');
             }
             if (!$data['to_addr']) {
-                throw new AdminException(400478);
+                throw new AdminException('请填写寄件人地址');
             }
             /** @var ServeServices $expressService */
             $expressService = app()->make(ServeServices::class);
@@ -635,7 +634,7 @@ if ($type == 'order') {
             $data['kuaidi_order_id'] = $dump['order_id'] ?? '';
         } else {
             if (!$data['delivery_id']) {
-                throw new AdminException(400531);
+                throw new AdminException('请输入快递单号');
             }
             $orderInfo->delivery_id = $data['delivery_id'];
         }
@@ -655,7 +654,7 @@ if ($type == 'order') {
                         'change_message' => '已发货 快递公司：' . $data['delivery_name'] . ' 快递单号：' . $data['delivery_id']
                     ]);
                 if (!$res) {
-                    throw new AdminException(400529);
+                    throw new AdminException('发货失败');
                 }
             });
         } else {
@@ -683,7 +682,7 @@ if ($type == 'order') {
                         'change_message' => '备货中 快递公司：' . $data['delivery_name'] . ' 快递单号：' . $data['delivery_id']
                     ]);
                 if (!$res) {
-                    throw new AdminException(400529);
+                    throw new AdminException('发货失败');
                 }
             });
         }
@@ -754,7 +753,7 @@ if ($type == 'order') {
                 /** @var StoreProductVirtualServices $virtualService */
                 $virtualService = app()->make(StoreProductVirtualServices::class);
                 $virtual = $virtualService->get(['attr_unique' => $unique, 'uid' => 0]);
-                if (!$virtual) throw new ApiException(100026);
+                if (!$virtual) throw new ApiException('数据不存在');
                 $virtual->order_id = $orderInfo['order_id'];
                 $virtual->uid = $orderInfo['uid'];
                 $virtual->save();
@@ -794,7 +793,7 @@ if ($type == 'order') {
                     'content' => '您购买的优惠券已支付成功，支付金额' . $orderInfo['pay_price'] . '元，订单号' . $orderInfo['order_id'] . '请在个人中心优惠券中查看,感谢您的光临！'
                 ]);
             } else {
-                throw new ApiException(410323);
+                throw new ApiException('您已有这张优惠券，请勿重复购买');
             }
             $statusService->save([
                 'oid' => $orderInfo['id'],

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -46,26 +46,26 @@ class StoreCombinationValidate extends Validate
      * @var array
      */
     protected $message = [
-        'product_id.require' => '400337',
-        'title.require' => '400338',
-        'info.require' => '400347',
-        'unit_name.require' => '400348',
-        'images.require' => '400349',
-        'section_time.require' => '400353',
-        'num.require' => '400354',
-        'num.gt' => '400355',
-        'virtual.require' => '400363',
-        'virtual.gt' => '400364',
-        'virtual.elt' => '400365',
-        'once_num.require' => '400366',
-        'once_num.gt' => '400367',
-        'temp_id.require' => '400360',
-        'description.require' => '400361',
-        'attrs.require' => '400362',
-        'people.require' => '400368',
-        'people.gt' => '400369',
-        'effective_time.require' => '400370',
-        'effective_time.gt' => '400371',
+        'product_id.require' => '请选择商品',
+        'title.require' => '请输入商品名称',
+        'info.require' => '请填写活动简介',
+        'unit_name.require' => '请填写单位',
+        'images.require' => '请选择商品轮播图',
+        'section_time.require' => '请选择活动时间段',
+        'num.require' => '请填写购买数量限制',
+        'num.gt' => '购买数量限制必须大于0',
+        'virtual.require' => '请填写虚拟拼团比例',
+        'virtual.gt' => '虚拟参团人数不能大于成团人数',
+        'virtual.elt' => '虚拟参团人数不能大于成团人数',
+        'once_num.require' => '请填写单次购买数量',
+        'once_num.gt' => '单次购买数量必须大于0',
+        'temp_id.require' => '请选择运费模板',
+        'description.require' => '请填写商品详情',
+        'attrs.require' => '请选择规格',
+        'people.require' => '请填写成团人数',
+        'people.gt' => '拼团人数不能小于2人',
+        'effective_time.require' => '请填写成团有效期',
+        'effective_time.gt' => '成团有效期必须大于0',
     ];
 
     protected $scene = [

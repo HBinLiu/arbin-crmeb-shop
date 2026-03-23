@@ -586,7 +586,7 @@ export default {
 .tree_tit {
   height: 50px;
   line-height: 50px;
-  font-size: 15px;
+  font-size: 14px;
   color: #333;
   font-weight: 500;
   text-align: center;

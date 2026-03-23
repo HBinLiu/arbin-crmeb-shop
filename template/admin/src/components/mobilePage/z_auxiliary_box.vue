@@ -1,14 +1,5 @@
 <template>
-  <div
-    class="mobile-page"
-    :style="{
-      background: bottomBgColor,
-      paddingTop: topConfig + 'px',
-      paddingBottom: bottomConfig + 'px',
-      paddingLeft: lrEdge + 'px',
-      paddingRight: lrEdge + 'px',
-    }"
-  >
+  <common_wrapper :config="configObj">
     <div
       class="box"
       :style="{
@@ -19,7 +10,7 @@
           : filletVal + 'px',
       }"
     ></div>
-  </div>
+  </common_wrapper>
 </template>
 
 <script>
@@ -76,6 +67,67 @@ export default {
         setUp: {
           tabVal: 0,
         },
+        zIndexConfig: {
+          title: '组件上浮',
+          val: 0,
+          min: 0,
+        },
+        borderConfig: {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Hide, 1: Show
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              { name: '实线', style: 'solid' },
+              { name: '虚线', style: 'dashed' },
+              { name: '点状', style: 'dotted' },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
+        },
+        shadowConfig: {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0,
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: 'rgba(0,0,0,0.1)' }],
+            color: [{ item: 'rgba(0,0,0,0.1)' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+          },
+        },
         titleLeft: '高度设置',
         titleRight: '通用样式',
         bgColor: {
@@ -111,20 +163,20 @@ export default {
           val: 10,
           min: 1,
         },
-        topConfig: {
-          title: '上边距',
+        paddingConfig: {
+          title: '内边距',
           val: 0,
           min: 0,
+          max: 100,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-        bottomConfig: {
-          title: '下边距',
+        marginConfig: {
+          title: '外边距',
+          isAll: false,
           val: 0,
           min: 0,
-        },
-        lrEdge: {
-          title: '左右边距',
-          val: 0,
-          min: 0,
+          max: 100,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
         fillet: {
           title: '背景圆角',
@@ -147,12 +199,9 @@ export default {
       },
       cSlider: '',
       bgColor: '',
-      bottomBgColor: '',
       confObj: {},
       pageData: {},
-      topConfig: '',
-      bottomConfig: '',
-      lrEdge: '',
+      configObj: null,
       fillet: 0,
       filletVal: 0,
       valList: [],
@@ -167,23 +216,27 @@ export default {
   methods: {
     setConfig(data) {
       if (!data) return;
-      if (data.heightConfig) {
-        this.cSlider = data.heightConfig.val;
-        this.bgColor = data.bgColor.color[0].item;
-        this.bottomBgColor = data.bottomBgColor.color[0].item;
-        this.topConfig = data.topConfig.val;
-        this.bottomConfig = data.bottomConfig.val;
-        this.lrEdge = data.lrEdge.val;
-        this.fillet = data.fillet.type;
-        this.filletVal = data.fillet.val;
-        this.valList = data.fillet.valList;
+      this.configObj = data;
+      for (let key in this.defaultConfig) {
+        if (data[key] == undefined) {
+          this.$set(data, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+        }
       }
+      this.cSlider = data.heightConfig.val;
+      this.bgColor = data.bgColor.color[0].item;
+      this.fillet = data.fillet.type;
+      this.filletVal = data.fillet.val;
+      this.valList = data.fillet.valList;
     },
   },
 };
 </script>
 
 <style scoped lang="scss">
+.mobile-page {
+  display: inline-block;
+  width: -webkit-fill-available;
+}
 .box {
   height: 20px;
   background: #f5f5f5;

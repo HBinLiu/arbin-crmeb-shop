@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -91,7 +91,7 @@ class WechatUserServices extends BaseServices
     {
         $uid = $this->dao->value([$openidType => $openid, 'is_del' => 0], 'uid');
         if (!$uid)
-            throw new AdminException(400710);
+            throw new AdminException('对应的uid不存在');
         return $uid;
     }
 
@@ -103,7 +103,7 @@ class WechatUserServices extends BaseServices
     public function unSubscribe($openid)
     {
         if (!$this->dao->update($openid, ['subscribe' => 0, 'subscribe_time' => time()], 'openid'))
-            throw new AdminException(400711);
+            throw new AdminException('取消关注失败');
         return true;
     }
 
@@ -146,7 +146,7 @@ class WechatUserServices extends BaseServices
             $userInfo['tagid_list'] = implode(',', $userInfo['tagid_list']);
         }
         if (!$this->dao->update($openid, $userInfo, 'openid'))
-            throw new AdminException(100013);
+            throw new AdminException('更新失败');
         return true;
     }
 
@@ -159,7 +159,7 @@ class WechatUserServices extends BaseServices
     {
         $userInfo = WechatService::getUserInfo($openid);
         if (!isset($userInfo['openid']))
-            throw new AdminException(410082);
+            throw new AdminException('请关注公众号');
         $userInfo = is_object($userInfo) ? $userInfo->toArray() : $userInfo;
         if (isset($userInfo['nickname']) && $userInfo['nickname']) {
             $userInfo['nickname'] = filter_emoji($userInfo['nickname']);
@@ -182,7 +182,7 @@ class WechatUserServices extends BaseServices
             $userServices = app()->make(UserServices::class);
             $userInfoData = $userServices->setUserInfo($userInfo);
             if (!$userInfoData) {
-                throw new AdminException(400703);
+                throw new AdminException('用户信息储存失败');
             }
             $uid = $userInfoData->uid;
         } else {
@@ -192,7 +192,7 @@ class WechatUserServices extends BaseServices
         $userInfo['add_time'] = time();
         $userInfo['uid'] = $uid;
         if (!$this->dao->save($userInfo)) {
-            throw new AdminException(400703);
+            throw new AdminException('用户信息储存失败');
         }
         //TODO 这个返回值待完善
         return $userInfoData;
@@ -256,7 +256,7 @@ class WechatUserServices extends BaseServices
         if (isset($wechatUserInfo['nickname']) || isset($wechatUserInfo['headimgurl'])) $wechatUserInfo['is_complete'] = 1;
         if ($wechatUserInfo) {
             if (isset($userData['openid']) && $userData['openid'] && false === $wechatUser->update(['uid' => $userInfo['uid'], 'openid' => $userData['openid']], $wechatUserInfo)) {
-                throw new ApiException(100013);
+                throw new ApiException('更新失败');
             }
         }
         return true;
@@ -354,12 +354,12 @@ class WechatUserServices extends BaseServices
                 $loginService->updateUserInfo($wechatInfo, $userInfo);
                 if ($wechatUser) {
                     if (!$this->dao->update($wechatUser['id'], $wechatInfo, 'id')) {
-                        throw new ApiException(100007);
+                        throw new ApiException('修改失败');
                     }
                 } else {
                     $wechatInfo['uid'] = $uid;
                     if (!$this->dao->save($wechatInfo)) {
-                        throw new ApiException(100007);
+                        throw new ApiException('修改失败');
                     }
                 }
             });
@@ -369,12 +369,12 @@ class WechatUserServices extends BaseServices
             $userInfo = $this->transaction(function () use ($userServices, $wechatInfo, $spreadId, $userType) {
                 $userInfo = $userServices->setUserInfo($wechatInfo, (int)$spreadId, $userType);
                 if (!$userInfo) {
-                    throw new AuthException(410083);
+                    throw new AuthException('新增用户失败');
                 }
                 $wechatInfo['uid'] = $userInfo->uid;
                 $wechatInfo['add_time'] = $userInfo->add_time;
                 if (!$this->dao->save($wechatInfo)) {
-                    throw new AuthException(410083);
+                    throw new AuthException('新增用户失败');
                 }
                 $userInfo['new_user'] = (int)sys_config('get_avatar', 0);
                 return $userInfo;
@@ -442,7 +442,7 @@ class WechatUserServices extends BaseServices
     public function subscribe($openid): bool
     {
         if (!$this->dao->update($openid, ['subscribe' => 1, 'subscribe_time' => time()], 'openid'))
-            throw new AdminException(410084);
+            throw new AdminException('用户关注失败');
         return true;
     }
 }

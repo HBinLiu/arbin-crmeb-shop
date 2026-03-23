@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -55,14 +55,14 @@ class LoginServices extends BaseServices
         $user = $this->dao->getOne(['account|phone' => $account, 'is_del' => 0]);
         if ($user) {
             if ($user->pwd !== md5((string)$password))
-                throw new ApiException(410025);
+                throw new ApiException('账号或密码错误');
             if ($user->pwd === md5('123456'))
-                throw new ApiException(410026);
+                throw new ApiException('请修改您的初始密码，再尝试登录');
         } else {
-            throw new ApiException(410025);
+            throw new ApiException('账号或密码错误');
         }
         if (!$user['status'])
-            throw new ApiException(410027);
+            throw new ApiException('您已被禁止登录，请联系管理员');
 
         //更新用户信息
         if ($agent_id) {
@@ -74,7 +74,7 @@ class LoginServices extends BaseServices
         if ($token) {
             return ['token' => $token['token'], 'expires_time' => $token['params']['exp']];
         } else
-            throw new ApiException(410019);
+            throw new ApiException('登录失败');
     }
 
     /**
@@ -112,7 +112,8 @@ class LoginServices extends BaseServices
             //如果店员切换代理商，则店员在之前代理商下推广的用户，他们的直接上级从当前店员变为之前代理商
             if ($userInfo->agent_id != 0 && $userInfo->agent_id != $spreadInfo->agent_id) {
                 $this->dao->update(['staff_id' => $userInfo['uid'], 'spread_uid' => $userInfo['uid']], ['spread_uid' => $spreadInfo['agent_id'], 'staff_id' => 0]);
-                $this->dao->update(['staff_id' => $userInfo['uid'], 'not_spread_uid' => $userInfo['uid']], ['staff_id' => 0]);
+                $this->dao->getSearch(['staff_id' => $userInfo['uid'], 'not_spread_uid' => $userInfo['uid']])->update(['staff_id' => 0]);
+
             }
             //绑定用户后置事件
             event('UserRegisterListener', [$spreadUid, $userInfo['user_type'], $userInfo['nickname'], $userInfo['uid'], $is_new]);
@@ -191,7 +192,7 @@ class LoginServices extends BaseServices
             }
         }
         if (!$this->dao->update($userInfo['uid'], $data, 'uid')) {
-            throw new ApiException(100007);
+            throw new ApiException('修改失败');
         }
         return true;
     }
@@ -199,14 +200,14 @@ class LoginServices extends BaseServices
     public function verify(SmsService $services, $phone, $type, $time)
     {
         if ($this->dao->getOne(['account' => $phone, 'is_del' => 0]) && $type == 'register') {
-            throw new ApiException(410028);
+            throw new ApiException('手机号已注册');
         }
         $code = rand(100000, 999999);
         $data['code'] = $code;
         $data['time'] = $time;
         $res = $services->send(true, $phone, $data, 'verify_code');
         if ($res !== true)
-            throw new ApiException(410031);
+            throw new ApiException('短信平台验证码发送失败');
         return $code;
     }
 
@@ -224,7 +225,7 @@ class LoginServices extends BaseServices
     public function register($account, $password, $spread, $user_type = 'h5')
     {
         if ($this->dao->getOne(['account|phone' => $account, 'is_del' => 0])) {
-            throw new ApiException(410028);
+            throw new ApiException('手机号已注册');
         }
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
@@ -258,7 +259,7 @@ class LoginServices extends BaseServices
         $data['country'] = '';
         $data['status'] = 1;
         if (!$re = $this->dao->save($data)) {
-            throw new ApiException(410014);
+            throw new ApiException('注册失败');
         } else {
             $userServices->rewardNewUser((int)$re->uid);
             //用户生成后置事件
@@ -303,10 +304,10 @@ class LoginServices extends BaseServices
     {
         $user = $this->dao->getOne(['account|phone' => $account, 'is_del' => 0], 'uid');
         if (!$user) {
-            throw new ApiException(410032);
+            throw new ApiException('用户不存在');
         }
         if (!$this->dao->update($user['uid'], ['pwd' => md5((string)$password)], 'uid')) {
-            throw new ApiException(410033);
+            throw new ApiException('修改密码失败');
         }
         return true;
     }
@@ -328,12 +329,12 @@ class LoginServices extends BaseServices
         if (!$user) {
             $user = $this->register($phone, '123456', $spread, $user_type);
             if (!$user) {
-                throw new ApiException(410034);
+                throw new ApiException('用户登录失败,无法生成新用户,请稍后再试');
             }
         }
 
         if (!$user->status)
-            throw new ApiException(410027);
+            throw new ApiException('您已被禁止登录，请联系管理员');
 
         // 设置推广关系
         if ($agent_id) {
@@ -346,7 +347,7 @@ class LoginServices extends BaseServices
         if ($token) {
             return ['token' => $token['token'], 'expires_time' => $token['params']['exp']];
         } else {
-            throw new ApiException(410019);
+            throw new ApiException('登录失败');
         }
     }
 
@@ -371,20 +372,20 @@ class LoginServices extends BaseServices
         }
         $switch_user = $this->dao->getOne($where);
         if (!$switch_user) {
-            return app('json')->fail(410035);
+            return app('json')->fail('用户不存在,无法切换');
         }
         if (!$switch_user->status) {
-            return app('json')->fail(410027);
+            return app('json')->fail('您已被禁止登录，请联系管理员');
         }
         $edit_data = ['login_type' => $login_type];
         if (!$this->dao->update($switch_user['uid'], $edit_data, 'uid')) {
-            throw new ApiException(410036);
+            throw new ApiException('修改新用户登录类型出错');
         }
         $token = $this->createToken((int)$switch_user['uid'], 'api');
         if ($token) {
             return ['token' => $token['token'], 'expires_time' => $token['params']['exp']];
         } else {
-            throw new ApiException(410019);
+            throw new ApiException('登录失败');
         }
     }
 
@@ -400,11 +401,11 @@ class LoginServices extends BaseServices
     public function bindind_phone($phone, string $key = '')
     {
         if (!$key) {
-            throw new ApiException(410037);
+            throw new ApiException('请刷新页面或者重新授权');
         }
         [$openid, $wechatInfo, $spreadId, $agent_id, $login_type, $userType] = $createData = CacheService::get($key);
         if (!$createData) {
-            throw new ApiException(410037);
+            throw new ApiException('请刷新页面或者重新授权');
         }
         $wechatInfo['phone'] = $phone;
         /** @var WechatUserServices $wechatUser */
@@ -419,7 +420,7 @@ class LoginServices extends BaseServices
                 'expires_time' => $token['params']['exp'],
             ];
         } else
-            return app('json')->fail(410019);
+            return app('json')->fail('登录失败');
     }
 
     /**
@@ -436,25 +437,25 @@ class LoginServices extends BaseServices
     {
         $userInfo = $this->dao->get($uid);
         if (!$userInfo) {
-            throw new ApiException(410113);
+            throw new ApiException('用户不存在');
         }
         if ($this->dao->getOne([['phone', '=', $phone], ['user_type', '<>', 'h5'], ['is_del', '=', 0]])) {
-            throw new ApiException(410039);
+            throw new ApiException('此手机已经绑定，无法多次绑定');
         }
         if ($userInfo->phone) {
-            throw new ApiException(410040);
+            throw new ApiException('您的账号已经绑定过手机号码');
         }
         $data = [];
         if ($this->dao->getOne(['account' => $phone, 'phone' => $phone, 'user_type' => 'h5', 'is_del' => 0])) {
-            if (!$step) return ['msg' => 410041, 'data' => ['is_bind' => 1]];
+            if (!$step) return ['msg' => 'H5已有账号是否绑定此账号上', 'data' => ['is_bind' => 1]];
         } else {
             $data['account'] = $phone;
         }
         $data['phone'] = $phone;
         if ($this->dao->update($userInfo['uid'], $data, 'uid') || $userInfo->phone == $phone)
-            return ['msg' => 410016, 'data' => []];
+            return ['msg' => '绑定成功', 'data' => []];
         else
-            throw new ApiException(410017);
+            throw new ApiException('绑定失败');
     }
 
     /**
@@ -470,21 +471,21 @@ class LoginServices extends BaseServices
     {
         $userInfo = $this->dao->get(['uid' => $uid, 'is_del' => 0]);
         if (!$userInfo) {
-            throw new ApiException(410113);
+            throw new ApiException('用户不存在');
         }
         if ($userInfo->phone == $phone) {
-            throw new ApiException(410042);
+            throw new ApiException('新手机号和原手机号相同，无需修改');
         }
         if ($this->dao->getOne([['phone', '=', $phone], ['is_del', '=', 0]])) {
-            throw new ApiException(410043);
+            throw new ApiException('此手机已经注册');
         }
         $data = [];
         $data['phone'] = $phone;
         $data['account'] = $phone;
         if ($this->dao->update($userInfo['uid'], $data, 'uid'))
-            return ['msg' => 100001, 'data' => []];
+            return ['msg' => '修改成功', 'data' => []];
         else
-            throw new ApiException(100007);
+            throw new ApiException('修改失败');
     }
 
     /**

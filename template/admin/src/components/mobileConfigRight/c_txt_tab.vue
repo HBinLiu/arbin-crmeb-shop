@@ -8,7 +8,7 @@
       <el-col class="color-box">
         <el-radio-group v-model="configData.type" type="button" @input="radioChange($event)">
           <el-radio :label="key" v-for="(radio, key) in configData.list" :key="key">
-            <span class="iconfont-diy" :class="radio.icon" v-if="radio.icon"></span>
+            <span class="iconfont" :class="radio.icon" v-if="radio.icon"></span>
             <span v-else>{{ radio.val }}</span>
           </el-radio>
         </el-radio-group>

@@ -109,7 +109,6 @@ export default {
     getvideoint() {
       // this.modalVideo = true;
       this.$videoModal((e) => {
-        console.log(e);
         let _this = this;
         _this.modalVideo = false;
         this.video = e;

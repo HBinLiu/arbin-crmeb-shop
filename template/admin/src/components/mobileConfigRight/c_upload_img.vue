@@ -1,7 +1,7 @@
 <template>
   <div class="upload_img" :class="configData.type == 'code' ? 'on' : ''" v-if="configData">
-    <div class="header">{{ configData.header }}</div>
-    <div class="title">{{ configData.title }}</div>
+    <!-- <div class="header">{{ configData.header }}</div> -->
+    <div v-if="configData.title" class="title">{{ configData.title }}</div>
     <div class="list">
       <div class="item">
         <div class="name">{{ configData.type == 'code' ? configData.name : '图片' }}</div>
@@ -125,7 +125,6 @@ export default {
     },
     // 点击图文封面
     modalPicTap(title) {
-      console.log(this.configData);
       if (this.configData.video == 1) {
         this.$videoModal((e) => {
           this.configData.url = e;
@@ -178,6 +177,7 @@ export default {
 <style scoped lang="scss">
 .upload_img {
   padding: 0 15px;
+  margin-top: 10px;
   &.on {
     .title {
       margin-bottom: 0;
@@ -230,10 +230,9 @@ export default {
   color: #000;
 }
 .title {
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  font-size: 12px;
-  color: #999;
+  padding: 20px 0px;
+  font-size: 14px;
+  color: #333333;
 }
 .box {
   width: 64px;

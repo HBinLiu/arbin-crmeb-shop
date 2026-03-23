@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -40,19 +40,19 @@ class AdminAuthServices extends BaseServices
     /**
      * 获取Admin授权信息
      * @param string $token
-     * @param int $code
+     * @param string $msg
      * @return array
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
      */
-    public function parseToken(string $token, int $code = 110003): array
+    public function parseToken(string $token, string $msg = '登录已过期,请重新登录'): array
     {
         /** @var CacheService $cacheService */
         $cacheService = app()->make(CacheService::class);
 
         if (!$token || $token === 'undefined') {
-            throw new AuthException($code);
+            throw new AuthException($msg, [], 401);
         }
         /** @var JwtAuth $jwtAuth */
         $jwtAuth = app()->make(JwtAuth::class);
@@ -63,7 +63,7 @@ class AdminAuthServices extends BaseServices
         $md5Token = md5($token);
         if (!$cacheService->has($md5Token) || !$cacheService->get($md5Token, '', NULL, 'admin')) {
             $this->authFailAfter($id, $type);
-            throw new AuthException($code);
+            throw new AuthException($msg, [], 401);
         }
 
         //验证token
@@ -74,7 +74,7 @@ class AdminAuthServices extends BaseServices
                 $cacheService->delete($md5Token);
             }
             $this->authFailAfter($id, $type);
-            throw new AuthException($code);
+            throw new AuthException($msg, [], 401);
         }
 
         //获取管理员信息
@@ -84,10 +84,10 @@ class AdminAuthServices extends BaseServices
                 $cacheService->delete($md5Token);
             }
             $this->authFailAfter($id, $type);
-            throw new AuthException($code);
+            throw new AuthException($msg, [], 401);
         }
         if ($pwd !== '' && $pwd !== md5($adminInfo->pwd)) {
-            throw new AuthException($code);
+            throw new AuthException($msg, [], 401);
         }
 
         $adminInfo->type = $type;

@@ -9,7 +9,7 @@
           @change="sliderChange"
           placeholder="请选择分类"
           size="mini"
-          v-model="configData.classVal"
+          v-model="modelValue"
           :options="treeSelect"
           :props="props"
           filterable
@@ -23,6 +23,7 @@
 
 <script>
 import { cascaderListApi } from '@/api/product';
+import { categoryListApi } from '@/api/cms';
 export default {
   name: 'c_classify',
   props: {
@@ -44,11 +45,32 @@ export default {
       treeSelect: [],
     };
   },
+  computed: {
+    modelValue: {
+      get() {
+        if (this.configData.activeValue !== undefined) {
+          return this.configData.activeValue;
+        }
+        return this.configData.classVal;
+      },
+      set(val) {
+        if (this.configData.activeValue !== undefined) {
+          this.configData.activeValue = val;
+        } else {
+          this.configData.classVal = val;
+        }
+      },
+    },
+  },
   mounted() {
     this.$nextTick(() => {
       this.defaults = this.configObj;
       this.configData = this.configObj[this.configNme];
-      this.goodsCategory();
+      if (this.configNme === 'articleClass') {
+        this.articleCategory();
+      } else {
+        this.goodsCategory();
+      }
     });
   },
   watch: {
@@ -63,6 +85,27 @@ export default {
   methods: {
     sliderChange() {
       this.$emit('getConfig', { name: 'classlfy' });
+    },
+    articleCategory() {
+      categoryListApi({
+        status: 1,
+        type: 1,
+      })
+        .then((res) => {
+          this.treeSelect = this.formatCategory(res.data);
+        })
+        .catch((res) => {
+          this.$message.error(res.msg);
+        });
+    },
+    formatCategory(list) {
+      return list.map((item) => {
+        return {
+          value: item.id,
+          label: item.title,
+          children: item.children ? this.formatCategory(item.children) : null,
+        };
+      });
     },
     goodsCategory() {
       cascaderListApi(1)
@@ -79,6 +122,7 @@ export default {
 
 <style scoped lang="scss">
 .slider-box {
+  margin-top: 20px;
   padding: 0 15px;
   .label {
     color: #999999;
@@ -90,10 +134,14 @@ export default {
 .c_row-item {
   margin-bottom: 20px;
 }
-::v-deep.el-cascader__search-input {
+::v-deep .el-cascader__search-input {
   margin-left: 8px;
+  font-size: 12px;
 }
 ::v-deep.el-cascader {
   width: 100%;
+  .el-tag {
+    margin: 4px 0 2px 6px;
+  }
 }
 </style>

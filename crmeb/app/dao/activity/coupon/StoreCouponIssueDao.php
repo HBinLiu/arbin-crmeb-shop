@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -395,5 +395,55 @@ class StoreCouponIssueDao extends BaseDao
             ->with(['used' => function ($query) use ($uid) {
                 $query->where('uid', $uid);
             }])->order('coupon_price desc')->select()->toArray();
+    }
+
+    /**
+     * 自定义组件-优惠券
+     * @param $where
+     * @param $order
+     * @param $limit
+     * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2026/1/13
+     */
+    public function getThemeCoupon($where, $order, $limit)
+    {
+        $model = $this->getModel()->where('status', 1)->where('is_del', 0)->where('remain_count > 0 OR is_permanent = 1');
+
+        if ($where['ids'] != '') {
+            $ids = explode(',', $where['ids']);
+            $list = $model->whereIn('id', $ids)->order($order)->select()->toArray();
+        } else {
+            $list = $model->when($where['type'] !== '', function ($query) use ($where) {
+                $query->where('type', $where['type']);
+            })->when($where['user_type'] !== '', function ($query) use ($where) {
+                if ($where['user_type'] == 1) {
+                    $query->where('receive_type', '<>', 4);
+                } else {
+                    $query->where('receive_type', 4);
+                }
+            })->when($where['receive_type'] !== '', function ($query) use ($where) {
+                $query->where('receive_type', $where['receive_type']);
+            })->when(isset($where['min_price']), function ($query) use ($where) {
+                if ($where['min_price'] > 0) {
+                    $query->where('use_min_price', '>=', $where['min_price']);
+                } else {
+                    $query->where('use_min_price', 0);
+                }
+            })->when($where['start_time'] != '' && $where['end_time'] != '', function ($query) use ($where) {
+                $start_time = strtotime($where['start_time']);
+                $end_time = strtotime($where['end_time']);
+                $query->where(function ($query) use ($start_time, $end_time) {
+                    $query->where('start_time', '<=', $start_time)->where('end_time', '>=', $end_time);
+                })->whereOr(function ($query) {
+                    $query->where('start_time', 0)->where('end_time', 0);
+                });
+            })->limit($limit)->order($order)->select()->toArray();
+        }
+        return $list;
     }
 }

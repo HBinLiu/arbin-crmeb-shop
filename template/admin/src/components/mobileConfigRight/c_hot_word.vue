@@ -4,9 +4,9 @@
       <draggable class="dragArea list-group" :list="configData.list" group="peoples" handle=".icon">
         <div class="input-item" v-for="(item, index) in configData.list" :key="index">
           <div class="icon">
-            <span class="iconfont-diy iconxingzhuangjiehe"></span>
+            <span class="iconfont iconxingzhuangjiehe"></span>
           </div>
-          <el-input v-model="item.val" maxlength="10" placeholder="选填，不超过十个字"  />
+          <el-input v-model="item.val" maxlength="10" placeholder="选填，不超过十个字" />
           <!-- <el-select v-model="item.val">
             <el-option v-for="(val, index) in wordList" :value="val.name" :key="index">{{ val.name }}</el-option>
           </el-select> -->
@@ -141,7 +141,7 @@ export default {
         width: 30px;
         cursor: move;
 
-        .iconfont-diy {
+        .iconfont {
           font-size: 16px;
           color: #dddddd;
         }

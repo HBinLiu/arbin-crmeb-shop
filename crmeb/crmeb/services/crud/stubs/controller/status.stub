@@ -7,7 +7,7 @@
     public function status($id)
     {
         if (!$id) {
-            return app('json')->fail(100100);
+            return app('json')->fail('ID不能为空'); 
         }
 
         $data = $this->request->postMore([
@@ -18,12 +18,12 @@
         $filedAll = {%FIELD_ALL_PHP%};
 
         if (!in_array($data['field'], $filedAll)) {
-            return app('json')->fail(100100);
+            return app('json')->fail('字段不存在');
         }
 
         if ($this->service->update(['id'=> $id], [$data['field']=> $data['value']])) {
-            return app('json')->success(100001);
+            return app('json')->success('修改成功');
         } else {
-             return app('json')->fail(100100);
+             return app('json')->fail('修改失败');
         }
     }

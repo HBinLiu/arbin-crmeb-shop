@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -116,31 +116,31 @@ class StoreCombination extends AuthController
         if ($data['section_time']) {
             [$start_time, $end_time] = $data['section_time'];
             if (strtotime($end_time) < time()) {
-                return app('json')->fail(400507);
+                return app('json')->fail('活动结束时间不能小于当前时间');
             }
         }
         $combination = [];
         if ($id) {
             $combination = $this->services->get((int)$id);
             if (!$combination) {
-                return app('json')->fail(100026);
+                return app('json')->fail('数据不存在');
             }
         }
         //限制编辑
         if ($data['copy'] == 0 && $combination) {
             if ($combination['stop_time'] < time()) {
-                return app('json')->fail(400508);
+                return app('json')->fail('活动已结束,请重新添加或复制');
             }
         }
         if ($data['num'] < $data['once_num']) {
-            return app('json')->fail(400500);
+            return app('json')->fail('限制单次购买数量不能大于总购买数量');
         }
         if ($data['copy'] == 1) {
             $id = 0;
             unset($data['copy']);
         }
         $this->services->saveData($id, $data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -151,7 +151,7 @@ class StoreCombination extends AuthController
     public function delete($id)
     {
         $this->services->update($id, ['is_del' => 1]);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**

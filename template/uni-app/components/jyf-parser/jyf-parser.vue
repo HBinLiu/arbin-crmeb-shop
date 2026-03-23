@@ -522,12 +522,14 @@
 						// #endif
 						.select('#top').boundingClientRect().exec(res => {
 							// #endif
-							this.width = res[0].width;
-							if (res[0].height == height) {
-								this.$emit('ready', res[0])
-								clearInterval(this._timer);
+							if (res && res[0]) {
+								this.width = res[0].width;
+								if (res[0].height == height) {
+									this.$emit('ready', res[0])
+									clearInterval(this._timer);
+								}
+								height = res[0].height;
 							}
-							height = res[0].height;
 							// #ifndef H5
 						});
 					// #endif

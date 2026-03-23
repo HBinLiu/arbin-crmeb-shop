@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -66,7 +66,7 @@ class LangType extends AuthController
         ]);
         $this->services->langTypeSave($data);
         CacheService::delete('lang_type_data');
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -78,7 +78,7 @@ class LangType extends AuthController
     public function langTypeStatus($id, $status)
     {
         $this->services->langTypeStatus($id, $status);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -90,6 +90,6 @@ class LangType extends AuthController
     {
         $this->services->langTypeDel($id);
         CacheService::delete('lang_type_data');
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 }

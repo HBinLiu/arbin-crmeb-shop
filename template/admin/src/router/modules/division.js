@@ -35,6 +35,7 @@ export default {
       },
       component: () => import('@/pages/division/list/index'),
     },
+    
     {
       path: 'agent/index',
       name: `${pre}agent`,

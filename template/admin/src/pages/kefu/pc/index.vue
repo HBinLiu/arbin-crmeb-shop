@@ -310,6 +310,12 @@ export default {
     //     deep:true
     // }
   },
+  beforeDestroy() {
+    if (this.ws) {
+      this.ws.$off('socket_open', this.onSocketOpen);
+      this.ws.$off('close', this.onSocketClose);
+    }
+  },
   created() {
     this.upload = Setting.apiBaseURL.replace('adminapi', 'kefuapi') + '/upload';
     serviceInfo().then((res) => {
@@ -328,10 +334,14 @@ export default {
     });
     setTimeout((e) => {
       Socket.then((ws) => {
+        if (this._isDestroyed) return;
+        this.ws = ws;
         ws.send({
           type: 'kefu_login',
           data: getCookies('kefu_token'),
         });
+        ws.$on('socket_open', this.onSocketOpen);
+        ws.$on('close', this.onSocketClose);
         ws.$on(['reply', 'chat'], (data) => {
           if (data.msn_type == 1) {
             data.msn = this.replace_em(data.msn);
@@ -341,13 +351,17 @@ export default {
               data.msn = this.replace_em(`[${data.msn}]`);
             }
           }
-          this.chatList.push(data);
-          this.$nextTick(function () {
-            setTimeout(() => {
-              var container = document.querySelector('#chat_scroll');
-              this.scrollTop = container.offsetHeight;
-            }, 800);
-          });
+          if (data.to_uid == this.userActive.to_uid || data.uid == this.userActive.to_uid) {
+            this.chatList.push(data);
+            this.$nextTick(function () {
+              setTimeout(() => {
+                var container = document.querySelector('#chat_scroll');
+                if (container) {
+                  this.scrollTop = container.offsetHeight;
+                }
+              }, 800);
+            });
+          }
         });
         ws.$on('reply', (data) => {
           // mp3.play();
@@ -383,6 +397,22 @@ export default {
     // Socket.init(this,'kefu');
   },
   methods: {
+    onSocketOpen(key) {
+      if (key == 2) {
+        this.ws.send({
+          type: 'kefu_login',
+          data: getCookies('kefu_token'),
+        });
+      }
+    },
+    onSocketClose(data) {
+      if (data.key == 2) {
+        this.$message.error('连接断开，正在尝试重连...');
+        setTimeout(() => {
+          this.ws.init(2);
+        }, 2000);
+      }
+    },
     beforeUpload(file) {
       return isPicUpload(file);
     },
@@ -452,7 +482,6 @@ export default {
         if (event.target.value == '') {
           return this.$message.error('请输入消息');
         }
-        console.log(event.target.value);
         this.sendMsg(event.target.value, 1);
         this.chatCon = '';
         this.$nextTick(() => this.$refs.chatInput.focus());

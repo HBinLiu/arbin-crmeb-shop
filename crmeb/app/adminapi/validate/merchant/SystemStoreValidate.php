@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -38,15 +38,15 @@ class SystemStoreValidate extends Validate
      * @var array
      */
     protected $message = [
-        'name.require' => '400378',
-        'introduction.require' => '400379',
-        'phone.require' => '400380',
-        'image.require' => '400381',
-        'oblong_image.require' => '400382',
-        'address.require' => '400383',
-        'detailed_address.require' => '400384',
-        'latlng.require' => '400385',
-        'day_time.require' => '400386',
+        'name.require' => '请填写门店名称',
+        'introduction.require' => '请填写门店简介',
+        'phone.require' => '请填写门店电话',
+        'image.require' => '请选择提货点logo',
+        'oblong_image.require' => '请选择提货点大图',
+        'address.require' => '请选择地址',
+        'detailed_address.require' => '请填写详细地址',
+        'latlng.require' => '请选择经纬度',
+        'day_time.require' => '请选择营业时间',
     ];
 
     protected $scene = [

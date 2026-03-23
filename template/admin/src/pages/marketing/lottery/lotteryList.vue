@@ -22,7 +22,6 @@
             end-placeholder="结束日期"
             :picker-options="pickerOptions"
             style="width: 250px"
-            class="mr20"
           ></el-date-picker>
         </el-form-item>
         <el-form-item label="活动状态：">
@@ -63,7 +62,7 @@
           >
             <el-option label="全部" value="" />
             <el-option label="开启" :value="1" />
-            <el-option label="关闭" :value="0" />
+            <el-option label="关闭" :value="2" />
           </el-select>
         </el-form-item>
 
@@ -73,9 +72,10 @@
             placeholder="请输入活动名称"
             v-model="tableFrom.keyword"
             @change="userSearchs"
+            clearable
           />
         </el-form-item>
-        <el-button type="primary" v-db-click @click="userSearchs()">搜索</el-button>
+        <el-button type="primary" v-db-click @click="userSearchs()">查询</el-button>
       </el-form>
     </el-card>
     <el-card class="mt-20" :bordered="false" shadow="never">
@@ -297,7 +297,6 @@ export default {
     this.$nextTick(function () {
       const clipboard = new ClipboardJS('.copy-data');
       clipboard.on('success', () => {
-        console.log('11');
         this.$message.success('复制成功');
       });
     });
@@ -306,7 +305,6 @@ export default {
   methods: {
     // 操作
     changeMenu(row, name, index) {
-      console.log(row, name, index);
       switch (name) {
         case '1':
           this.customer(row);
@@ -340,7 +338,6 @@ export default {
     },
     // 选择人员
     selectCustomer(e) {
-      console.log(e);
       this.customerShow = false;
       this.formInline.uid = e.uid;
       this.formInline.image = e.image;

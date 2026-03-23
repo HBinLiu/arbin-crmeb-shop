@@ -2,20 +2,12 @@
   <div>
     <div class="setUpTop"></div>
     <div class="setUp">
-      <div class="label" v-if="defaults.cname">
+      <!-- <div class="label" v-if="defaults.cname">
         {{ defaults.cname }}
-      </div>
-      <div class="title acea-row">
-        <div
-          class="item"
-          :class="index == current ? 'on' : ''"
-          v-for="(item, index) in list"
-          :key="index"
-          @click="onClickTab(index)"
-        >
-          {{ item }}
-        </div>
-      </div>
+      </div> -->
+      <el-tabs v-model="activeTab" @tab-click="handleTabClick">
+        <el-tab-pane v-for="(item, index) in list" :key="index" :label="item" :name="String(index)"> </el-tab-pane>
+      </el-tabs>
     </div>
   </div>
 </template>
@@ -37,8 +29,9 @@ export default {
       configData: {
         tabVal: 0,
       },
-      list: ['内容', '样式'],
+      list: ['内容设置', '样式设置'],
       current: 0,
+      activeTab: '0',
     };
   },
   watch: {
@@ -46,7 +39,8 @@ export default {
       handler(nVal, oVal) {
         this.defaults = nVal;
         this.configData = nVal[this.configNme];
-        this.current = this.configData.tabVal;
+        this.current = this.configData?.tabVal;
+        this.activeTab = String(this.configData?.tabVal);
       },
       deep: true,
     },
@@ -56,18 +50,22 @@ export default {
       this.defaults = this.configObj;
       this.configData = this.configObj[this.configNme];
       this.$nextTick((e) => {
-        this.current = this.configData.tabVal;
+        this.current = this.configData?.tabVal;
+        this.activeTab = String(this.configData?.tabVal);
       });
     });
   },
   methods: {
-    onClickTab(index) {
+    handleTabClick(tab) {
+      const index = parseInt(tab.name);
       this.configData.tabVal = index;
       this.current = index;
     },
-    // onClickTab (e) {
-    //     this.$emit('getConfig', e);
-    // }
+    onClickTab(index) {
+      this.configData.tabVal = index;
+      this.current = index;
+      this.activeTab = String(index);
+    },
   },
 };
 </script>
@@ -79,42 +77,51 @@ export default {
 }
 .setUp {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 56px;
-  padding: 0 15px;
-
+  justify-content: center;
+  padding: 0px 15px 0;
+  border-bottom: 1px solid #f0f2f5;
+  z-index: 99;
+  position: relative;
+  background: #fff;
   .label {
     font-size: 16px;
     color: #333333;
+    margin-bottom: 15px;
   }
 
-  .title {
-    width: 140px;
-    height: 28px;
-    background: #f9f9f9;
-    border-radius: 14px;
-    line-height: 28px;
-    font-size: 12px;
-    color: #333333;
-    .item {
-      width: 50%;
-      text-align: center;
-      cursor: pointer;
-      &.on {
-        width: 70px;
-        background: var(--prev-color-primary);
-        border-radius: 14px;
-        color: #ffffff;
-        font-size: 12px;
-      }
+  ::v-deep .el-tabs__header {
+    margin: 0;
+  }
+
+  ::v-deep .el-tabs__nav-wrap::after {
+    height: 1px;
+    background-color: #e4e7ed;
+  }
+
+  ::v-deep .el-tabs__item {
+    font-size: 14px;
+    color: #606266;
+    padding: 0 60px;
+    height: 40px;
+    line-height: 40px;
+
+    &.is-active {
+      color: var(--prev-color-primary);
+      font-weight: 500;
+    }
+
+    &:hover {
+      color: var(--prev-color-primary);
     }
   }
-}
-.setUp ::v-deep.ivu-tabs-nav-scroll {
-  padding: 0 30px;
-}
-.setUp ::v-deep.ivu-tabs-nav .ivu-tabs-tab {
-  padding: 8px 45px;
+
+  ::v-deep .el-tabs__active-bar {
+    background-color: var(--prev-color-primary);
+    height: 2px;
+  }
+
+  ::v-deep .el-tabs__content {
+    display: none;
+  }
 }
 </style>

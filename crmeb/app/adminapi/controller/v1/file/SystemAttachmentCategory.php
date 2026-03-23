@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -83,10 +83,10 @@ class SystemAttachmentCategory extends AuthController
         ]);
         if (is_array($data['pid'])) $data['pid'] = end($data['pid']);
         if (!$data['name']) {
-            return app('json')->fail(400100);
+            return app('json')->fail('请填写分类名称');
         }
         $this->service->save($data);
-        return app('json')->success(100021);
+        return app('json')->success('添加成功');
     }
 
     /**
@@ -113,16 +113,16 @@ class SystemAttachmentCategory extends AuthController
         ]);
         if (is_array($data['pid'])) $data['pid'] = end($data['pid']);
         if (!$data['name']) {
-            return app('json')->fail(400100);
+            return app('json')->fail('请填写分类名称');
         }
         if ($data['pid'] == $id) {
             return app('json')->fail('上级分类不能是自己');
         }
         $info = $this->service->get($id);
         $count = $this->service->count(['pid' => $id]);
-        if ($count && $info['pid'] != $data['pid']) return app('json')->fail(400105);
+        if ($count && $info['pid'] != $data['pid']) return app('json')->fail('该分类有下级分类，无法修改上级');
         $this->service->update($id, $data);
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }
 
     /**
@@ -133,6 +133,6 @@ class SystemAttachmentCategory extends AuthController
     public function delete($id)
     {
         $this->service->del($id);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 }

@@ -117,7 +117,11 @@
 						})
 					});
 			},
-			getBargainUserCancel: function(bargainId) {
+			/**
+		 * 取消砍价活动
+		 * @param {number} bargainId - 砍价活动ID
+		 */
+		getBargainUserCancel: function(bargainId) {
 				var that = this;
 				getBargainUserCancel({
 						bargainId: bargainId

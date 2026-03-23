@@ -147,7 +147,7 @@ export function getCollectUserList(data) {
  * 
  */
 export function getReplyList(id, data) {
-	return request.get('reply/list/' + id, data)
+	return request.get('reply/list/' + id, data, {noAuth: true})
 }
 
 /**

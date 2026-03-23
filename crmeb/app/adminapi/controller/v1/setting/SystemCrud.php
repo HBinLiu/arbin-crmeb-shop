@@ -1,15 +1,13 @@
 <?php
-/**
- *  +----------------------------------------------------------------------
- *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
- *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
- *  +----------------------------------------------------------------------
- *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
- *  +----------------------------------------------------------------------
- *  | Author: CRMEB Team <admin@crmeb.com>
- *  +----------------------------------------------------------------------
- */
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 
 namespace app\adminapi\controller\v1\setting;
 
@@ -154,7 +152,7 @@ class SystemCrud extends AuthController
             //收集表单展示数据
             if ($item['from_type']) {
                 if (!$name) {
-                    return app('json')->fail(500048, [], ['field' => $item['field']]);
+                    return app('json')->fail('列表名称不能为空', [], ['field' => $item['field']]);
                 }
                 if (!$option && in_array($item['from_type'], [FormTypeEnum::RADIO, FormTypeEnum::SELECT])) {
                     return app('json')->fail('表单类型为radio或select时,options字段不能为空');
@@ -194,10 +192,10 @@ class SystemCrud extends AuthController
             }
         }
         if (!$fromField) {
-            return app('json')->fail(500046);
+            return app('json')->fail('表单类型至少选择一项');
         }
         if (!$columnField) {
-            return app('json')->fail(500047);
+            return app('json')->fail('列表展示数据生成失败');
         }
         $data['fromField'] = $fromField;
         $data['tableIndex'] = $tableIndex;
@@ -205,12 +203,12 @@ class SystemCrud extends AuthController
         $data['searchField'] = $searchField;
         $data['hasOneField'] = $hasOneField;
         if (!$data['tableName']) {
-            return app('json')->fail(500042);
+            return app('json')->fail('表名不能为空');
         }
 
         $this->services->createCrud($id, $data);
 
-        return app('json')->success(500043);
+        return app('json')->success('功能创建成功');
     }
 
     /**
@@ -227,11 +225,11 @@ class SystemCrud extends AuthController
         ], true);
 
         if (!$tableName) {
-            return app('json')->fail(500042);
+            return app('json')->fail('表名不能为空');
         }
 
         if (in_array($tableName, SystemCrudServices::NOT_CRUD_TABANAME)) {
-            return app('json')->fail(500041);
+            return app('json')->fail('系统数据表，无法生成');
         }
 
         $routeName = 'crud/' . Str::snake($tableName);
@@ -283,12 +281,12 @@ class SystemCrud extends AuthController
     public function read($id)
     {
         if (!$id) {
-            return app('json')->fail(500035);
+            return app('json')->fail('接口不存在');
         }
 
         $info = $this->services->get($id);
         if (!$info) {
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         }
 
         $routeName = 'crud/' . Str::snake($info->table_name);
@@ -469,7 +467,7 @@ class SystemCrud extends AuthController
         }
 
         if (empty($filepath) || !$id) {
-            return app('json')->fail(410087);
+            return app('json')->fail('平台错误：发生异常，请稍后重试');
         }
         $crudInfo = $this->services->get($id, ['make_path']);
         if (!$crudInfo) {
@@ -494,9 +492,9 @@ class SystemCrud extends AuthController
         }
         $res = $service->savefile($makeFilepath, $comment);
         if ($res) {
-            return app('json')->success(100000);
+            return app('json')->success('保存成功');
         } else {
-            return app('json')->fail(100006);
+            return app('json')->fail('保存失败');
         }
     }
 
@@ -577,12 +575,12 @@ class SystemCrud extends AuthController
     public function delete(SystemMenusServices $services, $id)
     {
         if (!$id) {
-            return app('json')->fail(500035);
+            return app('json')->fail('接口不存在');
         }
 
         $info = $this->services->get($id);
         if (!$info) {
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         }
 
         $menusServices = app()->make(SystemMenusServices::class);
@@ -615,7 +613,7 @@ class SystemCrud extends AuthController
                 }
             }
             if ($errorFile) {
-                return app('json')->success(500040, [], [
+                return app('json')->success('删除文件失败，失败原因{:message}', [], [
                     'message' => '文件：' . implode("\n", $errorFile) . ';无法被删除!'
                 ]);
             }
@@ -624,7 +622,7 @@ class SystemCrud extends AuthController
         $info->delete();
 
 
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -638,12 +636,12 @@ class SystemCrud extends AuthController
     public function download($id)
     {
         if (!$id) {
-            return app('json')->fail(500035);
+            return app('json')->fail('接口不存在');
         }
 
         $info = $this->services->get($id);
         if (!$info) {
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         }
         $zipPath = app()->getRootPath() . 'backup' . DS . Str::camel($info->table_name);
         $zipName = app()->getRootPath() . 'backup' . DS . Str::camel($info->table_name) . '.zip';
@@ -693,7 +691,7 @@ class SystemCrud extends AuthController
         ], $makePath, $zipPath);
 
         if (!extension_loaded('zip')) {
-            return app('json')->fail(500039);
+            return app('json')->fail('zip扩展未安装');
         }
 
         $fileService = new FileService();

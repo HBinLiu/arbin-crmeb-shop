@@ -82,7 +82,6 @@ export default {
         });
     },
     selectLabel(label, index) {
-      console.log(this.dataLabel);
       if (label.disabled) {
         const index = this.dataLabel.indexOf(this.dataLabel.filter((d) => d.id === label.id)[0]);
         this.dataLabel.splice(index, 1);

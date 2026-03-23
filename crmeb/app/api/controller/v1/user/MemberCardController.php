@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -83,11 +83,11 @@ class MemberCardController
             ['from', 'weixin'],
         ]);
         $data['from'] = strtolower(trim($data['from']));
-        if (!array_key_exists($data['from'], $this->channelType)) return app('json')->fail(100101);
+        if (!array_key_exists($data['from'], $this->channelType)) return app('json')->fail('非法操作');
         $data['from'] = $this->channelType[$data['from']];
         $uid = (int)$request->uid();
         $this->services->drawMemberCard($data, $uid);
-        return app('json')->success(410165);
+        return app('json')->success('激活成功');
     }
 
     /**

@@ -51,7 +51,10 @@
         "workerman/crontab": "^1.0",
         "topthink/think-migration": "^3.0",
         "topthink/think-filesystem": "^2.0",
-        "aws/aws-sdk-php": "^3.173"
+        "aws/aws-sdk-php": "^3.173",
+        "ext-zip": "*",
+        "ext-simplexml": "*",
+        "crmeb/easypay": "^1.0"
     },
     "autoload": {
         "psr-4": {
@@ -72,10 +75,6 @@
             "@php think vendor:publish"
         ]
     },
-    "repositories": {
-        "packagist": {
-            "type": "composer",
-            "url": "https://mirrors.aliyun.com/composer/"
-        }
-    }
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -84,12 +84,12 @@ class AuthController
     public function authBindingPhone($code = '', $iv = '', $encryptedData = '', $spread_code = '', $spread_spid = '', $key = '')
     {
         if (!$code || !$iv || !$encryptedData)
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         $data = $this->services->authBindingPhone($code, $iv, $encryptedData, $spread_code, $spread_spid, $key);
         if ($data) {
-            return app('json')->success(410001, $data);
+            return app('json')->success('登录成功', $data);
         } else
-            return app('json')->fail(410019);
+            return app('json')->fail('登录失败');
     }
 
     /**
@@ -114,11 +114,11 @@ class AuthController
         //验证验证码
         $verifyCode = CacheService::get('code_' . $phone);
         if (!$verifyCode)
-            return app('json')->fail(410009);
+            return app('json')->fail('请先获取验证码');
         $verifyCode = substr($verifyCode, 0, 6);
         if ($verifyCode != $captcha) {
             CacheService::delete('code_' . $phone);
-            return app('json')->fail(410010);
+            return app('json')->fail('验证码错误');
         }
         CacheService::delete('code_' . $phone);
         $data = $this->services->phoneLogin($key, $phone, $spread_code, 0, $spread_spid, $code);
@@ -137,8 +137,8 @@ class AuthController
      */
     public function bindingPhone($code = '', $iv = '', $encryptedData = '')
     {
-        if (!$code || !$iv || !$encryptedData) return app('json')->fail(100100);
+        if (!$code || !$iv || !$encryptedData) return app('json')->fail('参数错误');
         $this->services->bindingPhone($code, $iv, $encryptedData);
-        return app('json')->success(410016);
+        return app('json')->success('绑定成功');
     }
 }

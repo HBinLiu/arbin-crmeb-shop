@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -135,7 +135,7 @@ class StoreServiceServices extends BaseServices
     {
         $serviceInfo = $this->dao->get($id);
         if (!$serviceInfo) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         return create_form('编辑客服', $this->createServiceForm($serviceInfo->toArray()), $this->url('/app/wechat/kefu/' . $id), 'PUT');
     }
@@ -190,11 +190,11 @@ class StoreServiceServices extends BaseServices
         if (!$toUid) {
             $serviceInfoList = $this->getServiceList(['status' => 1, 'online' => 1]);
             if (!count($serviceInfoList)) {
-                throw new ApiException(410136);
+                throw new ApiException('暂无客服人员在线，请稍后联系');
             }
             $uids = array_column($serviceInfoList['list'], 'uid');
             if (!$uids) {
-                throw new ApiException(410136);
+                throw new ApiException('暂无客服人员在线，请稍后联系');
             }
             /** @var StoreServiceRecordServices $recordServices */
             $recordServices = app()->make(StoreServiceRecordServices::class);
@@ -208,7 +208,7 @@ class StoreServiceServices extends BaseServices
                 $toUid = $uids[array_rand($uids)] ?? 0;
             }
             if (!$toUid) {
-                throw new ApiException(410136);
+                throw new ApiException('暂无客服人员在线，请稍后联系');
             }
         }
         $userInfo = $this->dao->get(['uid' => $toUid], ['nickname', 'avatar']);
@@ -221,6 +221,7 @@ class StoreServiceServices extends BaseServices
                 $userInfo['avatar'] = '';
             }
         }
+        if ($userInfo['avatar']) $userInfo['avatar'] = set_file_url($userInfo['avatar']);
         /** @var StoreServiceLogServices $logServices */
         $logServices = app()->make(StoreServiceLogServices::class);
         $result = ['serviceList' => [], 'uid' => $toUid, 'nickname' => $userInfo['nickname'], 'avatar' => $userInfo['avatar']];

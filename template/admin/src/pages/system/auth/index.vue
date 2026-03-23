@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-card v-for="(value, key, index) in tableList" :key="index" :bordered="false" shadow="never" class="ivu-mt mt16">
+    <el-card v-for="(value, key, index) in tableList" :key="index" :bordered="false" shadow="never" class="ivu-mt mb16">
       <div class="head acea-row row-between-wrapper">{{ key | headText }}</div>
       <el-table ref="table" :data="tableList[key]" empty-text="暂无数据">
         <el-table-column :label="key == 'permissions' ? '文件/目录' : '环境'" minWidth="180">
@@ -99,6 +99,7 @@ export default {
       disabled: false,
       isShow: false, // 验证码模态框是否出现
       active: 0,
+      spread_uid: 0,
       timer: null,
       version: '',
       label: '',
@@ -186,6 +187,7 @@ export default {
       getVersion().then((res) => {
         this.version = res.data.version;
         this.label = res.data.label;
+        this.spread_uid = res.data.spread_uid || 0;
       });
     },
     getCrmebCopyRight() {
@@ -289,7 +291,7 @@ export default {
         host = host.replace('www.', '');
       }
       this.iframeUrl =
-        this.baseUrl + '?url=' + host + '&product=' + product + '&version=' + this.version + '&label=' + this.label;
+        this.baseUrl + '?url=' + host + '&product=' + product + '&version=' + this.version + '&label=' + this.label + '&spread_uid=' + this.label;
       this.isTemplate = true;
     },
     // 用户点击遮罩层，应该关闭模态框

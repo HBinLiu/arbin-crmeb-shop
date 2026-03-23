@@ -115,68 +115,73 @@ export default {
   },
   methods: {
     chinaConfigure() {
-      let myChart = echarts.init(this.$refs.myEchart); //这里是为了获得容器所在位置
-      window.onresize = myChart.resize;
-      myChart.setOption({
-        // 进行相关配置
-        backgroundColor: '#fff',
-        tooltip: {
-          trigger: 'item',
-          formatter: function (params) {
-            console.log(params, 'params');
-            return params.data
-              ? `地区:${params.name}</br>累计用户: ${params.data.value}</br>新增用户: ${params.data.newNum}</br>访客数: ${params.data.visitNum}</br>支付金额: ${params.data.payPrice}`
-              : `地区:${params.name}</br>累计用户: 0</br>新增用户: 0</br>访客数: 0</br>支付金额: 0`;
+      if (this.chart) {
+        this.chart.dispose();
+      }
+      this.$nextTick(() => {
+        let myChart = echarts.init(this.$refs.myEchart); //这里是为了获得容器所在位置
+        this.chart = myChart;
+        window.onresize = myChart.resize;
+        myChart.setOption({
+          // 进行相关配置
+          backgroundColor: '#fff',
+          tooltip: {
+            trigger: 'item',
+            formatter: function (params) {
+              return params.data
+                ? `地区:${params.name}</br>累计用户: ${params.data.value}</br>新增用户: ${params.data.newNum}</br>访客数: ${params.data.visitNum}</br>支付金额: ${params.data.payPrice}`
+                : `地区:${params.name}</br>累计用户: 0</br>新增用户: 0</br>访客数: 0</br>支付金额: 0`;
+            },
+          }, // 鼠标移到图里面的浮动提示框
+          dataRange: {
+            show: false,
+            min: 0,
+            max: 1000,
+            text: ['High', 'Low'],
+            realtime: true,
+            calculable: true,
+            color: ['orangered', 'yellow', 'lightskyblue'],
           },
-        }, // 鼠标移到图里面的浮动提示框
-        dataRange: {
-          show: false,
-          min: 0,
-          max: 1000,
-          text: ['High', 'Low'],
-          realtime: true,
-          calculable: true,
-          color: ['orangered', 'yellow', 'lightskyblue'],
-        },
-        geo: {
-          // 这个是重点配置区
-          map: 'china', // 表示中国地图
-          roam: false,
-          label: {
-            normal: {
-              show: false, // 是否显示对应地名
-              textStyle: {
-                color: 'rgba(0,0,0,0.4)',
+          geo: {
+            // 这个是重点配置区
+            map: 'china', // 表示中国地图
+            roam: false,
+            label: {
+              normal: {
+                show: false, // 是否显示对应地名
+                textStyle: {
+                  color: 'rgba(0,0,0,0.4)',
+                },
+              },
+            },
+            itemStyle: {
+              normal: {
+                borderColor: 'rgba(0, 0, 0, 0.2)',
+              },
+              emphasis: {
+                areaColor: null,
+                shadowOffsetX: 0,
+                shadowOffsetY: 0,
+                shadowBlur: 20,
+                borderWidth: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.5)',
               },
             },
           },
-          itemStyle: {
-            normal: {
-              borderColor: 'rgba(0, 0, 0, 0.2)',
+          series: [
+            {
+              type: 'scatter',
+              zoom: 1.2,
+              aspectScale: 1.75, //长宽比
+              coordinateSystem: 'geo', // 对应上方配置
             },
-            emphasis: {
-              areaColor: null,
-              shadowOffsetX: 0,
-              shadowOffsetY: 0,
-              shadowBlur: 20,
-              borderWidth: 0,
-              shadowColor: 'rgba(0, 0, 0, 0.5)',
+            {
+              type: 'map',
+              geoIndex: 0,
+              data: this.resdata,
             },
-          },
-        },
-        series: [
-          {
-            type: 'scatter',
-            zoom: 1.2,
-            aspectScale: 1.75, //长宽比
-            coordinateSystem: 'geo', // 对应上方配置
-          },
-          {
-            type: 'map',
-            geoIndex: 0,
-            data: this.resdata,
-          },
-        ],
+          ],
+        });
       });
     },
     // 统计图
@@ -196,7 +201,8 @@ export default {
           this.chinaConfigure();
         })
         .catch((res) => {
-          this.$message.error(res.msg);
+          console.log(res);
+          this.$message.error(res);
         });
     },
     //性别
@@ -266,7 +272,8 @@ export default {
           };
         })
         .catch((res) => {
-          this.$message.error(res.msg);
+          console.log(res);
+          this.$message.error(res);
         });
     },
   },

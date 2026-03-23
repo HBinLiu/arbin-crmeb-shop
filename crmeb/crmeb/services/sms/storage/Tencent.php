@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -114,7 +114,7 @@ class Tencent extends BaseSms
         $res = HttpService::request(self::API_URL, 'post', $body, $this->getHeader($body));
         $res = json_decode($res, true);
         if (!empty($res['Response']['Error'])) {
-            return $this->setError($res['Response']['Message']);
+            return $this->setError(json_encode($res['Response']));
         }
         if ($res['Response']['SendStatusSet'][0]['Code'] != 'Ok') {
             return $this->setError($res['Response']['SendStatusSet'][0]['Message']);

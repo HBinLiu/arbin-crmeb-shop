@@ -106,6 +106,12 @@ export default {
     };
   },
   watch: {
+    configObj: {
+      handler(nVal, oVal) {
+        this.$store.commit('mobildConfig/footPageUpdata', nVal);
+      },
+      deep: true,
+    },
     'configObj.setUp.tabVal': {
       handler(nVal, oVal) {
         this.setUp = nVal;
@@ -176,9 +182,20 @@ export default {
     },
   },
   mounted() {
-    this.configObj = this.$store.state.mobildConfig.pageFooter;
+    this.configObj = this.patchConfig(this.$store.state.mobildConfig.pageFooter);
   },
   methods: {
+    patchConfig(config) {
+      if (!config.c_common_style) {
+        config.c_common_style = {
+          color: 'rgba(255,255,255,1)',
+          color2: 'rgba(255,255,255,1)',
+          lr: 0,
+          type: 0,
+        };
+      }
+      return config;
+    },
     getRComStyle(arr, type, type2, type3) {
       if (type == 0) {
         if (type2 == 2) {

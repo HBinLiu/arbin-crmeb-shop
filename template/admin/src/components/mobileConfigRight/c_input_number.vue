@@ -15,9 +15,10 @@
             v-model="configData.val"
             :placeholder="configData.placeholder"
             :step="1"
-            :max="100"
-            :min="1"
+            :max="configData.max || 100"
+            :min="configData.min || 1"
             @change="bindChange"
+            style="width: 100%"
           ></el-input-number>
         </div>
       </el-col>

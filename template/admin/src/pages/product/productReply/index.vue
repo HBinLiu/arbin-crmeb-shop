@@ -435,7 +435,6 @@ export default {
         }
       }
       this.ids = ids;
-      console.log(this.ids);
     },
     openBatchModal() {
       if (!this.ids.length) return this.$message.warning('请先选择评论');

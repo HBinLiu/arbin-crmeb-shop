@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace crmeb\services\easywechat\orderShipping;
 
 use crmeb\exceptions\AdminException;
@@ -75,18 +83,40 @@ class OrderClient extends BaseOrder
             $params['is_all_delivered'] = $is_all_delivered;
         }
 
-        foreach ($shipping_list as $shipping) {
-            $contact = $this->handleContact($shipping['contact'] ?? []);
-            $params['shipping_list'][] = [
-                'tracking_no' => $shipping['tracking_no'] ?? '',
-                'express_company' => isset($shipping['express_company']) ? $this->getDelivery($shipping['express_company']) : '',
-                'item_desc' => $shipping['item_desc'],
-                'contact' => $contact
-            ];
+        if ($logistics_type == 1) {
+            foreach ($shipping_list as $shipping) {
+                $contact = $this->handleContact($shipping['contact'] ?? []);
+                $params['shipping_list'][] = [
+                    'tracking_no' => $shipping['tracking_no'] ?? '',
+                    'express_company' => $shipping['express_company'],
+                    'item_desc' => $shipping['item_desc'],
+                    'contact' => $contact
+                ];
+            }
+        } else {
+            $params['shipping_list'] = $shipping_list;
         }
+
         // 跳转路径
         $this->setMesJumpPath($path);
         return $this->shipping($params);
+    }
+
+    /**
+     * 订单列表查询
+     * @param $params
+     * @return array
+     * @throws HttpException
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2025/8/14
+     */
+    public function shippingOrderList($params)
+    {
+        if (!$this->checkManaged()) {
+            throw new AdminException('开通小程序订单管理服务后重试');
+        }
+        return $this->orderList($params);
     }
 
 
@@ -236,11 +266,11 @@ class OrderClient extends BaseOrder
         $list = $this->getDeliveryList();
         if ($list) {
             $key = self::cache_prefix . '_delivery_list';
-            $date = array_column($list['delivery_list'], 'delivery_id', 'delivery_name');
+            $data = array_column($list['delivery_list'], 'delivery_id', 'delivery_name');
             // 创建缓存
-            CacheService::set($key, json_encode($date));
+            CacheService::set($key, json_encode($data));
 
-            return $date;
+            return $data;
         } else {
             throw new AdminException('物流公司列表异常');
         }

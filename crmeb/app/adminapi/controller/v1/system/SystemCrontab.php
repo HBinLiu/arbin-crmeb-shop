@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\adminapi\controller\v1\system;
 
 use app\adminapi\controller\AuthController;
@@ -85,7 +93,7 @@ class SystemCrontab extends AuthController
             if (!$this->isSafePhpCode($data['customCode'])) return app('json')->fail('自定义内容存在危险代码，请检查代码');
         }
         $this->services->saveTimer($data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -96,7 +104,7 @@ class SystemCrontab extends AuthController
     public function delTimer($id)
     {
         $this->services->delTimer($id);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -108,7 +116,7 @@ class SystemCrontab extends AuthController
     public function setTimerStatus($id, $is_open)
     {
         $this->services->setTimerStatus($id, $is_open);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**

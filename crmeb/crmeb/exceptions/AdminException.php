@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -27,10 +27,7 @@ class AdminException extends \RuntimeException
             }
         }
 
-        if (is_numeric($message)) {
-            $code = $message;
-            $message = getLang($message, $replace);
-        }
+        $message = getLang($message, $replace);
 
         parent::__construct($message, $code, $previous);
     }

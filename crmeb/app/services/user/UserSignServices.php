@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -89,7 +89,7 @@ class UserSignServices extends BaseServices
         $data['balance'] = $integral_balance + $number;
         $data['add_time'] = time();
         if (!$this->dao->save($data)) {
-            throw new ApiException(410290);
+            throw new ApiException('添加签到数据失败');
         }
         /** @var UserBillServices $userBill */
         $userBill = app()->make(UserBillServices::class);
@@ -105,7 +105,7 @@ class UserSignServices extends BaseServices
             $data['pm'] = 1;
             $data['status'] = 1;
             if (!$userBill->save($data)) {
-                throw new ApiException(410291);
+                throw new ApiException('赠送经验失败');
             }
             //检测会员等级
             try {
@@ -156,14 +156,14 @@ class UserSignServices extends BaseServices
         //检测用户是否存在
         $user = $userServices->getUserInfo($uid);
         if (!$user) {
-            throw new ApiException(410032);
+            throw new ApiException('用户不存在');
         }
 
         $userServices->offMemberLevel($uid);
 
         //检测今天是否已经签到
         if ($this->getIsSign($uid, 'today')) {
-            throw new ApiException(410293);
+            throw new ApiException('已经签到');
         }
         $title = '签到奖励';
         //检测昨天是否签到，如果没有签到，连续签到清0
@@ -218,7 +218,7 @@ class UserSignServices extends BaseServices
             $user->integral = (int)$user->integral + (int)$sign_point;
             if ($sign_exp) $user->exp = bcadd((string)$user->exp, (string)$sign_exp, 2);
             if (!$user->save()) {
-                throw new ApiException(410287);
+                throw new ApiException('修改用户信息失败');
             }
         });
 
@@ -253,7 +253,7 @@ class UserSignServices extends BaseServices
         $userServices = app()->make(UserServices::class);
         $user = $userServices->getUserInfo($uid);
         if (!$user) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
         //是否统计签到
         if ($sign || $all) {

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -16,6 +16,7 @@ use app\services\diy\DiyProServices;
 use app\services\diy\DiyServices;
 use app\services\diy\PageCategoryServices;
 use app\services\diy\PageLinkServices;
+use app\services\diy\ThemeServices;
 use app\services\product\product\StoreCategoryServices;
 use think\facade\App;
 
@@ -53,10 +54,10 @@ class PageLink extends AuthController
      */
     public function getLinks($cate_id, PageCategoryServices $pageCategoryServices)
     {
-        if (!$cate_id) return app('json')->fail(100100);
+        if (!$cate_id) return app('json')->fail('参数错误');
         $category = $pageCategoryServices->get((int)$cate_id);
         if (!$category) {
-            return app('json')->fail(400103);
+            return app('json')->fail('分类不存在');
         }
         switch ($category['type']) {
             case 'special':
@@ -88,17 +89,17 @@ class PageLink extends AuthController
             ['name', ''],
             ['url', '']
         ]);
-        if (!$cate_id || !$data['name'] || !$data['url']) return app('json')->fail(100100);
+        if (!$cate_id || !$data['name'] || !$data['url']) return app('json')->fail('参数错误');
         $category = $pageCategoryServices->get((int)$cate_id);
         if (!$category) {
-            return app('json')->fail(400103);
+            return app('json')->fail('分类不存在');
         }
         $data['cate_id'] = $cate_id;
         $data['add_time'] = time();
         if (!$this->services->save($data)) {
-            return app('json')->fail(100022);
+            return app('json')->fail('添加失败');
         }
-        return app('json')->success(100021);
+        return app('json')->success('添加成功');
     }
 
     /**
@@ -108,9 +109,9 @@ class PageLink extends AuthController
      */
     public function del($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         $this->services->del($id);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     public function getLinkCategory()
@@ -147,13 +148,13 @@ class PageLink extends AuthController
         if (!$cate_id) return app('json')->fail('参数错误');
         $category = $pageCategoryServices->get((int)$cate_id);
         if (!$category) {
-            return app('json')->fail(400103);
+            return app('json')->fail('分类不存在');
         }
         switch ($category['type']) {
             case 'special':
-                /** @var DiyProServices $diyServices */
-                $diyProServices = app()->make(DiyProServices::class);
-                $data = $diyProServices->getList('link');
+                /** @var ThemeServices $themeServices */
+                $themeServices = app()->make(ThemeServices::class);
+                $data = $themeServices->getMicroPageList();
                 break;
             case 'product_category':
                 /** @var StoreCategoryServices $storeCategoryServices */

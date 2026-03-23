@@ -11,7 +11,7 @@
           inline
         >
           <el-form-item label="活动搜索：" label-for="title">
-            <el-input placeholder="请输入活动名称，ID" v-model="tableFrom.title" class="form_content_width" />
+            <el-input placeholder="请输入活动名称，ID" v-model="tableFrom.title" clearable class="form_content_width" />
           </el-form-item>
           <el-form-item label="活动状态：">
             <el-select

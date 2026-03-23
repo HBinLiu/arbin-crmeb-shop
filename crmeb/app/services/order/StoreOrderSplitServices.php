@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -60,7 +60,7 @@ class StoreOrderSplitServices extends BaseServices
         $ids = array_unique(array_column($cart_ids, 'cart_id'));
         if (!$cart_ids || !$ids) return false;
         if (!$orderInfo) $orderInfo = $this->dao->get($id, ['*']);
-        if (!$orderInfo) throw new AdminException(400118);
+        if (!$orderInfo) throw new AdminException('订单不存在');
         $old_order = $orderInfo;
         $orderInfo = $orderInfoOld = is_object($orderInfo) ? $orderInfo->toArray() : $orderInfo;
         foreach ($this->order_data as $field) {
@@ -100,7 +100,7 @@ class StoreOrderSplitServices extends BaseServices
                     $order_data['unique'] = $storeOrderCreateServices->getNewOrderId('');
                     $new_order = $this->dao->save($order_data);
                     if (!$new_order) {
-                        throw new AdminException(400544);
+                        throw new AdminException('生成新订单失败');
                     }
                     $new_id = (int)$new_order->id;
                     $allData = [];
@@ -206,7 +206,7 @@ class StoreOrderSplitServices extends BaseServices
             $orderInfo = $this->dao->get($id, ['*']);
         }
         if (!$orderInfo) {
-            throw new AdminException(400118);
+            throw new AdminException('订单不存在');
         }
         /** @var StoreOrderCreateServices $storeOrderCreateServices */
         $storeOrderCreateServices = app()->make(StoreOrderCreateServices::class);
@@ -223,7 +223,7 @@ class StoreOrderSplitServices extends BaseServices
         $order_data['add_time'] = time();
         $new_order = $this->dao->save($order_data);
         if (!$new_order) {
-            throw new AdminException(400544);
+            throw new AdminException('生成新订单失败');
         }
         $new_id = (int)$new_order->id;
         /** @var StoreOrderStatusServices $statusService */
@@ -263,12 +263,12 @@ class StoreOrderSplitServices extends BaseServices
 
             //修改原来订单商品信息
             if (false === $storeOrderCartInfoServices->update(['oid' => $id, 'cart_id' => $cart['cart_id']], $update_data)) {
-                throw new AdminException(400545);
+                throw new AdminException('修改原来订单商品拆分状态失败');
             }
             $cart_data_all[] = $cart_data;
         }
         if (!$storeOrderCartInfoServices->saveAll($cart_data_all)) {
-            throw new AdminException(400546);
+            throw new AdminException('新增拆分订单商品信息失败');
         }
         $new_order = $this->dao->get($new_id);
         $this->splitComputeOrder($new_id, $cart_data_all, $new_order);
@@ -325,7 +325,7 @@ class StoreOrderSplitServices extends BaseServices
         $order_update['agent_brokerage'] = $agentBrokerage;
         $order_update['division_brokerage'] = $divisionBrokerage;
         if (false === $this->dao->update($id, $order_update, 'id')) {
-            throw new AdminException(400547);
+            throw new AdminException('保存新订单商品信息失败');
         }
         return true;
     }
@@ -390,7 +390,7 @@ class StoreOrderSplitServices extends BaseServices
             $orderInfo = $this->dao->get($id, ['*']);
         }
         if (!$orderInfo) {
-            throw new AdminException(400118);
+            throw new AdminException('订单不存在');
         }
         /** @var StoreOrderCartInfoServices $storeOrderCartInfoServices */
         $storeOrderCartInfoServices = app()->make(StoreOrderCartInfoServices::class);

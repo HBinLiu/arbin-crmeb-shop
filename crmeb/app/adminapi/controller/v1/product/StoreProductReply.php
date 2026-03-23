@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -21,6 +21,17 @@ use think\facade\App;
  */
 class StoreProductReply extends AuthController
 {
+    /**
+     * @var StoreProductReplyServices
+     */
+    protected $services;
+    
+    /**
+     * 构造方法
+     * @param App $app
+     * @param StoreProductReplyServices $service
+     * @var StoreProductReplyServices $services
+     */
     public function __construct(App $app, StoreProductReplyServices $service)
     {
         parent::__construct($app);
@@ -56,7 +67,7 @@ class StoreProductReply extends AuthController
     public function delete($id)
     {
         $this->services->del($id);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -70,7 +81,7 @@ class StoreProductReply extends AuthController
             ['content', '']
         ], true);
         $this->services->setReply($id, $content);
-        return app('json')->success(400169);
+        return app('json')->success('回复成功');
     }
 
     /**
@@ -109,7 +120,7 @@ class StoreProductReply extends AuthController
         }
         $this->validate(['product_id' => $data['product_id'], 'nickname' => $data['nickname'], 'avatar' => $data['avatar'], 'comment' => $data['comment'], 'product_score' => $data['product_score'], 'service_score' => $data['service_score']], \app\adminapi\validate\product\StoreProductReplyValidate::class, 'save');
         $this->services->saveReply($data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**

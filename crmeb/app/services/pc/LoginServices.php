@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -68,13 +68,13 @@ class LoginServices extends BaseServices
 
         $userInfo = $user->get(['account' => $account]);
         if (!$userInfo) {
-            throw new ApiException(410141);
+            throw new ApiException('没有此用户');
         }
         if ($password && !password_verify($password, $userInfo->password)) {
-            throw new ApiException(410025);
+            throw new ApiException('账号或密码错误');
         }
         if (!$userInfo->status) {
-            throw new ApiException(410027);
+            throw new ApiException('您已被禁止登录，请联系管理员');
         }
         $token = $this->createToken($userInfo->id, 'api');
         $userInfo->update_time = time();
@@ -101,16 +101,16 @@ class LoginServices extends BaseServices
         $info = $oauth->oauth(null, ['open' => true]);
 
         if (!$info) {
-            throw new ApiException(410131);
+            throw new ApiException('授权失败');
         }
         $wechatInfo = $info->getOriginal();
         if (!isset($wechatInfo['unionid'])) {
-            throw new ApiException(410132);
+            throw new ApiException('unionid不存在');
         }
         if (!isset($wechatInfo['nickname'])) {
             $wechatInfo = $oauth->getUserInfo($wechatInfo['openid']);
             if (!isset($wechatInfo['nickname']))
-                throw new ApiException(410131);
+                throw new ApiException('授权失败');
             if (isset($wechatInfo['tagid_list']))
                 $wechatInfo['tagid_list'] = implode(',', $wechatInfo['tagid_list']);
         } else {

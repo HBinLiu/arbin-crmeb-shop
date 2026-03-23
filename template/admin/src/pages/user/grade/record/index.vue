@@ -153,6 +153,10 @@ export default {
           label: '免费',
         },
         {
+          val: 'yue',
+          label: '余额',
+        },
+        {
           val: 'weixin',
           label: '微信',
         },

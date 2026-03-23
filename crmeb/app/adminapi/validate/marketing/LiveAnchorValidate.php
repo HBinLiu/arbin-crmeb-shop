@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -34,10 +34,10 @@ class LiveAnchorValidate extends Validate
      * @var array
      */
     protected $message = [
-        'name.require' => '400107',
-        'wechat.require' => '400110',
-        'phone.require' => '400333',
-        'phone.checkPhone' => '400252',
+        'name.require' => '请输入姓名',
+        'wechat.require' => '请输入微信账号',
+        'phone.require' => '请填写手机号码',
+        'phone.checkPhone' => '手机号格式错误',
     ];
 
     protected function checkPhone($value): bool

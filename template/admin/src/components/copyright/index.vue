@@ -27,7 +27,7 @@ export default {
         {
           title: '社区',
           key: '社区',
-          href: 'http://q.crmeb.com',
+          href: 'https://www.crmeb.com/ask',
         },
         {
           title: '文档',

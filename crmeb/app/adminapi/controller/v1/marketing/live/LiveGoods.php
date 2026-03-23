@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -81,7 +81,7 @@ class LiveGoods extends AuthController
         }
         if ($error) return app('json')->fail(40137);
         $this->services->add($goods_info);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -91,7 +91,7 @@ class LiveGoods extends AuthController
      */
     public function detail($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         $goods = $this->services->get($id, ['*'], ['product']);
         return app('json')->success($goods ? $goods->toArray() : []);
     }
@@ -103,7 +103,7 @@ class LiveGoods extends AuthController
     public function syncGoods()
     {
         $this->services->syncGoodStatus();
-        return app('json')->success(100038);
+        return app('json')->success('同步成功');
     }
 
     /**
@@ -116,9 +116,9 @@ class LiveGoods extends AuthController
      */
     public function audit($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         $this->services->audit((int)$id);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -131,9 +131,9 @@ class LiveGoods extends AuthController
      */
     public function resetAudit($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         $this->services->resetAudit((int)$id);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -144,7 +144,7 @@ class LiveGoods extends AuthController
      */
     public function setShow(int $id, $is_show)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         return app('json')->success($this->services->isShow($id, $is_show));
     }
 
@@ -158,9 +158,9 @@ class LiveGoods extends AuthController
      */
     public function delete($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         $this->services->delete($id);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
 }

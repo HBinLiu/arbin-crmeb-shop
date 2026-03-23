@@ -9,10 +9,17 @@
   >
     <el-alert class="mb10" type="warning" :closable="false">
       <template slot="title">
-        <p>用户姓名：{{ userSendmsg.real_name }}</p>
-        <p>用户电话：{{ userSendmsg.user_phone }}</p>
-        <p>用户地址：{{ userSendmsg.user_address }}</p>
+        <div class="title-box">
+          <div>
+            <p>用户姓名：{{ userSendmsg.real_name }}</p>
+            <p>用户电话：{{ userSendmsg.user_phone }}</p>
+            <p>用户地址：{{ userSendmsg.user_address }}</p>
+          </div>
+        </div>
       </template>
+      <div class="copy-box">
+        <span class="copy-btn" @click="onCopyAll">复制</span>
+      </div>
     </el-alert>
     <el-form
       v-if="modals"
@@ -662,11 +669,29 @@ export default {
       this.$refs.viewer.$viewer.show();
       // this.$viewer.show();
     },
+    onCopyAll() {
+      let code = `用户姓名：${this.userSendmsg.real_name}\n用户电话：${this.userSendmsg.user_phone}\n用户地址：${this.userSendmsg.user_address}`;
+      this.onCopy(code);
+    },
+    onCopy(copyData) {
+      this.$copyText(copyData)
+        .then((message) => {
+          this.$message.success('复制成功');
+        })
+        .catch((err) => {
+          this.$message.error('复制失败');
+        });
+    },
   },
 };
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+.copy-btn {
+  color: #57a3f3;
+  cursor: pointer;
+  margin-left: 10px;
+}
 .express_temp_id {
   position: relative;
 }
@@ -717,5 +742,16 @@ export default {
 }
 .coumped {
   font-size: 12px;
+}
+.title-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+.copy-box {
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }
 </style>

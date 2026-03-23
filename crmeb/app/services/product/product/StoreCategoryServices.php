@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -123,7 +123,7 @@ class StoreCategoryServices extends BaseServices
         $res = $res && $this->dao->update($id, ['is_show' => $is_show], 'pid');
         CacheService::clear();
         if (!$res) {
-            throw new AdminException(100005);
+            throw new AdminException('操作失败');
         }
     }
 
@@ -198,21 +198,21 @@ class StoreCategoryServices extends BaseServices
     public function createData($data)
     {
         if (!$data['cate_name']) {
-            throw new AdminException(400100);
+            throw new AdminException('请填写分类名称');
         }
 
         if ($this->dao->getOne(['cate_name' => $data['cate_name'], 'pid' => $data['pid']])) {
-            throw new AdminException(400101);
+            throw new AdminException('该分类已存在');
         }
 
         $parent = $this->dao->getOne(['id' => $data['pid']]);
         if ($data['pid'] && (!$parent || $parent['pid'] > 0)) {
-            throw new AdminException(400740);
+            throw new AdminException('只支持两级分类');
         }
 
         $data['add_time'] = time();
         $res = $this->dao->save($data);
-        if (!$res) throw new AdminException(100006);
+        if (!$res) throw new AdminException('保存失败');
 
         CacheService::clear();
 
@@ -233,24 +233,24 @@ class StoreCategoryServices extends BaseServices
     public function editData($id, $data)
     {
         if (!$data['cate_name']) {
-            throw new AdminException(400100);
+            throw new AdminException('请填写分类名称');
         }
 
         $parent = $this->dao->getOne(['id' => $data['pid']]);
         if ($parent && $parent['pid'] > 0) {
-            throw new AdminException(400740);
+            throw new AdminException('只支持两级分类');
         }
 
         $cate = $this->dao->getOne(['cate_name' => $data['cate_name'], 'pid' => $data['pid']]);
         if ($cate && $cate['id'] != $id) {
-            throw new AdminException(400101);
+            throw new AdminException('该分类已存在');
         }
         $this->transaction(function () use ($id, $data) {
             $res = $this->dao->update($id, $data);
             /** @var StoreProductCateServices $productCate */
             $productCate = app()->make(StoreProductCateServices::class);
             $res = $res && $productCate->update(['cate_id' => $id], ['cate_pid' => $data['pid']]);
-            if (!$res) throw new AdminException(100007);
+            if (!$res) throw new AdminException('修改失败');
         });
 
         CacheService::clear();
@@ -263,10 +263,10 @@ class StoreCategoryServices extends BaseServices
     public function del(int $id)
     {
         if ($this->dao->count(['pid' => $id])) {
-            throw new AdminException(400102);
+            throw new AdminException('请先删除子分类');
         }
         $res = $this->dao->delete($id);
-        if (!$res) throw new AdminException(100008);
+        if (!$res) throw new AdminException('删除失败');
 
         CacheService::clear();
     }

@@ -2,7 +2,7 @@
   <div>
     <pages-header
       ref="pageHeader"
-      :title="$route.params.id ? '编辑优惠券' : '添加优惠券'"
+      :title="$route.params.id && isEdit ? '编辑优惠券' : '添加优惠券'"
       :backUrl="$routeProStr + '/marketing/store_coupon_issue/index'"
     ></pages-header>
     <el-card :bordered="false" shadow="never" class="mt16">
@@ -60,9 +60,19 @@
             <div class="acea-row">
               <div v-for="(item, index) in productList" :key="index" class="pictrue">
                 <img v-lazy="item.image" />
-                <i  v-if="formData.type == 2 && !formData.id" class="el-icon-error btndel" v-db-click @click="remove(item.product_id)"></i>
+                <i
+                  v-if="formData.type == 2 && !formData.id"
+                  class="el-icon-error btndel"
+                  v-db-click
+                  @click="remove(item.product_id)"
+                ></i>
               </div>
-              <div v-if="formData.type == 2 && !formData.id" class="upLoad acea-row row-center-wrapper" v-db-click @click="modals = true">
+              <div
+                v-if="formData.type == 2 && !formData.id"
+                class="upLoad acea-row row-center-wrapper"
+                v-db-click
+                @click="modals = true"
+              >
                 <i class="el-icon-goods" style="font-size: 24px"></i>
               </div>
             </div>
@@ -138,7 +148,7 @@
             <el-radio :label="0">不限时</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-show="isReceiveTime" label="">
+        <el-form-item v-show="isReceiveTime && formData.receive_type != 2 && formData.receive_type != 3" label="">
           <el-date-picker
             clearable
             v-model="datetime2"
@@ -240,7 +250,7 @@ export default {
       isCouponTime: 1,
       isReceiveTime: 0,
       modals: false,
-      datetime1: ['2023-10-18 00:00:00', '2023-11-22 00:00:00'],
+      datetime1: ['', ''],
       datetime2: [],
     };
   },

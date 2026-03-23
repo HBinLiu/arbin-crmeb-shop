@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -57,9 +57,9 @@ class SystemOutAccount extends AuthController
      */
     public function set_status($id = '', $status = '')
     {
-        if ($status == '' || $id == '') return app('json')->fail(100100);
+        if ($status == '' || $id == '') return app('json')->fail('参数错误');
         $this->services->update($id, ['status' => $status]);
-        return app('json')->success($status == 1 ? 100012 : 100013);
+        return app('json')->success($status == 1 ? '更新成功' : '更新失败');
     }
 
     /**
@@ -69,9 +69,9 @@ class SystemOutAccount extends AuthController
      */
     public function delete($id)
     {
-        if ($id == '') return app('json')->fail(100100);
+        if ($id == '') return app('json')->fail('参数错误');
         $this->services->update($id, ['is_del' => 1]);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -96,9 +96,9 @@ class SystemOutAccount extends AuthController
         $data['add_time'] = time();
         $data['rules'] = implode(',', $data['rules']);
         if (!$this->services->save($data)) {
-            return app('json')->fail(100006);
+            return app('json')->fail('保存失败');
         } else {
-            return app('json')->success(100000);
+            return app('json')->success('保存成功');
         }
     }
 
@@ -125,9 +125,9 @@ class SystemOutAccount extends AuthController
         $data['rules'] = implode(',', $data['rules']);
         $res = $this->services->update($id, $data);
         if (!$res) {
-            return app('json')->fail(100006);
+            return app('json')->fail('保存失败');
         } else {
-            return app('json')->success(100000);
+            return app('json')->success('保存成功');
         }
     }
 
@@ -150,7 +150,7 @@ class SystemOutAccount extends AuthController
             ['refund_cancel_push', ''],
         ]);
         $this->services->outSetUpSave($id, $data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -188,7 +188,7 @@ class SystemOutAccount extends AuthController
             ['error_code', []] //错误码
         ]);
         $service->saveInterface((int)$id, $data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -217,10 +217,10 @@ class SystemOutAccount extends AuthController
             ['name', ''], //名称
         ]);
         if (!$data['id'] || !$data['name']) {
-            return app('json')->success(100100);
+            return app('json')->success('参数错误');
         }
         $service->editInterfaceName($data);
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }
 
     /**
@@ -231,9 +231,9 @@ class SystemOutAccount extends AuthController
      */
     public function delInterface($id, OutInterfaceServices $service)
     {
-        if (!$id) return app('json')->success(100100);
+        if (!$id) return app('json')->success('参数错误');
         $service->delInterface($id);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -250,6 +250,6 @@ class SystemOutAccount extends AuthController
             ['push_password', 0],
             ['push_token_url', '']
         ]);
-        return app('json')->success('100014', $this->services->textOutUrl($data));
+        return app('json')->success('设置成功', $this->services->textOutUrl($data));
     }
 }

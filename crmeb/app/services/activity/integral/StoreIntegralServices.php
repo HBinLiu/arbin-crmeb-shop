@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -63,7 +63,7 @@ class StoreIntegralServices extends BaseServices
     public function saveData(int $id, array $data)
     {
         if ($data['num'] < $data['once_num']) {
-            throw new AdminException(400500);
+            throw new AdminException('限制单次购买数量不能大于总购买数量');
         }
         $description = $data['description'];
         $detail = $data['attrs'];
@@ -80,7 +80,7 @@ class StoreIntegralServices extends BaseServices
         /** @var StoreProductServices $storeProductServices */
         $storeProductServices = app()->make(StoreProductServices::class);
         if ($data['quota'] > $storeProductServices->value(['id' => $data['product_id']], 'stock')) {
-            throw new AdminException(400090);
+            throw new AdminException('限量不能超过商品库存');
         }
         $this->transaction(function () use ($id, $data, $description, $detail, $items, $storeDescriptionServices, $storeProductAttrServices, $storeProductServices) {
             if ($id) {
@@ -88,7 +88,7 @@ class StoreIntegralServices extends BaseServices
                 $storeDescriptionServices->saveDescription((int)$id, $description, 4);
                 $skuList = $storeProductServices->validateProductAttr($items, $detail, (int)$id, 4);
                 $storeProductAttrServices->saveProductAttr($skuList, (int)$id, 4);
-                if (!$res) throw new AdminException(100007);
+                if (!$res) throw new AdminException('修改失败');
             } else {
                 if (!$storeProductServices->getOne(['is_del' => 0, 'id' => $data['product_id']])) {
                     throw new AdminException('无法添加回收站商品');
@@ -98,7 +98,7 @@ class StoreIntegralServices extends BaseServices
                 $storeDescriptionServices->saveDescription((int)$res->id, $description, 4);
                 $skuList = $storeProductServices->validateProductAttr($items, $detail, (int)$res->id, 4, 1, true);
                 $storeProductAttrServices->saveProductAttr($skuList, (int)$res->id, 4);
-                if (!$res) throw new AdminException(100022);
+                if (!$res) throw new AdminException('添加失败');
             }
         });
     }
@@ -117,9 +117,9 @@ class StoreIntegralServices extends BaseServices
         /** @var StoreProductAttrResultServices $storeProductAttrResultServices */
         $storeProductAttrResultServices = app()->make(StoreProductAttrResultServices::class);
         if (!$data) {
-            throw new AdminException(400337);
+            throw new AdminException('请选择商品');
         }
-        if (!$data['attrs']) throw new AdminException(400337);
+        if (!$data['attrs']) throw new AdminException('请选择商品');
         $attrs = [];
         foreach ($data['attrs'] as $k => $v) {
             $attrs[$v['product_id']][] = $v;
@@ -171,10 +171,10 @@ class StoreIntegralServices extends BaseServices
     {
         $info = $this->dao->get($id);
         if (!$info) {
-            throw new AdminException(400533);
+            throw new AdminException('商品不存在');
         }
         if ($info->is_del) {
-            throw new AdminException(400534);
+            throw new AdminException('您查看的积分商品已被删除');
         }
         $info['price'] = floatval($info['price']);
         /** @var StoreDescriptionServices $storeDescriptionServices */
@@ -192,12 +192,31 @@ class StoreIntegralServices extends BaseServices
      */
     public function attrList(int $id, int $pid)
     {
+        /** @var StoreProductAttrServices $storeProductAttrService */
+        $storeProductAttrService = app()->make(StoreProductAttrServices::class);
         /** @var StoreProductAttrResultServices $storeProductAttrResultServices */
         $storeProductAttrResultServices = app()->make(StoreProductAttrResultServices::class);
-        $combinationResult = $storeProductAttrResultServices->value(['product_id' => $id, 'type' => 4], 'result');
-        $items = json_decode($combinationResult, true)['attr'];
-        $productAttr = $this->getAttr($items, $pid, 0);
-        $combinationAttr = $this->getAttr($items, $id, 4);
+        $integralResult = $storeProductAttrResultServices->value(['product_id' => $id, 'type' => 4], 'result');
+        $items = json_decode($integralResult, true)['attr'];
+        $productAttr = $storeProductAttrService->getProductAttr(['product_id' => $pid, 'type' => 0]);
+        $pAttr = [];
+        foreach ($productAttr as $key => $value) {
+            $pAttr[$key]['value'] = $value['attr_name'];
+            $pAttr[$key]['detailValue'] = '';
+            $pAttr[$key]['attrHidden'] = true;
+            $pAttr[$key]['detail'] = $value['attr_values'];
+        }
+
+        $integralAttr = $storeProductAttrService->getProductAttr(['product_id' => $id, 'type' => 4]);
+        $iAttr = [];
+        foreach ($integralAttr as $key => $value) {
+            $iAttr[$key]['value'] = $value['attr_name'];
+            $iAttr[$key]['detailValue'] = '';
+            $iAttr[$key]['attrHidden'] = true;
+            $iAttr[$key]['detail'] = $value['attr_values'];
+        }
+        $productAttr = $this->getAttr($pAttr, $pid, 0);
+        $combinationAttr = $this->getAttr($iAttr, $id, 4);
         foreach ($productAttr as $pk => $pv) {
             foreach ($combinationAttr as &$sv) {
                 if ($pv['detail'] == $sv['detail']) {
@@ -277,7 +296,7 @@ class StoreIntegralServices extends BaseServices
     {
         $storeInfo = $this->dao->getOne(['id' => $id], '*', ['getPrice']);
         if (!$storeInfo) {
-            throw new AdminException(400533);
+            throw new AdminException('商品不存在');
         } else {
             $storeInfo = $storeInfo->toArray();
         }
@@ -375,24 +394,24 @@ class StoreIntegralServices extends BaseServices
         }
         $StoreIntegralInfo = $this->getIntegralOne($integralId);
         if (!$StoreIntegralInfo) {
-            throw new ApiException(400093);
+            throw new ApiException('商品已下架或已删除');
         }
         /** @var StoreIntegralOrderServices $orderServices */
         $orderServices = app()->make(StoreIntegralOrderServices::class);
         $userBuyCount = $orderServices->getBuyCount($uid, $integralId);
         if ($StoreIntegralInfo['once_num'] < $num && $StoreIntegralInfo['once_num'] != -1) {
-            throw new ApiException(410313, ['num' => $StoreIntegralInfo['once_num']]);
+            throw new ApiException('每个订单限购{:num}件', ['num' => $StoreIntegralInfo['once_num']]);
         }
         if ($StoreIntegralInfo['num'] < ($userBuyCount + $num) && $StoreIntegralInfo['num'] != -1) {
-            throw new ApiException(410298, ['num' => $StoreIntegralInfo['num']]);
+            throw new ApiException('每人总共限购{:num}件', ['num' => $StoreIntegralInfo['num']]);
         }
         $res = $attrValueServices->getOne(['product_id' => $integralId, 'unique' => $unique, 'type' => 4]);
         if ($num > $res['quota']) {
-            throw new ApiException(410297, ['num' => $num]);
+            throw new ApiException('该商品库存不足{:num}', ['num' => $num]);
         }
         $product_stock = $attrValueServices->value(['product_id' => $StoreIntegralInfo['product_id'], 'suk' => $res['suk'], 'type' => 0], 'stock');
         if ($product_stock < $num) {
-            throw new ApiException(410297, ['num' => $num]);
+            throw new ApiException('该商品库存不足{:num}', ['num' => $num]);
         }
         return $unique;
     }

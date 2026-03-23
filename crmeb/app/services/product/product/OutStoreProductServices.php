@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -52,8 +52,8 @@ class OutStoreProductServices extends BaseServices
      */
     public function save(int $id, array $data)
     {
-        if (count($data['cate_id']) < 1) throw new AdminException(400373);
-        if (!$data['store_name']) throw new AdminException(400338);
+        if (count($data['cate_id']) < 1) throw new AdminException('请选择商品分类');
+        if (!$data['store_name']) throw new AdminException('请输入商品名称');
 
         if (count($data['slider_image']) < 1) {
             $data['is_show'] = 0;
@@ -72,15 +72,15 @@ class OutStoreProductServices extends BaseServices
             $data['limit_type'] = 0;
             $data['limit_num'] = 0;
         } else {
-            if (!in_array($data['limit_type'], [1, 2])) throw new AdminException(400570);
-            if ($data['limit_num'] <= 0) throw new AdminException(400571);
+            if (!in_array($data['limit_type'], [1, 2])) throw new AdminException('请选择限购类型');
+            if ($data['limit_num'] <= 0) throw new AdminException('限购数量不能小于1');
         }
 
         // 固定邮费 0为包邮
         $data['freight'] = 2;
         $data['postage'] = (float)$data['postage'];
         if (bccomp($data['postage'], '0.00', 2) < 0) {
-            throw new AdminException(400741);
+            throw new AdminException('运费格式错误');
         }
 
         if (count($data['activity']) == 4) {
@@ -144,7 +144,7 @@ class OutStoreProductServices extends BaseServices
                 $item['brokerage'] = sprintf("%.2f", $item['brokerage'] ?? '0.00');
                 $item['brokerage_two'] = sprintf("%.2f", $item['brokerage'] ?? '0.00');
                 if (bccomp(bcadd($item['brokerage'], $item['brokerage_two']), $item['price']) == 1) {
-                    throw new AdminException(400572);
+                    throw new AdminException('一二级返佣相加不能大于商品售价');
                 }
             }
         }
@@ -194,7 +194,7 @@ class OutStoreProductServices extends BaseServices
                 $storeProductCateServices->change($id, $cateData);
                 $skuList = $productServices->validateProductAttr($attr, $detail, $id, 0, 0);
                 $attrRes = $storeProductAttrServices->saveProductAttr($skuList, $id, 0, 0, 0);
-                if (!$attrRes) throw new AdminException(100022);
+                if (!$attrRes) throw new AdminException('添加失败');
             } else {
                 $data['add_time'] = time();
                 $data['code_path'] = '';
@@ -212,7 +212,7 @@ class OutStoreProductServices extends BaseServices
                 $storeProductCateServices->change($res->id, $cateData);
                 $skuList = $productServices->validateProductAttr($attr, $detail, $res->id, 0, 0, true);
                 $attrRes = $storeProductAttrServices->saveProductAttr($skuList, $res->id, 0, 0, 0);
-                if (!$attrRes) throw new AdminException(100022);
+                if (!$attrRes) throw new AdminException('添加失败');
                 $id = (int)$res->id;
             }
             return $id;
@@ -226,7 +226,7 @@ class OutStoreProductServices extends BaseServices
      */
     public function setShow(int $id, int $is_show)
     {
-        if (empty($id)) throw new AdminException(100100);
+        if (empty($id)) throw new AdminException('参数错误');
 
         if ($is_show) {
             // 检查商品是否可以上架
@@ -265,7 +265,7 @@ class OutStoreProductServices extends BaseServices
         if ($productInfo) {
             $productInfo = $productInfo->toArray();
         } else {
-            throw new AdminException(400533);
+            throw new AdminException('商品不存在');
         }
 
         $productInfo['cate_id'] = $productInfo['cate_id'] ? array_map('intval', explode(',', $productInfo['cate_id'])) : [];
@@ -395,19 +395,19 @@ class OutStoreProductServices extends BaseServices
         if ($productInfo) {
             $productInfo = $productInfo->toArray();
         } else {
-            throw new AdminException(400533);
+            throw new AdminException('商品不存在');
         }
 
         if (!$productInfo['image'] || !$productInfo['slider_image']) {
-            throw new AdminException(400349);
+            throw new AdminException('请选择商品轮播图');
         }
 
         if (!$productInfo['unit_name']) {
-            throw new AdminException(400348);
+            throw new AdminException('请填写单位');
         }
 
         if (!$productInfo['cate_id']) {
-            throw new AdminException(400373);
+            throw new AdminException('请选择商品分类');
         }
 
         if ($productInfo['spec_type'] == 1) {
@@ -417,7 +417,7 @@ class OutStoreProductServices extends BaseServices
             foreach ($result['value'] as $v) {
                 foreach ($v['detail'] as $dv) {
                     if (!$dv['pic']) {
-                        throw new AdminException(400581);
+                        throw new AdminException('请上传商品图片');
                     }
                 }
             }
@@ -426,7 +426,7 @@ class OutStoreProductServices extends BaseServices
             $storeProductAttrValueServices = app()->make(StoreProductAttrValueServices::class);
             $result = $storeProductAttrValueServices->getOne(['product_id' => $id, 'type' => 0]);
             if (!$result['image']) {
-                throw new AdminException(400581);
+                throw new AdminException('请上传商品图片');
             }
         }
     }
@@ -479,7 +479,7 @@ class OutStoreProductServices extends BaseServices
 
             $stock = $storeProductAttrValueServices->sum(['product_id' => $id], 'stock');
             $res = $this->dao->update($id, ['stock' => $stock]);
-            if (!$res) throw new AdminException(100007);
+            if (!$res) throw new AdminException('修改失败');
 
             $attrValue = $storeProductAttrValueServices->getColumn(['product_id' => $id], 'stock', 'bar_code');
             $result = $storeProductAttrResultServices->getResult(['product_id' => $id, 'type' => 0]);

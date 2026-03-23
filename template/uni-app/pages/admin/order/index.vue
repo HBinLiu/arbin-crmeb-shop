@@ -1,7 +1,7 @@
 <template>
 	<view>
 		<view class="order-index" ref="container">
-			<view class="header acea-row">
+		<!-- 	<view class="header acea-row">
 				<navigator class="item" url="/pages/admin/orderList/index?types=0" hover-class="none">
 					<view class="num">{{ census.unpaid_count }}</view>
 					<view>{{$t(`待付款`)}}</view>
@@ -22,7 +22,7 @@
 					<view class="num">{{ census.refund_count }}</view>
 					<view>{{$t(`退款`)}}</view>
 				</navigator>
-			</view>
+			</view> -->
 			<view class="wrapper">
 				<view class="title">
 					<span class="iconfont icon-shujutongji"></span>{{$t(`数据统计`)}}
@@ -182,7 +182,7 @@
 		width: 690upx;
 		background-color: #fff;
 		border-radius: 10upx;
-		margin: -115upx auto 0 auto;
+		margin: 30upx auto 0 auto;
 		padding-top: 25upx;
 	}
 

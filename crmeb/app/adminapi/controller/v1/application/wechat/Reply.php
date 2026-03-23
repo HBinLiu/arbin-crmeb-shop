@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -48,7 +48,7 @@ class Reply extends AuthController
         $where = $this->request->getMore([
             ['key', ''],
         ]);
-        if ($where['key'] == '') return app('json')->fail(100100);
+        if ($where['key'] == '') return app('json')->fail('参数错误');
         $info = $this->services->getDataByKey($where['key']);
         return app('json')->success(compact('info'));
     }
@@ -96,19 +96,19 @@ class Reply extends AuthController
         ]);
         try {
             if (!isset($data['key']) && empty($data['key']))
-                return app('json')->fail(400239);
+                return app('json')->fail('请输入关键字');
             if (!isset($data['type']) && empty($data['type']))
-                return app('json')->fail(400240);
+                return app('json')->fail('请选择回复类型');
             if (!in_array($data['type'], $this->services->replyType()))
-                return app('json')->fail(400241);
+                return app('json')->fail('回复类型有误');
 
             if (!isset($data['data']) || !is_array($data['data']))
-                return app('json')->fail(400242);
+                return app('json')->fail('回复消息参数有误');
             $res = $this->services->redact($data['data'], $id, $data['key'], $data['type'], $data['status']);
             if (!$res)
-                return app('json')->fail(100006);
+                return app('json')->fail('保存失败');
             else
-                return app('json')->success(100000, $data);
+                return app('json')->success('保存成功', $data);
         } catch (HttpException $e) {
             return app('json')->fail($e->getMessage());
         }
@@ -122,16 +122,16 @@ class Reply extends AuthController
     public function delete($id)
     {
         if (!$this->services->delete($id)) {
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
         } else {
             /** @var WechatKeyServices $keyServices */
             $keyServices = app()->make(WechatKeyServices::class);
             $res = $keyServices->delete($id, 'reply_id');
             if (!$res) {
-                return app('json')->fail(100008);
+                return app('json')->fail('删除失败');
             }
         }
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -142,9 +142,9 @@ class Reply extends AuthController
      */
     public function set_status($id, $status)
     {
-        if ($status == '' || $id == 0) return app('json')->fail(100100);
+        if ($status == '' || $id == 0) return app('json')->fail('参数错误');
         $this->services->update($id, ['status' => $status], 'id');
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -158,13 +158,13 @@ class Reply extends AuthController
     public function code_reply($id)
     {
         if (!$id) {
-            return app('json')->fail('100100');
+            return app('json')->fail('参数错误');
         }
         /** @var QrcodeServices $qrcode */
         $qrcode = app()->make(QrcodeServices::class);
         $code = $qrcode->getForeverQrcode('reply', $id);
         if (!$code['ticket']) {
-            return app('json')->fail(400237);
+            return app('json')->fail('二维码生成失败');
         }
         return app('json')->success($code->toArray());
     }

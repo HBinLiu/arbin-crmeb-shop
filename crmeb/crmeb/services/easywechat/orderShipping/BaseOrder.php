@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace crmeb\services\easywechat\orderShipping;
 
 use crmeb\exceptions\AdminException;
@@ -54,6 +62,20 @@ class BaseOrder extends AbstractAPI
     public function shipping($params)
     {
         return $this->resultHandle($this->parseJSON('POST', [self::BASE_API . self::ORDER . 'upload_shipping_info', json_encode($params, JSON_UNESCAPED_UNICODE)]));
+    }
+
+    /**
+     * 订单列表查询
+     * @param $params
+     * @return array
+     * @throws \EasyWeChat\Core\Exceptions\HttpException
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2025/7/23
+     */
+    public function orderList($params)
+    {
+        return $this->resultHandle($this->parseJSON('POST', [self::BASE_API . self::ORDER . 'get_order_list', json_encode($params, JSON_UNESCAPED_UNICODE)]));
     }
 
     /**

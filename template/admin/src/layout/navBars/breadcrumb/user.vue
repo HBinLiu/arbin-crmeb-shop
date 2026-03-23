@@ -25,7 +25,7 @@
           <i class="el-icon-bell" :title="$t('message.user.title4')"></i>
         </el-badge>
         <transition name="el-zoom-in-top" slot="content">
-          <UserNews :vm="this" v-show="isShowUserNewsPopover" @haveNews="initIsDot"></UserNews>
+          <UserNews v-show="isShowUserNewsPopover" @haveNews="initIsDot"></UserNews>
         </transition>
       </el-tooltip>
     </div>
@@ -36,10 +36,7 @@
       ></i>
     </div>
     <div class="layout-navbars-breadcrumb-user-icon mr10" v-db-click @click="openMobelPage">
-      <i
-        title="商城页面"
-        class="el-icon-mobile-phone"
-      ></i>
+      <i title="商城页面" class="el-icon-mobile-phone"></i>
     </div>
     <el-dropdown :show-timeout="70" @command="onDropdownCommand">
       <span class="layout-navbars-breadcrumb-user-link">
@@ -109,9 +106,9 @@ export default {
     initIsDot(status) {
       this.isDot = status;
     },
-    openMobelPage(){
+    openMobelPage() {
       // 获取域名
-      window.open(window.location.origin, '_blank')
+      window.open(window.location.origin, '_blank');
     },
     /**
      * 打开新弹窗
@@ -212,21 +209,25 @@ export default {
               if (action === 'confirm') {
                 instance.confirmButtonLoading = true;
                 instance.confirmButtonText = this.$t('message.user.logOutExit');
-                AccountLogout().then((res) => {
-                  done();
-                  this.$message.success('您已成功退出');
-                  this.$store.commit('clearAll');
-                  // localStorage.clear();
-                  // sessionStorage.clear();
-                  removeCookies('token');
-                  removeCookies('expires_time');
-                  removeCookies('uuid');
-                  // this.$router.replace({ path: `${settings.routePre}/login` });
-                  setTimeout(() => {
-                    this.$router.replace({ name: 'login' });
-                    instance.confirmButtonLoading = false;
-                  }, 1500);
-                });
+                AccountLogout()
+                  .then((res) => {
+                    done();
+                    this.$message.success('您已成功退出');
+                    this.$store.commit('clearAll');
+                    // localStorage.clear();
+                    // sessionStorage.clear();
+                    removeCookies('token');
+                    removeCookies('expires_time');
+                    removeCookies('uuid');
+                    // this.$router.replace({ path: `${settings.routePre}/login` });
+                  })
+                  .finally(() => {
+                    setTimeout(() => {
+                      this.$router.replace({ name: 'login' });
+                      instance.confirmButtonLoading = false;
+                      done();
+                    }, 1500);
+                  });
               } else {
                 done();
               }
@@ -277,6 +278,7 @@ export default {
     line-height: 50px;
     display: flex;
     align-items: center;
+    font-size: 15px;
     &:hover {
       background: var(--prev-color-hover);
       i {

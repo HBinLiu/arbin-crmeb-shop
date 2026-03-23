@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\api\controller\v1\order;
 
 use app\Request;
@@ -65,13 +73,13 @@ class StoreOrderRefundController
      */
     public function cancelApply(Request $request, $uni)
     {
-        if (!strlen(trim($uni))) return app('json')->fail(100100);
+        if (!strlen(trim($uni))) return app('json')->fail('参数错误');
         $orderRefund = $this->services->get(['order_id' => $uni, 'is_cancel' => 0]);
         if (!$orderRefund || $orderRefund['uid'] != $request->uid()) {
-            return app('json')->fail(410173);
+            return app('json')->fail('订单不存在');
         }
         if (!in_array($orderRefund['refund_type'], [1, 2, 4, 5])) {
-            return app('json')->fail(410224);
+            return app('json')->fail('当前状态不能取消申请');
         }
         $this->services->update($orderRefund['id'], ['is_cancel' => 1]);
         $this->services->cancelOrderRefundCartInfo((int)$orderRefund['id'], (int)$orderRefund['store_order_id'], $orderRefund);
@@ -87,7 +95,7 @@ class StoreOrderRefundController
             'cancel_time' => date('Y-m-d H:i:s'),
         ]]);
 
-        return app('json')->success(100019);
+        return app('json')->success('取消成功');
     }
 
     /**
@@ -105,12 +113,12 @@ class StoreOrderRefundController
             ['refund_img', ''],
             ['refund_explain', ''],
         ]);
-        if ($data['id'] == '') return app('json')->fail(100100);
+        if ($data['id'] == '') return app('json')->fail('参数错误');
         $res = $this->services->editRefundExpress($data);
         if ($res)
-            return app('json')->success(100017);
+            return app('json')->success('提交成功');
         else
-            return app('json')->fail(100018);
+            return app('json')->fail('提交失败');
     }
 
     /**
@@ -127,8 +135,8 @@ class StoreOrderRefundController
         $orderServices = app()->make(StoreOrderServices::class);
         $orderServices->update($oid, ['is_del' => 1], 'id');
         if ($res)
-            return app('json')->success(100002);
+            return app('json')->success('删除成功');
         else
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
     }
 }

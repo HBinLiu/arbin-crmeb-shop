@@ -167,7 +167,7 @@ export default {
 			toLogin();
 		}
 	},
-		// 分享朋友圈及朋友
+	// 分享朋友圈及朋友
 	onShareAppMessage() {
 		return {
 			title: '积分抽奖',

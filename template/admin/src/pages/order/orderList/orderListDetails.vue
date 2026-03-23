@@ -28,7 +28,9 @@ export default {
   },
   methods: {
     changeGetTabs() {
-      this.$parent.getTabs();
+      if (this.$refs.table && this.$refs.table.getTabs) {
+        this.$refs.table.getTabs();
+      }
     },
     // 列表数据
     getData(res) {

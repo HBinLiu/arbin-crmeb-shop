@@ -319,7 +319,6 @@ export default {
     },
     // 顶部切换
     bindTab(item) {
-      console.log('111');
       this.wordsTabCur = item.key;
       this.wordsData.isScroll = true;
       this.wordsData.page = 1;

@@ -56,7 +56,7 @@
         </el-table-column>
         <el-table-column label="回复类型" min-width="130">
           <template slot-scope="scope">
-            <span>{{ scope.row.type }}</span>
+            <span>{{ scope.row.typeName }}</span>
           </template>
         </el-table-column>
         <el-table-column label="是否显示" min-width="130">

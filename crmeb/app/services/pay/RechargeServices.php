@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -39,10 +39,10 @@ class RechargeServices
     public function recharge(UserRecharge $recharge)
     {
         if (!$recharge) {
-            throw new ApiException(410173);
+            throw new ApiException('订单不存在');
         }
         if ($recharge['paid'] == 1) {
-            throw new ApiException(410174);
+            throw new ApiException('订单已支付');
         }
         $payType = '';
         switch ($recharge['recharge_type']) {
@@ -59,7 +59,7 @@ class RechargeServices
         $payType = app()->make(OrderPayServices::class)->getPayType($payType);
 
         if (!$payType) {
-            throw new ApiException(410278);
+            throw new ApiException('不支持该类型方式');
         }
 
         if ($recharge['recharge_type'] == PayServices::WEIXIN_PAY && !request()->isH5() && !request()->isApp()) {
@@ -73,13 +73,13 @@ class RechargeServices
             } else if (request()->isWechat()) {
                 $userType = 'wechat';
             } else {
-                throw new ApiException(410275);
+                throw new ApiException('获取用户openid失败,无法支付');
             }
 
             $openid = $wechatUser->uidToOpenid((int)$recharge['uid'], $userType);
 
             if (!$openid) {
-                throw new ApiException(410275);
+                throw new ApiException('获取用户openid失败,无法支付');
             }
         } else {
             $openid = '';

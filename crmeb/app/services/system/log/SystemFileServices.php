@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -57,7 +57,7 @@ class SystemFileServices extends BaseServices
     public function Login(string $password, string $type)
     {
         if (config('filesystem.password') !== $password) {
-            throw new AdminException(400140);
+            throw new AdminException('账号或密码错误');
         }
         $md5Password = md5($password);
         /** @var JwtAuth $jwtAuth */
@@ -83,7 +83,7 @@ class SystemFileServices extends BaseServices
         $cacheService = app()->make(CacheService::class);
 
         if (!$token || $token === 'undefined') {
-            throw new AuthException(110008);
+            throw new AuthException('登录已过期,请重新登录', [], 403);
         }
 
         /** @var JwtAuth $jwtAuth */
@@ -94,7 +94,7 @@ class SystemFileServices extends BaseServices
         //检测token是否过期
         $md5Token = md5($token);
         if (!$cacheService->has($md5Token) || !($cacheService->get($md5Token))) {
-            throw new AuthException(110008);
+            throw new AuthException('登录已过期,请重新登录', [], 403);
         }
 
         //验证token
@@ -104,15 +104,15 @@ class SystemFileServices extends BaseServices
             if (!request()->isCli()) {
                 $cacheService->delete($md5Token);
             }
-            throw new AuthException(110008);
+            throw new AuthException('登录已过期,请重新登录', [], 403);
         }
 
         if ($id !== md5(config('filesystem.password'))) {
-            throw new AuthException(110008);
+            throw new AuthException('登录已过期,请重新登录', [], 403);
         }
 
         if ($pwd !== md5(config('filesystem.password'))) {
-            throw new AuthException(110008);
+            throw new AuthException('登录已过期,请重新登录', [], 403);
         }
 
         return true;
@@ -490,7 +490,40 @@ class SystemFileServices extends BaseServices
     {
         $res = app()->make(SystemFileInfoServices::class)->update(['full_path' => $full_path], ['mark' => $mark]);
         if (!$res) {
-            throw new AdminException(100006);
+            throw new AdminException('保存失败');
         }
+    }
+
+    /**
+     * 写入文件md5
+     * @return bool
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2026/2/25
+     */
+    public function writeMd5(){
+        $rootPath = app()->getRootPath();
+        $files = array_merge(
+            $this->getDir($rootPath . 'app'),
+            $this->getDir($rootPath . 'crmeb')
+        );
+        // 只找 .php 文件
+        $files = array_filter($files, function ($path) {
+            return pathinfo($path, PATHINFO_EXTENSION) === 'php';
+        });
+        $len = strlen($rootPath);
+        $list = [];
+        foreach ($files as $path) {
+            $list[] = [
+                'filename' => substr($path, $len),
+                'md5' => md5_file($path),
+            ];
+        }
+
+        $systemFileMd5Services = app()->make(SystemFileMd5Services::class);
+        $systemFileMd5Services->clearMd5List();
+        $systemFileMd5Services->saveMd5List($list);
+
+        return true;
     }
 }

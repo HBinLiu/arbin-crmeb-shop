@@ -175,7 +175,7 @@
 						{{ $t(`查看位置`) }}
 					</view>
 				</view>
-				<view v-if="orderInfo.virtual_type == 0 && orderInfo.gift_uid != 0">
+				<view class="mt-12" v-if="orderInfo.virtual_type == 0 && (is_gift == 0 || is_gift == 2)">
 					<view class="address" v-if="orderInfo.shipping_type === 1">
 						<view class="name">
 							{{ orderInfo.real_name }}
@@ -695,7 +695,7 @@ export default {
 			userInfo: {},
 			isReturn: '',
 			urlQuery: '',
-			is_gift: 0,
+			is_gift: 0, // 0正常商品 || 无人领取   1 购买者   2领取人
 			giftData: null,
 			giftModalData: null,
 			mpGiftImg: HTTP_REQUEST_URL + '/statics/images/gift_share.jpg'
@@ -1028,6 +1028,9 @@ export default {
 						//#ifdef H5
 						that.setOpenShare();
 						//#endif
+					} 
+					if(!res.data.is_gift || this.is_gift == 2) {
+						uni.hideShareMenu();
 					}
 					if (that.invoiceData) {
 						that.invoiceData.pay_price = res.data.pay_price;

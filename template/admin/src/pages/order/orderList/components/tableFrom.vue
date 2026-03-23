@@ -300,6 +300,12 @@ export default {
     },
     //
     handleReset() {
+      this.orderData.status = '';
+      this.orderData.data = '';
+      this.orderData.real_name = '';
+      this.orderData.field_key = 'all';
+      this.orderData.pay_type = '';
+      this.orderData.type = '';
       this.timeVal = [];
       this.time = '';
       this.resetSearch();

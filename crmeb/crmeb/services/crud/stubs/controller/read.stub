@@ -7,12 +7,12 @@
     public function read($id)
     {
         if (!$id) {
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         }
 
         $info = $this->service->get($id, [{%FIELD%}], {%WITH%});
         if (!$info) {
-            return app('json')->fail(100100);
+            return app('json')->fail('数据不存在');
         }
 
         return app('json')->success($info->toArray());

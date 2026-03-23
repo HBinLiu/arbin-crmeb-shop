@@ -496,6 +496,7 @@ export default {
         limit_type: 0,
         limit_num: 0,
         vip_product: false, //付费会员专属开关
+        vip_product_type: 0, // 0仅付费会员可见 1仅付费会员可购买
         custom_form: [], //自定义留言
         store_name: '',
         cate_id: [],
@@ -1693,7 +1694,6 @@ export default {
     generateAttr(data, val) {
       this.generateHeader(data);
       const combinations = this.generateCombinations(data);
-      console.log('规格组合总数：' + combinations.length);
       const virtualType = this.formValidate.virtual_type;
       // 如果combinations数量超过 500，则分批次生成属性
       let rows = [];

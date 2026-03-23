@@ -685,3 +685,12 @@ export function invoiceConfig() {
     method: 'get',
   });
 }
+
+// 修改发送货地址
+export function editAddress(data) {
+  return request({
+    url: `/order/edit_address/${data.id}`,
+    method: 'post',
+    data,
+  });
+}

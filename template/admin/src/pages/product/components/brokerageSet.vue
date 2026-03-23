@@ -261,7 +261,6 @@ export default {
       productBrokerage(this.productId, 1).then((res) => {
         let arr = JSON.parse(JSON.stringify(res.data.attrValue));
         this.defaultAttrData = Object.values(arr);
-        console.log(this.defaultAttrData, 'this.defaultAttrData');
         this.attrData = Object.values(res.data.attrValue);
         this.formData.is_sub = res.data.storeInfo.is_sub;
         this.storeInfo = res.data.storeInfo;

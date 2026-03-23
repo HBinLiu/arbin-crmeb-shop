@@ -1,15 +1,13 @@
 <?php
-/**
- *  +----------------------------------------------------------------------
- *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
- *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
- *  +----------------------------------------------------------------------
- *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
- *  +----------------------------------------------------------------------
- *  | Author: CRMEB Team <admin@crmeb.com>
- *  +----------------------------------------------------------------------
- */
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 
 namespace app\adminapi\controller\v1\setting;
 
@@ -80,7 +78,7 @@ class SystemRouteCate extends AuthController
         ]);
 
         if (!$data['name']) {
-            return app('json')->fail(500037);
+            return app('json')->fail('接口分类名称不能为空');
         }
 
         $data['add_time'] = time();
@@ -88,7 +86,7 @@ class SystemRouteCate extends AuthController
         $this->services->save($data);
 
 
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
 
     }
 
@@ -122,13 +120,13 @@ class SystemRouteCate extends AuthController
         ]);
 
         if (!$data['name']) {
-            return app('json')->fail(500037);
+            return app('json')->fail('接口分类名称不能为空');
         }
 
         $data['pid'] = $data['path'][count($data['path']) - 1] ?? 0;
         $this->services->update($id, $data);
 
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }
 
     /**
@@ -142,15 +140,15 @@ class SystemRouteCate extends AuthController
     public function delete(SystemRouteServices $service, $id)
     {
         if (!$id) {
-            return app('json')->fail(500035);
+            return app('json')->fail('接口不存在');
         }
 
         if ($service->count(['cate_id' => $id])) {
-            return app('json')->fail(500038);
+            return app('json')->fail('该分类下有接口，无法删除');
         }
 
         $this->services->delete($id);
 
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 }

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -80,7 +80,7 @@ class Diy extends AuthController
                     if (isset($v['goodsList']['list']) && $v['goodsList']['list'] && $v['tabConfig']['tabVal'] == 1) {
                         $limitMax = config('database.page.limitMax', 50);
                         if (count($v['goodsList']['list']) > $limitMax) {
-                            return app('json')->fail(400350);
+                            return app('json')->fail('您设置得商品个数超出系统限制');
                         }
                         $v['ids'] = array_column($v['goodsList']['list'], 'id');
                         $v['goodsList']['list'] = [];
@@ -91,7 +91,7 @@ class Diy extends AuthController
         $data['value'] = json_encode($value);
         $data['version'] = uniqid();
         $this->services->saveData($id, $data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -125,7 +125,7 @@ class Diy extends AuthController
                     if (isset($item['goodsList']['list']) && is_array($item['goodsList']['list'])) {
                         $limitMax = config('database.page.limitMax', 50);
                         if (isset($item['numConfig']['val']) && isset($item['tabConfig']['tabVal']) && $item['tabConfig']['tabVal'] == 0 && $item['numConfig']['val'] > $limitMax) {
-                            return app('json')->fail(400350);
+                            return app('json')->fail('您设置得商品个数超出系统限制');
                         }
                         $item['goodsList']['ids'] = array_column($item['goodsList']['list'], 'id');
                         unset($item['goodsList']['list']);
@@ -145,7 +145,7 @@ class Diy extends AuthController
             } elseif (isset($value['d_goodList']['goodsList']['list'])) {
                 $limitMax = config('database.page.limitMax', 50);
                 if (isset($value['d_goodList']['numConfig']['val']) && isset($value['d_goodList']['tabConfig']['tabVal']) && $value['d_goodList']['tabConfig']['tabVal'] == 0 && $value['d_goodList']['numConfig']['val'] > $limitMax) {
-                    return app('json')->fail(400350);
+                    return app('json')->fail('您设置得商品个数超出系统限制');
                 }
                 $value['d_goodList']['goodsList']['ids'] = array_column($value['d_goodList']['goodsList']['list'], 'id');
                 unset($value['d_goodList']['goodsList']['list']);
@@ -171,7 +171,7 @@ class Diy extends AuthController
         $data['type'] = 2;
         $data['is_diy'] = 1;
         $data['version'] = uniqid();
-        return app('json')->success($id ? 100001 : 100000, ['id' => $this->services->saveData($id, $data)]);
+        return app('json')->success($id ? '修改成功' : '保存成功', ['id' => $this->services->saveData($id, $data)]);
     }
 
     /**
@@ -182,7 +182,7 @@ class Diy extends AuthController
     public function del($id)
     {
         $this->services->del($id);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -193,7 +193,7 @@ class Diy extends AuthController
     public function setStatus($id)
     {
         $this->services->setStatus($id);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -210,12 +210,12 @@ class Diy extends AuthController
      */
     public function getInfo(int $id, StoreProductServices $services, StoreSeckillServices $seckillServices, StoreCombinationServices $combinationServices, StoreBargainServices $bargainServices)
     {
-        if (!$id) throw new AdminException(100100);
+        if (!$id) throw new AdminException('参数错误');
         $info = $this->services->get($id);
         if ($info) {
             $info = $info->toArray();
         } else {
-            throw new AdminException(400351);
+            throw new AdminException('模板不存在');
         }
         if (!$info['value']) return app('json')->success(compact('info'));
         $info['value'] = json_decode($info['value'], true);
@@ -267,12 +267,12 @@ class Diy extends AuthController
      */
     public function getDiyInfo($id, StoreProductServices $services)
     {
-        if (!$id) throw new AdminException(100100);
+        if (!$id) throw new AdminException('参数错误');
         $info = $this->services->get($id);
         if ($info) {
             $info = $info->toArray();
         } else {
-            throw new AdminException(400351);
+            throw new AdminException('模板不存在');
         }
         $info['value'] = json_decode($info['value'], true);
         if ($info['value']) {
@@ -452,15 +452,15 @@ class Diy extends AuthController
      */
     public function Recovery($id)
     {
-        if (!$id) throw new AdminException(100100);
+        if (!$id) throw new AdminException('参数错误');
         $info = $this->services->get($id);
         if ($info) {
             $info->value = $info->default_value;
             $info->update_time = time();
             $info->save();
-            return app('json')->success(100014);
+            return app('json')->success('设置成功');
         } else {
-            throw new AdminException(400351);
+            throw new AdminException('模板不存在');
         }
     }
 
@@ -498,13 +498,13 @@ class Diy extends AuthController
         $data = $this->request->postMore([
             ['name', ''],
         ]);
-        if (!$data['name']) app('json')->fail(400352);
+        if (!$data['name']) app('json')->fail('请输入页面名称');
         $data['version'] = '1.0';
         $data['add_time'] = time();
         $data['type'] = 0;
         $data['is_diy'] = 1;
         $this->services->save($data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -514,15 +514,15 @@ class Diy extends AuthController
      */
     public function setRecovery($id)
     {
-        if (!$id) throw new AdminException(100100);
+        if (!$id) throw new AdminException('参数错误');
         $info = $this->services->get($id);
         if ($info) {
             $info->default_value = $info->value;
             $info->update_time = time();
             $info->save();
-            return app('json')->success(100014);
+            return app('json')->success('设置成功');
         } else {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
     }
 
@@ -575,15 +575,15 @@ class Diy extends AuthController
      */
     public function colorChange($status, $type)
     {
-        if (!$status) throw new AdminException(100100);
+        if (!$status) throw new AdminException('参数错误');
         $info = $this->services->get(['template_name' => $type, 'type' => 1]);
         if ($info) {
             $info->value = $status;
             $info->update_time = time();
             $info->save();
-            return app('json')->success(100014);
+            return app('json')->success('设置成功');
         } else {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
     }
 
@@ -616,7 +616,7 @@ class Diy extends AuthController
             ['routine_my_menus', []]
         ]);
         $this->services->memberSaveData($data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -657,7 +657,7 @@ class Diy extends AuthController
         /** @var CacheServices $cacheServices */
         $cacheServices = app()->make(CacheServices::class);
         $cacheServices->setDbCache('open_adv', $data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**

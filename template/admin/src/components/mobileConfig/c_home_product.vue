@@ -44,6 +44,14 @@ export default {
     return {
       configObj: {},
       rCom: [
+        // {
+        //   components: toolCom.c_title,
+        //   configNme: 'titleLeft',
+        // },
+        {
+          components: toolCom.c_card_select,
+          configNme: 'styleConfig',
+        },
         {
           components: toolCom.c_set_up,
           configNme: 'setUp',
@@ -53,10 +61,6 @@ export default {
         {
           components: toolCom.c_title,
           configNme: 'titleLeft',
-        },
-        {
-          components: toolCom.c_radio,
-          configNme: 'styleConfig',
         },
         {
           components: toolCom.c_radio,
@@ -142,41 +146,17 @@ export default {
       fourStyle2: [
         {
           components: toolCom.c_bg_color,
+          configNme: 'goodsPriceColor',
+        },
+        {
+          components: toolCom.c_bg_color,
           configNme: 'bntBgColor',
         },
       ],
       currencyStyle: [
         {
-          components: toolCom.c_title,
-          configNme: 'titleCurrency',
-        },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'moduleColor',
-        },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'bottomBgColor',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'topConfig',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'bottomConfig',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'prConfig',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'mbConfig',
-        },
-        {
-          components: toolCom.c_fillet,
-          configNme: 'fillet',
+          components: toolCom.c_common_style,
+          configNme: 'commonStyle',
         },
       ],
       setUp: 0,
@@ -190,7 +170,7 @@ export default {
     num(nVal) {
       // debugger;
       let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[nVal]));
-      this.configObj = value;
+      this.configObj = this.patchConfig(value);
     },
     configObj: {
       handler(nVal, oVal) {
@@ -201,7 +181,20 @@ export default {
     'configObj.setUp.tabVal': {
       handler(nVal, oVal) {
         this.setUp = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          // {
+          //   components: toolCom.c_title,
+          //   configNme: 'titleLeft',
+          // },
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (nVal == 0) {
           this.getRComContent(arr, this.type3);
         } else {
@@ -213,7 +206,16 @@ export default {
     'configObj.styleConfig.tabVal': {
       handler(nVal, oVal) {
         this.type = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (this.setUp) {
           this.getRComStyle(arr, nVal, this.type2, this.type3, this.type4);
         }
@@ -222,7 +224,16 @@ export default {
     'configObj.cartConfig.tabVal': {
       handler(nVal, oVal) {
         this.type3 = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (this.setUp == 0) {
           this.getRComContent(arr, nVal);
         } else {
@@ -233,7 +244,16 @@ export default {
     'configObj.toneConfig.tabVal': {
       handler(nVal, oVal) {
         this.type2 = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (this.setUp) {
           this.getRComStyle(arr, this.type, nVal, this.type3, this.type4);
         }
@@ -242,7 +262,16 @@ export default {
     'configObj.toneCartConfig.tabVal': {
       handler(nVal, oVal) {
         this.type4 = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (this.setUp) {
           this.getRComStyle(arr, this.type, this.type2, this.type3, nVal);
         }
@@ -252,10 +281,39 @@ export default {
   mounted() {
     this.$nextTick(() => {
       let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[this.num]));
-      this.configObj = value;
+      this.configObj = this.patchConfig(value);
     });
   },
   methods: {
+    patchConfig(data) {
+      if (!data) return data;
+      if (!data.paddingConfig) {
+        data.paddingConfig = {
+          title: '内边距',
+          val: 0,
+          min: 0,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        };
+        if (data.topConfig) data.paddingConfig.valList[0].val = data.topConfig.val;
+        if (data.prConfig) {
+          data.paddingConfig.valList[1].val = data.prConfig.val;
+          data.paddingConfig.valList[3].val = data.prConfig.val;
+        }
+        if (data.bottomConfig) data.paddingConfig.valList[2].val = data.bottomConfig.val;
+      }
+      if (!data.marginConfig) {
+        data.marginConfig = {
+          title: '外边距',
+          val: 0,
+          min: 0,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        };
+        if (data.mbConfig) data.marginConfig.valList[0].val = data.mbConfig.val;
+      }
+      return data;
+    },
     getRComContent(arr, type3) {
       if (type3 == 0) {
         this.rCom = [...arr, ...this.oneContent, ...this.twoContent];
@@ -445,7 +503,6 @@ export default {
       }
     },
     getConfig(data) {
-      console.log(data, 'data');
       let configObj = this.configObj.tabConfig.list[this.configObj.tabConfig.tabCur];
       let activeValue = configObj.selectConfig.activeValue;
       if (!data.name) {
@@ -454,7 +511,6 @@ export default {
       if (data.name == 'selectType' && data.values == 1) {
         return;
       }
-      console.log(configObj, 'configObj.tabVal');
       let type = configObj.tabVal;
       let dataObj = {
         page: 1,

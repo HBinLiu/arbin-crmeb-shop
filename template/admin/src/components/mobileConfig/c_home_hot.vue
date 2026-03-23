@@ -43,7 +43,7 @@ export default {
     num(nVal) {
       // debugger;
       let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[nVal]));
-      this.configObj = value;
+      this.configObj = this.patchConfig(value);
     },
     configObj: {
       handler(nVal, oVal) {
@@ -78,15 +78,11 @@ export default {
             },
             {
               components: toolCom.c_bg_color,
-              configNme: 'bgColor',
-            },
-            {
-              components: toolCom.c_bg_color,
               configNme: 'boxColor',
             },
             {
-              components: toolCom.c_slider,
-              configNme: 'mbConfig',
+              components: toolCom.c_common_style,
+              configNme: 'c_common_style',
             },
           ];
           this.rCom = arr.concat(tempArr);
@@ -109,10 +105,48 @@ export default {
   mounted() {
     this.$nextTick(() => {
       let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[this.num]));
-      this.configObj = value;
+      this.configObj = this.patchConfig(value);
     });
   },
   methods: {
+    patchConfig(data) {
+      if (!data.paddingConfig) {
+        this.$set(data, 'paddingConfig', {
+          isAll: false,
+          title: '内边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+      }
+      if (!data.marginConfig) {
+        this.$set(data, 'marginConfig', {
+          isAll: false,
+          title: '外边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [{ val: data.mbConfig ? data.mbConfig.val : 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+      }
+      if (!data.bottomBgColor) {
+        this.$set(data, 'bottomBgColor', {
+          title: '底部背景',
+          default: [
+            {
+              item: '#F5F5F5',
+            },
+          ],
+          color: [
+            {
+              item: '#F5F5F5',
+            },
+          ],
+        });
+      }
+      return data;
+    },
     getConfig(data) {},
     handleSubmit(name) {
       let obj = {};

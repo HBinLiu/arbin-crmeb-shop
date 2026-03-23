@@ -5,8 +5,13 @@
         {{ configData.title }}
       </el-col>
       <el-col :span="18">
-        <el-select v-model="configData.activeValue" @change="sliderChange">
-          <el-option v-for="(item, index) in configData.list" :value="item.activeValue" :key="index" :label="item.title"></el-option>
+        <el-select v-model="configData.activeValue" @change="sliderChange" style="width: 100%">
+          <el-option
+            v-for="(item, index) in configData.list"
+            :value="item.activeValue"
+            :key="index"
+            :label="item.title"
+          ></el-option>
         </el-select>
       </el-col>
     </div>
@@ -54,8 +59,7 @@ export default {
   },
   methods: {
     sliderChange(e) {
-      let storage = window.localStorage;
-      this.configData.activeValue = e ? e : storage.getItem(this.timeStamp);
+      this.configData.activeValue = e;
       this.$emit('getConfig', { name: 'select', values: e });
     },
   },

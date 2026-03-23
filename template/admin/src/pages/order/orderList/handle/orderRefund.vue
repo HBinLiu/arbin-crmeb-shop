@@ -163,7 +163,6 @@ export default {
     handleChange(e, params, index) {
       let total = 0;
       this.selectData.forEach((v, i) => {
-        console.log(v.num)
         total += v.num * v.cart_info.truePrice;
       });
       this.formItem.refund_price = total;
@@ -227,10 +226,10 @@ export default {
           this.$emit('submitFail');
           this.reset();
           this.splitSwitch = false;
-          if (res.data.label) this.printImg(res.data.label);
+          if (res.data && res.data.label) this.printImg(res.data.label);
         })
-        .catch((res) => {
-          this.$message.error(res.msg);
+        .catch((err) => {
+          this.$message.error(err);
         });
     },
     cancel(name) {

@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\adminapi\controller\v1\system;
 
 use app\adminapi\controller\AuthController;
@@ -88,7 +96,7 @@ class SystemEvent extends AuthController
         if ($adminInfo['level'] != 0) return app('json')->fail('仅超级管理员可以操作定时任务');
         if (!$this->isSafePhpCode($data['customCode'])) return app('json')->fail('自定义内容存在危险代码，请检查代码');
         $this->services->saveEvent($data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -134,7 +142,7 @@ class SystemEvent extends AuthController
     public function setEventStatus($id, $is_open)
     {
         $this->services->setEventStatus($id, $is_open);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -152,6 +160,6 @@ class SystemEvent extends AuthController
     {
         if (!$id) return app('json')->fail('参数错误');
         $this->services->eventDel($id);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 }

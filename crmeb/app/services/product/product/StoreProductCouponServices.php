@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -63,7 +63,7 @@ class StoreProductCouponServices extends BaseServices
             if ($data_all) {
                 $res = $this->dao->saveAll($data_all);
             }
-            if (!$res) throw new AdminException(400561);
+            if (!$res) throw new AdminException('关联优惠券失败');
         }
         return true;
     }
@@ -81,7 +81,7 @@ class StoreProductCouponServices extends BaseServices
         $storeOrder = app()->make(StoreOrderServices::class);
         $order = $storeOrder->getOne(['order_id' => $orderId]);
         if (!$order || $order['uid'] != $uid) {
-            throw new ApiException(410173);
+            throw new ApiException('订单不存在');
         }
         $key = 'order_product_coupon_' . $uid . '_' . $order['id'];
         return CacheService::get($key, []);
@@ -102,13 +102,13 @@ class StoreProductCouponServices extends BaseServices
         $userServices = app()->make(UserServices::class);
         $user = $userServices->getUserInfo($uid);
         if (!$user) {
-            throw new ApiException(410032);
+            throw new ApiException('用户不存在');
         }
         /** @var StoreOrderServices $storeOrder */
         $storeOrder = app()->make(StoreOrderServices::class);
         $order = $storeOrder->getOne(['id' => $orderId]);
         if (!$order || $order['uid'] != $uid) {
-            throw new ApiException(410173);
+            throw new ApiException('订单不存在');
         }
         /** @var StoreOrderCartInfoServices $storeOrderCartInfo */
         $storeOrderCartInfo = app()->make(StoreOrderCartInfoServices::class);

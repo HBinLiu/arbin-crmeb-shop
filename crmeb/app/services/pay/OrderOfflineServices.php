@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -42,11 +42,11 @@ class OrderOfflineServices extends BaseServices
         $orderSerives = app()->make(StoreOrderServices::class);
         $orderInfo = $orderSerives->get($id);
         if (!$orderInfo) {
-            throw new ApiException(410173);
+            throw new ApiException('订单不存在');
         }
 
         if ($orderInfo->paid) {
-            throw new ApiException(410174);
+            throw new ApiException('订单已支付');
         }
         $orderInfo->paid = 1;
         $orderInfo->pay_time = time();

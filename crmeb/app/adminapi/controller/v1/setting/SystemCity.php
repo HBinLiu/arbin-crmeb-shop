@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -90,12 +90,12 @@ class SystemCity extends AuthController
             $data['level'] = $data['level'] + 1;
             $data['city_id'] = intval($this->services->getCityIdMax() + 1);
             $this->services->save($data);
-            return app('json')->success(100000);
+            return app('json')->success('保存成功');
         } else {
             unset($data['level']);
             unset($data['parent_id']);
             $this->services->update($data['id'], $data);
-            return app('json')->success(100001);
+            return app('json')->success('修改成功');
         }
     }
 
@@ -124,7 +124,7 @@ class SystemCity extends AuthController
             [['city_id', 'd'], 0]
         ], true);
         $this->services->deleteCity($id);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -135,7 +135,7 @@ class SystemCity extends AuthController
     {
         CacheService::delete('CITY_LIST');
         CacheService::delete('CITY_FULL_LIST');
-        return app('json')->success(400185);
+        return app('json')->success('清除成功');
     }
 
     /**

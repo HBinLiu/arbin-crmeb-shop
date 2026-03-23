@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -100,7 +100,7 @@ class ProductServices extends BaseServices
         $productInfo = $this->dao->get($id, ['store_name', 'IFNULL(sales,0) + IFNULL(ficti,0) as sales', 'image',
             'slider_image', 'price', 'vip_price', 'ot_price', 'stock', 'id'], ['description']);
         if (!$productInfo) {
-            throw new ApiException(410143);
+            throw new ApiException('商品未查到');
         }
         return $productInfo->toArray();
     }

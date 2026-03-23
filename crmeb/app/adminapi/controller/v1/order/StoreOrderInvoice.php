@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -80,20 +80,17 @@ class StoreOrderInvoice extends AuthController
      */
     public function set_invoice($id = '')
     {
-        if ($id == '') return app('json')->fail(100100);
+        if ($id == '') return app('json')->fail('参数错误');
         $data = $this->request->postMore([
             ['is_invoice', 0],
             ['invoice_number', 0],
             ['remark', '']
         ]);
         if ($data['is_invoice'] == 1 && !$data['invoice_number']) {
-            return app('json')->fail(400166);
-        }
-        if ($data['invoice_number'] && !preg_match('/^\d{8,10}$/', $data['invoice_number'])) {
-            return app('json')->fail(400167);
+            return app('json')->fail('请填写开票号');
         }
         $this->services->setInvoice((int)$id, $data);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -104,13 +101,13 @@ class StoreOrderInvoice extends AuthController
     public function orderInfo(StoreProductServices $productServices, StoreOrderServices $orderServices, $id)
     {
         if (!$id || !($orderInfo = $orderServices->get($id))) {
-            return app('json')->fail(400118);
+            return app('json')->fail('订单不存在');
         }
         /** @var UserServices $services */
         $services = app()->make(UserServices::class);
         $userInfo = $services->get($orderInfo['uid']);
         if (!$userInfo) {
-            return app('json')->fail(400119);
+            return app('json')->fail('用户信息不存在');
         }
         $userInfo = $userInfo->hidden(['pwd', 'add_ip', 'last_ip', 'login_type']);
         $userInfo['spread_name'] = '';

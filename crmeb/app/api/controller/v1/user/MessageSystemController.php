@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -58,7 +58,7 @@ class MessageSystemController
     public function detail(Request $request, $id)
     {
         if (!$id) {
-            app('json')->fail(100100);
+            app('json')->fail('参数错误');
         }
         $uid = (int)$request->uid();
         $where['uid'] = $uid;
@@ -85,6 +85,6 @@ class MessageSystemController
         } else {
             $this->services->update($data['id'], [$data['key'] => $data['value']]);
         }
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 }

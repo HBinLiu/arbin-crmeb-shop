@@ -14,6 +14,13 @@
           >
           </el-switch>
         </el-form-item>
+        <el-form-item v-if="formData.vip_product">
+          <!-- 0仅付费会员可见 1仅付费会员可购买 -->
+          <el-radio-group v-model="formData.vip_product_type">
+            <el-radio :label="0">仅付费会员可见</el-radio>
+            <el-radio :label="1">仅付费会员可购买</el-radio>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item label="付费会员价：">
           <el-switch
             v-model="formData.is_vip"
@@ -103,6 +110,7 @@ export default {
       formData: {
         is_vip: 0,
         vip_product: 1,
+        vip_product_type: 0,
       },
       brokerage: '',
       brokerage_two: '',
@@ -240,6 +248,7 @@ export default {
       productBrokerage(this.productId, 2).then((res) => {
         this.formData.is_vip = res.data.storeInfo.is_vip;
         this.formData.vip_product = res.data.storeInfo.vip_product;
+        this.formData.vip_product_type = res.data.storeInfo.vip_product_type;
         this.attrData = Object.values(res.data.attrValue);
         // this.levelList = res.data.level_list;
         // if (res.data.level_list.length) {

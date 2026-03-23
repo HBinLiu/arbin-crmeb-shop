@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -71,7 +71,7 @@ class StoreCartController
         else $new = false;
         /** @var StoreCartServices $cartService */
         $cartService = app()->make(StoreCartServices::class);
-        if (!$where['productId'] || !is_numeric($where['productId'])) return app('json')->fail(100100);
+        if (!$where['productId'] || !is_numeric($where['productId'])) return app('json')->fail('参数错误');
         $type = 0;
         if ($where['secKillId']) {
             $type = 1;
@@ -82,14 +82,14 @@ class StoreCartController
             if ($where['pinkId']) {
                 /** @var StorePinkServices $pinkServices */
                 $pinkServices = app()->make(StorePinkServices::class);
-                if ($pinkServices->isPinkStatus($where['pinkId'])) return app('json')->fail(410315);
+                if ($pinkServices->isPinkStatus($where['pinkId'])) return app('json')->fail('拼团已到期');
             }
         } elseif ($where['advanceId']) {
             $type = 6;
         }
         if ($type == 0) $cartService->checkVipGoodsBuy($request->user(), $where['productId']);
         $res = $cartService->setCart($request->uid(), $where['productId'], $where['cartNum'], $where['uniqueId'], $type, $new, $where['combinationId'], $where['secKillId'], $where['bargainId'], $where['advanceId']);
-        if (!$res) return app('json')->fail(100022);
+        if (!$res) return app('json')->fail('添加失败');
         else  return app('json')->success(['cartId' => $res]);
     }
 
@@ -105,10 +105,10 @@ class StoreCartController
         ]);
         $where['ids'] = is_array($where['ids']) ? $where['ids'] : explode(',', $where['ids']);
         if (!count($where['ids']))
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         if ($this->services->removeUserCart((int)$request->uid(), $where['ids']))
-            return app('json')->success(100002);
-        return app('json')->fail(100008);
+            return app('json')->success('删除成功');
+        return app('json')->fail('删除失败');
     }
 
     /**
@@ -125,11 +125,11 @@ class StoreCartController
             ['id', 0],//购物车编号
             ['number', 0],//购物车编号
         ]);
-        if (!$where['id'] || !is_numeric($where['id'])) return app('json')->fail(100100);
-        if (!$where['number'] || !is_numeric($where['number'])) return app('json')->fail(100007);
+        if (!$where['id'] || !is_numeric($where['id'])) return app('json')->fail('参数错误');
+        if (!$where['number'] || !is_numeric($where['number'])) return app('json')->fail('修改失败');
         $res = $this->services->changeUserCartNum($where['id'], $where['number'], $request->uid());
-        if ($res) return app('json')->success(100001);
-        else return app('json')->fail(100007);
+        if ($res) return app('json')->success('修改成功');
+        else return app('json')->fail('修改失败');
     }
 
     /**
@@ -162,6 +162,6 @@ class StoreCartController
             ['unique', '']
         ], true);
         $this->services->modifyCart($cart_id, $product_id, $unique);
-        return app('json')->success(410225);
+        return app('json')->success('重选成功');
     }
 }

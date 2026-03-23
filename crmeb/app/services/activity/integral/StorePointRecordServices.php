@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\services\activity\integral;
 
 use app\dao\user\UserBillDao;
@@ -75,12 +83,12 @@ class StorePointRecordServices extends BaseServices
      */
     public function recordRemark($id, $mark)
     {
-        if (!$id) throw new AdminException(100100);
-        if ($mark === '') throw new AdminException(400106);
+        if (!$id) throw new AdminException('参数错误');
+        if ($mark === '') throw new AdminException('备注不能为空');
         if ($this->dao->update($id, ['mark' => $mark])) {
             return true;
         } else {
-            throw new AdminException(100025);
+            throw new AdminException('备注失败');
         }
     }
 

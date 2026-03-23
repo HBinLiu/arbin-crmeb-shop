@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -64,7 +64,7 @@ class StoreServiceFeedback extends AuthController
     public function edit($id)
     {
         if (!$id) {
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         }
         return app('json')->success($this->services->editForm((int)$id));
     }
@@ -81,14 +81,14 @@ class StoreServiceFeedback extends AuthController
             ['status', 0],
         ]);
         if (!$id || !($feedInfo = $this->services->get($id))) {
-            return app('json')->fail(400268);
+            return app('json')->fail('反馈内容不存在');
         }
         $feedInfo->make = $data['make'];
         if ($data['status']) {
             $feedInfo->status = $data['status'];
         }
         $feedInfo->save();
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }
 
     /**
@@ -100,12 +100,12 @@ class StoreServiceFeedback extends AuthController
     public function delete($id)
     {
         if (!$id) {
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         }
         if ($this->services->delete($id)) {
-            return app('json')->success(100002);
+            return app('json')->success('删除成功');
         } else {
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
         }
     }
 }

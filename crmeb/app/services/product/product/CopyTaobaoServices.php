@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -68,7 +68,7 @@ class CopyTaobaoServices extends BaseServices
                 break;
             case 2://99API
                 $apikey = sys_config('copy_product_apikey');
-                if (!$apikey) throw new AdminException(400554);
+                if (!$apikey) throw new AdminException('请先配置接口密钥');
                 /** @var ServeServices $services */
                 $services = app()->make(ServeServices::class);
                 $result = $services->copy('copy99api')->goods($url, [
@@ -178,12 +178,12 @@ $productInfo['protection_list'] = [];
         //生成附件目录
         try {
             if (make_path('attach', 3, true) === '')
-                throw new AdminException(400555);
+                throw new AdminException('无法创建文件夹，请检查您的上传目录权限');
         } catch (\Exception $e) {
-            throw new AdminException(400555);
+            throw new AdminException('无法创建文件夹，请检查您的上传目录权限');
         }
         $description = $storeDescriptionServices->getDescription(['product_id ' => $id, 'type' => 0]);
-        if (!$description) throw new AdminException(400556);
+        if (!$description) throw new AdminException('商品参数错误');
         //替换并下载详情里面的图片默认下载全部图片
         $description = preg_replace('#<style>.*?</style>#is', '', $description);
         $description = $this->uploadImage([], $description, 1, $AttachmentCategory['id']);
@@ -281,7 +281,7 @@ $productInfo['protection_list'] = [];
                 return $html;
                 break;
             default:
-                throw new AdminException(400557);
+                throw new AdminException('上传方式错误');
                 break;
         }
         return $uploadImage;
@@ -309,7 +309,7 @@ $productInfo['protection_list'] = [];
             $ext = $this->getImageExtname($name)['ext_name'];
         }
         if (!in_array($ext, Config::get('upload.fileExt'))) {
-            throw new AdminException(400558);
+            throw new AdminException('格式错误');
         }
         //TODO 获取远程文件所采用的方法
         if ($type) {
@@ -329,7 +329,7 @@ $productInfo['protection_list'] = [];
                 if (substr($url, 0, 2) == '//') {
                     $url = "https:" . $url;
                 }
-                readfile($url);
+                @readfile($url);
                 $content = ob_get_contents();
                 ob_end_clean();
             } catch (\Exception $e) {
@@ -337,7 +337,7 @@ $productInfo['protection_list'] = [];
             }
         }
         $size = strlen(trim($content));
-        if (!$content || $size <= 2) throw new AdminException(400559);
+        if (!$content || $size <= 2) throw new AdminException('图片流获取失败');
         $date_dir = date('Y') . '/' . date('m') . '/' . date('d');
         $upload_type = sys_config('upload_type', 1);
         $upload = UploadService::init($upload_type);
@@ -403,7 +403,7 @@ $productInfo['protection_list'] = [];
 
         //生成附件目录
         if (make_path('attach', 3, true) === '') {
-            throw new AdminException(400555);
+            throw new AdminException('无法创建文件夹，请检查您的上传目录权限');
         }
 
         //上传图片

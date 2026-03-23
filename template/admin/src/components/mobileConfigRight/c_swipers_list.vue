@@ -7,10 +7,10 @@
       <draggable class="dragArea list-group" :list="configData.list" group="peoples" handle=".move-icon">
         <div class="item" v-for="(item, index) in configData.list" :key="index">
           <div class="delect-btn" @click.stop="bindDelete(item, index)" v-if="!configData.isCube">
-            <span class="iconfont-diy icondel_1"></span>
+            <span class="iconfont icondel_1"></span>
           </div>
           <div class="move-icon">
-            <span class="iconfont-diy icondrag"></span>
+            <span class="iconfont icondrag"></span>
           </div>
           <div>
             <div class="info">
@@ -251,7 +251,7 @@ export default {
         right: -13px;
         top: -16px;
 
-        .iconfont-diy {
+        .iconfont {
           font-size: 25px;
           color: #ccc;
         }
@@ -337,7 +337,7 @@ export default {
   color: #ccc;
 }
 
-.iconfont-diy {
+.iconfont {
   color: #dddddd;
   font-size: 28px;
 }

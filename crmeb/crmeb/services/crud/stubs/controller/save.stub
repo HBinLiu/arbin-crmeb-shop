@@ -13,5 +13,5 @@
 {%OTHER_PHP%}
         $this->service->crudSave($data);
 
-        return app('json')->success(100021);
+        return app('json')->success('添加成功');
     }

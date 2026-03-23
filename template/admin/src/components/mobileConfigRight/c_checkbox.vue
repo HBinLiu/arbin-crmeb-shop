@@ -8,7 +8,9 @@
         <el-checkbox
           :label="item.id"
           :disabled="
-            selectedData.length >= 3 && userStyle && configData.userType && !selectedData.includes(item.id)
+            (selectedData.length >= 3 && userStyle && configData.userType && !selectedData.includes(item.id)) ||
+            (configData.type.length >= 3 && configData.name == 'showContent' && !configData.type.includes(item.id)) ||
+            (configData.type.length >= configData.maxList && !configData.type.includes(item.id))
               ? true
               : false
           "
@@ -49,8 +51,8 @@ export default {
       handler(nVal, oVal) {
         this.defaults = nVal;
         this.configData = nVal[this.configNme];
-        this.userStyle = nVal.styleConfig.tabVal;
-        this.selectedData = nVal.checkboxInfo.type;
+        this.userStyle = nVal.styleConfig?.tabVal || 1;
+        this.selectedData = nVal.checkboxInfo?.type || [];
       },
       deep: true,
     },
@@ -107,8 +109,8 @@ export default {
     this.$nextTick(() => {
       this.defaults = this.configObj;
       this.configData = this.configObj[this.configNme];
-      this.userStyle = this.defaults.styleConfig.tabVal;
-      this.selectedData = this.defaults.checkboxInfo.type;
+      this.userStyle = this.defaults.styleConfig?.tabVal;
+      this.selectedData = this.defaults.checkboxInfo?.type || [];
     });
   },
   methods: {

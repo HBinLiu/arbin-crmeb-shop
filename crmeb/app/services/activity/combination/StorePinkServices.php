@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -548,7 +548,7 @@ class StorePinkServices extends BaseServices
             ['status', '=', 1],
             ['stop_time', '>', time()],
         ]);
-        if (!$pinkT) throw new ApiException(410314);
+        if (!$pinkT) throw new ApiException('未查到拼团信息，无法取消');
         list($pinkAll, $pinkT, $count, $idAll, $uidAll) = $this->getPinkMemberAndPinkK($pinkT);
         if (count($pinkAll)) {
             $count = $pinkT['people'] - ($this->dao->count(['k_id' => $pink_id, 'is_refund' => 0]) + 1);
@@ -558,7 +558,7 @@ class StorePinkServices extends BaseServices
             } else {
                 //拼团完成
                 $this->PinkComplete($uidAll, $idAll, $uid, $pinkT);
-                throw new ApiException(410316);
+                throw new ApiException('拼团已完成，无法取消');
             }
         }
         /** @var StoreOrderServices $orderService */
@@ -625,7 +625,7 @@ class StorePinkServices extends BaseServices
                         $valueData .= '&pid=' . $user['uid'];
                     }
                     $res = MiniProgramService::appCodeUnlimitService($valueData, 'pages/activity/goods_combination_status/index', 280);
-                    if (!$res) throw new ApiException(410167);
+                    if (!$res) throw new ApiException('二维码生成失败');
                     $uploadType = (int)sys_config('upload_type', 1);
                     $upload = UploadService::init();
                     $res = (string)EntityBody::factory($res);
@@ -656,7 +656,7 @@ class StorePinkServices extends BaseServices
                 if ($imageInfo['image_type'] == 1)
                     $data['url'] = $siteUrl . $url;
                 $posterImage = PosterServices::setShareMarketingPoster($data, 'routine/activity/pink/poster');
-                if (!is_array($posterImage)) throw new ApiException(410172);
+                if (!is_array($posterImage)) throw new ApiException('生成海报失败');
                 $systemAttachmentServices->save([
                     'name' => $posterImage['name'],
                     'att_dir' => $posterImage['dir'],
@@ -680,7 +680,7 @@ class StorePinkServices extends BaseServices
                     $codeUrl = set_http_type($siteUrl . '/pages/activity/goods_combination_status/index?id=' . $pinkId . '&spread=' . $user['uid'], 1);//二维码链接
                     $imageInfo = PosterServices::getQRCodePath($codeUrl, $name);
                     if (is_string($imageInfo)) {
-                        throw new ApiException(410167);
+                        throw new ApiException('二维码生成失败');
                     }
                     $systemAttachmentServices->save([
                         'name' => $imageInfo['name'],
@@ -699,7 +699,7 @@ class StorePinkServices extends BaseServices
                 $data['url'] = $url;
                 if ($imageInfo['image_type'] == 1) $data['url'] = $siteUrl . $url;
                 $posterImage = PosterServices::setShareMarketingPoster($data, 'wap/activity/pink/poster');
-                if (!is_array($posterImage)) throw new ApiException(410172);
+                if (!is_array($posterImage)) throw new ApiException('生成海报失败');
                 $systemAttachmentServices->save([
                     'name' => $posterImage['name'],
                     'att_dir' => $posterImage['dir'],
@@ -716,7 +716,7 @@ class StorePinkServices extends BaseServices
                 $wapPosterImage = set_http_type($posterImage['dir'], 1);//公众号推广海报
                 return $wapPosterImage;
             }
-            throw new ApiException(100100);
+            throw new ApiException('参数错误');
         } catch (\Exception $e) {
             throw new ApiException($e->getMessage());
         }
@@ -889,7 +889,7 @@ class StorePinkServices extends BaseServices
                         $valueData .= '&pid=' . $user['uid'];
                     }
                     $res = MiniProgramService::appCodeUnlimitService($valueData, 'pages/activity/goods_combination_status/index', 280);
-                    if (!$res) throw new ApiException(410167);
+                    if (!$res) throw new ApiException('二维码生成失败');
                     $uploadType = (int)sys_config('upload_type', 1);
                     $upload = UploadService::init();
                     $res = $upload->to('routine/activity/pink/code')->validate()->setAuthThumb(false)->stream($res, $name);

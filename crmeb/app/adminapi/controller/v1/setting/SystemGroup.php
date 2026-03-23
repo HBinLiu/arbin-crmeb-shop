@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -74,10 +74,10 @@ class SystemGroup extends AuthController
 
         //数据组名称判断
         if (!$params['name']) {
-            return app('json')->fail(400187);
+            return app('json')->fail('请输入名称');
         }
         if (!$params['config_name']) {
-            return app('json')->fail(400274);
+            return app('json')->fail('请输入配置名称');
         }
         $data["name"] = $params['name'];
         $data["config_name"] = $params['config_name'];
@@ -85,7 +85,7 @@ class SystemGroup extends AuthController
         $data["cate_id"] = $params['cate_id'];
         //字段信息判断
         if (!count($params['typelist']))
-            return app('json')->fail(400294);
+            return app('json')->fail('字段至少存在一个');
         else {
             $validate = ["name", "type", "title", "description"];
             foreach ($params["typelist"] as $key => $value) {
@@ -100,7 +100,7 @@ class SystemGroup extends AuthController
         $data["fields"] = json_encode($data["fields"]);
         $this->services->save($data);
         \crmeb\services\CacheService::clear();
-        return app('json')->success(400295);
+        return app('json')->success('添加数据组成功');
     }
 
     /**
@@ -153,12 +153,12 @@ class SystemGroup extends AuthController
         ]);
 
         //数据组名称判断
-        if (!$params['name']) return app('json')->fail(400187);
-        if (!$params['config_name']) return app('json')->fail(400274);
+        if (!$params['name']) return app('json')->fail('请输入名称');
+        if (!$params['config_name']) return app('json')->fail('请输入配置名称');
         //判断ID是否存在，存在就是编辑，不存在就是添加
         if (!$id) {
             if ($this->services->count(['config_name' => $params['config_name']])) {
-                return app('json')->fail(400296);
+                return app('json')->fail('数据关键字已存在');
             }
         }
         $data["name"] = $params['name'];
@@ -167,13 +167,13 @@ class SystemGroup extends AuthController
         $data["cate_id"] = $params['cate_id'];
         //字段信息判断
         if (!count($params['typelist']))
-            return app('json')->fail(400294);
+            return app('json')->fail('字段至少存在一个');
         else {
             $validate = ["name", "type", "title", "description"];
             foreach ($params["typelist"] as $key => $value) {
                 foreach ($value as $name => $field) {
                     if (empty($field["value"]) && in_array($name, $validate))
-                        return app('json')->fail(400297);
+                        return app('json')->fail('字段不能为空');
                     else
                         $data["fields"][$key][$name] = $field["value"];
                 }
@@ -182,7 +182,7 @@ class SystemGroup extends AuthController
         $data["fields"] = json_encode($data["fields"]);
         $this->services->update($id, $data);
         \crmeb\services\CacheService::clear();
-        return app('json')->success(400295);
+        return app('json')->success('添加数据组成功');
     }
 
     /**
@@ -194,10 +194,10 @@ class SystemGroup extends AuthController
     public function delete($id, SystemGroupDataServices $services)
     {
         if (!$this->services->delete($id))
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
         else {
             $services->delete($id, 'gid');
-            return app('json')->success(100002);
+            return app('json')->success('删除成功');
         }
     }
 

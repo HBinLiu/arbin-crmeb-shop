@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -120,30 +120,30 @@ class UserLabelServices extends BaseServices
     public function save(int $id, array $data)
     {
         if (!$data['label_cate']) {
-            throw new AdminException(400669);
+            throw new AdminException('请选择标签分类');
         }
         $levelName = $this->dao->getOne(['label_name' => $data['label_name'], 'label_cate' => $data['label_cate']]);
         if ($id) {
             if (!$this->getLable($id)) {
-                throw new AdminException(100026);
+                throw new AdminException('数据不存在');
             }
             if ($levelName && $id != $levelName['id']) {
-                throw new AdminException(400670);
+                throw new AdminException('该标签已经存在');
             }
             if ($this->dao->update($id, $data)) {
                 return true;
             } else {
-                throw new AdminException(100007);
+                throw new AdminException('修改失败');
             }
         } else {
             unset($data['id']);
             if ($levelName) {
-                throw new AdminException(400670);
+                throw new AdminException('该标签已经存在');
             }
             if ($this->dao->save($data)) {
                 return true;
             } else {
-                throw new AdminException(100022);
+                throw new AdminException('添加失败');
             }
         }
     }
@@ -160,7 +160,7 @@ class UserLabelServices extends BaseServices
     {
         if ($this->getLable($id)) {
             if (!$this->dao->delete($id)) {
-                throw new AdminException(100008);
+                throw new AdminException('删除失败');
             }
         }
         return true;

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -80,7 +80,7 @@ class StoreOrder extends AuthController
      */
     public function delivery(string $order_id)
     {
-        if (!$order_id) return app('json')->fail(100100);
+        if (!$order_id) return app('json')->fail('参数错误');
         $data = $this->request->postMore([
             ['delivery_name', ''],//快递公司名称
             ['delivery_id', ''],//快递单号
@@ -88,7 +88,7 @@ class StoreOrder extends AuthController
         ]);
         $data['express_record_type'] = 1;
         $data['type'] = 1;
-        return app('json')->success(100010, $this->services->delivery($order_id, $data));
+        return app('json')->success('操作成功', $this->services->delivery($order_id, $data));
     }
 
     /**
@@ -98,7 +98,7 @@ class StoreOrder extends AuthController
      */
     public function splitCartInfo(string $order_id)
     {
-        if (!$order_id) return app('json')->fail(100100);
+        if (!$order_id) return app('json')->fail('参数错误');
         return app('json')->success($this->services->getCartList($order_id));
     }
 
@@ -109,7 +109,7 @@ class StoreOrder extends AuthController
      */
     public function splitDelivery(string $order_id)
     {
-        if (!$order_id) return app('json')->fail(100100);
+        if (!$order_id) return app('json')->fail('参数错误');
         $data = $this->request->postMore([
             ['delivery_name', ''],//快递公司名称
             ['delivery_id', ''],//快递单号
@@ -119,11 +119,11 @@ class StoreOrder extends AuthController
         ]);
 
         if (!$data['cart_ids']) {
-            return app('json')->fail(400158);
+            return app('json')->fail('请选择发货商品');
         }
         foreach ($data['cart_ids'] as &$cart) {
             if (!isset($cart['cart_id']) || !$cart['cart_id'] || !isset($cart['cart_num']) || !$cart['cart_num']) {
-                return app('json')->fail(400159);
+                return app('json')->fail('请重新选择发货商品或发货件数');
             }
             $cart['cart_id'] = (int)$cart['cart_id'];
             $cart['cart_num'] = (int)$cart['cart_num'];
@@ -132,7 +132,7 @@ class StoreOrder extends AuthController
         $data['type'] = 1;
 
         $this->services->splitDelivery($order_id, $data);
-        return app('json')->success(100010);
+        return app('json')->success('操作成功');
     }
 
     /**
@@ -143,9 +143,9 @@ class StoreOrder extends AuthController
      */
     public function receive(string $order_id)
     {
-        if (!$order_id) return app('json')->fail(100100);
+        if (!$order_id) return app('json')->fail('参数错误');
         $this->services->receive($order_id);
-        return app('json')->success(400117);
+        return app('json')->success('收货成功');
     }
 
     /**
@@ -155,7 +155,7 @@ class StoreOrder extends AuthController
      */
     public function setInvoice(string $order_id)
     {
-        if (!$order_id) return app('json')->fail(100100);
+        if (!$order_id) return app('json')->fail('参数错误');
         $data = $this->request->postMore([
             [['header_type', 'd'], 1],
             [['type', 'd'], 1],
@@ -169,32 +169,32 @@ class StoreOrder extends AuthController
             ['card_number', ''],
         ]);
 
-        if (!$data['drawer_phone']) return app('json')->fail(410144);
-        if (!check_phone($data['drawer_phone'])) return app('json')->fail(410018);
-        if (!$data['name']) return app('json')->fail(410145);
+        if (!$data['drawer_phone']) return app('json')->fail('请填写开票手机号');
+        if (!check_phone($data['drawer_phone'])) return app('json')->fail('手机号格式不正确');
+        if (!$data['name']) return app('json')->fail('请填写发票抬头（开具发票企业名称）');
         if (!in_array($data['header_type'], [1, 2])) {
             $data['header_type'] = empty($data['duty_number']) ? 1 : 2;
         }
         if ($data['header_type'] == 1 && !preg_match('/^[\x80-\xff]{2,60}$/', $data['name'])) {
-            return app('json')->fail(410146);
+            return app('json')->fail('请填写正确的发票抬头（开具发票企业名称）');
         }
         if ($data['header_type'] == 2 && !preg_match('/^[0-9a-zA-Z&\(\)\（\）\x80-\xff]{2,150}$/', $data['name'])) {
-            return app('json')->fail(410146);
+            return app('json')->fail('请填写正确的发票抬头（开具发票企业名称）');
         }
         if ($data['header_type'] == 2 && !$data['duty_number']) {
-            return app('json')->fail(410147);
+            return app('json')->fail('请填写发票税号');
         }
         if ($data['header_type'] == 2 && !preg_match('/^[A-Z0-9]{15}$|^[A-Z0-9]{17}$|^[A-Z0-9]{18}$|^[A-Z0-9]{20}$/', $data['duty_number'])) {
-            return app('json')->fail(410148);
+            return app('json')->fail('请填写正确的发票税号');
         }
         if ($data['card_number'] && !preg_match('/^[1-9]\d{11,19}$/', $data['card_number'])) {
-            return app('json')->fail(410149);
+            return app('json')->fail('请填写正确的银行卡号');
         }
 
         if ($this->services->setInvoice($order_id, $data)) {
-            return app('json')->success(100001);
+            return app('json')->success('修改成功');
         } else {
-            return app('json')->fail(100005);
+            return app('json')->fail('操作失败');
         }
     }
 
@@ -205,7 +205,7 @@ class StoreOrder extends AuthController
      */
     public function setInvoiceStatus(string $order_id)
     {
-        if (!$order_id) return app('json')->fail(100100);
+        if (!$order_id) return app('json')->fail('参数错误');
         $data = $this->request->postMore([
             ['is_invoice', 0],
             ['invoice_number', 0],
@@ -213,14 +213,11 @@ class StoreOrder extends AuthController
         ]);
 
         if ($data['is_invoice'] == 1 && !$data['invoice_number']) {
-            return app('json')->fail(400166);
-        }
-        if ($data['invoice_number'] && !preg_match('/^\d{8,10}$/', $data['invoice_number'])) {
-            return app('json')->fail(400167);
+            return app('json')->fail('请填写开票号');
         }
 
         $this->services->setInvoice($order_id, $data);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -230,7 +227,7 @@ class StoreOrder extends AuthController
      */
     public function read(string $order_id)
     {
-        if (!$order_id) return app('json')->fail(100100);
+        if (!$order_id) return app('json')->fail('参数错误');
         return app('json')->success($this->services->getInfo($order_id));
     }
 
@@ -241,18 +238,18 @@ class StoreOrder extends AuthController
      */
     public function remark(string $order_id)
     {
-        if (!$order_id) return app('json')->fail(100100);
+        if (!$order_id) return app('json')->fail('参数错误');
         $data = $this->request->postMore([['remark', '']]);
-        if (!$data['remark']) return app('json')->fail(400106);
+        if (!$data['remark']) return app('json')->fail('备注不能为空');
 
         if (!$order = $this->services->get(['order_id' => $order_id])) {
-            return app('json')->fail(400118);
+            return app('json')->fail('订单不存在');
         }
         $order->remark = $data['remark'];
         if ($order->save()) {
-            return app('json')->success(100024);
+            return app('json')->success('备注成功');
         } else
-            return app('json')->fail(100025);
+            return app('json')->fail('备注失败');
     }
 
     /**
@@ -262,10 +259,10 @@ class StoreOrder extends AuthController
      */
     public function updateDistribution(string $order_id)
     {
-        if (!$order_id) return app('json')->fail(100100);
+        if (!$order_id) return app('json')->fail('参数错误');
         $data = $this->request->postMore([['delivery_name', ''], ['delivery_code', ''], ['delivery_id', '']]);
 
         $this->services->updateDistribution($order_id, $data);
-        return app('json')->success(100010);
+        return app('json')->success('操作成功');
     }
 }

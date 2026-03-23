@@ -5,10 +5,10 @@
         <el-form ref="tableFrom" :model="tableFrom" :label-width="labelWidth" label-position="right"
           @submit.native.prevent inline>
           <el-form-item label="商品搜索：" label-for="store_name">
-            <el-input placeholder="请输入商品名称，ID" v-model="tableFrom.store_name" class="form_content_width" />
+            <el-input placeholder="请输入商品名称，ID" v-model="tableFrom.store_name" clearable class="form_content_width" />
           </el-form-item>
           <el-form-item label="活动搜索：" label-for="store_name">
-            <el-input placeholder="请输入活动名称" v-model="tableFrom.activity_name" class="form_content_width" />
+            <el-input placeholder="请输入活动名称" v-model="tableFrom.activity_name" clearable class="form_content_width" />
           </el-form-item>
           <el-form-item label="活动状态：">
             <el-select placeholder="请选择" clearable v-model="tableFrom.status" @change="userSearchs"
@@ -120,9 +120,9 @@
             <!-- <a v-if="scope.row.stop_status === 0" v-db-click @click="edit(scope.row)">编辑</a>
             <el-divider direction="vertical" v-if="scope.row.stop_status === 0" />
             <a v-db-click @click="copy(scope.row)">复制</a>
-            <el-divider direction="vertical"></el-divider> -->
-            <a v-db-click @click="del(scope.row, '删除秒杀商品', scope.$index)">删除</a>
             <el-divider direction="vertical"></el-divider>
+            <a v-db-click @click="del(scope.row, '删除秒杀商品', scope.$index)">删除</a>
+            <el-divider direction="vertical"></el-divider> -->
             <a v-db-click @click="viewInfo(scope.row)">统计</a>
           </template>
         </el-table-column>

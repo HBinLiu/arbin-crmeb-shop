@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -231,13 +231,13 @@ class ChatHandle
                 $_userInfo = $userService->getUserInfo($data['uid'], 'nickname,avatar');
             }
             $data['nickname'] = $_userInfo['nickname'];
-            $data['avatar'] = $_userInfo['avatar'];
+            $data['avatar'] = set_file_url($_userInfo['avatar']);
         } else {
             $avatar = sys_config('tourist_avatar');
             $_userInfo['avatar'] = $tourist_avatar ?: Arr::getArrayRandKey(is_array($avatar) ? $avatar : []);
             $_userInfo['nickname'] = '游客' . $uid;
             $data['nickname'] = $_userInfo['nickname'];
-            $data['avatar'] = $_userInfo['avatar'];
+            $data['avatar'] = set_file_url($_userInfo['avatar']);
         }
 
         //商品消息类型
@@ -277,12 +277,7 @@ class ChatHandle
             //用户在线，可是没有和当前用户进行聊天，给当前用户发送未读条数
             if (isset($connections[$to_uid])) {
                 $data['recored']['nickname'] = $_userInfo['nickname'];
-                if (!preg_match('/^https?:\/\//i', $_userInfo['avatar'])) {
-                    // 若不以http/https开头，则拼接站点域名
-                    $data['recored']['avatar'] = sys_config('site_url') . $_userInfo['avatar'];
-                } else {
-                    $data['recored']['avatar'] = $_userInfo['avatar'];
-                }
+                $data['recored']['avatar'] = set_file_url($_userInfo['avatar']);
                 $response->connection($this->service->user()[$to_uid])->send('mssage_num', [
                     'uid' => $uid,
                     'num' => $unMessagesCount,

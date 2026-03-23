@@ -1,9 +1,76 @@
-const themeList = {
-	green: '--view-theme: rgba(66,202,77,1);--view-theme-16: #42CA4D;--view-priceColor:#FF7600;--view-minorColor:rgba(108, 198, 94, 0.5);--view-minorColorT:rgba(66, 202, 77, 0.1);--view-bntColor:#FE960F;--view-op-ten: rgba(66,202,77, 0.1);--view-main-start:#70E038; --view-main-over:#42CA4D;--view-op-point-four: rgba(66,202,77, 0.04);--view-op-point-eight: rgba(66,202,77, 0.8);--view-linear:linear-gradient(180deg, rgba(66,202,77,0.2) 0%, rgba(255,255,255,0) 100%);--view-gradient:#4DEA4D',
-	red: '--view-theme: rgba(233,51,35,1);--view-theme-16: #e93323;--view-priceColor:#e93323;--view-minorColor:rgba(233, 51, 35, 0.5);--view-minorColorT:rgba(233, 51, 35, 0.1);--view-bntColor:#FE960F;--view-op-ten: rgba(233,51,35, 0.1);--view-main-start:#FF6151; --view-main-over:#e93323;--view-op-point-four: rgba(233,51,35, 0.04);--view-op-point-eight: rgba(233,51,35, 0.8);--view-linear:linear-gradient(180deg, rgba(232,58,35,0.2) 0%, rgba(255,255,255,0) 100%);--view-gradient:#FF7931',
-	blue: '--view-theme: rgba(29,176,252,1);--view-theme-16:#1db0fc;--view-priceColor:#FD502F;--view-minorColor:rgba(58, 139, 236, 0.5);--view-minorColorT:rgba(9, 139, 243, 0.1);--view-bntColor:#22CAFD;--view-op-ten: rgba(29,176,252, 0.1);--view-main-start:#40D1F4; --view-main-over:#1DB0FC;--view-op-point-four: rgba(29,176,252, 0.04);--view-op-point-eight: rgba(29,176,252, 0.8);--view-linear:linear-gradient(180deg, rgba(29,176,252,0.2) 0%, rgba(255,255,255,0) 100%);--view-gradient:#5ACBFF',
-	pink: '--view-theme: rgba(255,68,143,1);--view-theme-16:#ff448f;--view-priceColor:#FF448F;--view-minorColor:rgba(255, 68, 143, 0.5);--view-minorColorT:rgba(255, 68, 143, 0.1);--view-bntColor:#282828;--view-op-ten: rgba(255,68,143, 0.1);--view-main-start:#FF67AD; --view-main-over:#FF448F;--view-op-point-four: rgba(255,68,143, 0.04);--view-op-point-eight: rgba(255,68,143, 0.8);--view-linear:linear-gradient(180deg, rgba(255,68,143,0.2) 0%, rgba(255,255,255,0) 100%);--view-gradient:#FF67AD',
-	orange: '--view-theme: rgba(254,92,45,1); --view-theme-16:#FE5C2D;--view-priceColor:#FE5C2D;--view-minorColor:rgba(254, 92, 45, 0.5);--view-minorColorT:rgba(254, 92, 45, 0.1);--view-bntColor:#FDB000;--view-op-ten: rgba(254,92,45, 0.1);--view-main-start:#FF9445; --view-main-over:#FE5C2D;--view-op-point-four: rgba(254,92,45, 0.04);--view-op-point-eight: rgba(254,92,45, 0.8);--view-linear:linear-gradient(180deg, rgba(254,92,45,0.2) 0%, rgba(255,255,255,0) 100%);--view-gradient:#FF9451'
+import { getThemeInfo } from "@/api/api.js";
+
+/**
+ * 处理颜色
+ */
+export function hexToRgba(hex, alpha) {
+  let sColor = hex.toLowerCase();
+  const reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/;
+  if (sColor && reg.test(sColor)) {
+    if (sColor.length === 4) {
+      let sColorNew = "#";
+      for (let i = 1; i < 4; i += 1) {
+        sColorNew += sColor.slice(i, i + 1).concat(sColor.slice(i, i + 1));
+      }
+      sColor = sColorNew;
+    }
+    //处理六位的颜色值
+    let sColorChange = [];
+    for (let i = 1; i < 7; i += 2) {
+      sColorChange.push(parseInt("0x" + sColor.slice(i, i + 2)));
+    }
+    return "rgba(" + sColorChange.join(",") + "," + alpha + ")";
+  }
+  return sColor;
 }
 
-export default themeList
+/**
+ * 设置主题颜色
+ * @param {Object} data 主题数据
+ */
+export function setThemeColor(data) {
+  let selectedTheme;
+  // 处理自定义主题色数据
+  if (data.theme_color) {
+    let themeColor = data.theme_color;
+    let gradientColor = data.gradient_color;
+    let subColor = data.sub_color;
+    let lightColor = data.light_color;
+    selectedTheme = `
+      --view-theme: ${hexToRgba(themeColor, 1)};
+      --view-theme-16: ${themeColor};
+      --view-priceColor: ${themeColor};
+      --view-minorColor: ${subColor};
+      --view-minorColorT: ${lightColor};
+      --view-bntColor: ${subColor};
+      --view-op-ten: ${hexToRgba(themeColor, 0.1)};
+      --view-main-start: ${gradientColor};
+      --view-main-over: ${themeColor};
+      --view-op-point-four: ${hexToRgba(themeColor, 0.04)};
+      --view-op-point-eight: ${hexToRgba(themeColor, 0.8)};
+      --view-linear: linear-gradient(180deg, ${hexToRgba(
+        themeColor,
+        0.2,
+      )} 0%, rgba(255,255,255,0) 100%);
+      --view-gradient: ${gradientColor};
+    `;
+    uni.setStorageSync("viewColor", selectedTheme);
+    uni.$emit("ok", selectedTheme);
+  }
+}
+
+/**
+ * 获取并应用主题
+ * @param {Number|String} themeId 主题ID
+ */
+export function applyTheme(themeId) {
+  let data = {};
+  if (themeId) data.theme_id = themeId;
+  return getThemeInfo("theme", data).then((res) => {
+    console.log("11122334");
+    uni.setStorageSync("is_diy", 1);
+    uni.$emit("is_diy", 1);
+    setThemeColor(res.data);
+    return res.data;
+  });
+}

@@ -25,6 +25,7 @@
               placeholder="请输入搜索内容"
               v-model="formValidate.real_name"
               class="form_content_width"
+              clearable
             >
               <el-select v-model="field_key" slot="prepend" style="width: 100px">
                 <el-option value="all" label="全部"></el-option>
@@ -48,8 +49,9 @@
             </el-select>
           </el-form-item>
           <el-form-item label="">
-            <el-button type="primary" class="mr15" v-db-click @click="userSearchs">搜索</el-button>
-            <!--            <el-button class="mr15" v-db-click @click="refresh">刷新</el-button>-->
+            <el-button type="primary" v-db-click @click="userSearchs">搜索</el-button>
+            <el-button v-db-click @click="exports">导出</el-button>
+            <!-- <el-button class="mr15" v-db-click @click="refresh">刷新</el-button> -->
           </el-form-item>
         </el-form>
       </div>
@@ -156,6 +158,7 @@
 
 <script>
 import { verifyOrderApi, merchantStoreListApi } from '@/api/setting';
+import { exportverifyOrderApi } from '@/api/export';
 import cardsData from '@/components/cards/cards';
 import referrerInfo from '@/components/referrerInfo/index';
 export default {
@@ -241,6 +244,16 @@ export default {
       };
       this.field_key = '';
       this.getList();
+    },
+    // 导出
+    exports() {
+      exportverifyOrderApi(this.formValidate)
+        .then((res) => {
+          location.href = res.data[0];
+        })
+        .catch((res) => {
+          this.$message.error(res.msg);
+        });
     },
   },
 };

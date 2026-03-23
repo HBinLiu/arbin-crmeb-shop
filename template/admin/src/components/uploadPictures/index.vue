@@ -128,7 +128,12 @@
                     <a href="#" class="demo-badge"></a>
                   </el-badge>
                 </p>
-                <div class="img" :class="item.isSelect ? 'on' : ''" v-db-click @click.stop="changImage(item, index, pictrueList)">
+                <div
+                  class="img"
+                  :class="item.isSelect ? 'on' : ''"
+                  v-db-click
+                  @click.stop="changImage(item, index, pictrueList)"
+                >
                   <img v-lazy="item.satt_dir" />
                 </div>
 

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -47,7 +47,7 @@ class StoreOrderWriteOffServices extends BaseServices
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
      */
-    public function writeOffOrder(string $code, int $confirm, int $uid = 0)
+    public function writeOffOrder(string $code, int $confirm, int $uid = 0, $auth = 0)
     {
         $orderInfo = $this->dao->getOne([
             ['verify_code', '=', $code],
@@ -57,15 +57,18 @@ class StoreOrderWriteOffServices extends BaseServices
             ['pid', '>=', 0]
         ]);
         if (!$orderInfo) {
-            throw new ApiException(410173);
+            throw new ApiException('订单不存在');
+        }
+        if ($orderInfo['status'] > 0) {
+            throw new ApiException('该订单已被核销');
         }
         if (!$orderInfo['verify_code'] || ($orderInfo->shipping_type != 2 && $orderInfo->delivery_type != 'send')) {
-            throw new ApiException(410267);
+            throw new ApiException('此订单不能被核销');
         }
         /** @var StoreOrderRefundServices $storeOrderRefundServices */
         $storeOrderRefundServices = app()->make(StoreOrderRefundServices::class);
         if ($storeOrderRefundServices->count(['store_order_id' => $orderInfo['id'], 'refund_type' => [1, 2, 4, 5], 'is_cancel' => 0, 'is_del' => 0])) {
-            throw new ApiException(410268);
+            throw new ApiException('订单有售后申请请先处理');
         }
         if ($uid) {
             $isAuth = true;
@@ -87,12 +90,12 @@ class StoreOrderWriteOffServices extends BaseServices
                     }
                     break;
             }
-            if (!$isAuth) {
-                throw new ApiException(410269);
+            if (!$isAuth && $auth == 0) {
+                throw new ApiException('您无权限核销此订单，请联系管理员');
             }
         }
         if ($orderInfo->status == 2) {
-            throw new ApiException(410270);
+            throw new ApiException('订单已核销');
         }
         /** @var StoreOrderCartInfoServices $orderCartInfo */
         $orderCartInfo = app()->make(StoreOrderCartInfoServices::class);
@@ -102,14 +105,14 @@ class StoreOrderWriteOffServices extends BaseServices
         if ($cartInfo) $orderInfo['image'] = $cartInfo['cart_info']['productInfo']['image'];
         if ($orderInfo->shipping_type == 2) {
             if ($orderInfo->status > 0) {
-                throw new ApiException(410270);
+                throw new ApiException('订单已核销');
             }
         }
         if ($orderInfo->combination_id && $orderInfo->pink_id) {
             /** @var StorePinkServices $services */
             $services = app()->make(StorePinkServices::class);
             $res = $services->getCount([['id', '=', $orderInfo->pink_id], ['status', '<>', 2]]);
-            if ($res) throw new ApiException(410271);
+            if ($res) throw new ApiException('拼团订单暂未成功无法核销');
         }
         if ($confirm == 0) {
             /** @var UserServices $services */
@@ -128,14 +131,14 @@ class StoreOrderWriteOffServices extends BaseServices
             $storeOrderTask = app()->make(StoreOrderTakeServices::class);
             $re = $storeOrderTask->storeProductOrderUserTakeDelivery($orderInfo);
             if (!$re) {
-                throw new ApiException(410272);
+                throw new ApiException('核销失败');
             }
             if ($orderInfo['shipping_type'] == 2) {
                 event('OrderShippingListener', ['product', $orderInfo, 4, '', '']);
             }
             return $orderInfo->toArray();
         } else {
-            throw new ApiException(410272);
+            throw new ApiException('核销失败');
         }
     }
 }

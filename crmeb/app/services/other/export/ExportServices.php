@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -221,7 +221,7 @@ class ExportServices extends BaseServices
         $export = $fileKey = [];
         /** @var StoreOrderServices $orderServices */
         $orderServices = app()->make(StoreOrderServices::class);
-        $data = $orderServices->getOrderList(['status' => 1, 'shipping_type' => 1, 'virtual_type' => 0])['data'];
+        $data = $orderServices->getOrderList(['status' => 1, 'shipping_type' => 1, 'virtual_type' => 0, 'pid' => 0])['data'];
         if (!empty($data)) {
             $i = 0;
             foreach ($data as $item) {
@@ -327,12 +327,19 @@ class ExportServices extends BaseServices
                         $attrArr[] = $attrArray['value'] . '=' . $detailString;
                     }
                     $attrString = implode(';', $attrArr);
+                    if (reset($cateName)['one'] == null) {
+                        $cate_name_one = reset($cateName)['two'] ?? '';
+                        $cate_name_two = '';
+                    } else {
+                        $cate_name_one = reset($cateName)['one'] ?? '';
+                        $cate_name_two = reset($cateName)['two'] ?? '';
+                    }
                     $one_data = [
                         'id' => intval($product_id),
                         'store_name' => $productInfo['store_name'],
                         'virtual_type' => $virtualType[$productInfo['virtual_type']],
-                        'cate_name_one' => reset($cateName)['one'] ?? '',
-                        'cate_name_two' => reset($cateName)['two'] ?? '',
+                        'cate_name_one' => $cate_name_one,
+                        'cate_name_two' => $cate_name_two,
                         'unit_name' => $productInfo['unit_name'],
                         'ficti' => intval($productInfo['ficti']),
                         'min_qty' => intval($productInfo['min_qty']),
@@ -342,8 +349,8 @@ class ExportServices extends BaseServices
                         'ot_price' => floatval($value['ot_price']),
                         'cost' => floatval($value['cost']),
                         'stock' => intval($value['stock']),
-                        'volume' => intval($value['volume'] ?? 0),
                         'weight' => intval($value['weight'] ?? 0),
+                        'volume' => intval($value['volume'] ?? 0),
                         'bar_code' => $value['bar_code'] ?? '',
                         'bar_code_number' => $value['bar_code_number'] ?? '',
                         'store_info' => $productInfo['store_info'],
@@ -1009,6 +1016,44 @@ class ExportServices extends BaseServices
         $header = ['日期/时间', '访客数', '浏览量', '新增用户数', '成交用户数', '付费会员数'];
         $title = ['用户统计', '用户统计' . time(), ' 生成时间：' . date('Y-m-d H:i:s', time())];
         $filename = '用户统计_' . date('YmdHis', time());
+        $suffix = 'xlsx';
+        $is_save = true;
+        return $this->export($header, $title, $export, $filename, $suffix, $is_save);
+    }
+
+    /**
+     * 核销记录导出
+     * @param array $data
+     * @return mixed|string[]
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2025/9/9
+     */
+    public function verifyOrder($data = [])
+    {
+        $export = [];
+        if (!empty($data)) {
+            foreach ($data as $item) {
+                $productName = '';
+                foreach ($item['_info'] as $productInfo) {
+                    $productName .= $productInfo['cart_info']['productInfo']['store_name'] . ' ';
+                }
+                $export[] = [
+                    $item['order_id'],
+                    $item['real_name'] . '/' . $item['uid'],
+                    $productName,
+                    $item['pay_price'],
+                    $item['clerk_name'],
+                    $item['store_name'],
+                    $item['pay_type_name'],
+                    $item['status_name']['status_name'],
+                    $item['add_time'],
+                ];
+            }
+        }
+        $header = ['订单号', '用户信息', '商品信息', '支付金额', '核销员', '核销门店', '支付状态', '订单状态', '下单时间'];
+        $title = ['核销记录导出', '核销记录导出' . time(), ' 生成时间：' . date('Y-m-d H:i:s', time())];
+        $filename = '核销记录_' . date('YmdHis', time());
         $suffix = 'xlsx';
         $is_save = true;
         return $this->export($header, $title, $export, $filename, $suffix, $is_save);

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -46,7 +46,7 @@ class WechatTemplate extends AuthController
     public function syncSubscribe()
     {
         if (!sys_config('wechat_appid') || !sys_config('wechat_appsecret')) {
-            throw new AdminException(400248);
+            throw new AdminException('请先配置微信公众号appid、appSecret等参数');
         }
 
         $tempIds = $this->services->getTempId('wechat');
@@ -59,6 +59,6 @@ class WechatTemplate extends AuthController
         foreach ($tempKeys as $key => $content) {
             SyncMessageJob::dispatch('SyncWechat', [$key, $content['wechat_content']]);
         }
-        return app('json')->success(100038);
+        return app('json')->success('同步成功');
     }
 }

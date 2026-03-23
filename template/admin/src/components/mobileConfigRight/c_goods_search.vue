@@ -56,7 +56,6 @@ export default {
   },
   methods: {
     checkboxChange(e) {
-      console.log('dfdf', e);
       this.$emit('getConfig', e);
     },
     sliderChange(e) {

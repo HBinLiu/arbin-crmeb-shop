@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -24,6 +24,11 @@ use think\facade\App;
  */
 class MemberCardBatch extends AuthController
 {
+    /**
+     * @var MemberCardBatchServices
+     */
+    protected $services;
+
     /**
      * MemberCardBatch constructor.
      * @param App $app
@@ -63,7 +68,7 @@ class MemberCardBatch extends AuthController
             ['remark', '']
         ]);
         $this->services->save((int)$id, $data);
-        return app('json')->success(400313);
+        return app('json')->success('卡片生成成功');
     }
 
     /**
@@ -79,7 +84,7 @@ class MemberCardBatch extends AuthController
             ['field', ''],
         ]);
         $this->services->setValue($id, $data);
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }
 
     /**会员二维码，兑换卡

@@ -258,7 +258,6 @@ export default {
     },
     // 头部选择
     bindTab(item) {
-      console.log('1122');
       debugger;
       this.tabCur = item.key;
       this.cateId = '';

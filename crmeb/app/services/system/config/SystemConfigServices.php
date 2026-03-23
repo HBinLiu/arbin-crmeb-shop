@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -1039,7 +1039,7 @@ class SystemConfigServices extends BaseServices
         }
         $auth = $this->postUrl[$name]['auth'] ?? false;
         if ($auth === false) {
-            throw new AdminException(400601);
+            throw new AdminException('请求不被允许');
         }
         if ($auth) {
             /** @var SystemConfigTabServices $systemConfigTabServices */
@@ -1047,7 +1047,7 @@ class SystemConfigServices extends BaseServices
             foreach ($post as $key => $value) {
                 $tab_ids = $systemConfigTabServices->getColumn([['eng_title', 'IN', $auth]], 'id');
                 if (!$tab_ids || !in_array($key, $this->dao->getColumn([['config_tab_id', 'IN', $tab_ids]], 'menu_name'))) {
-                    throw new AdminException(400602);
+                    throw new AdminException('设置类目不被允许');
                 }
             }
         }
@@ -1067,7 +1067,7 @@ class SystemConfigServices extends BaseServices
     {
         $menu = $this->dao->get($id)->getData();
         if (!$menu) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         /** @var SystemConfigTabServices $service */
         $service = app()->make(SystemConfigTabServices::class);
@@ -1300,7 +1300,7 @@ class SystemConfigServices extends BaseServices
         $data['parameter'] = str_replace("\r\n", "\n", $data['parameter']);//防止不兼容
         $parameter = explode("\n", $data['parameter']);
         if (count($parameter) < 2) {
-            throw new AdminException(400603);
+            throw new AdminException('请输入正确格式的配置参数');
         }
         foreach ($parameter as $k => $v) {
             if (isset($v) && !empty($v)) {
@@ -1308,7 +1308,7 @@ class SystemConfigServices extends BaseServices
             }
         }
         if (count($option) < 2) {
-            throw new AdminException(400603);
+            throw new AdminException('请输入正确格式的配置参数');
         }
         $bool = 1;
         foreach ($option as $k => $v) {
@@ -1321,13 +1321,13 @@ class SystemConfigServices extends BaseServices
             }
         }
         if (!$bool) {
-            throw new AdminException(400603);
+            throw new AdminException('请输入正确格式的配置参数');
         }
         $num1 = count($option_new);//提取该数组的数目
         $arr2 = array_unique($option_new);//合并相同的元素
         $num2 = count($arr2);//提取合并后数组个数
         if ($num1 > $num2) {
-            throw new AdminException(400603);
+            throw new AdminException('请输入正确格式的配置参数');
         }
         return true;
     }
@@ -1351,12 +1351,12 @@ class SystemConfigServices extends BaseServices
                 switch ($k) {
                     case 'required':
                         if ($v == 'true' && $data['value'] === '') {
-                            throw new AdminException(400604, ['name' => $data['info'] ?? '']);
+                            throw new AdminException('{:name}请输入默认值', ['name' => $data['info'] ?? '']);
                         }
                         break;
                     case 'url':
                         if ($v == 'true' && !check_link($data['value'])) {
-                            throw new AdminException(400605, ['name' => $data['info'] ?? '']);
+                            throw new AdminException('{:name}请输入正确url', ['name' => $data['info'] ?? '']);
                         }
                         break;
                 }
@@ -1422,7 +1422,7 @@ WSS;
         try {
             file_put_contents($wssFile, $content);
         } catch (\Throwable $e) {
-            throw new AdminException(400606);
+            throw new AdminException('保存wss证书失败');
         }
     }
 

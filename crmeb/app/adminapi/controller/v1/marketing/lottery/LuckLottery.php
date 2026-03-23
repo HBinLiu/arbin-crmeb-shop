@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -62,7 +62,7 @@ class LuckLottery extends AuthController
     public function detail($id)
     {
         if (!$id) {
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         }
         return app('json')->success($this->services->getLotteryInfo((int)$id));
     }
@@ -98,25 +98,25 @@ class LuckLottery extends AuthController
             ['prize', []]
         ]);
         if (!$data['name']) {
-            return app('json')->fail(400501);
+            return app('json')->fail('请添加抽奖活动名称');
         }
         if ($data['is_content'] && !$data['content']) {
-            return app('json')->fail(400502);
+            return app('json')->fail('请添加抽奖描述等文案');
         }
         [$start, $end] = $data['period'];
         unset($data['period']);
         $data['start_time'] = $start ? strtotime($start) : 0;
-        $data['end_time'] = $end ? strtotime($end) : 0;
+        $data['end_time'] = $end ? strtotime($end) + 86399 : 0;
         if ($data['start_time'] && $data['end_time'] && $data['end_time'] <= $data['start_time']) {
-            return app('json')->fail(400503);
+            return app('json')->fail('活动结束时间必须大于开始时间');
         }
         if (!$data['prize']) {
-            return app('json')->fail(400504);
+            return app('json')->fail('请添加奖品');
         }
         if (in_array($data['factor'], [1, 2]) && !$data['factor_num']) {
-            return app('json')->fail(400505);
+            return app('json')->fail('请填写消耗数量');
         }
-        return app('json')->success($this->services->add($data) ? 100000 : 100006);
+        return app('json')->success($this->services->add($data) ? '保存成功' : '保存失败');
     }
 
     /**
@@ -151,28 +151,28 @@ class LuckLottery extends AuthController
             ['prize', []]
         ]);
         if (!$id) {
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         }
         if (!$data['name']) {
-            return app('json')->fail(400501);
+            return app('json')->fail('请添加抽奖活动名称');
         }
         [$start, $end] = $data['period'];
         unset($data['period']);
         $data['start_time'] = $start ? strtotime($start) : 0;
-        $data['end_time'] = $end ? strtotime($end) : 0;
+        $data['end_time'] = $end ? strtotime($end) + 86399 : 0;
         if ($data['start_time'] && $data['end_time'] && $data['end_time'] <= $data['start_time']) {
-            return app('json')->fail(400503);
+            return app('json')->fail('活动结束时间必须大于开始时间');
         }
         if ($data['is_content'] && !$data['content']) {
-            return app('json')->fail(400502);
+            return app('json')->fail('请添加抽奖描述等文案');
         }
         if (!$data['prize']) {
-            return app('json')->fail(400504);
+            return app('json')->fail('请添加奖品');
         }
         if (in_array($data['factor'], [1, 2]) && !$data['factor_num']) {
-            return app('json')->fail(400505);
+            return app('json')->fail('请填写消耗数量');
         }
-        return app('json')->success($this->services->edit((int)$id, $data) ? 100001 : 100007);
+        return app('json')->success($this->services->edit((int)$id, $data) ? '修改成功' : '修改失败');
     }
 
     /**
@@ -187,9 +187,9 @@ class LuckLottery extends AuthController
         list($id) = $this->request->getMore([
             ['id', 0],
         ], true);
-        if (!$id) return app('json')->fail(100026);
+        if (!$id) return app('json')->fail('数据不存在');
         $this->services->delLottery((int)$id);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -203,9 +203,9 @@ class LuckLottery extends AuthController
      */
     public function setStatus($id = '', $status = '')
     {
-        if ($status == '' || $id == '') return app('json')->fail(100100);
+        if ($status == '' || $id == '') return app('json')->fail('参数错误');
         $this->services->setStatus((int)$id, (int)$status);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     public function factorList()

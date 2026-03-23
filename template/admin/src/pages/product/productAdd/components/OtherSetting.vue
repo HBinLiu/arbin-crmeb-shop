@@ -56,18 +56,28 @@
       </el-form-item>
     </el-col>
     <el-col :span="24">
+      <el-form-item label="服务保障：">
+        <el-checkbox-group v-model="formValidate.protection_list" v-if="protectionList.length">
+          <el-checkbox v-for="(item, index) in protectionList" :key="index" :label="item.id">{{
+            item.title
+          }}</el-checkbox>
+        </el-checkbox-group>
+        <el-button v-else type="primary" v-db-click @click="addProtection">添加保障</el-button>
+        <div class="tips-info">商品详情中显示的服务保障信息，可多选</div>
+      </el-form-item>
+    </el-col>
+    <el-col :span="24">
       <el-form-item label="商品参数：">
         <el-select
           v-model="paramsType"
           clearable
-          style="width: 200px; margin-left: 6px; margin-right: 10px"
+          style="width: 200px; margin-right: 10px"
           @change="changeParamsType"
         >
           <el-option v-for="items in paramsTypeList" :value="items.id" :key="items.id" :label="items.name"></el-option>
         </el-select>
         <div class="specifications">
           <el-table
-            v-if="paramsType || formValidate.params_list.length"
             class="mt15"
             ref="selection"
             :data="formValidate.params_list"
@@ -89,7 +99,7 @@
             </el-table-column>
           </el-table>
           <el-button
-            v-if="formValidate.params_list.length < 8 && paramsType"
+            v-if="formValidate.params_list.length < 8"
             type="primary"
             class="submission mr15 mt20"
             v-db-click
@@ -97,17 +107,6 @@
             >添加参数</el-button
           >
         </div>
-      </el-form-item>
-    </el-col>
-    <el-col :span="24">
-      <el-form-item label="服务保障：">
-        <el-checkbox-group v-model="formValidate.protection_list" v-if="protectionList.length">
-          <el-checkbox v-for="(item, index) in protectionList" :key="index" :label="item.id">{{
-            item.title
-          }}</el-checkbox>
-        </el-checkbox-group>
-        <el-button v-else type="primary" v-db-click @click="addProtection">添加保障</el-button>
-        <div class="tips-info">商品详情中显示的服务保障信息，可多选</div>
       </el-form-item>
     </el-col>
     <el-col :span="24">

@@ -3,8 +3,16 @@
   "enablePullDownRefresh": true,
   "navigationStyle": "custom",
   "navigationBarTextStyle": "black",
+  "componentPlaceholder": {
+    "page-design": "view"
+  },
   "usingComponents": {
     "page-footer": "/components/pageFooter/index",
-    "edit-user-modal": "/components/eidtUserModal/index"
+    "edit-user-modal": "/components/eidtUserModal/index",
+    "page-design": "/subpackage/diyComponents/pageDesign",
+    "coupon-window": "/components/couponWindow/index",
+    "waterfalls-flow": "/components/WaterfallsFlow/WaterfallsFlow",
+    "empty-page": "/components/emptyPage",
+    "loading": "/components/Loading/index"
   }
 }

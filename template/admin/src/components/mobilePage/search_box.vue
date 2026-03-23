@@ -1,20 +1,6 @@
 <template>
-  <div
-    :style="{
-      background: bottomBgColor,
-      paddingTop: topConfig + 'px',
-      paddingBottom: bottomConfig + 'px',
-      paddingLeft: prConfig + 'px',
-      paddingRight: prConfig + 'px',
-    }"
-  >
-    <div
-      class="search-box"
-      :style="{
-        background: `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`,
-        borderRadius: bgRadius,
-      }"
-    >
+  <common_wrapper :config="configObj">
+    <div class="search-box" :style="[searchBoxStyle]">
       <div class="search acea-row row-middle" :style="[txtPosition]">
         <img :src="logoUrl" alt="" v-if="logoUrl && styleConfig == 0 && styleTypeConfig == 1" />
         <div
@@ -49,7 +35,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </common_wrapper>
 </template>
 
 <script>
@@ -104,6 +90,13 @@ export default {
         background: this.searchBoxColor,
       };
     },
+    searchBoxStyle() {
+      if (this.configObj && this.configObj.moduleColor) {
+        return {
+          background: `linear-gradient(90deg, ${this.configObj.moduleColor.color[0].item} 0%, ${this.configObj.moduleColor.color[1].item} 100%)`,
+        };
+      }
+    },
   },
   watch: {
     pageData: {
@@ -145,6 +138,11 @@ export default {
         titleRight: '搜索框',
         titleCurrency: '通用样式',
         titleTxt: '文字设置',
+        zIndexConfig: {
+          title: '组件上浮',
+          val: 0,
+          min: 0,
+        },
         styleConfig: {
           title: '选择风格',
           tabVal: 0,
@@ -330,21 +328,6 @@ export default {
             },
           ],
         },
-        topConfig: {
-          title: '上边距',
-          val: 0,
-          min: 0,
-        },
-        bottomConfig: {
-          title: '下边距',
-          val: 0,
-          min: 0,
-        },
-        prConfig: {
-          title: '左右边距',
-          val: 0,
-          min: 0,
-        },
         fillet: {
           title: '背景圆角',
           type: 0,
@@ -363,17 +346,105 @@ export default {
           min: 0,
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
+        paddingConfig: {
+          title: '内边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        },
+        marginConfig: {
+          title: '外边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        },
+        componentBgConfig: {
+          title: '背景设置',
+          tabVal: 0,
+          tabList: [{ name: '颜色' }, { name: '图片' }],
+          colorConfig: {
+            title: '背景颜色',
+            default: [{ item: '#F5F5F5' }, { item: '#F5F5F5' }],
+            color: [{ item: '#F5F5F5' }, { item: '#F5F5F5' }],
+          },
+          colorDirection: {
+            title: '渐变方向',
+            tabVal: 0,
+            tabList: [{ name: '横向' }, { name: '纵向' }, { name: '左斜' }, { name: '右斜' }],
+          },
+          imageConfig: {
+            header: '背景图片',
+            title: '',
+            name: '上传图片',
+            type: 'code',
+            url: '',
+            info: '建议尺寸：750px * 400px',
+          },
+        },
+        borderConfig: {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Hide, 1: Show
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              { name: '实线', style: 'solid' },
+              { name: '虚线', style: 'dashed' },
+              { name: '点状', style: 'dotted' },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
+        },
+        shadowConfig: {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0,
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: 'rgba(0,0,0,0.1)' }],
+            color: [{ item: 'rgba(0,0,0,0.1)' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+          },
+        },
       },
       pageData: {},
       logoUrl: '',
       styleConfig: 0,
-      bottomBgColor: '',
-      bgColorLeft: '',
-      bgColorRight: '',
-      topConfig: 0,
-      bottomConfig: 0,
-      prConfig: 0,
-      bgRadius: 0,
       titleConfig: '',
       searchBoxColor: '',
       tipConfig: '',
@@ -386,6 +457,12 @@ export default {
       txtColor: '',
       txtStyleConfig: '',
       txtSize: 0,
+      paddingConfig: null,
+      marginConfig: null,
+      borderConfig: null,
+      shadowConfig: null,
+      componentBgConfig: null,
+      configObj: null,
     };
   },
   mounted() {
@@ -397,40 +474,43 @@ export default {
   methods: {
     setConfig(data) {
       if (!data) return;
-      if (data.prConfig) {
-        this.logoUrl = data.logoConfig.url;
-        this.styleConfig = data.styleConfig.tabVal;
-        this.styleTypeConfig = data.styleTypeConfig.tabVal;
-        // this.fixConfig = data.fixConfig.tabVal || 0;
-        this.txtFixConfig = data.txtFixConfig.tabVal;
-        this.txtStyleConfig = data.txtStyleConfig.tabList[data.txtStyleConfig.tabVal].style;
-        this.txtSize = data.txtSize.val;
-        this.txtColor = data.txtColor.color[0].item;
-        this.bottomBgColor = data.bottomBgColor.color[0].item;
-        this.bgColorLeft = data.moduleColor.color[0].item;
-        this.bgColorRight = data.moduleColor.color[1].item;
-        this.topConfig = data.topConfig.val;
-        this.bottomConfig = data.bottomConfig.val;
-        this.prConfig = data.prConfig.val;
-        this.titleConfig = data.titleConfig.value;
-        this.searchBoxColor = data.searchBoxColor.color[0].item;
-        this.tipConfig = data.tipConfig.value;
-        this.hotWords = data.hotWords.list.length ? data.hotWords.list[0].val : '';
-        this.tipColor = data.tipColor.color[0].item;
-        this.hotWordsColor = data.hotWordsColor.color[0].item;
-        let fillet = data.fillet.type;
-        let filletVal = data.fillet.val;
-        let valList = data.fillet.valList;
-        this.bgRadius = fillet
-          ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
-          : filletVal + 'px';
+      let dataClone = JSON.parse(JSON.stringify(data));
+      for (let key in this.defaultConfig) {
+        if (dataClone[key] === undefined) {
+          this.$set(dataClone, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+        }
       }
+      this.configObj = dataClone;
+
+      this.paddingConfig = dataClone.paddingConfig;
+      this.marginConfig = dataClone.marginConfig;
+      this.borderConfig = dataClone.borderConfig;
+      this.shadowConfig = dataClone.shadowConfig;
+      this.componentBgConfig = dataClone.componentBgConfig;
+
+      this.logoUrl = dataClone.logoConfig.url;
+      this.styleConfig = dataClone.styleConfig.tabVal;
+      this.styleTypeConfig = dataClone.styleTypeConfig.tabVal;
+      this.txtFixConfig = dataClone.txtFixConfig.tabVal;
+      this.txtStyleConfig = dataClone.txtStyleConfig.tabList[dataClone.txtStyleConfig.tabVal].style;
+      this.txtSize = dataClone.txtSize.val;
+      this.txtColor = dataClone.txtColor.color[0].item;
+      this.titleConfig = dataClone.titleConfig.value;
+      this.searchBoxColor = dataClone.searchBoxColor.color[0].item;
+      this.tipConfig = dataClone.tipConfig.value;
+      this.hotWords = dataClone.hotWords.list.length ? dataClone.hotWords.list[0].val : '';
+      this.tipColor = dataClone.tipColor.color[0].item;
+      this.hotWordsColor = dataClone.hotWordsColor.color[0].item;
     },
   },
 };
 </script>
 
 <style scoped lang="scss">
+.mobile-page {
+  display: inline-block;
+  width: -webkit-fill-available;
+}
 .search-box {
   display: flex;
   align-items: center;

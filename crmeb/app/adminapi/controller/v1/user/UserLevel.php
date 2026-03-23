@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -66,13 +66,13 @@ class UserLevel extends AuthController
             ['exp_num', 0]
         ]);
         if ($data['valid_date'] == 0) $data['is_forever'] = 1;//有效时间为0的时候就是永久
-        if (!$data['name']) return app('json')->fail(400324);
-        if (!$data['grade']) return app('json')->fail(400325);
-        if (!$data['icon']) return app('json')->fail(400327);
-        if (!$data['image']) return app('json')->fail(400328);
-        if (!$data['exp_num']) return app('json')->fail(400329);
+        if (!$data['name']) return app('json')->fail('请输入等级名称');
+        if (!$data['grade']) return app('json')->fail('请输入等级');
+        if (!$data['icon']) return app('json')->fail('请上传等级图标');
+        if (!$data['image']) return app('json')->fail('请上传等级背景图标');
+        if (!$data['exp_num']) return app('json')->fail('请输入升级经验值');
         $this->services->save((int)$data['id'], $data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /*
@@ -107,7 +107,7 @@ class UserLevel extends AuthController
      */
     public function set_show($is_show = '', $id = '')
     {
-        if ($is_show == '' || $id == '') return app('json')->fail(100100);
+        if ($is_show == '' || $id == '') return app('json')->fail('参数错误');
         return app('json')->success($this->services->setShow((int)$id, (int)$is_show));
     }
 
@@ -122,9 +122,9 @@ class UserLevel extends AuthController
             ['field', ''],
             ['value', '']
         ]);
-        if ($data['field'] == '' || $data['value'] == '') return app('json')->fail(100100);
+        if ($data['field'] == '' || $data['value'] == '') return app('json')->fail('参数错误');
         $this->services->setValue((int)$id, $data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
 

@@ -57,7 +57,7 @@
         <div class="bnt acea-row row-middle df-jcsb">
           <div class="">
             <el-button
-              class="mr14"
+              class="mr8"
               type="primary"
               :disabled="checkPicList.length === 0"
               v-db-click
@@ -68,7 +68,7 @@
             >
             <!-- <el-button size="small" type="primary" v-db-click @click="uploadModal">上传视频</el-button> -->
             <el-button
-              class="mr14"
+              class="mr8"
               v-if="upload_type !== '1'"
               type="primary"
               size="small"
@@ -87,10 +87,12 @@
               style="display: inline-block"
               accept=".mp4"
             >
-              <el-button class="mr14" size="small" type="primary">上传视频</el-button>
+              <el-button class="mr8" size="small" type="primary">上传视频</el-button>
             </el-upload>
+            <!-- 输入链接 -->
+            <el-button class="mr8" size="small" type="primary" icon="el-icon-link" @click="openInputModal"></el-button>
             <el-button
-              class="mr14"
+              class="mr8"
               size="small"
               :disabled="!checkPicList.length && !ids.length"
               v-db-click
@@ -111,7 +113,7 @@
           </div>
           <div>
             <el-input
-              class="mr14"
+              class="mr8"
               v-model="fileData.real_name"
               placeholder="请输入视频名"
               size="small"
@@ -251,6 +253,13 @@
       <video :src="imageUrl" controls />
     </el-dialog>
     <input type="file" ref="refid" style="display: none" @change="zh_uploadFile_change" />
+    <!-- 输入链接弹窗 -->
+    <el-dialog title="输入视频链接" append-to-body :visible.sync="inputModal" width="400px">
+      <div class="flex">
+        <el-input class="mr-20" v-model="inputUrl" placeholder="请输入视频链接" />
+        <el-button type="primary" @click="uploadByUrl">使用</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -352,6 +361,8 @@ export default {
       upload: {
         videoIng: false, // 是否显示进度条；
       },
+      inputModal: false, // 输入链接弹窗
+      inputUrl: '', // 输入的视频链接
     };
   },
   mounted() {
@@ -367,6 +378,10 @@ export default {
     this.getFileList();
   },
   methods: {
+    // 打开输入链接弹窗
+    openInputModal() {
+      this.inputModal = true;
+    },
     //获取视频上传类型
     uploadType() {
       uploadType().then((res) => {
@@ -390,14 +405,12 @@ export default {
       if (evfile.target.files[0].type !== 'video/mp4') {
         return that.$message.error('只能上传mp4文件');
       }
-      console.log('111');
       debugger;
       let types = {
         key: evfile.target.files[0].name,
         contentType: evfile.target.files[0].type,
       };
       productGetTempKeysApi(types).then((res) => {
-        console.log(res, evfile, res.data.type);
         that.$videoCloud
           .videoUpload({
             type: res.data.type,
@@ -845,7 +858,6 @@ export default {
     },
     // 点击使用选中视频
     checkPics() {
-      console.log(this.checkPicList, 'this.checkPicList', this.isChoice);
       if (this.isChoice === 'one') {
         if (this.checkPicList.length > 1) return this.$message.warning('最多只能选一张视频');
         this.$emit('getVideo', this.checkPicList[0].att_dir);
@@ -856,6 +868,16 @@ export default {
         this.$emit('getPicD', this.checkPicList);
         this.$emit('getVideo', this.checkPicList);
       }
+    },
+    // 上传视频链接
+    uploadByUrl() {
+      if (!this.inputUrl) {
+        this.$message.error('请输入视频链接');
+        return;
+      }
+      this.$emit('getVideo', this.inputUrl);
+      this.$emit('getPicD', this.inputUrl);
+      this.inputUrl = '';
     },
     editName(item) {
       let it = item.real_name.split('.');

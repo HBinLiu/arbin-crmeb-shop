@@ -1,44 +1,6 @@
 <template>
-  <!-- 添加主题-首页装修 -->
   <div class="diy-page">
-    <div class="i-layout-page-header header-title">
-      <div class="fl_header">
-        <!-- <span class="ivu-page-header-title mr20" style="padding: 0" v-text="$route.meta.title"></span> -->
-        <div class="f-title acea-row row-middle">
-          <div class="acea-row row-middle cup" @click="returnTap">
-            <div class="iconfont iconfanhui"></div>
-            <div class="return">返回</div>
-          </div>
-          <div class="mr20">
-            <span class="name mr5">当前页面：{{ nameTxt || '模板' }}</span>
-            <el-popover v-model="visible" width="347">
-              <span slot="reference" class="iconfont iconzidingyicaidan cup"></span>
-              <template>
-                <div class="flex">
-                  <el-input
-                    v-model="nameTxt"
-                    placeholder="必填不超过15个字"
-                    maxlength="15"
-                    style="width: 200px"
-                  ></el-input>
-                  <el-button type="text" @click="cancel">取消</el-button>
-                  <el-button type="primary" @click="determine">确定</el-button>
-                </div>
-              </template>
-            </el-popover>
-          </div>
-        </div>
-        <div class="rbtn">
-          <!-- <el-button class="ml20 header-btn look" v-db-click @click="exportView" :loading="loading">导出</el-button>
-          <el-button class="ml20 header-btn look" v-db-click @click="importView" :loading="loading">导入</el-button> -->
-          <el-button class="ml20 header-btn look" v-db-click @click="preview" :loading="loading">预览</el-button>
-          <el-button class="ml20 header-btn close" v-db-click @click="saveConfig(1)" :loading="loading">保存</el-button>
-          <el-button class="ml20 header-btn save" v-db-click @click="saveConfig(2)" :loading="loading"
-            >保存并关闭</el-button
-          >
-        </div>
-      </div>
-    </div>
+    <!-- 旧 Header 已迁移至新编辑模块顶部，移除该块 -->
     <el-card :bordered="false" shadow="never">
       <div class="diy-wrapper" :style="'height:' + clientHeight + 'px;'">
         <!-- 左侧 -->
@@ -67,14 +29,14 @@
                     homeComb: element.cname == '轮播搜索',
                     service: element.cname == '悬浮按钮',
                   }"
-                  v-for="(element, index) in item.list"
+                  v-for="element in item.list"
                   :key="element.id"
                   @click="addDom(element, 1)"
                   v-show="item.isOpen"
                 >
                   <div>
                     <div class="position" style="display: none">释放鼠标将组建添加到此处</div>
-                    <svg class="conter iconfont-diy icon svg-icon" aria-hidden="true">
+                    <svg class="conter iconfont icon svg-icon" aria-hidden="true">
                       <use :xlink:href="element.icon"></use>
                     </svg>
                     <p class="conter">{{ element.cname }}</p>
@@ -90,7 +52,12 @@
             <div class="contxt">
               <div class="overflowy">
                 <div class="picture"><img src="@/assets/images/electric.png" /></div>
-                <div class="page-title" :class="{ on: activeIndex == -100 }" @click="showTitle">
+                <div
+                  v-if="pageType == 'home'"
+                  class="page-title"
+                  :class="{ on: activeIndex == -100 }"
+                  @click="showTitle"
+                >
                   {{ titleTxt }}
                   <div class="delete-box"></div>
                   <div class="handle"></div>
@@ -116,7 +83,7 @@
                       rollHeight +
                       'px;'
                     "
-                    ref="imgContainer"
+                    id="imgContainer"
                   >
                     <draggable
                       class="dragArea list-group"
@@ -137,7 +104,11 @@
                         v-for="(item, key) in mConfig"
                         :key="key"
                         @click.stop="bindconfig(item, key)"
-                        :style="colorTxt ? 'background-color:' + colorPickerTxt + ';' : 'background-color:#fff;'"
+                        :style="
+                          colorTxt
+                            ? 'background-color:' + colorPickerTxt + ';'
+                            : 'background-color: rgba(255,255,255, 0);'
+                        "
                       >
                         <component
                           :is="item.name"
@@ -169,13 +140,24 @@
                           </div>
                         </div>
                         <div class="handle"></div>
-                        <div class="delete-name" :class="{ on: activeIndex == key }">{{ item.cname }}</div>
+                        <div class="delete-name" :class="{ on: activeIndex == key }">
+                          <span
+                            v-if="
+                              item.name == 'home_custom_component' &&
+                              defaultArrays[item.num] &&
+                              defaultArrays[item.num].selectType
+                            "
+                            class="custom-badge"
+                            >{{ getBadgeText(defaultArrays[item.num].selectType.activeValue) }}</span
+                          >
+                          {{ item.cname }}
+                        </div>
                       </div>
                     </draggable>
                   </div>
                 </div>
               </div>
-              <div class="overflowy">
+              <div class="overflowy" v-if="pageType == 'home' && !isMicroPage">
                 <div
                   class="page-foot"
                   @click="showFoot"
@@ -187,12 +169,20 @@
                   <div class="handle"></div>
                 </div>
               </div>
+              <div class="overflowy" v-if="pageType == 'detail'">
+                <div class="page-foot" @click="showBottomMenu" :class="{ on: activeIndex == -102 }">
+                  <home_bottom_menu :colorStyle="colorStyle"></home_bottom_menu>
+                  <div class="delete-box"></div>
+                  <div class="handle"></div>
+                </div>
+              </div>
               <div class="defaultData" v-if="pageId !== 0">
                 <!-- <div class="data" @click="setmoren">设置默认</div>
-                                  <div class="data" @click="getmoren">恢复默认</div> -->
+                <div class="data" @click="getmoren">恢复默认</div> -->
                 <el-button class="data" @click="showTitle">页面设置</el-button>
-                <el-button class="data" @click="nameModal = true">另存模板</el-button>
+                <el-button class="data" @click="nameModal = true">另存模版</el-button>
                 <el-button class="data" @click="reast">重置</el-button>
+                <el-button v-if="!isMicroPage" class="data" @click="saveCover">保存为封面</el-button>
               </div>
             </div>
           </div>
@@ -235,21 +225,26 @@
         <el-button type="primary" v-db-click @click="saveModal">确 定</el-button>
       </span>
     </el-dialog>
-    <!--<div class="foot-box">-->
-    <!--<Button @click="reast">重置</Button>-->
-    <!--<Button type="primary" @click="saveConfig" :loading="loading"-->
-    <!--&gt;保存-->
-    <!--</Button-->
-    <!--&gt;-->
-    <!--</div>-->
   </div>
 </template>
 
 <script crossorigin="anonymous">
-import { categoryList, diyProInfo, diyProSave, setDefault, recovery, diyUpdateName, getRoutineCode } from '@/api/diy';
+import {
+  categoryList,
+  themeInfo,
+  themeSave,
+  setDefault,
+  recovery,
+  diyUpdateName,
+  getRoutineCode,
+  saveThemeImage,
+} from '@/api/diy';
+import { fileUpload } from '@/api/setting';
 import vuedraggable from 'vuedraggable';
 import mPage from '@/components/mobilePage/index.js';
 import mConfig from '@/components/mobileConfig/index.js';
+import home_bottom_menu from '@/components/mobilePage/home_bottom_menu.vue';
+
 import footPage from '@/components/pagesFoot';
 import { mapState } from 'vuex';
 import html2canvas from 'html2canvas';
@@ -258,7 +253,7 @@ import Setting from '@/setting';
 import QRCode from 'qrcodejs2';
 
 export default {
-  inject: ['reload'],
+  inject: ['reload', 'setDirty'],
   name: 'index.vue',
   components: {
     footPage,
@@ -266,6 +261,7 @@ export default {
     draggable: vuedraggable,
     ...mPage,
     ...mConfig,
+    home_bottom_menu,
   },
   filters: {
     filterTxt(val) {
@@ -279,6 +275,7 @@ export default {
       titleTxt: (state) => state.mobildConfig.pageTitle || '首页',
       showTxt: (state) => state.mobildConfig.pageShow,
       colorTxt: (state) => state.mobildConfig.pageColor,
+      bgPic: (state) => state.mobildConfig.pagePic,
       picTxt: (state) => state.mobildConfig.pagePic,
       colorPickerTxt: (state) => state.mobildConfig.pageColorPicker,
       tabValTxt: (state) => state.mobildConfig.pageTabVal,
@@ -294,6 +291,9 @@ export default {
       set(value) {
         this.$store.commit('mobildConfig/UPNAME', value);
       },
+    },
+    isMicroPage() {
+      return this.$route.query.page_type == 'micro';
     },
   },
   mixins: [theme],
@@ -340,6 +340,9 @@ export default {
       saveName: '',
     };
   },
+  beforeCreate() {
+    this.$store.commit('mobildConfig/SETEMPTY');
+  },
   created() {
     this.categoryList();
     this.pageId = this.$route.query.id;
@@ -354,10 +357,14 @@ export default {
     this.$nextTick(() => {
       this.$store.commit('mobildConfig/FOOTER', { title: '是否自定义', name: imgList });
       this.arraySort();
-      if (this.pageId != 0) {
+      if (this.pageId != 0 || this.$route.query.tid) {
         this.getDefaultConfig();
-      } else {
+      } else if (this.pageType == 'home') {
         this.showTitle();
+      } else {
+        // 清空 vuex 中的 defaultArray
+        this.$store.commit('mobildConfig/DEFAULTARRAY', {});
+        this.$store.commit('mobildConfig/RESET_BOTTOM_MENU');
       }
       this.clientHeight = `${document.documentElement.clientHeight}` - 65.81; //获取浏览器可视区域高度
       let H = `${document.documentElement.clientHeight}` - 180;
@@ -370,6 +377,31 @@ export default {
       };
     });
   },
+  watch: {
+    mConfig: {
+      handler(nVal, oVal) {
+        if (this.setDirty) {
+          this.setDirty(true);
+        }
+      },
+      deep: true,
+    },
+    'mConfig.length': {
+      handler(nVal, oVal) {
+        if (this.setDirty) {
+          this.setDirty(true);
+        }
+      },
+    },
+    defaultArrays: {
+      handler(nVal, oVal) {
+        if (this.setDirty) {
+          this.setDirty(true);
+        }
+      },
+      deep: true,
+    },
+  },
   methods: {
     exportView() {
       let that = this;
@@ -379,6 +411,145 @@ export default {
       });
     },
     importView() {},
+    // 将远程图片（OSS等）转为 base64，绕过 html2canvas 跨域限制
+    async convertImagesToBase64(container) {
+      const imgs = container.querySelectorAll('img');
+      const tasks = Array.from(imgs).map((img) => {
+        return new Promise((resolve) => {
+          const src = img.getAttribute('src');
+          if (!src || src.startsWith('data:')) {
+            resolve();
+            return;
+          }
+          // 给 URL 追加时间戳，避免浏览器缓存导致丢失 CORS 响应头
+          const separator = src.includes('?') ? '&' : '?';
+          const cacheBustUrl = `${src}${separator}_t=${Date.now()}`;
+          fetch(cacheBustUrl, { mode: 'cors', cache: 'no-store' })
+            .then((res) => res.blob())
+            .then((blob) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                img.setAttribute('src', reader.result);
+                resolve();
+              };
+              reader.onerror = () => resolve(); // 转换失败则跳过，不阻塞
+              reader.readAsDataURL(blob);
+            })
+            .catch(() => resolve()); // 请求失败则跳过
+        });
+      });
+      await Promise.all(tasks);
+    },
+
+    // 保存为封面 - 截取长图并上传
+    saveCover() {
+      // 保存当前选中的组件索引
+      const previousActiveIndex = this.activeIndex;
+      this.$message.info('正在生成封面图片，请稍候...');
+
+      setTimeout(async () => {
+        try {
+          // 取消选中状态
+          this.activeIndex = -999;
+          this.rConfig = [];
+
+          // 等待 DOM 更新
+          await this.$nextTick();
+
+          // 获取 imgContainer 元素
+          const container = document.getElementById('imgContainer');
+          if (!container) {
+            this.$message.error('未找到页面容器元素');
+            // 恢复选中状态
+            this.activeIndex = previousActiveIndex;
+            this.restoreActiveComponent(previousActiveIndex);
+            return;
+          }
+
+          // 将容器内所有远程图片（含OSS）预先转为 base64，解决 html2canvas 跨域白图问题
+          await this.convertImagesToBase64(container);
+
+          // 使用 html2canvas 截取长图
+          const canvas = await html2canvas(container, {
+            useCORS: true,
+            allowTaint: true, // 已手动转为 base64，可放开 allowTaint
+            logging: false,
+            scale: 2, // 提高清晰度
+            backgroundColor: this.colorTxt ? this.colorPickerTxt : '#ffffff',
+            scrollY: -window.scrollY,
+            scrollX: -window.scrollX,
+            windowWidth: container.scrollWidth,
+            windowHeight: container.scrollHeight,
+          });
+
+          // 将 canvas 转换为 blob
+          canvas.toBlob(
+            async (blob) => {
+              if (!blob) {
+                this.$message.error('图片生成失败');
+                // 恢复选中状态
+                this.activeIndex = previousActiveIndex;
+                this.restoreActiveComponent(previousActiveIndex);
+                return;
+              }
+
+              // 创建 FormData 上传
+              const formData = new FormData();
+              const fileName = `cover_${Date.now()}.png`;
+              const file = new File([blob], fileName, { type: 'image/png' });
+              formData.append('file', file);
+              formData.append('type', 1);
+
+              try {
+                // 上传到后端
+                const res = await fileUpload(formData);
+                if (res.status === 200) {
+                  this.$message.success('封面保存成功！');
+                  // 这里可以根据需要将图片URL保存到页面配置中
+                  this.coverUrl = res.data.src;
+                  if (!this.mConfig.length) return this.$message.warning('请先配置DIY数据');
+                  if (!this.pageId) return this.$message.warning('请先保存DIY数据');
+                  saveThemeImage(this.pageId, { image: this.coverUrl, type: this.pageType });
+                } else {
+                  this.$message.error(res.msg || '封面保存失败');
+                }
+              } catch (err) {
+                this.$message.error(err.msg || '上传失败，请重试');
+              } finally {
+                // 恢复选中状态
+                this.activeIndex = previousActiveIndex;
+                this.restoreActiveComponent(previousActiveIndex);
+              }
+            },
+            'image/png',
+            0.95,
+          ); // 图片质量 0.95
+        } catch (error) {
+          console.error('截图失败：', error);
+          this.$message.error('生成封面失败，请重试');
+          // 恢复选中状态
+          this.activeIndex = previousActiveIndex;
+          this.restoreActiveComponent(previousActiveIndex);
+        }
+      }, 300);
+    },
+    // 恢复选中的组件
+    restoreActiveComponent(index) {
+      if (index === -100) {
+        // 恢复页面设置
+        this.showTitle();
+      } else if (index === -101) {
+        // 恢复底部菜单
+        this.showFoot();
+      } else if (index === -102) {
+        // 恢复底部菜单
+        this.showBottomMenu();
+      } else if (index >= 0 && index < this.mConfig.length) {
+        // 恢复组件选中
+        const item = this.mConfig[index];
+        this.bindconfig(item, index);
+      }
+    },
     preview() {
       this.modal = true;
       this.creatQrCode(this.pageId, this.diyStatus);
@@ -397,12 +568,12 @@ export default {
     //生成二维码
     creatQrCode(id, status) {
       this.$refs.qrCodeUrl.innerHTML = '';
-      let url = '';
-      if (status) {
-        url = `${this.BaseURL}pages/index/index`;
-      } else {
-        url = `${this.BaseURL}pages/annex/special/index?id=${id}`;
-      }
+      let url = `${this.BaseURL}pages/index/index?theme_id=${this.$route.query.id}`;
+      // if (status) {
+      //   url = `${this.BaseURL}pages/index/index`;
+      // } else {
+      //   url = `${this.BaseURL}pages/annex/special/index?id=${id}`;
+      // }
       var qrcode = new QRCode(this.$refs.qrCodeUrl, {
         text: url, // 需要转换为二维码的内容
         width: 160,
@@ -528,6 +699,20 @@ export default {
       let abc = obj;
       this.rConfig = [];
       this.rConfig[0] = JSON.parse(JSON.stringify(obj));
+    },
+    showBottomMenu() {
+      this.activeIndex = -102;
+      let obj = {};
+      for (var i in mConfig) {
+        if (i == 'c_bottom_menu') {
+          // this.rConfig = obj
+          obj = mConfig[i];
+          obj.configName = mConfig[i].name;
+          obj.cname = '底部菜单';
+        }
+      }
+      this.rConfig = [];
+      this.rConfig.push(JSON.parse(JSON.stringify(obj)));
     },
     // 对象转数组
     objToArr(data) {
@@ -715,13 +900,48 @@ export default {
     },
     //中间页点击添加模块；
     bindAddDom(item, type, index) {
-      let i = item;
-      this.lConfig.forEach((j) => {
-        if (item.name == j.name) {
-          i = j;
-        }
-      });
-      this.addDomCon(i, type, index);
+      // 复制
+      if (type == 0) {
+        let defaultArray = this.$store.state.mobildConfig.defaultArray;
+        let configData = JSON.parse(JSON.stringify(defaultArray[item.num]));
+
+        // 找到原始配置以获取 cname, icon 等基础信息
+        let baseItem = item;
+        this.lConfig.forEach((j) => {
+          if (item.name == j.name) {
+            baseItem = j;
+          }
+        });
+
+        // 先调用 addDomCon 添加一个新组件，然后立即用 configData 覆盖它
+        this.addDomCon(baseItem, type, index);
+
+        // 获取刚添加的组件（在 index+1 位置，因为 addDomCon 是 splice(index+1, 0, ...)）
+        let newIndex = index + 1;
+        let newItem = this.mConfig[newIndex];
+
+        // 重新获取最新的 defaultArray (引用)
+        let currentDefaultArray = this.$store.state.mobildConfig.defaultArray;
+
+        // 保留新生成的 num 和 timestamp 相关字段，覆盖其他配置
+        let newConfig = {
+          ...configData,
+          num: newItem.num,
+          id: newItem.id, // 确保使用新生成的唯一ID
+          timestamp: currentDefaultArray[newItem.num].timestamp,
+        };
+
+        // 提交更新
+        this.$store.commit('mobildConfig/UPDATEARR', { num: newItem.num, val: newConfig });
+      } else {
+        let i = item;
+        this.lConfig.forEach((j) => {
+          if (item.name == j.name) {
+            i = j;
+          }
+        });
+        this.addDomCon(i, type, index);
+      }
     },
     //左边配置模块点击添加；
     addDom(item, type) {
@@ -743,32 +963,40 @@ export default {
     },
     // 组件删除
     bindDelete(item, key) {
-      if (item.name == 'search_box') {
-        this.isSearch = false;
-      }
-      if (item.name == 'nav_bar') {
-        this.isTab = false;
-      }
-      if (item.name == 'home_comb') {
-        this.isComb = false;
-      }
-      if (item.name == 'home_service') {
-        this.isService = false;
-      }
-      this.mConfig.splice(key, 1);
-      this.rConfig.splice(0, 1);
-      if (this.mConfig.length != key) {
-        this.rConfig.push(this.mConfig[key]);
-      } else {
-        if (this.mConfig.length) {
-          this.activeIndex = key - 1;
-          this.rConfig.push(this.mConfig[key - 1]);
-        } else {
-          this.showTitle();
-        }
-      }
-      // 删除第几个配置
-      this.$store.commit('mobildConfig/DELETEARRAY', item);
+      this.$confirm('确定要删除此组件吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(() => {
+          if (item.name == 'search_box') {
+            this.isSearch = false;
+          }
+          if (item.name == 'nav_bar') {
+            this.isTab = false;
+          }
+          if (item.name == 'home_comb') {
+            this.isComb = false;
+          }
+          if (item.name == 'home_service') {
+            this.isService = false;
+          }
+          this.mConfig.splice(key, 1);
+          this.rConfig.splice(0, 1);
+          if (this.mConfig.length != key) {
+            this.rConfig.push(this.mConfig[key]);
+          } else {
+            if (this.mConfig.length) {
+              this.activeIndex = key - 1;
+              this.rConfig.push(this.mConfig[key - 1]);
+            } else {
+              this.showTitle();
+            }
+          }
+          // 删除第几个配置
+          this.$store.commit('mobildConfig/DELETEARRAY', item);
+        })
+        .catch(() => {});
     },
     // 组件返回
     config(data) {
@@ -793,6 +1021,16 @@ export default {
         list: [],
         isOpen: true,
       };
+      let goods = {
+        title: '商品组件',
+        list: [],
+        isOpen: true,
+      };
+      let user = {
+        title: '用户组件',
+        list: [],
+        isOpen: true,
+      };
       let tool = {
         title: '工具组件',
         list: [],
@@ -808,8 +1046,23 @@ export default {
         if (el.type == 2) {
           tool.list.push(el);
         }
+        if (el.type == 3) {
+          if (this.pageType !== 'home' && this.pageType !== 'user') {
+            if (el.name === 'home_product_info' || el.cname === '商品信息') {
+              goods.list.unshift(el);
+            } else {
+              goods.list.push(el);
+            }
+          }
+        }
+        if (el.type == 4) {
+          if (this.pageType !== 'home' && this.pageType !== 'detail') user.list.push(el);
+        }
       });
-      tempArr.push(basis, marketing, tool);
+      tempArr.push(basis, marketing);
+      if (this.pageType !== 'home' && this.pageType !== 'user') tempArr.push(goods);
+      if (this.pageType !== 'home' && this.pageType !== 'detail') tempArr.push(user);
+      tempArr.push(tool);
       this.leftMenu = tempArr;
     },
     // toImage(val){
@@ -823,31 +1076,61 @@ export default {
     //         this.diySaveDate(val,imgUrl)
     //     });
     // },
-    diySaveDate(val, num, type, save) {
-      diyProSave(type ? 0 : this.pageId, {
-        type: this.pageType || save,
-        value: val,
-        title: this.titleTxt,
-        name: this.nameTxt || '模板',
-        is_show: this.showTxt ? 1 : 0,
-        is_bg_color: this.colorTxt ? 1 : 0,
-        color_picker: this.colorPickerTxt,
-        bg_pic: this.picUrlTxt,
-        bg_tab_val: this.tabValTxt,
-        is_bg_pic: this.picTxt ? 1 : 0,
-      })
+    diySaveDate(val, num, title, save) {
+      let pageData = {};
+      if (['home', 'detail', 'user'].includes(this.pageType)) {
+        pageData = {
+          type: this.pageType,
+          value: val,
+          title: this.titleTxt,
+          name: this.nameTxt || '模板',
+          is_show: this.showTxt ? 1 : 0,
+          is_bg_color: this.colorTxt ? 1 : 0,
+          is_bg_pic: this.bgPic ? 1 : 0,
+          color_picker: this.colorPickerTxt,
+          bg_pic: this.picUrlTxt,
+          cover_pic: this.coverUrl,
+        };
+      } else if (['category', 'theme'].includes(this.pageType)) {
+        pageData = val;
+      }
+      let requestData = {
+        type: this.pageType,
+        value: pageData,
+      };
+      if (this.$route.query.page_type === 'micro') {
+        requestData.page_type = 'micro';
+      }
+      if (title) {
+        requestData.title = title;
+      }
+      if (this.$route.query.tid) {
+        requestData.tid = this.$route.query.tid;
+      }
+      themeSave(title ? 0 : this.pageId, requestData)
         .then((res) => {
-          this.pageId = res.data.id;
+          if (this.pageId != res.data.id && !title) {
+            let query = { ...this.$route.query, id: res.data.id };
+            delete query.tid; // 保存后移除 tid
+            this.$router.replace({ query });
+            this.pageId = res.data.id;
+          }
           this.$message.success(res.msg);
           let that = this;
           this.nameModal = false;
           if (num == 2) {
             this.relLoading = false;
             setTimeout(() => {
-              window.location.replace(this.$routeProStr + '/setting/pages/devise/0');
+              let page = this.isMicroPage
+                ? this.$routeProStr + '/setting/theme/micro_page'
+                : this.$routeProStr + '/setting/my_theme';
+              window.location.replace(page);
             }, 2000);
           } else {
             this.loading = false;
+          }
+          if (this.setDirty) {
+            this.setDirty(false);
           }
         })
         .catch((res) => {
@@ -889,10 +1172,18 @@ export default {
         this.relLoading = true;
       }
       let val = this.$store.state.mobildConfig.defaultArray;
-      if (!this.footActive) {
+      if (!this.footActive && this.pageType == 'home') {
         let timestamp = new Date().getTime() * 1000;
         val[timestamp] = this.$store.state.mobildConfig.pageFooter;
         this.footActive = true;
+      } else if (this.pageType == 'detail') {
+        // 获取最后一个对象的值 判断 val 不是一个空对象
+        let lastObj = val && Object.values(val).pop();
+        console.log(lastObj, 'val');
+        if (lastObj.name != 'bottomMenu') {
+          let timestamp = new Date().getTime() * 1000;
+          val[timestamp] = this.$store.state.mobildConfig.bottomMenu;
+        }
       }
       this.$nextTick(() => {
         this.diySaveDate(val, num, type, save);
@@ -900,21 +1191,24 @@ export default {
     },
     // 获取默认配置
     getDefaultConfig() {
-      diyProInfo(this.pageId, {
-        type: 1,
-      }).then(({ data }) => {
+      let id = this.pageId;
+      if (id == 0 && this.$route.query.tid) {
+        id = this.$route.query.tid;
+      }
+      themeInfo(id, this.pageType).then((res) => {
         let obj = {};
         let tempARR = [];
-        this.$store.commit('mobildConfig/titleUpdata', data.info.title);
-        this.$store.commit('mobildConfig/nameUpdata', data.info.name);
-        this.$store.commit('mobildConfig/showUpdata', data.info.is_show);
-        this.$store.commit('mobildConfig/colorUpdata', data.info.is_bg_color || 0);
-        this.$store.commit('mobildConfig/picUpdata', data.info.is_bg_pic || 0);
-        this.$store.commit('mobildConfig/pickerUpdata', data.info.color_picker || '#f5f5f5');
-        this.$store.commit('mobildConfig/radioUpdata', data.info.bg_tab_val || 0);
-        this.$store.commit('mobildConfig/picurlUpdata', data.info.bg_pic || '');
-        this.diyStatus = data.info.status;
-        let newArr = this.objToArr(data.info.value);
+        let data = res.data;
+        this.$store.commit('mobildConfig/titleUpdata', data.title);
+        this.$store.commit('mobildConfig/nameUpdata', data.name);
+        this.$store.commit('mobildConfig/showUpdata', data.is_show);
+        this.$store.commit('mobildConfig/colorUpdata', data.is_bg_color || 0);
+        this.$store.commit('mobildConfig/picUpdata', data.is_bg_pic || 0);
+        this.$store.commit('mobildConfig/pickerUpdata', data.color_picker || '#f5f5f5');
+        this.$store.commit('mobildConfig/radioUpdata', data.bg_tab_val || 0);
+        this.$store.commit('mobildConfig/picurlUpdata', data.bg_pic || '');
+        this.diyStatus = data.status;
+        let newArr = this.objToArr(data.value);
 
         function sortNumber(a, b) {
           return a.timestamp - b.timestamp;
@@ -937,6 +1231,10 @@ export default {
             // let storage = window.localStorage;
             // storage.setItem(el.timestamp, el.selectConfig.activeValue);
           }
+          if (el.name == 'bottomMenu') {
+            this.$store.commit('mobildConfig/UPBOTTOMMENU', el);
+            return;
+          }
           el.id = 'id' + el.timestamp;
           this.lConfig.map((item, j) => {
             if (el.name == item.defaultName) {
@@ -954,13 +1252,15 @@ export default {
             }
           });
         });
-
         let objs = newArr[newArr.length - 1];
 
-        if (objs.name == 'pageFoot') {
+        if (this.pageType == 'home' && objs.name == 'pageFoot') {
           this.$store.commit('mobildConfig/footPageUpdata', objs);
+          this.showTitle();
+        } else if (this.pageType == 'detail' && objs.name != 'bottomMenu') {
+          this.$store.commit('mobildConfig/bottomMenuUpdata', objs);
+          // this.showBottomMenu();
         }
-        this.showTitle();
       });
     },
     categoryList() {
@@ -984,6 +1284,15 @@ export default {
           this.getDefaultConfig();
         });
       }
+    },
+    getBadgeText(val) {
+      const map = {
+        user: '用户',
+        article: '文章',
+        coupon: '优惠券',
+        goods: '商品',
+      };
+      return map[val] || '';
     },
   },
   beforeDestroy() {
@@ -1070,9 +1379,9 @@ export default {
   color: var(--prev-color-primary);
   border-color: var(--prev-color-primary);
 }
-::v-deep .c_row-item {
-  margin-bottom: 15px;
-}
+// ::v-deep .c_row-item {
+//   margin-bottom: 10px;
+// }
 .ysize {
   background-size: 100%;
 }
@@ -1135,7 +1444,7 @@ export default {
   background: #f0f2f5;
   display: flex;
   justify-content: center;
-  padding-top: 20px;
+  padding-top: 40px;
   height: 100%;
   .acticons {
     position: absolute;
@@ -1158,7 +1467,7 @@ export default {
   cursor: pointer;
   position: absolute;
   left: 50%;
-  margin-left: 245px;
+  margin-left: 235px;
 
   .data {
     display: block;
@@ -1171,12 +1480,18 @@ export default {
     border-radius: 3px;
     font-size: 12px;
     margin-left: 0 !important;
+    border: none;
   }
 
   .data:hover {
-    background-color: #2d8cf0;
+    color: var(--prev-color-primary);
+    border: none;
+    box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.03);
+  }
+  .data:focus {
     color: #fff;
-    border: 0;
+    background-color: var(--prev-color-primary);
+    border: 1px solid var(--prev-color-primary);
   }
 }
 
@@ -1184,7 +1499,7 @@ export default {
   margin-right: 4px;
 
   .picture {
-    width: 379px;
+    width: 375px;
     height: 20px;
     margin: 0 auto;
     background-color: #fff;
@@ -1243,11 +1558,6 @@ export default {
   display: flex;
   justify-content: space-between;
   margin-bottom: 10px;
-}
-
-.iconfont-diy {
-  font-size: 24px;
-  color: var(--prev-color-primary);
 }
 
 .diy-wrapper {
@@ -1378,7 +1688,7 @@ export default {
 
         &:hover {
           box-shadow: 0 0 5px 0 rgba(24, 144, 255, 0.3);
-          border-right: 5px;
+          border-radius: 5px;
           transform: scale(1.1);
           transition: all 0.2s;
         }
@@ -1397,7 +1707,7 @@ export default {
 
     .page-foot {
       position: relative;
-      width: 379px;
+      width: 375px;
       margin: 0 auto 20px auto;
 
       .delete-box {
@@ -1405,7 +1715,7 @@ export default {
         position: absolute;
         left: -2px;
         top: 0;
-        width: 383px;
+        width: 379px;
         height: 100%;
         border: 2px dashed var(--prev-color-primary);
         padding: 10px 0;
@@ -1438,7 +1748,7 @@ export default {
       font-size: 15px;
       color: #333333;
       text-align: center;
-      width: 379px;
+      width: 375px;
       margin: 0 auto;
 
       .delete-box {
@@ -1446,7 +1756,7 @@ export default {
         position: absolute;
         left: -2px;
         top: 0;
-        width: 383px;
+        width: 379px;
         height: 100%;
         border: 2px dashed var(--prev-color-primary);
         padding: 10px 0;
@@ -1491,7 +1801,7 @@ export default {
     .scroll-box {
       flex: 1;
       background-color: #fff;
-      width: 379px;
+      width: 375px;
       margin: 0 auto;
       padding-top: 1px;
     }
@@ -1526,7 +1836,7 @@ export default {
         }
         .delete-name {
           position: absolute;
-          top: 0;
+          top: 6px;
           background: #fff;
           left: -100px;
           width: 86px;
@@ -1536,6 +1846,19 @@ export default {
           font-size: 13px;
           color: #666;
           border-radius: 3px;
+
+          .custom-badge {
+            position: absolute;
+            top: -6px;
+            left: -16px;
+            background: #ffaa18;
+            color: #fff;
+            font-size: 10px;
+            padding: 0 5px;
+            border-radius: 3px;
+            line-height: 14px;
+            z-index: 10;
+          }
 
           &::before {
             content: '';
@@ -1554,7 +1877,7 @@ export default {
           position: absolute;
           left: -2px;
           top: 0;
-          width: 383px;
+          width: 379px;
           height: 100%;
           border: 2px dashed var(--prev-color-primary);
 
@@ -1577,6 +1900,7 @@ export default {
             }
             .iconfont {
               padding: 5px 0;
+              color: #fff;
 
               &.on {
                 opacity: 0.4;
@@ -1610,6 +1934,7 @@ export default {
     height: 100%;
     border-radius: 4px;
     overflow: scroll;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
 
     ::v-deep .ivu-tabs-bar {
@@ -1698,10 +2023,6 @@ export default {
 
 .contxt:hover ::-webkit-scrollbar-thumb {
   display: block;
-}
-.iconfont-diy {
-  font-size: 24px;
-  color: var(--prev-color-primary);
 }
 .icon {
   width: 28px;

@@ -384,12 +384,12 @@
 				this.prevent = true
 				extractCash(value).then(res => {
 					that.getUserInfo();
+					// #ifdef MP
 					if(this.weixinExtractType == 1 && this.currentTab == 1){
-						// #ifdef MP
 							this.openSubscribe('/pages/users/user_spread_user/index')
-						// #endif
 						return
 					}
+					// #endif
 					return this.$util.Tips({
 						title: res.msg,
 						icon: 'success'
@@ -397,17 +397,13 @@
 						url: '/pages/users/user_spread_user/index',
 						tab: 2
 					});
-					setTimeout(e => {
-						this.prevent = false
-					}, 1000)
 				}).catch(err => {
-					setTimeout(e => {
-						this.prevent = false
-					}, 1000)
 					return this.$util.Tips({
 						title: err
 					});
-				});
+				}).finally(e =>{
+					this.prevent = false
+				})
 			},
 			// #ifdef MP
 			openSubscribe(page) {
@@ -416,8 +412,12 @@
 				// })
 				openRevenueSubscribe().then(res => {
 					uni.hideLoading();
-					uni.navigateTo({
+					return this.$util.Tips({
+						title: res.msg,
+						icon: 'success'
+					}, {
 						url: page,
+						tab: 2
 					});
 				}).catch(() => {
 					uni.hideLoading();

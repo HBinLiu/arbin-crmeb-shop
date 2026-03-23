@@ -687,6 +687,24 @@ export function upgradeStatusApi() {
 }
 
 /**
+ * @description 下载进度
+ */
+export function downloadProgressApi(data) {
+  return request({
+    url: `/system/upgrade_download/progress`,
+    method: 'get',
+    params: data,
+  });
+}
+
+export function upgradeIgnoreFileApi() {
+  return request({
+    url: `/system/upgrade/ignore_file`,
+    method: 'get',
+  });
+}
+
+/**
  * @description 升级包 -- 升级记录
  * @param data
  */
@@ -714,7 +732,7 @@ export function upgradeExportApi(id) {
  */
 export function downloadApi(params) {
   return request({
-    url: '/system/upgrade_download/' + params,
+    url: '/system/package_download/' + params,
     method: 'POST',
   });
 }
@@ -891,5 +909,110 @@ export function eventTask() {
 export function copyrightList() {
   return request({
     url: `system/info`,
+  });
+}
+
+// ==================== 跨版本升级接口 ====================
+
+/**
+ * 检查跨版本升级
+ * @returns
+ */
+export function checkCrossVersionUpgradeApi() {
+  return request({
+    url: 'system/cross_version/check',
+    method: 'get',
+  });
+}
+
+/**
+ * 获取待执行的升级SQL列表
+ * @returns
+ */
+export function pendingSqlListApi() {
+  return request({
+    url: 'system/cross_version/pending_sql',
+    method: 'get',
+  });
+}
+
+/**
+ * 执行跨版本升级(单步)
+ * @param {Number} step 步骤索引
+ * @returns
+ */
+export function executeCrossVersionApi(step) {
+  return request({
+    url: 'system/cross_version/execute',
+    method: 'post',
+    data: { step },
+  });
+}
+
+/**
+ * 一键执行全部跨版本升级
+ * @returns
+ */
+export function executeAllCrossVersionApi() {
+  return request({
+    url: 'system/cross_version/execute_all',
+    method: 'post',
+  });
+}
+
+/**
+ * 获取跨版本升级进度
+ * @returns
+ */
+export function crossVersionUpgradeProgressApi() {
+  return request({
+    url: 'system/cross_version/progress',
+    method: 'get',
+  });
+}
+
+/**
+ * 获取备份状态
+ * @returns
+ */
+export function backupStatusApi() {
+  return request({
+    url: 'system/cross_version/backup_status',
+    method: 'get',
+  });
+}
+
+/**
+ * 获取可回退版本列表
+ * @returns
+ */
+export function rollbackVersionsApi() {
+  return request({
+    url: 'system/rollback/versions',
+    method: 'get',
+  });
+}
+/**
+ * 重新执行升级
+ * @returns
+ */
+export function reExecuteUpgradeApi(data) {
+  return request({
+    url: 'system/upgrade/reExecute',
+    method: 'get',
+    params: data,
+  });
+}
+
+/**
+ * 执行版本回退
+ * @param {Number} logId 升级日志ID
+ * @returns
+ */
+export function executeRollbackApi(logId) {
+  return request({
+    url: 'system/rollback/execute',
+    method: 'post',
+    data: { log_id: logId },
   });
 }

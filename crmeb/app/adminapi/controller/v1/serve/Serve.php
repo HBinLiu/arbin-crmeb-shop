@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -63,7 +63,7 @@ class Serve extends AuthController
         if ($res) {
             return app('json')->success($res);
         } else {
-            return app('json')->fail(400173);
+            return app('json')->fail('获取套餐列表失败');
         }
     }
 
@@ -81,19 +81,19 @@ class Serve extends AuthController
             ['pay_type', ''],
         ]);
         $openInfo = $this->services->user()->getUser();
-        if (!$openInfo) app('json')->fail(400174);
+        if (!$openInfo) app('json')->fail('获取支付码失败');
         switch ($data['type']) {
             case "sms" :
-                if (!$openInfo['sms']['open']) return app('json')->fail(400175);
+                if (!$openInfo['sms']['open']) return app('json')->fail('请先开通短信服务');
                 break;
             case "query" :
-                if (!$openInfo['query']['open']) return app('json')->fail(400176);
+                if (!$openInfo['query']['open']) return app('json')->fail('请先开通物流查询服务');
                 break;
             case "dump" :
-                if (!$openInfo['dump']['open']) return app('json')->fail(400177);
+                if (!$openInfo['dump']['open']) return app('json')->fail('请先开通电子面单打印服务');
                 break;
             case "copy" :
-                if (!$openInfo['copy']['open']) return app('json')->fail(400178);
+                if (!$openInfo['copy']['open']) return app('json')->fail('请先开通商品采集服务');
                 break;
         }
         $this->validate($data, MealValidata::class);
@@ -102,7 +102,7 @@ class Serve extends AuthController
         if ($res) {
             return app('json')->success($res);
         } else {
-            return app('json')->fail(400174);
+            return app('json')->fail('获取支付码失败');
         }
     }
 
@@ -127,7 +127,7 @@ class Serve extends AuthController
         $systemConfigService = app()->make(SystemConfigServices::class);
         $systemConfigService->saveExpressInfo($data);
         $this->services->express()->open();
-        return app('json')->success(100044);
+        return app('json')->success('开通成功');
 
     }
 
@@ -168,7 +168,7 @@ class Serve extends AuthController
             $this->services->express()->open();
         }
 
-        return app('json')->success(100044);
+        return app('json')->success('开通成功');
     }
 
     /**
@@ -189,7 +189,7 @@ class Serve extends AuthController
         $data['password'] = md5($data['password']);
         $this->services->user()->modify($data);
         CacheService::delete('sms_account');
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }
 
     /**
@@ -208,6 +208,6 @@ class Serve extends AuthController
 
         $this->services->user()->modifyPhone($data);
         CacheService::delete('sms_account');
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }
 }

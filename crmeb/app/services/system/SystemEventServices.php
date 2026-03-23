@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\services\system;
 
 use app\dao\system\SystemEventDao;
@@ -486,7 +494,7 @@ class SystemEventServices extends BaseServices
         } else {
             $res = $this->dao->update(['id' => $data['id']], $data);
         }
-        if (!$res) throw new AdminException(100006);
+        if (!$res) throw new AdminException('保存失败');
         return true;
     }
 
@@ -522,7 +530,7 @@ class SystemEventServices extends BaseServices
     public function setEventStatus($id, $is_open)
     {
         $res = $this->dao->update(['id' => $id], ['is_open' => $is_open]);
-        if (!$res) throw new AdminException(100014);
+        if (!$res) throw new AdminException('设置成功');
         return true;
     }
 }

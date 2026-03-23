@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -63,6 +63,7 @@ class WorkermanService
 
     public function onConnect(TcpConnection $connection)
     {
+        var_dump('adminConnect');
         $this->connections[$connection->id] = $connection;
         $connection->lastMessageTime = time();
     }
@@ -74,7 +75,7 @@ class WorkermanService
         if (!$res || !isset($res['type']) || !$res['type'] || $res['type'] == 'ping') {
             return $this->response->connection($connection)->success('ping', ['now' => time()]);
         }
-        var_dump('onMessage', $res);
+        var_dump('adminMessage', $res);
         if (!method_exists($this->handle, $res['type'])) return;
 
         $this->handle->{$res['type']}($connection, $res + ['data' => []], $this->response->connection($connection));
@@ -83,7 +84,7 @@ class WorkermanService
 
     public function onWorkerStart(Worker $worker)
     {
-        var_dump('onWorkerStart');
+        var_dump('adminWorkerStart');
 
         ChannelService::connet();
 
@@ -109,7 +110,7 @@ class WorkermanService
 
     public function onClose(TcpConnection $connection)
     {
-        var_dump('onClose');
+        var_dump('adminClose');
         unset($this->connections[$connection->id]);
     }
 }

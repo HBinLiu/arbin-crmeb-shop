@@ -288,7 +288,8 @@ export default {
     },
     'configObj.styleConfig.tabVal': {
       handler() {
-        this.count = this.defaults.styleConfig.count;
+        if (!this.configData.picList) return;
+        this.count = this.defaults.styleConfig?.count;
         this.picArrayConcat(this.count);
         this.configData.picList.splice(this.count);
         this.currentIndex = 0;
@@ -345,7 +346,7 @@ export default {
     },
     picArrayConcat(count) {
       for (let i = this.configData.picList.length; i < count; i++) {
-        this.configData.picList.push(this.arrayObj);
+        this.configData.picList.push(JSON.parse(JSON.stringify(this.arrayObj)));
       }
     },
     // 删除指定热区
@@ -482,7 +483,6 @@ export default {
             我们可以分别来画框,否则的话,就只能向一个方向画框,也就是点的右下方画框.
             */
       if (this.select) {
-        console.log(event.layerX, event.layerY, event);
         window.requestAnimationFrame(() => {
           // 取得鼠标移动时的坐标位置
           this.mouseX2 = event.layerX - 5;

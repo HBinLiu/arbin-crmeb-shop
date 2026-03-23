@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -16,7 +16,6 @@ use app\Request;
 use app\services\system\attachment\SystemAttachmentServices;
 use app\services\system\SystemRouteServices;
 use crmeb\services\CacheService;
-use think\facade\Env;
 use think\Response;
 use think\facade\Db;
 
@@ -74,20 +73,20 @@ class PublicController
         ], true);
         $service = app()->make(SystemAttachmentServices::class);
         if (CacheService::get('scan_upload') != $uploadToken) {
-            return app('json')->fail(410086);
+            return app('json')->fail('配置已更改或token已失效');
         }
         $service->upload((int)$pid, $file, $upload_type, $type, '', $uploadToken);
-        return app('json')->success(100032);
+        return app('json')->success('上传成功');
     }
 
     public function import(Request $request)
     {
         $filePath = $request->param('file_path', '');
         if (empty($filePath)) {
-            return app('json')->fail(12894);
+            return app('json')->fail('文件不存在');
         }
         app()->make(SystemRouteServices::class)->import($filePath);
-        return app('json')->success(100010);
+        return app('json')->success('操作成功');
     }
 
     /**
@@ -125,6 +124,7 @@ class PublicController
             ['name' => '.version', 'require' => '读写', 'value' => is_readable(root_path() . '.version') && is_writable(root_path() . '.version')],
             ['name' => '.constant', 'require' => '读写', 'value' => is_readable(root_path() . '.constant') && is_writable(root_path() . '.constant')],
         ];
+
         if (function_exists('exec')) {
             $workermanOutput = $timerOutput = $queueOutput = [];
             // exec("ps aux | grep 'php think workerman' | grep -v grep", $workermanOutput);
@@ -175,6 +175,7 @@ class PublicController
                 ['name' => '消息队列', 'require' => '开启', 'value' => file_exists(root_path('runtime') . '.queue')],
             ];
         }
+
         return app('json')->success($info);
     }
 

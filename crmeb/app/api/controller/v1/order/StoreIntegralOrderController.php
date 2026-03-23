@@ -1,6 +1,13 @@
 <?php
-
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\api\controller\v1\order;
 
 
@@ -31,7 +38,7 @@ class StoreIntegralOrderController
             'num'
         ], true);
         if (!$unique) {
-            return app('json')->fail(410201);
+            return app('json')->fail('请提交购买的商品');
         }
         $user = $request->user()->toArray();
         return app('json')->success($this->services->getOrderConfirmData($user, $unique, $num));
@@ -58,7 +65,7 @@ class StoreIntegralOrderController
         ], true);
         $productInfo = $storeProductAttrValueServices->uniqueByField($unique);
         if (!$productInfo || !isset($productInfo['storeIntegral']) || !$productInfo['storeIntegral']) {
-            return app('json')->fail(410202);
+            return app('json')->fail('商品不存在，请重新选择商品下单');
         }
         $productInfo = is_object($productInfo) ? $productInfo->toArray() : $productInfo;
 
@@ -66,7 +73,7 @@ class StoreIntegralOrderController
         //判断积分商品限量
         $storeIntegralServices->checkoutProductStock($uid, $productInfo['product_id'], $num, $unique);
         $order = $this->services->createOrder($uid, $addressId, $mark, $request->user()->toArray(), $num, $productInfo);
-        return app('json')->status('success', 410203, ['orderId' => $order['order_id']]);
+        return app('json')->status('success', '订单创建成功', ['orderId' => $order['order_id']]);
     }
 
     /**
@@ -77,9 +84,9 @@ class StoreIntegralOrderController
      */
     public function detail(Request $request, $uni)
     {
-        if (!strlen(trim($uni))) return app('json')->fail(100100);
+        if (!strlen(trim($uni))) return app('json')->fail('参数错误');
         $order = $this->services->getOne(['order_id' => $uni, 'is_del' => 0]);
-        if (!$order) return app('json')->fail(410173);
+        if (!$order) return app('json')->fail('订单不存在');
         $order = $order->toArray();
         $orderData = $this->services->tidyOrder($order);
         return app('json')->success($orderData);
@@ -109,12 +116,12 @@ class StoreIntegralOrderController
         list($order_id) = $request->postMore([
             ['order_id', ''],
         ], true);
-        if (!$order_id) return app('json')->fail(100100);
+        if (!$order_id) return app('json')->fail('参数错误');
         $order = $this->services->takeOrder($order_id, (int)$request->uid());
         if ($order) {
-            return app('json')->success(410204);
+            return app('json')->success('收货成功');
         } else
-            return app('json')->fail(410205);
+            return app('json')->fail('收货失败');
     }
 
     /**
@@ -126,8 +133,8 @@ class StoreIntegralOrderController
      */
     public function express(Request $request, ExpressServices $expressServices, $uni)
     {
-        if (!$uni || !($order = $this->services->getUserOrderDetail($uni, $request->uid()))) return app('json')->fail(410173);
-        if ($order['delivery_type'] != 'express' || !$order['delivery_id']) return app('json')->fail(410206);
+        if (!$uni || !($order = $this->services->getUserOrderDetail($uni, $request->uid()))) return app('json')->fail('订单不存在');
+        if ($order['delivery_type'] != 'express' || !$order['delivery_id']) return app('json')->fail('快递单号不存在');
         $order['price'] = (int)$order['price'];
         $order['total_price'] = (int)$order['total_price'];
         $cacheName = 'integral' . $order['order_id'] . $order['delivery_id'];
@@ -150,12 +157,12 @@ class StoreIntegralOrderController
         [$order_id] = $request->postMore([
             ['order_id', ''],
         ], true);
-        if (!$order_id) return app('json')->fail(100100);
+        if (!$order_id) return app('json')->fail('参数错误');
         $res = $this->services->removeOrder($order_id, (int)$request->uid());
         if ($res) {
-            return app('json')->success(100002);
+            return app('json')->success('删除成功');
         } else {
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
         }
     }
 }

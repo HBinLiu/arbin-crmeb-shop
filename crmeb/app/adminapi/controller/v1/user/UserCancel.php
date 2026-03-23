@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\adminapi\controller\v1\user;
 
 use app\adminapi\controller\AuthController;
@@ -44,16 +52,16 @@ class UserCancel extends AuthController
             ['mark', ''],
         ], true);
         $this->services->serMark($id, $mark);
-        return app('json')->success(100024);
+        return app('json')->success('备注成功');
     }
 
     public function agreeCancel($id)
     {
-        return app('json')->success(400319);
+        return app('json')->success('注销成功');
     }
 
     public function refuseCancel($id)
     {
-        return app('json')->success(400320);
+        return app('json')->success('拒绝注销');
     }
 }

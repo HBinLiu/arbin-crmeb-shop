@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -112,7 +112,7 @@ class DeliveryServiceServices extends BaseServices
     {
         $serviceInfo = $this->dao->get($id);
         if (!$serviceInfo) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         return create_form('编辑配送员', $this->createServiceForm($serviceInfo->toArray()), $this->url('/order/delivery/update/' . $id), 'PUT');
     }
@@ -158,34 +158,34 @@ class DeliveryServiceServices extends BaseServices
      */
     public function saveDeliveryService(array $data)
     {
-        if ($data['image'] == '') throw new AdminException(400250);
+        if ($data['image'] == '') throw new AdminException('请选择用户');
         $data['uid'] = $data['image']['uid'];
         /** @var UserServices $userService */
         $userService = app()->make(UserServices::class);
         $userInfo = $userService->get($data['uid']);
         if ($data['phone'] == '') {
             if (!$userInfo['phone']) {
-                throw new AdminException(400132);
+                throw new AdminException('请填写手机号');
             } else {
                 $data['phone'] = $userInfo['phone'];
             }
         } else {
             if (!check_phone($data['phone'])) {
-                throw new AdminException(400252);
+                throw new AdminException('手机号格式错误');
             }
         }
         if ($data['nickname'] == '') $data['nickname'] = $userInfo['nickname'];
         $data['avatar'] = $data['image']['image'];
         if ($this->dao->count(['uid' => $data['uid']])) {
-            throw new AdminException(400467);
+            throw new AdminException('配送员已存在');
         }
         if ($this->dao->count(['phone' => $data['phone']])) {
-            throw new AdminException(400468);
+            throw new AdminException('同一个手机号的配送员只能添加一个');
         }
         unset($data['image']);
         $data['add_time'] = time();
         $res = $this->dao->save($data);
-        if (!$res) throw new AdminException(100006);
+        if (!$res) throw new AdminException('保存失败');
         return true;
     }
 
@@ -199,22 +199,22 @@ class DeliveryServiceServices extends BaseServices
     {
         $delivery = $this->dao->get($id);
         if (!$delivery) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         if ($data["nickname"] == '') {
-            throw new AdminException(400469);
+            throw new AdminException('配送员名称不能为空');
         }
         if (!$data['phone']) {
-            throw new AdminException(400132);
+            throw new AdminException('请填写手机号');
         }
         if (!check_phone($data['phone'])) {
-            throw new AdminException(400252);
+            throw new AdminException('手机号格式错误');
         }
         if ($delivery['phone'] != $data['phone'] && $this->dao->count(['phone' => $data['phone']])) {
-            throw new AdminException(400468);
+            throw new AdminException('同一个手机号的配送员只能添加一个');
         }
         $res = $this->dao->update($id, $data);
-        if (!$res) throw new AdminException(100007);
+        if (!$res) throw new AdminException('修改失败');
         return true;
     }
 }

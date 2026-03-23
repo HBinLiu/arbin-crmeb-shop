@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -85,7 +85,7 @@ class StoreOrderTakeServices extends BaseServices
     {
         $order = $this->dao->getUserOrderDetail($uni, $uid);
         if (!$order) {
-            throw new ApiException(410173);
+            throw new ApiException('订单不存在');
         }
         $refundServices = app()->make(StoreOrderRefundServices::class);
         $orderIsRefund = $refundServices->orderIsRefund((int)$order['id']);
@@ -96,16 +96,16 @@ class StoreOrderTakeServices extends BaseServices
         $orderServices = app()->make(StoreOrderServices::class);
         $order = $orderServices->tidyOrder($order);
         if ($order['_status']['_type'] != 2) {
-            throw new ApiException(410266);
+            throw new ApiException('订单状态错误');
         }
         //存在拆分发货 需要分开收货
         if ($this->dao->count(['pid' => $order['id']])) {
-            throw new ApiException(410266);
+            throw new ApiException('订单状态错误');
         }
         $order->status = 2;
         $res = $order->save() && $this->storeProductOrderUserTakeDelivery($order);
         if (!$res) {
-            throw new ApiException(410205);
+            throw new ApiException('收货失败');
         }
         return $order;
     }
@@ -136,7 +136,7 @@ class StoreOrderTakeServices extends BaseServices
             //事业部
             $res4 = $this->divisionBrokerage($order, $userInfo);
             if (!($res1 && $res2 && $res3 && $res4)) {
-                throw new ApiException(410205);
+                throw new ApiException('收货失败');
             }
             return true;
         }, $isTran);
@@ -461,8 +461,7 @@ class StoreOrderTakeServices extends BaseServices
             $this->sendBackOrderBrokerage($orderInfo, $one_spread_uid, $brokeragePrice);
         }
         // 一级返佣成功 跳转二级返佣
-        $res = $res1 && $this->backOrderBrokerageTwo($orderInfo, $userInfo, $isSelfBrokerage, $frozen_time);
-        return $res;
+        return $res1 && $this->backOrderBrokerageTwo($orderInfo, $userInfo, $isSelfBrokerage, $frozen_time);
     }
 
 

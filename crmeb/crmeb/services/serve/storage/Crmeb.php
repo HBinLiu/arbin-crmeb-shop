@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -63,7 +63,7 @@ class Crmeb extends BaseStorage
     {
         $typeContent = [1 => 'sms', 2 => 'expr_dump', 3 => 'expr_query', 4 => 'copy'];
         if (!isset($typeContent[$type])) {
-            throw new AdminException(100100);
+            throw new AdminException('参数错误');
         }
         $data = ['page' => $page, 'limit' => $limit, 'type' => $typeContent[$type]];
         if ($type == 1 && $status != '') {

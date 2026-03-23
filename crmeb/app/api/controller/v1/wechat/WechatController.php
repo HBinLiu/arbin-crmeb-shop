@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -92,25 +92,25 @@ class WechatController
         ], true);
         if ($phone) {
             if (!$captcha) {
-                return app('json')->fail(410004);
+                return app('json')->fail('请输入验证码');
             }
             //验证验证码
             $verifyCode = CacheService::get('code_' . $phone);
             if (!$verifyCode)
-                return app('json')->fail(410009);
+                return app('json')->fail('请先获取验证码');
             $verifyCode = substr($verifyCode, 0, 6);
             if ($verifyCode != $captcha) {
                 CacheService::delete('code_' . $phone);
-                return app('json')->fail(410010);
+                return app('json')->fail('验证码错误');
             }
         }
         $token = $this->services->appAuth($userInfo, $phone);
         if ($token) {
-            return app('json')->success(410001, $token);
+            return app('json')->success('登录成功', $token);
         } else if ($token === false) {
-            return app('json')->success(410001, ['isbind' => true]);
+            return app('json')->success('登录成功', ['isbind' => true]);
         } else {
-            return app('json')->fail(410019);
+            return app('json')->fail('登录失败');
         }
     }
 
@@ -125,7 +125,7 @@ class WechatController
         if ($data) {
             return app('json')->success($data);
         } else {
-            return app('json')->fail(100016);
+            return app('json')->fail('获取失败');
         }
 
     }

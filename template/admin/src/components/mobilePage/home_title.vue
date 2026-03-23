@@ -1,47 +1,40 @@
 <template>
-  <div
-    :style="{
-      background: bottomBgColor,
-      marginTop: mbConfig + 'px',
-      paddingTop: topConfig + 'px',
-      paddingBottom: bottomConfig + 'px',
-      paddingLeft: prConfig + 'px',
-      paddingRight: prConfig + 'px',
-    }"
-  >
-    <div
-      class="title"
-      :style="{
-        background: `linear-gradient(90deg,${titleColorLeft} 0%,${titleColorRight} 100%)`,
-        borderRadius: fillet
-          ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
-          : filletVal + 'px',
-      }"
-    >
+  <common_wrapper :config="configObj">
+    <div class="mobile-page">
       <div
-        class="title-box"
-        :class="buttonConfig ? 'on' : ''"
+        class="title"
         :style="{
-          color: themeColor,
-          fontSize: fontSize + 'px',
-          fontStyle: txtStyle != 'bold' ? txtStyle : '',
-          fontWeight: txtStyle == 'bold' ? txtStyle : '',
-          textAlign: txtPosition,
+          background: `linear-gradient(90deg,${titleColorLeft} 0%,${titleColorRight} 100%)`,
+          borderRadius: fillet
+            ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
+            : filletVal + 'px',
         }"
       >
-        {{ titleTxt }}
-      </div>
-      <div
-        v-if="!buttonConfig"
-        :style="{
-          color: buttonColor,
-          fontSize: buttonSize + 'px',
-        }"
-      >
-        {{ buttonTitle }}<span class="iconfont iconjinru"></span>
+        <div
+          class="title-box"
+          :class="buttonConfig ? 'on' : ''"
+          :style="{
+            color: themeColor,
+            fontSize: fontSize + 'px',
+            fontStyle: txtStyle != 'bold' ? txtStyle : '',
+            fontWeight: txtStyle == 'bold' ? txtStyle : '',
+            textAlign: txtPosition,
+          }"
+        >
+          {{ titleTxt }}
+        </div>
+        <div
+          v-if="!buttonConfig"
+          :style="{
+            color: buttonColor,
+            fontSize: buttonSize + 'px',
+          }"
+        >
+          {{ buttonTitle }}<span class="iconfont iconjinru"></span>
+        </div>
       </div>
     </div>
-  </div>
+  </common_wrapper>
 </template>
 
 <script>
@@ -88,6 +81,7 @@ export default {
   },
   data() {
     return {
+      configObj: null,
       defaultConfig: {
         cname: '文本标题',
         name: 'titles',
@@ -99,6 +93,11 @@ export default {
         titleLeft: '标题设置',
         titleRight: '文字设置',
         titleCurrency: '通用样式',
+        zIndexConfig: {
+          title: '组件上浮',
+          val: 0,
+          min: 0,
+        },
         titleConfig: {
           title: '标题名称',
           value: '标题',
@@ -157,7 +156,7 @@ export default {
             },
           ],
         },
-        titleColor: {
+        moduleColor: {
           title: '组件背景',
           default: [
             {
@@ -176,38 +175,10 @@ export default {
             },
           ],
         },
-        bottomBgColor: {
-          title: '底部背景',
-          default: [
-            {
-              item: '#fff',
-            },
-          ],
-          color: [
-            {
-              item: '#fff',
-            },
-          ],
-        },
         buttonText: {
           title: '按钮文字',
           val: 12,
           min: 6,
-        },
-        topConfig: {
-          title: '上边距',
-          val: 0,
-          min: 0,
-        },
-        bottomConfig: {
-          title: '下边距',
-          val: 0,
-          min: 0,
-        },
-        prConfig: {
-          title: '左右边距',
-          val: 0,
-          min: 0,
         },
         textPosition: {
           title: '标题位置',
@@ -256,10 +227,98 @@ export default {
           val: 16,
           min: 8,
         },
-        mbConfig: {
-          title: '页面上间距',
+        borderConfig: {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Hide, 1: Show
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              { name: '实线', style: 'solid' },
+              { name: '虚线', style: 'dashed' },
+              { name: '点状', style: 'dotted' },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
+        },
+        shadowConfig: {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0,
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: 'rgba(0,0,0,0.1)' }],
+            color: [{ item: 'rgba(0,0,0,0.1)' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+          },
+        },
+        componentBgConfig: {
+          title: '背景设置',
+          tabVal: 0,
+          tabList: [{ name: '颜色' }, { name: '图片' }],
+          colorConfig: {
+            title: '背景颜色',
+            default: [{ item: '#F5F5F5' }, { item: '#F5F5F5' }],
+            color: [{ item: '#F5F5F5' }, { item: '#F5F5F5' }],
+          },
+          colorDirection: {
+            title: '渐变方向',
+            tabVal: 0,
+            tabList: [{ name: '横向' }, { name: '纵向' }, { name: '左斜' }, { name: '右斜' }],
+          },
+          imageConfig: {
+            header: '背景图片',
+            title: '',
+            name: '上传图片',
+            type: 'code',
+            url: '',
+            info: '建议尺寸：750px * 400px',
+          },
+        },
+        paddingConfig: {
+          title: '内边距',
           val: 0,
           min: 0,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        },
+        marginConfig: {
+          title: '外边距',
+          val: 0,
+          min: 0,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
         fillet: {
           title: '背景圆角',
@@ -279,6 +338,19 @@ export default {
           min: 0,
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
+        bottomBgColor: {
+          title: '底部背景',
+          default: [
+            {
+              item: '#F5F5F5',
+            },
+          ],
+          color: [
+            {
+              item: '#F5F5F5',
+            },
+          ],
+        },
       },
       titleTxt: '',
       link: '',
@@ -288,16 +360,27 @@ export default {
       titleColorLeft: '',
       titleColorRight: '',
       themeColor: '',
-      prConfig: 0,
+      paddingConfig: {
+        title: '内边距',
+        val: 0,
+        max: 100,
+        isAll: false,
+        valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+      },
+      marginConfig: {
+        title: '外边距',
+        val: 0,
+        max: 100,
+        isAll: false,
+        valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+      },
+
       pageData: {},
       bottomBgColor: '',
-      mbConfig: 0,
       buttonConfig: 0,
       buttonTitle: '',
       buttonColor: '',
       buttonSize: 0,
-      topConfig: 0,
-      bottomConfig: 0,
       fillet: 0,
       filletVal: 0,
       valList: [],
@@ -312,27 +395,38 @@ export default {
   methods: {
     setConfig(data) {
       if (!data) return;
-      if (data.mbConfig) {
+      this.configObj = data;
+      for (let key in this.defaultConfig) {
+        if (data[key] == undefined) {
+          this.$set(data, key, this.defaultConfig[key]);
+        }
+      }
+      if (data.id) {
         this.titleTxt = data.titleConfig.value;
         this.link = data.linkConfig.value;
         this.txtPosition = data.textPosition.tabList[data.textPosition.tabVal].style;
         this.txtStyle = data.textStyle.tabList[data.textStyle.tabVal].style;
         this.themeColor = data.themeColor.color[0].item;
         this.fontSize = data.fontSize.val;
-        this.mbConfig = data.mbConfig.val;
-        this.prConfig = data.prConfig.val;
-        this.titleColorLeft = data.titleColor.color[0].item;
-        this.titleColorRight = data.titleColor.color[1].item;
+        this.titleColorLeft = data.moduleColor.color[0].item;
+        this.titleColorRight = data.moduleColor.color[1].item;
         this.bottomBgColor = data.bottomBgColor.color[0].item;
         this.buttonConfig = data.buttonConfig.tabVal;
         this.buttonTitle = data.titleConfigRight.value;
         this.buttonColor = data.buttonColor.color[0].item;
         this.buttonSize = data.buttonText.val;
-        this.topConfig = data.topConfig.val;
-        this.bottomConfig = data.bottomConfig.val;
         this.fillet = data.fillet.type;
         this.filletVal = data.fillet.val;
         this.valList = data.fillet.valList;
+        this.marginConfig = data.marginConfig || {
+          val: 0,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        };
+
+        if (!data.marginConfig) {
+          if (data.mbConfig) this.marginConfig.valList[0].val = data.mbConfig.val;
+        }
       }
     },
   },

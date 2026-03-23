@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -89,13 +89,13 @@ class UserController
             ['nickname', ''],
         ], true);
         if (!$avatar && $nickname == '') {
-            return app('json')->fail(410134);
+            return app('json')->fail('请输入昵称或者选择头像');
         }
         $uid = (int)$request->uid();
         if ($this->services->eidtNickname($uid, ['avatar' => $avatar, 'nickname' => $nickname])) {
-            return app('json')->success(100014);
+            return app('json')->success('设置成功');
         }
-        return app('json')->fail(100015);
+        return app('json')->fail('设置失败');
     }
 
     /**
@@ -126,13 +126,13 @@ class UserController
             ['url', ''],
             ['stay_time', 0]
         ]);
-        if ($data['url'] == '') return app('json')->fail(100100);
+        if ($data['url'] == '') return app('json')->fail('参数错误');
         $data['uid'] = (int)$request->uid();
         $data['ip'] = $request->ip();
         if ($this->services->setVisit($data)) {
-            return app('json')->success(100021);
+            return app('json')->success('添加成功');
         } else {
-            return app('json')->fail(100022);
+            return app('json')->fail('添加失败');
         }
     }
 
@@ -169,7 +169,7 @@ class UserController
             ['sort', ''],
         ]);
         if (!in_array($spreadInfo['grade'], [0, 1])) {
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         }
         $uid = $request->uid();
         return app('json')->success($this->services->getUserSpreadGrade($uid, $spreadInfo['grade'], $spreadInfo['sort'], $spreadInfo['keyword']));
@@ -202,7 +202,7 @@ class UserController
         /** @var UserCancelServices $userCancelServices */
         $userCancelServices = app()->make(UserCancelServices::class);
         $userCancelServices->SetUserCancel($request->uid());
-        return app('json')->success(410135);
+        return app('json')->success('注销成功');
     }
 
     /**

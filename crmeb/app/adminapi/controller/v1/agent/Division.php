@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -26,6 +26,11 @@ use think\facade\App;
 class Division extends AuthController
 {
     /**
+     * @var DivisionServices
+     */
+    protected $services;
+
+    /**
      * Division constructor.
      * @param App $app
      * @param DivisionServices $services
@@ -45,6 +50,7 @@ class Division extends AuthController
      */
     public function divisionList()
     {
+        // 获取请求参数
         $where = $this->request->getMore([
             ['division_type', 0],
             ['keyword', '']
@@ -52,6 +58,7 @@ class Division extends AuthController
         if ($where['division_type'] == 2) {
             $where['division_id'] = $this->adminInfo['division_id'];
         }
+        // 调用服务层获取事业部列表
         $data = $this->services->getDivisionList($where);
         return app('json')->success($data);
     }
@@ -65,10 +72,12 @@ class Division extends AuthController
      */
     public function divisionDownList()
     {
+        // 获取参数：事业部类型、用户ID
         [$type, $uid] = $this->request->getMore([
             ['division_type', 0],
             ['uid', 0],
         ], true);
+        // 调用服务层获取下级列表
         $data = $this->services->divisionDownList($type, $uid);
         return app('json')->success($data);
     }
@@ -81,6 +90,7 @@ class Division extends AuthController
      */
     public function divisionCreate($uid)
     {
+        // 调用服务层获取事业部表单
         return app('json')->success($this->services->getDivisionForm((int)$uid));
     }
 
@@ -90,6 +100,7 @@ class Division extends AuthController
      */
     public function divisionSave()
     {
+        // 获取并验证请求数据
         $data = $this->request->postMore([
             ['uid', 0],
             ['aid', 0],
@@ -103,8 +114,9 @@ class Division extends AuthController
             ['roles', []],
             ['image', []]
         ]);
+        // 保存事业部数据
         $this->services->divisionSave($data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -115,6 +127,7 @@ class Division extends AuthController
      */
     public function divisionAgentCreate($uid)
     {
+        // 调用服务层获取代理商表单
         return app('json')->success($this->services->getDivisionAgentForm((int)$uid));
     }
 
@@ -128,6 +141,7 @@ class Division extends AuthController
      */
     public function divisionAgentSave(UserServices $userServices)
     {
+        // 获取并验证请求数据
         $data = $this->request->postMore([
             ['division_id', 0],
             ['uid', 0],
@@ -139,17 +153,20 @@ class Division extends AuthController
             ['image', []],
         ]);
         if ((int)$data['uid'] == 0) $data['uid'] = $data['image']['uid'];
+        // 验证用户信息
         $userInfo = $userServices->getUserInfo($data['uid'], 'is_division,is_agent,is_staff');
-        if (!$userInfo) throw new AdminException(100100);
+        if (!$userInfo) throw new AdminException('参数错误');
         if ($data['edit'] == 0) {
             if ($userInfo['is_division']) throw new AdminException('此用户是事业部，请勿添加为代理商');
             if ($userInfo['is_agent']) throw new AdminException('此用户是代理商，无法重复添加');
             if ($userInfo['is_staff']) throw new AdminException('此用户是下级员工，无法添加为代理商');
+            // 验证事业部信息
             $divisionUserInfo = $userServices->count(['uid' => (int)$data['division_id'], 'is_division' => 1, 'division_id' => $data['division_id']]);
-            if (!$divisionUserInfo) throw new AdminException(100100);
+            if (!$divisionUserInfo) throw new AdminException('参数错误');
         }
+        // 保存代理商数据
         $this->services->divisionAgentSave($data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -160,8 +177,9 @@ class Division extends AuthController
      */
     public function setDivisionStatus($status, $uid)
     {
+        // 调用服务层设置状态
         $this->services->setDivisionStatus($status, $uid);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -172,8 +190,9 @@ class Division extends AuthController
      */
     public function delDivision($type, $uid)
     {
+        // 调用服务层删除事业部/代理商
         $this->services->delDivision($type, $uid);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -185,6 +204,7 @@ class Division extends AuthController
      */
     public function AdminApplyList()
     {
+        // 获取请求参数
         $where = $this->request->getMore([
             ['uid', 0],
             ['division_id', 0],
@@ -196,6 +216,7 @@ class Division extends AuthController
         $where['division_id'] = $this->adminInfo['division_id'];
         /** @var DivisionAgentApplyServices $applyServices */
         $applyServices = app()->make(DivisionAgentApplyServices::class);
+        // 获取申请列表
         $data = $applyServices->AdminApplyList($where);
         return app('json')->success($data);
     }
@@ -211,6 +232,7 @@ class Division extends AuthController
     {
         /** @var DivisionAgentApplyServices $applyServices */
         $applyServices = app()->make(DivisionAgentApplyServices::class);
+        // 获取审核表单
         $data = $applyServices->examineApply($id, $type);
         return app('json')->success($data);
     }
@@ -224,6 +246,7 @@ class Division extends AuthController
      */
     public function applyAgentSave()
     {
+        // 获取审核参数
         $data = $this->request->getMore([
             ['type', 0],
             ['id', 0],
@@ -234,8 +257,9 @@ class Division extends AuthController
         ]);
         /** @var DivisionAgentApplyServices $applyServices */
         $applyServices = app()->make(DivisionAgentApplyServices::class);
+        // 保存审核结果
         $data = $applyServices->applyAgentSave($data);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -247,8 +271,9 @@ class Division extends AuthController
     {
         /** @var DivisionAgentApplyServices $applyServices */
         $applyServices = app()->make(DivisionAgentApplyServices::class);
+        // 删除申请记录
         $applyServices->delApply($id);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -262,6 +287,7 @@ class Division extends AuthController
      */
     public function divisionStaffCreate($uid)
     {
+        // 调用服务层获取员工表单
         return app('json')->success($this->services->getDivisionStaffForm((int)$uid));
     }
 
@@ -277,14 +303,16 @@ class Division extends AuthController
      */
     public function divisionStaffSave()
     {
+        // 获取并验证请求数据
         $data = $this->request->getMore([
             ['uid', 0],
             ['division_percent', 0],
             ['agent_id', 0],
             ['image', []],
         ]);
+        // 保存员工数据
         $this->services->divisionStaffSave($data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -296,6 +324,7 @@ class Division extends AuthController
      */
     public function divisionStatistics()
     {
+        // 获取请求参数：类型、时间、分页、排序
         [$type, $time, $page, $limit, $sort, $order] = $this->request->getMore([
             ['type', 0],
             ['time', ''],
@@ -305,6 +334,7 @@ class Division extends AuthController
             ['order', 'desc'],
         ], true);
         $time = $time != '' ? explode('-', $time) : [];
+        // 获取统计数据
         $data = $this->services->divisionStatistics($type, $time, $page, $limit, $sort, $order);
         return app('json')->success($data);
 

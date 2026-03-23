@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -78,7 +78,7 @@ class UserSignController
         }
         $uid = (int)$request->uid();
         $integral = $this->services->sign($uid);
-        return app('json')->success(410127, ['integral' => $integral], ['integral' => $integral]);
+        return app('json')->success('签到获得{:integral}积分', ['integral' => $integral], ['integral' => $integral]);
     }
 
     /**
@@ -121,7 +121,7 @@ class UserSignController
     {
         $uid = (int)$request->uid();
         $this->services->setSignRemind($uid, $status);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
 }

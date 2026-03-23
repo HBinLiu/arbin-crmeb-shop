@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -55,6 +55,7 @@ use think\facade\Route as Url;
  * @method bcDec($key, string $incField, string $inc, string $keyField = null, int $acc = 2) 高精度减法
  * @method getTrendData($time, $type, $timeType)
  * @method incPayCount(int $uid) 用户支付成功个数增加
+ * @mixin UserDao
  */
 class UserServices extends BaseServices
 {
@@ -144,7 +145,7 @@ class UserServices extends BaseServices
         }
         $res = $this->dao->save($data);
         if (!$res)
-            throw new AdminException(400684);
+            throw new AdminException('保存用户信息失败');
 
         //新用户注册奖励
         $this->rewardNewUser((int)$res->uid);
@@ -370,7 +371,7 @@ class UserServices extends BaseServices
     public function create(array $data)
     {
         if (!$this->dao->save($data))
-            throw new AdminException(100000);
+            throw new AdminException('保存成功');
         return true;
     }
 
@@ -383,7 +384,7 @@ class UserServices extends BaseServices
     public function resetPwd(int $uid, string $password)
     {
         if (!$this->dao->update($uid, ['pwd' => $password]))
-            throw new AdminException(400685);
+            throw new AdminException('密码重置失败');
         return true;
     }
 
@@ -397,7 +398,7 @@ class UserServices extends BaseServices
     public function incSpreadCount(int $uid, int $num = 1)
     {
         if (!$this->dao->incField($uid, 'spread_count', $num))
-            throw new AdminException(400686);
+            throw new AdminException('增加推广人数失败');
         return true;
     }
 
@@ -412,7 +413,7 @@ class UserServices extends BaseServices
     public function setLoginType(int $uid, string $type = 'h5')
     {
         if (!$this->dao->update($uid, ['login_type' => $type]))
-            throw new AdminException(400687);
+            throw new AdminException('设置登录类型失败');
         return true;
     }
 
@@ -426,7 +427,7 @@ class UserServices extends BaseServices
     public function setIsPromoter(int $uid, $is_promoter = 1)
     {
         if (!$this->dao->update($uid, ['is_promoter' => $is_promoter]))
-            throw new AdminException(400688);
+            throw new AdminException('设置推广员失败');
         return true;
     }
 
@@ -451,7 +452,7 @@ class UserServices extends BaseServices
     public function addNowMoney(int $uid, $old_now_money, $now_money)
     {
         if (!$this->dao->update($uid, ['now_money' => bcadd($old_now_money, $now_money, 2)]))
-            throw new AdminException(400689);
+            throw new AdminException('增加用户余额失败');
         return true;
     }
 
@@ -471,7 +472,7 @@ class UserServices extends BaseServices
             $money = ['now_money' => 0];
         }
         if (!$this->dao->update($uid, $money, 'uid'))
-            throw new AdminException(400690);
+            throw new AdminException('减少用户余额失败');
         return true;
     }
 
@@ -486,7 +487,7 @@ class UserServices extends BaseServices
     public function cutBrokeragePrice(int $uid, $brokerage_price, $price)
     {
         if (!$this->dao->update($uid, ['brokerage_price' => bcsub($brokerage_price, $price, 2)]))
-            throw new AdminException(400691);
+            throw new AdminException('减少用户佣金失败');
         return true;
     }
 
@@ -501,7 +502,7 @@ class UserServices extends BaseServices
     public function addIntegral(int $uid, $old_integral, $integral)
     {
         if (!$this->dao->update($uid, ['integral' => bcadd($old_integral, $integral, 2)]))
-            throw new AdminException(400692);
+            throw new AdminException('增加用户积分失败');
         return true;
     }
 
@@ -516,7 +517,7 @@ class UserServices extends BaseServices
     public function cutIntegral(int $uid, $old_integral, $integral)
     {
         if (!$this->dao->update($uid, ['integral' => bcsub($old_integral, $integral, 2)]))
-            throw new AdminException(400693);
+            throw new AdminException('减少用户积分失败');
         return true;
     }
 
@@ -531,7 +532,7 @@ class UserServices extends BaseServices
     public function addExp(int $uid, float $old_exp, float $exp)
     {
         if (!$this->dao->update($uid, ['exp' => bcadd($old_exp, $exp, 2)]))
-            throw new AdminException(400694);
+            throw new AdminException('增加用户经验失败');
         return true;
     }
 
@@ -546,14 +547,14 @@ class UserServices extends BaseServices
     public function cutExp(int $uid, float $old_exp, float $exp)
     {
         if (!$this->dao->update($uid, ['exp' => bcsub($old_exp, $exp, 2)]))
-            throw new AdminException(400695);
+            throw new AdminException('减少用户经验失败');
         return true;
     }
 
     /**
      * 获取用户标签
      * @param $uid
-     * @return \think\Collection
+     * @return array
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
@@ -604,7 +605,7 @@ class UserServices extends BaseServices
                 $item['status'] = ($item['status'] == 1) ? '正常' : '禁止';
                 $item['birthday'] = $item['birthday'] ? date('Y-m-d', (int)$item['birthday']) : '';
                 $item['extract_count_price'] = $userExtract[$item['uid']] ?? 0;//累计提现
-                $item['spread_uid_nickname'] = $item['spread_uid'] ? ($spread_names[$item['spread_uid']] ?? '') . '/' . $item['spread_uid'] : '无';
+                $item['spread_uid_nickname'] = $item['spread_uid'] ? ($spread_names[$item['spread_uid']] ?? '') . '(' . $item['spread_uid'] . ')' : '无';
                 //用户类型
                 if ($item['user_type'] == 'routine') {
                     $item['user_type'] = '小程序';
@@ -637,6 +638,7 @@ class UserServices extends BaseServices
                 $item['agent_level_name'] = $agentLevel[$item['agent_level']] ?? '无';
                 $item['labels'] = $userlabel[$item['uid']] ?? '';
                 $item['isMember'] = $item['is_money_level'] > 0 ? 1 : 0;
+                $item['svip_over_day'] = $item['overdue_time'] ? ceil(($item['overdue_time'] - time()) / 86400) : '';
                 if (strpos($item['avatar'], '/statics/system_images/') !== false) {
                     $item['avatar'] = set_file_url($item['avatar']);
                 }
@@ -656,7 +658,7 @@ class UserServices extends BaseServices
     {
         $user = $this->getUserInfo($id);
         if (!$user)
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         $f = array();
         $f[] = Form::input('uid', '用户编号', $user->getData('uid'))->disabled(true);
         $f[] = Form::input('real_name', '真实姓名', $user->getData('real_name'));
@@ -776,7 +778,7 @@ class UserServices extends BaseServices
     {
         $user = $this->getUserInfo($id);
         if (!$user) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         $res1 = false;
         $res2 = false;
@@ -786,7 +788,7 @@ class UserServices extends BaseServices
             $userMoneyServices = app()->make(UserMoneyServices::class);
             if ($data['money_status'] == 1) {//增加
                 $edit['now_money'] = bcadd($user['now_money'], $data['money'], 2);
-                $res1 = $userMoneyServices->income('system_add', $user['uid'], $data['money'], $edit['now_money'], $data['adminId'] ?? 0);
+                $res1 = $userMoneyServices->income('system_add', $user['uid'], $data['money'], $edit['now_money'], $data['adminId'] ?? 0, $data['mark']);
                 //增加充值记录
                 $recharge_data = [
                     'order_id' => app()->make(StoreOrderCreateServices::class)->getNewOrderId('cz'),
@@ -809,7 +811,7 @@ class UserServices extends BaseServices
                     $edit['now_money'] = 0;
                     $data['money'] = $user['now_money'];
                 }
-                $res1 = $userMoneyServices->income('system_sub', $user['uid'], $data['money'], $edit['now_money'], $data['adminId'] ?? 0);
+                $res1 = $userMoneyServices->income('system_sub', $user['uid'], $data['money'], $edit['now_money'], $data['adminId'] ?? 0, $data['mark']);
             }
             event('OutPushListener', ['user_update_push', ['uid' => $id, 'type' => 'money', 'value' => $data['money_status'] == 2 ? -floatval($data['money']) : $data['money']]]);
         } else {
@@ -823,13 +825,13 @@ class UserServices extends BaseServices
                 $edit['integral'] = bcadd($user['integral'], $data['integration'], 2);
                 $integral_data['balance'] = $edit['integral'];
                 $integral_data['title'] = '系统增加积分';
-                $integral_data['mark'] = '系统增加了' . floatval($data['integration']) . '积分';
+                $integral_data['mark'] = $data['mark'] == '' ? '系统增加了' . floatval($data['integration']) . '积分' : $data['mark'];
                 $res2 = $userBill->incomeIntegral($user['uid'], 'system_add', $integral_data);
             } else if ($data['integration_status'] == 2) {//减少
                 $edit['integral'] = bcsub($user['integral'], $data['integration'], 2);
                 $integral_data['balance'] = $edit['integral'];
                 $integral_data['title'] = '系统减少积分';
-                $integral_data['mark'] = '系统扣除了' . floatval($data['integration']) . '积分';
+                $integral_data['mark'] = $data['mark'] == '' ? '系统扣除了' . floatval($data['integration']) . '积分' : $data['mark'];
                 $res2 = $userBill->expendIntegral($user['uid'], 'system_sub', $integral_data);
             }
             event('OutPushListener', ['user_update_push', ['uid' => $id, 'type' => 'point', 'value' => $data['integration_status'] == 2 ? -intval($data['integration']) : $data['integration']]]);
@@ -838,7 +840,7 @@ class UserServices extends BaseServices
         }
         //修改基本信息
         if (!isset($data['is_other']) || !$data['is_other']) {
-            app()->make(UserLabelRelationServices::class)->setUserLable([$id], $data['label_id']);
+            app()->make(UserLabelRelationServices::class)->setUserLabel([$id], $data['label_id']);
             if (isset($data['pwd']) && $data['pwd'] && $data['pwd'] != $user['pwd']) {
                 $edit['pwd'] = $data['pwd'];
             }
@@ -869,7 +871,7 @@ class UserServices extends BaseServices
         else $res3 = true;
         if ($res1 && $res2 && $res3)
             return true;
-        else throw new AdminException(100007);
+        else throw new AdminException('修改失败');
     }
 
     /**
@@ -882,7 +884,7 @@ class UserServices extends BaseServices
     {
         $user = $this->getUserInfo($id);
         if (!$user) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         $f = array();
         if ($type == 'money') {
@@ -892,7 +894,8 @@ class UserServices extends BaseServices
             $f[] = Form::radio('integration_status', '修改积分', 1)->options([['value' => 1, 'label' => '增加'], ['value' => 2, 'label' => '减少']]);
             $f[] = Form::number('integration', '积分', 0)->min(0)->precision(0)->max(999999);
         }
-        return create_form('修改其他', $f, Url::buildUrl('/user/update_other/' . $id), 'PUT');
+        $f[] = Form::input('mark', '备注', '')->type('textarea')->required();
+        return create_form($type == 'money' ? '修改余额' : '修改积分', $f, Url::buildUrl('/user/update_other/' . $id), 'PUT');
     }
 
     /**
@@ -939,10 +942,10 @@ class UserServices extends BaseServices
         /** @var UserGroupServices $userGroup */
         $userGroup = app()->make(UserGroupServices::class);
         if (!$userGroup->getGroup($group_id)) {
-            throw new AdminException(400696);
+            throw new AdminException('该分组不存在');
         }
         if (!$this->setUserGroup($uids, $group_id)) {
-            throw new AdminException(400697);
+            throw new AdminException('设置分组失败或无改动');
         }
         return true;
     }
@@ -985,17 +988,17 @@ class UserServices extends BaseServices
      * 保存用户标签
      * @return mixed
      */
-    public function saveSetLabel($uids, $lable_id)
+    public function saveSetLabel($uids, $labels, $label_type = 0)
     {
-        foreach ($lable_id as $id) {
+        foreach ($labels as $id) {
             if (!app()->make(UserLabelServices::class)->getLable((int)$id)) {
-                throw new AdminException(400698);
+                throw new AdminException('有标签不存在或被删除');
             }
         }
         /** @var UserLabelRelationServices $services */
         $services = app()->make(UserLabelRelationServices::class);
-        if (!$services->setUserLable($uids, $lable_id)) {
-            throw new AdminException(400668);
+        if (!$services->setUserLabel($uids, $labels, $label_type)) {
+            throw new AdminException('设置标签失败');
         }
         return true;
     }
@@ -1008,7 +1011,7 @@ class UserServices extends BaseServices
     public function giveLevel($id)
     {
         if (!$this->getUserInfo($id)) {
-            throw new AdminException(400214);
+            throw new AdminException('用户不存在');
         }
         //查询高于当前会员的所有会员等级
         $grade = app()->make(UserLevelServices::class)->getUerLevelInfoByUid($id, 'grade');
@@ -1037,7 +1040,7 @@ class UserServices extends BaseServices
     public function saveGiveLevel(int $id, int $level_id)
     {
         if (!$this->getUserInfo($id)) {
-            throw new AdminException(400214);
+            throw new AdminException('用户不存在');
         }
         /** @var SystemUserLevelServices $systemLevelServices */
         $systemLevelServices = app()->make(SystemUserLevelServices::class);
@@ -1045,15 +1048,15 @@ class UserServices extends BaseServices
         $userLevelServices = app()->make(UserLevelServices::class);
         //查询当前选择的会员等级
         $systemLevel = $systemLevelServices->getLevel($level_id);
-        if (!$systemLevel) throw new AdminException(400699);
+        if (!$systemLevel) throw new AdminException('等级不存在或被删除');
         //检查是否拥有此会员等级
         $level = $userLevelServices->getWhereLevel(['uid' => $id, 'level_id' => $level_id], 'valid_time,is_forever');
         if ($level && $level['status'] == 1 && $level['is_del'] == 0) {
-            throw new AdminException(400700);
+            throw new AdminException('此用户已有该用户等级，无法再次赠送');
         }
         //保存会员信息
         if (!$userLevelServices->setUserLevel($id, $level_id, $systemLevel)) {
-            throw new AdminException(400219);
+            throw new AdminException('赠送失败');
         }
         return true;
     }
@@ -1071,7 +1074,7 @@ class UserServices extends BaseServices
     {
         $userInfo = $this->getUserInfo($id);
         if (!$userInfo) {
-            throw new AdminException(400214);
+            throw new AdminException('用户不存在');
         }
         if ($userInfo['is_ever_level'] == 1) {
             $timeDiff = '永久';
@@ -1103,10 +1106,10 @@ class UserServices extends BaseServices
             return true;
         }
         if (!$userInfo) {
-            throw new AdminException(400214);
+            throw new AdminException('用户不存在');
         }
-        if ($days == 0) throw new AdminException(400701);
-        if ($days < -1) throw new AdminException(400702);
+        if ($days == 0) throw new AdminException('赠送天数不能为0');
+        if ($days < -1) throw new AdminException('天数输入错误');
         if ($userInfo->is_money_level == 0) {
             $userInfo->is_money_level = 3;
             if ($days == -1) {
@@ -1153,14 +1156,14 @@ class UserServices extends BaseServices
     public function cleanUpLevel($uid)
     {
         if (!$this->getUserInfo($uid))
-            throw new AdminException(400214);
+            throw new AdminException('用户不存在');
         /** @var UserLevelServices $services */
         $services = app()->make(UserLevelServices::class);
         return $this->transaction(function () use ($uid, $services) {
             $res = $services->delUserLevel($uid);
             $res1 = $this->dao->update($uid, ['clean_time' => time(), 'level' => 0, 'exp' => 0], 'uid');
             if (!$res && !$res1)
-                throw new AdminException(400186);
+                throw new AdminException('清除失败');
             return true;
         });
     }
@@ -1277,7 +1280,7 @@ class UserServices extends BaseServices
     {
         $userInfo = $this->getUserInfo($uid);
         if (!$userInfo) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         $userInfo['avatar'] = strpos($userInfo['avatar'], 'http') === false ? (sys_config('site_url') . $userInfo['avatar']) : $userInfo['avatar'];
         $userInfo['overdue_time'] = date('Y-m-d H:i:s', $userInfo['overdue_time']);
@@ -1290,7 +1293,7 @@ class UserServices extends BaseServices
                 $userInfo['addres'] = '';
             }
         }
-        $userInfo['vip_name'] = app()->make(SystemUserLevelServices::class)->value(['grade' => $userInfo['level']], 'name');
+        $userInfo['vip_name'] = app()->make(SystemUserLevelServices::class)->value(['id' => $userInfo['level']], 'name');
         $userInfo['group_name'] = app()->make(UserGroupServices::class)->value(['id' => $userInfo['group_id']], 'group_name');
         $userInfo['spread_uid_nickname'] = $this->dao->value(['uid' => $userInfo['spread_uid']], 'nickname') . '/' . $userInfo['spread_uid'];
         $userInfo['label_list'] = implode(',', array_column(app()->make(UserLabelRelationServices::class)->getUserLabelList([$uid]), 'label_name'));
@@ -1362,7 +1365,7 @@ class UserServices extends BaseServices
                 $services = app()->make(UserMoneyServices::class);
                 return $services->balanceList(['uid' => $id]);
             default:
-                throw new AdminException(100100);
+                throw new AdminException('参数错误');
         }
     }
 
@@ -1618,7 +1621,7 @@ class UserServices extends BaseServices
     {
         $userInfo = $this->getUserInfo($uid);
         if (!$userInfo) {
-            throw new AdminException(400214);
+            throw new AdminException('用户不存在');
         }
         /** @var UserBillServices $userBill */
         $userBill = app()->make(UserBillServices::class);
@@ -1639,10 +1642,10 @@ class UserServices extends BaseServices
     {
         $info = $this->dao->get(['uid' => $uid]);
         if (!$info) {
-            throw new ApiException(400214);
+            throw new ApiException('用户不存在');
         }
         if (!$this->dao->update($uid, $data, 'uid')) {
-            throw new ApiException(100007);
+            throw new ApiException('修改失败');
         }
 
         //自定义事件-用户修改信息
@@ -1697,7 +1700,7 @@ class UserServices extends BaseServices
     {
         $userInfo = $this->dao->getOne(['uid' => $uid]);
         if (!$userInfo) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
         if ($code && !$spreadUid) {
             /** @var QrcodeServices $qrCode */
@@ -1763,7 +1766,7 @@ class UserServices extends BaseServices
             $data['agent_id'] = $spreadInfo['agent_id'];
             $data['staff_id'] = $spreadInfo['staff_id'];
             if (!$this->dao->update($uid, $data, 'uid')) {
-                throw new ApiException(410288);
+                throw new ApiException('绑定推广关系失败');
             }
             return '绑定上级成功，上级uid为' . $spreadUid;
         } else {
@@ -1780,7 +1783,7 @@ class UserServices extends BaseServices
     {
         $userInfo = $this->getUserInfo($data['uid'], 'uid,user_type');
         if (!$userInfo) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
         $data['channel_type'] = $userInfo['user_type'];
         $data['add_time'] = time();
@@ -1798,7 +1801,7 @@ class UserServices extends BaseServices
         if ($userVisit->save($data)) {
             return true;
         } else {
-            throw new ApiException(100015);
+            throw new ApiException('设置失败');
         }
     }
 
@@ -1832,7 +1835,7 @@ class UserServices extends BaseServices
     {
         $user = $this->getUserInfo($uid);
         if (!$user) {
-            throw new AdminException(400214);
+            throw new AdminException('用户不存在');
         }
         $spread_one_ids = $this->getUserSpredadUids($uid, 1);
         $spread_two_ids = $this->getUserSpredadUids($uid, 2);
@@ -1933,7 +1936,7 @@ class UserServices extends BaseServices
         $appid = sys_config('wechat_appid');
         $appSecret = sys_config('wechat_appsecret');
         if (!$appid || !$appSecret) {
-            throw new AdminException(400236);
+            throw new AdminException('请先配置小程序appid、appSecret等参数');
         }
         $key = md5('sync_wechat_users');
         //一天点击一次
@@ -1980,7 +1983,7 @@ class UserServices extends BaseServices
             $data['headimgurl'] = $info['headimgurl'] ?? '';
             $userInfoData = $this->setUserInfo($data);
             if (!$userInfoData) {
-                throw new AdminException(400703);
+                throw new AdminException('用户信息储存失败');
             }
             $data['uid'] = $userInfoData['uid'];
             $data['subscribe'] = $info['subscribe'] ?? 1;
@@ -2003,7 +2006,7 @@ class UserServices extends BaseServices
             /** @var WechatUserServices $wechatUser */
             $wechatUser = app()->make(WechatUserServices::class);
             if (!$wechatUser->saveAll($dataAll)) {
-                throw new AdminException(400703);
+                throw new AdminException('用户信息储存失败');
             }
         }
         return true;
@@ -2021,9 +2024,9 @@ class UserServices extends BaseServices
      */
     public function setMemberOverdueTime($vip_day, int $user_id, int $is_money_level, $member_type = false)
     {
-        if ($vip_day == 0) throw new ApiException(410289);
+        if ($vip_day == 0) throw new ApiException('天数不能为0');
         $user_info = $this->getUserInfo($user_id, 'is_money_level,overdue_time');
-        if (!$user_info) throw new ApiException(410032);
+        if (!$user_info) throw new ApiException('用户不存在');
         if (!$member_type) $member_type = "month";
         if ($member_type == 'ever') {
             $overdue_time = 0;
@@ -2253,6 +2256,14 @@ class UserServices extends BaseServices
             $userInfo['birthday'] = (int)$userInfo['birthday'] ? date('Y-m-d', (int)$userInfo['birthday']) : '';
             $userInfo['level'] = $userInfo['level'] != 0 ? $userInfo['level'] : '';
             $userInfo['group_id'] = $userInfo['group_id'] != 0 ? $userInfo['group_id'] : '';
+            if ($userInfo['addres'] == '') {
+                $defaultAddressInfo = app()->make(UserAddressServices::class)->getUserDefaultAddress($uid);
+                if ($defaultAddressInfo) {
+                    $userInfo['addres'] = $defaultAddressInfo['province'] . $defaultAddressInfo['city'] . $defaultAddressInfo['district'] . $defaultAddressInfo['detail'];
+                } else {
+                    $userInfo['addres'] = '';
+                }
+            }
         }
         $levelInfo = $systemUserLevelServices->getWhereLevelList([], 'id,name');
         $groupInfo = $userGroupServices->getGroupList();
@@ -2274,7 +2285,7 @@ class UserServices extends BaseServices
     {
         $user = $this->getUserInfo($id);
         if (!$user) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         $res1 = false;
         $res2 = false;
@@ -2309,7 +2320,7 @@ class UserServices extends BaseServices
         if ($res1 && $res2 && $res3) {
             return true;
         } else {
-            throw new AdminException(100007);
+            throw new AdminException('修改失败');
         }
     }
 

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -80,7 +80,7 @@ class StoreProductAttrValueServices extends BaseServices
     public function saveAll(array $data)
     {
         $res = $this->dao->saveAll($data);
-        if (!$res) throw new AdminException(100006);
+        if (!$res) throw new AdminException('保存失败');
         return $res;
     }
 
@@ -89,9 +89,9 @@ class StoreProductAttrValueServices extends BaseServices
      * @param array $where
      * @return array
      */
-    public function getSkuArray(array $where)
+    public function getSkuArray(array $where, $field = 'id,bar_code,bar_code_number,cost,price,vip_price,ot_price,stock,image as pic,weight,volume,brokerage,brokerage_two,quota,unique', $key = 'suk')
     {
-        return $this->dao->getColumn($where, 'id,bar_code,bar_code_number,cost,price,vip_price,ot_price,stock,image as pic,weight,volume,brokerage,brokerage_two,quota,unique', 'suk');
+        return $this->dao->getColumn($where, $field, $key);
     }
 
     /**

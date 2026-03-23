@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -49,7 +49,7 @@ class StoreOrderSuccessServices extends BaseServices
     public function zeroYuanPayment(array $orderInfo, int $uid, string $payType = PayServices::YUE_PAY)
     {
         if ($orderInfo['paid']) {
-            throw new ApiException(410265);
+            throw new ApiException('该订单已支付');
         }
         return $this->paySuccess($orderInfo, $payType);//余额支付成功
     }

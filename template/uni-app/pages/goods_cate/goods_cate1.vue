@@ -67,7 +67,7 @@
 </template>
 
 <script>
-	let sysHeight = uni.getSystemInfoSync().statusBarHeight + 'px';
+	let sysHeight = uni.getWindowInfo().statusBarHeight + 'px';
 	import {
 		getCategoryList
 	} from '@/api/store.js';

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -49,11 +49,11 @@ class UserServices extends BaseServices
         /** @var StoreServiceRecordServices $kefuService */
         $kefuService = app()->make(StoreServiceRecordServices::class);
         if (!$kefuService->count(['to_uid' => $uid])) {
-            throw new ApiException(410032);
+            throw new ApiException('用户不存在');
         }
         $userInfo = $this->dao->get($uid, ['nickname', 'avatar', 'spread_uid', 'is_promoter', 'birthday', 'now_money', 'user_type', 'level', 'group_id', 'phone', 'is_money_level'], ['userGroup']);
         if (!$userInfo) {
-            throw new ApiException(410032);
+            throw new ApiException('用户不存在');
         }
         /** @var UserLabelRelationServices $labalServices */
         $labalServices = app()->make(UserLabelRelationServices::class);

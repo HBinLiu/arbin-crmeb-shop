@@ -1,6 +1,13 @@
 <?php
-
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\services\wechat;
 
 
@@ -70,7 +77,7 @@ class WechatQrcodeServices extends BaseServices
         if ($info) {
             $info = $info->toArray();
         } else {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         /** @var UserServices $userService */
         $userService = app()->make(UserServices::class);
@@ -115,15 +122,15 @@ class WechatQrcodeServices extends BaseServices
         $data['data'] = json_encode($data['data']);
         if ($id) {
             $info = $this->dao->get($id);
-            if (!$info) throw new AdminException(100026);
+            if (!$info) throw new AdminException('数据不存在');
             if ($info['image'] == '') $data['image'] = $this->getChannelCode($id);
             $info = $this->dao->update($id, $data);
-            if (!$info) throw new AdminException(100006);
+            if (!$info) throw new AdminException('保存失败');
         } else {
             $info = $this->dao->save($data);
             $image = $this->getChannelCode($info['id']);
             $info = $this->dao->update($info['id'], ['image' => $image]);
-            if (!$info) throw new AdminException(100006);
+            if (!$info) throw new AdminException('保存失败');
         }
         return true;
     }
@@ -153,7 +160,7 @@ class WechatQrcodeServices extends BaseServices
             } else {
                 $res = false;
             }
-            if (!$res) throw new AdminException(400237);
+            if (!$res) throw new AdminException('二维码生成失败');
             $imageInfo = $this->downloadImage($resCode['url'], $name);
             $systemAttachment->attachmentAdd($name, $imageInfo['size'], $imageInfo['type'], $imageInfo['att_dir'], $imageInfo['att_dir'], 1, $imageInfo['image_type'], time(), 1);
         }
@@ -183,7 +190,7 @@ class WechatQrcodeServices extends BaseServices
             $ext = $this->getImageExtname($name)['ext_name'];
         }
         if (!in_array($ext, Config::get('upload.fileExt'))) {
-            throw new AdminException(400558);
+            throw new AdminException('格式错误');
         }
         //TODO 获取远程文件所采用的方法
         if ($type) {

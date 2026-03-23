@@ -1,15 +1,5 @@
 <template>
-  <div
-    class="mobile-page"
-    :style="{
-      background: bottomBgColor,
-      paddingTop: topConfig + 'px',
-      paddingBottom: bottomConfig + 'px',
-      paddingLeft: edge + 'px',
-      paddingRight: edge + 'px',
-      marginTop: udEdge + 'px',
-    }"
-  >
+  <common_wrapper :config="configObj">
     <div
       class="box"
       :style="{
@@ -20,7 +10,7 @@
       }"
       v-html="richText"
     ></div>
-  </div>
+  </common_wrapper>
 </template>
 
 <script>
@@ -77,6 +67,67 @@ export default {
         setUp: {
           tabVal: 0,
         },
+        zIndexConfig: {
+          title: '组件上浮',
+          val: 0,
+          min: 0,
+        },
+        borderConfig: {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Hide, 1: Show
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              { name: '实线', style: 'solid' },
+              { name: '虚线', style: 'dashed' },
+              { name: '点状', style: 'dotted' },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
+        },
+        shadowConfig: {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0,
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+          },
+        },
         titleLeft: '富文本内容',
         titleRight: '通用样式',
         bgColor: {
@@ -107,25 +158,21 @@ export default {
             },
           ],
         },
-        topConfig: {
-          title: '上边距',
+        paddingConfig: {
+          title: '内边距',
           val: 0,
           min: 0,
+          max: 100,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-        bottomConfig: {
-          title: '下边距',
+        marginConfig: {
+          title: '外边距',
           val: 0,
           min: 0,
-        },
-        lrConfig: {
-          title: '左右边距',
-          val: 0,
-          min: 0,
-        },
-        udConfig: {
-          title: '页面上间距',
-          val: 0,
-          min: 0,
+          max: 100,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
         richText: {
           val: '',
@@ -150,18 +197,21 @@ export default {
         },
       },
       cSlider: '',
+      configObj: null,
       bgColor: '',
       confObj: {},
       pageData: {},
-      edge: '',
-      udEdge: '',
       richText: '',
       bottomBgColor: '',
-      topConfig: '',
-      bottomConfig: '',
       fillet: 0,
       filletVal: 0,
       valList: [],
+      paddingConfig: {
+        valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+      },
+      marginConfig: {
+        valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+      },
     };
   },
   mounted() {
@@ -173,24 +223,39 @@ export default {
   methods: {
     setConfig(data) {
       if (!data) return;
-      if (data.lrConfig) {
-        this.bgColor = data.bgColor.color[0].item;
-        this.bottomBgColor = data.bottomBgColor.color[0].item;
-        this.topConfig = data.topConfig.val;
-        this.bottomConfig = data.bottomConfig.val;
-        this.edge = data.lrConfig.val;
-        this.udEdge = data.udConfig.val;
-        this.richText = data.richText.val;
-        this.fillet = data.fillet.type;
-        this.filletVal = data.fillet.val;
-        this.valList = data.fillet.valList;
+      this.configObj = data;
+      for (let key in this.defaultConfig) {
+        if (data[key] == undefined) {
+          this.$set(data, key, this.defaultConfig[key]);
+        }
       }
+      this.bgColor = data.bgColor.color[0].item;
+      this.bottomBgColor = data.bottomBgColor.color[0].item;
+      this.richText = data.richText.val;
+      this.fillet = data.fillet.type;
+      this.filletVal = data.fillet.val;
+      this.valList = data.fillet.valList;
+      this.paddingConfig = data.paddingConfig || {
+        valList: [
+          { val: data.topConfig ? data.topConfig.val : 0 },
+          { val: data.lrConfig ? data.lrConfig.val : 0 },
+          { val: data.bottomConfig ? data.bottomConfig.val : 0 },
+          { val: data.lrConfig ? data.lrConfig.val : 0 },
+        ],
+      };
+      this.marginConfig = data.marginConfig || {
+        valList: [{ val: data.udConfig ? data.udConfig.val : 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+      };
     },
   },
 };
 </script>
 
 <style scoped lang="scss">
+.mobile-page {
+  display: inline-block;
+  width: -webkit-fill-available;
+}
 .mobile-page ::v-deepvideo {
   width: 100% !important;
 }

@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\adminapi\controller\v1\diy;
 
 use app\adminapi\controller\AuthController;
@@ -147,5 +155,66 @@ class DiyPro extends AuthController
         // 保存内容
         $this->services->importDIYData($content);
         return app('json')->success('导入成功');
+    }
+
+    public function textField()
+    {
+        $user = [
+            ['label' => '用户名称', 'value' => 'nickname'],
+            ['label' => '用户id', 'value' => 'uid'],
+            ['label' => '用户头像', 'value' => 'image'],
+            ['label' => '商品收藏', 'value' => 'collection_num'],
+            ['label' => '商品加购', 'value' => 'cart_num'],
+            ['label' => '订单总数', 'value' => 'order_num'],
+            ['label' => '我的积分', 'value' => 'integral'],
+            ['label' => '我的余额', 'value' => 'now_money'],
+            ['label' => '我的佣金', 'value' => 'brokerage_price'],
+            ['label' => '未读消息', 'value' => 'unread_msg_num'],
+        ];
+
+        $article = [
+            ['label' => '文章标题', 'value' => 'title'],
+            ['label' => '文章id', 'value' => 'id'],
+            ['label' => '文章封面', 'value' => 'image'],
+            ['label' => '文章分类', 'value' => 'cid_name'],
+            ['label' => '文章简介', 'value' => 'synopsis'],
+            ['label' => '文章浏览量', 'value' => 'visit'],
+            ['label' => '添加时间', 'value' => 'add_time'],
+        ];
+
+        $coupon = [
+            ['label' => '优惠券名称', 'value' => 'coupon_title'],
+            ['label' => '优惠券id', 'value' => 'id'],
+            ['label' => '优惠券类型', 'value' => 'type'],
+            ['label' => '优惠券面值', 'value' => 'coupon_price'],
+            ['label' => '优惠券状态', 'value' => 'status'],
+            ['label' => '领取时间', 'value' => 'receive_time'],
+            ['label' => '使用时间', 'value' => 'use_time'],
+            ['label' => '使用门槛', 'value' => 'use_min_price'],
+            ['label' => '发放数量', 'value' => 'receive_count'],
+            ['label' => '添加时间', 'value' => 'add_time'],
+        ];
+
+        $product = [
+            ['label' => '商品名称', 'value' => 'store_name'],
+            ['label' => '商品id', 'value' => 'id'],
+            ['label' => '商品图片', 'value' => 'image'],
+            ['label' => '商品简介', 'value' => 'store_info'],
+            ['label' => '商品单位', 'value' => 'unit_name'],
+            ['label' => '商品分类', 'value' => 'cate_name'],
+            ['label' => '商品库存', 'value' => 'stock'],
+            ['label' => '商品售价', 'value' => 'price'],
+            ['label' => '商品最高售价', 'value' => 'max_price'],
+            ['label' => '商品最低售价', 'value' => 'min_price'],
+            ['label' => '商品原价', 'value' => 'ot_price'],
+            ['label' => '商品最高原价', 'value' => 'max_ot_price'],
+            ['label' => '商品最低原价', 'value' => 'min_ot_price'],
+            ['label' => '商品起购数量', 'value' => 'min_qty'],
+            ['label' => '商品销量', 'value' => 'sales'],
+            ['label' => '商品访问量', 'value' => 'browse'],
+            ['label' => '商品添加时间', 'value' => 'add_time'],
+        ];
+
+        return app('json')->success(compact('user', 'article', 'coupon', 'product'));
     }
 }

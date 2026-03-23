@@ -1,35 +1,28 @@
-# api 目录结构说明
+crmeb/app/api目录是网站前端(非管理后台)的API接口目录。
 
-## 目录结构
+它与adminapi目录的区别在于:
 
-```
-.
-├── config/                  # 配置目录
-├── controller/              # 控制器目录
-├── lang/                    # 语言包目录
-├── middleware/              # 中间件目录
-├── route/                   # 路由配置目录
-├── validate/                # 验证器目录
-├── ApiExceptionHandle.php   # 异常处理器
-├── common.php               # 公共方法
-├── event.php                # 事件配置
-└── provider.php             # 服务提供者
-```
+- adminapi目录下的是管理后台系统的API接口
+- api目录下的是网站前端系统(手机端/微信小程序/H5等)的API接口
 
-## 目录说明
+具体来说:
 
-- **config/** - 移动端API专用配置
-- **controller/** - 移动端控制器，处理移动端业务逻辑
-- **lang/** - 移动端多语言文件
-- **middleware/** - 移动端中间件，如用户认证、请求日志等
-- **route/** - 移动端路由配置
-- **validate/** - 移动端数据验证器
+- api目录下也是采用控制器(Controller)方式组织接口代码
+- 每个控制器对应一个功能模块,如OrderController负责订单相关接口等
+- 接口用于前端页面的ajax请求,获取数据用于渲染
+- 接口也采用RESTful风格设计
 
-## 功能说明
+例如:
 
-api模块专门用于处理移动端应用的API接口，包括：
-- 用户注册登录
-- 商品浏览购买
-- 订单管理
-- 支付功能
-- 个人中心等移动端功能
+- 用户注册接口在UserController的register方法
+- 获取订单列表在OrderController的lists方法
+- 支付结果通知在PayController的notify方法
+
+和adminapi目录一样,api目录也通过定义清晰的接口,解耦了前后端,让前端更专注于业务展示。
+
+区别在于目标用户不同:
+
+- adminapi为后台管理员使用
+- api目录下的接口为前台用户(手机端、小程序端等)提供数据服务
+
+所以二者都起到了前后端分离的关键作用。

@@ -24,8 +24,8 @@
               @change="userSearchs"
               class="form_content_width"
             >
-              <el-option value="1" label="显示"></el-option>
-              <el-option value="0" label="隐藏"></el-option>
+              <el-option value="1" label="开启"></el-option>
+              <el-option value="0" label="关闭"></el-option>
             </el-select>
           </el-form-item>
           <el-form-item label="分类名称：" label-for="status2">

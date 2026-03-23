@@ -192,7 +192,7 @@
                 >
                 <el-dropdown-item
                   command="7"
-                  v-show="[1, 2].includes(scope.row.refund_type) && scope.row.is_pink_cancel === 0"
+                  v-show="[1, 2, 5].includes(scope.row.refund_type) && scope.row.is_pink_cancel === 0"
                   >不退款</el-dropdown-item
                 >
                 <el-dropdown-item command="8" v-show="scope.row.is_del == 1">删除订单</el-dropdown-item>

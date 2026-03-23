@@ -69,7 +69,6 @@ export default {
     uniqueArray(arr) {
       const seen = {};
       return arr.filter((item) => {
-        console.log(item)
         item.title =
           item.use_min_price !== '0.00'
             ? `${item.title} | 满${item.use_min_price}元 减 ${item.coupon_price}元`

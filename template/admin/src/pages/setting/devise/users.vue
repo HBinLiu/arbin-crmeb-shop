@@ -1,7 +1,7 @@
 <template>
   <div class="users">
     <el-card :bordered="false" shadow="never" class="h100">
-      <div class="acea-row row-top  no-warp">
+      <div class="acea-row row-top no-warp">
         <div class="left" :style="colorStyle">
           <div class="header" :class="{ bgColor: userData.status == 3, solid: current == 1 }" @click="currentShow(1)">
             <div class="top acea-row row-between-wrapper">
@@ -54,7 +54,12 @@
             </div>
             <div class="bnt">立即续费</div>
           </div>
-          <div class="orderCenter on dotted p-y-15" :class="current == 4 ? 'solid' : ''" v-db-click @click="currentShow(4)">
+          <div
+            class="orderCenter on dotted p-y-15"
+            :class="current == 4 ? 'solid' : ''"
+            v-db-click
+            @click="currentShow(4)"
+          >
             <div class="title acea-row row-between-wrapper">
               <div>订单中心</div>
               <div class="all">查看全部<span class="iconfont iconjinru"></span></div>
@@ -201,7 +206,7 @@
           <div class="c_row-item" v-if="current == 3">
             <el-col class="label" :span="4"> 商家服务： </el-col>
             <el-col :span="20" class="slider-box">
-              <el-radio-group v-model="userData.business_status" >
+              <el-radio-group v-model="userData.business_status">
                 <el-radio :label="1">
                   <span>样式1</span>
                 </el-radio>
@@ -215,8 +220,8 @@
             <el-col class="label" :span="4"> 广告位： </el-col>
             <el-col :span="20" class="slider-box">
               <el-switch
-                :active-value="1"
-                :inactive-value="0"
+                :active-value="true"
+                :inactive-value="false"
                 v-model="userData.my_banner_status"
                 style="margin-bottom: 12px"
               />
@@ -270,7 +275,7 @@ export default {
         loop: false,
       },
       userData: {
-        my_banner_status: true,
+        my_banner_status: false,
         routine_my_banner: [],
         routine_my_menus: [],
         status: '',
@@ -409,6 +414,7 @@ export default {
           if (
             el.url == '/pages/admin/order/index' ||
             el.url == '/pages/admin/order_cancellation/index' ||
+            el.url == '/pages/admin/manage/index' ||
             el.name == '客服接待'
           ) {
             storeMenu.push(el);

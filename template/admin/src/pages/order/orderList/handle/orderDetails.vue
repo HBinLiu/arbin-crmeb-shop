@@ -38,7 +38,7 @@
             </li>
             <li class="item">
               <div class="title">支付方式</div>
-              <div>{{ orderDatalist.orderInfo.pay_type | payType }}</div>
+              <div>{{ (orderDatalist.orderInfo.pay_type | payType) || '其它方式' }}</div>
             </li>
             <li class="item">
               <div class="title">支付时间</div>

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -71,7 +71,7 @@ class DeliveryService extends AuthController
         ]);
 
         $this->services->saveDeliveryService($data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -100,7 +100,7 @@ class DeliveryService extends AuthController
         ]);
 
         $this->services->updateDeliveryService((int)$id, $data);
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }
 
     /**
@@ -111,9 +111,9 @@ class DeliveryService extends AuthController
     public function delete($id)
     {
         if (!$this->services->delete($id))
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
         else
-            return app('json')->success(100002);
+            return app('json')->success('删除成功');
     }
 
     /**
@@ -124,9 +124,9 @@ class DeliveryService extends AuthController
      */
     public function set_status($id, $status)
     {
-        if ($status == '' || $id == 0) return app('json')->fail(100100);
+        if ($status == '' || $id == 0) return app('json')->fail('参数错误');
         $this->services->update($id, ['status' => $status]);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**

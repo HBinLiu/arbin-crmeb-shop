@@ -31,5 +31,5 @@ module.exports = {
 	//分页最多显示条数
 	LIMIT: 10,
 	// 请求超时限制 默认10秒
-	TIMEOUT: 10000
+	TIMEOUT: 100000
 }

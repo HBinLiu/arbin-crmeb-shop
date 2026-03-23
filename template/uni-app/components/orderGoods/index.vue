@@ -55,7 +55,7 @@
 						</view>
 						<view class='evaluate' v-else-if="item.is_reply==1">{{$t(`已评价`)}}</view>
 					</view>
-
+					
 				</view>
 
 				<view class="botton-btn">
@@ -350,9 +350,9 @@
 
 	.op {
 		opacity: 0.5;
-
+		
 	}
-
+	
 	.gray {
 		filter: grayscale(100%);
 		filter: gray;

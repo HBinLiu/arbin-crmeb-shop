@@ -325,7 +325,6 @@ export default {
     },
     // 提交
     handleSubmit() {
-      console.log(this.currentTab);
       if (this.currentTab === '1') {
         this.formValidate.customCode = this.editor.getValue();
         this.formValidate.mark = 'customTimer';

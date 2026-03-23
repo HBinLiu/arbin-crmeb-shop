@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -66,7 +66,7 @@ class Wechat extends BaseStorage implements OAuthInterface
             $service = app()->make(WechatOpenService::class);
             $wechatInfo = $service->getAuthorizationInfo();
             if (!$wechatInfo) {
-                throw new OAuthException(410131);
+                throw new OAuthException('授权失败');
             }
         }
 

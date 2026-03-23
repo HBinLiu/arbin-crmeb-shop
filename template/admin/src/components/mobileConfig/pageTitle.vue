@@ -31,7 +31,7 @@
           <el-checkbox v-model="bgPic" @change="bgPicTap">背景图</el-checkbox>
           <el-radio-group v-model="tabVal" size="mini" @input="radioTap">
             <el-radio-button :label="index" v-for="(item, index) in picList" :key="index">
-              <span class="iconfont-diy" :class="item"></span>
+              <span class="iconfont" :class="item"></span>
             </el-radio-button>
           </el-radio-group>
         </div>
@@ -41,17 +41,13 @@
             <img :src="bgPicUrl" alt="" v-if="bgPicUrl" />
             <div class="upload-box" v-else><i class="el-icon-camera" /></div>
             <div class="replace" v-if="bgPicUrl">更换图片</div>
-            <!--<span class="iconfont-diy icondel_1" @click.stop="bindDelete" v-if="bgPicUrl"></span>-->
+            <!--<span class="iconfont icondel_1" @click.stop="bindDelete" v-if="bgPicUrl"></span>-->
           </div>
         </div>
       </el-col>
     </div>
     <div>
-      <el-dialog
-        :visible.sync="modalPic"
-        width="960px"
-        title="上传背景图"
-      >
+      <el-dialog :visible.sync="modalPic" width="960px" title="上传背景图">
         <uploadPictures
           :isChoice="isChoice"
           @getPic="getPic"
@@ -103,6 +99,7 @@ export default {
   },
   created() {
     let state = this.$store.state.mobildConfig;
+    console.log(state, 'statestate');
     this.value = state.pageTitle;
     this.name = state.pageName;
     this.isShow = state.pageShow ? true : false;
@@ -128,8 +125,6 @@ export default {
       });
     },
     colorPickerTap(colorPicker) {
-      console.log(colorPicker);
-
       this.$store.commit('mobildConfig/UPPICKER', colorPicker);
     },
     radioTap(val) {
@@ -196,7 +191,7 @@ export default {
     height: 24px;
     line-height: 24px;
   }
-  .iconfont-diy {
+  .iconfont {
     position: absolute;
     top: -15px;
     right: -8px;

@@ -20,11 +20,7 @@
     </div>
     <div class="bnt" @click="openFloorModal">+ 编辑热区</div>
     <div>
-      <el-dialog
-        :visible.sync="modalPic"
-        width="960px"
-        :title="'上传图片'"
-      >
+      <el-dialog :visible.sync="modalPic" width="960px" :title="'上传图片'">
         <uploadPictures
           :isChoice="isChoice"
           @getPic="getPic"
@@ -127,7 +123,6 @@ export default {
     handleAreaData(areaData) {
       // 打印保存的数据
       this.configData.list = areaData;
-      console.log('保存的数据', areaData);
     },
   },
 };

@@ -5,7 +5,7 @@
         {{ configData.title }}
       </el-col>
       <el-col :span="18">
-        <el-slider v-model="configData.val" show-input :min="configData.min"></el-slider>
+        <el-slider v-model="configData.val" show-input :min="configData.min" :max="configData.max"></el-slider>
       </el-col>
     </div>
   </div>

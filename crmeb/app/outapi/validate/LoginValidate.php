@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -29,8 +29,8 @@ class LoginValidate extends Validate
      * @var string[]
      */
     protected $message = [
-        'appid.require' => 400133,
-        'appid.account' => 400140,
-        'appsecret.regex' => 400134,
+        'appid.require' => '请填写账号',
+        'appid.account' => '账号或密码错误',
+        'appsecret.regex' => '请填写密码',
     ];
 }

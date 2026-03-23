@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -53,13 +53,13 @@ class OutAccountServices extends BaseServices
     {
         $autInfo = $this->dao->get(['appid' => $appid, 'is_del' => 0]);
         if (!$autInfo) {
-            throw new AuthException(410141);
+            throw new AuthException('没有此用户');
         }
         if ($appsecret && !password_verify($appsecret, $autInfo->appsecret)) {
-            throw new AuthException(400744);
+            throw new AuthException('appid或appsecret错误');
         }
         if ($autInfo->status == 0) {
-            throw new AuthException(400595);
+            throw new AuthException('您已被禁止登录');
         }
         $token = $this->createToken($autInfo->id, 'out');
         $data['last_time'] = time();
@@ -184,14 +184,14 @@ class OutAccountServices extends BaseServices
             if (!request()->isCli()) {
                 $cacheService->delete($md5Token);
             }
-            throw new AuthException(110003);
+            throw new AuthException('登录已过期,请重新登录');
         }
 
         if ($authInfo->status == 2) {
             if (!request()->isCli()) {
                 $cacheService->delete($md5Token);
             }
-            throw new AuthException(400595);
+            throw new AuthException('您已被禁止登录');
         }
         return true;
     }
@@ -207,19 +207,19 @@ class OutAccountServices extends BaseServices
     protected function verifyToken(string $token, JwtAuth $jwtAuth, CacheService $cacheService): array
     {
         if (!$token || $token === 'undefined') {
-            throw new AuthException(400172);
+            throw new AuthException('登录失败');
         }
 
         $md5Token = md5($token);
 
         if (!$cacheService->has($md5Token) || !($cacheToken = $cacheService->get($md5Token, '', NULL, 'out'))) {
-            throw new AuthException(110006);
+            throw new AuthException('登录已过期,请重新登录');
         }
 
         //解析token
         [$id, $type] = $jwtAuth->parseToken($token);
         if (!$id || $type != 'out') {
-            throw new AuthException(400172);
+            throw new AuthException('登录失败');
         }
 
         try {
@@ -228,7 +228,7 @@ class OutAccountServices extends BaseServices
             if (!request()->isCli()) {
                 $cacheService->delete($md5Token);
             }
-            throw new AuthException(400172);
+            throw new AuthException('登录失败');
         }
 
         return [$md5Token, $id, $type];
@@ -252,12 +252,12 @@ class OutAccountServices extends BaseServices
      */
     public function textOutUrl($data)
     {
-        if (!$data['push_account'] || !$data['push_password'] || !$data['push_token_url']) throw new AdminException(100100);
+        if (!$data['push_account'] || !$data['push_password'] || !$data['push_token_url']) throw new AdminException('参数错误');
         $param = ['push_account' => $data['push_account'], 'push_password' => $data['push_password']];
         $res = HttpService::getRequest($data['push_token_url'], $param);
         $res = $res ? json_decode($res, true) : ['status' => 400];
         if (!isset($res['status']) && $res['status'] != 200) {
-            throw new AdminException(100015);
+            throw new AdminException('设置失败');
         } else {
             return $res['data'];
         }

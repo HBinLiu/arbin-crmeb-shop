@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -56,7 +56,7 @@ class StoreProductRule extends AuthController
             ['spec', []]
         ]);
         $this->services->save($id, $data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -82,6 +82,6 @@ class StoreProductRule extends AuthController
             ['ids', '']
         ], true);
         $this->services->del((string)$ids);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 }

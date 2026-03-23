@@ -30,8 +30,8 @@
                   <i class="el-icon-more el-icon--right"></i>
                   <template slot="dropdown">
                     <el-dropdown-menu>
-                      <el-dropdown-item command="1">编辑分类</el-dropdown-item>
-                      <el-dropdown-item v-if="data.id" command="2">删除分类</el-dropdown-item>
+                      <el-dropdown-item command="1">编辑分组</el-dropdown-item>
+                      <el-dropdown-item v-if="data.id" command="2">删除分组</el-dropdown-item>
                     </el-dropdown-menu>
                   </template>
                 </el-dropdown>
@@ -386,6 +386,7 @@ export default {
         }
         this.labelSort = res.data;
       });
+      this.getList();
     },
     // 显示标签小菜单
     showMenu(item) {
@@ -418,7 +419,7 @@ export default {
     cancel() {
       this.form = {
         id: 0,
-        cate_id: '',
+        cate_id: this.labelFrom.cate_id,
         name: '',
         type: 1, //样式类型 1自定义 2图片
         font_color: '#e93323',

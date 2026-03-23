@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -81,12 +81,12 @@ class StoreServiceSpeechcraft extends AuthController
         $data['add_time'] = time();
         $data['kefu_id'] = 0;
         if ($this->services->count(['message' => $data['message']])) {
-            return app('json')->fail(400269);
+            return app('json')->fail('话术不能重复添加');
         }
         if ($this->services->save($data)) {
-            return app('json')->success(400270);
+            return app('json')->success('创建话术成功');
         } else {
-            return app('json')->fail(400271);
+            return app('json')->fail('创建话术失败');
         }
     }
 
@@ -99,7 +99,7 @@ class StoreServiceSpeechcraft extends AuthController
     {
         $info = $this->services->get($id);
         if (!$info) {
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         }
         return app('json')->success($info);
     }
@@ -136,12 +136,12 @@ class StoreServiceSpeechcraft extends AuthController
         $this->validate($data, StoreServiceSpeechcraftValidata::class);
         $message = $this->services->get(['message' => $data['message']]);
         if ($message && $message['id'] != $id) {
-            return app('json')->fail(400269);
+            return app('json')->fail('话术不能重复添加');
         }
         if ($this->services->update($id, $data)) {
-            return app('json')->success(100001);
+            return app('json')->success('修改成功');
         } else {
-            return app('json')->fail(100007);
+            return app('json')->fail('修改失败');
         }
 
     }
@@ -154,12 +154,12 @@ class StoreServiceSpeechcraft extends AuthController
     public function delete($id)
     {
         if (!$id || !($info = $this->services->get($id))) {
-            return app('json')->fail(400272);
+            return app('json')->fail('删除的话术不存在');
         }
         if ($info->delete()) {
-            return app('json')->success(100002);
+            return app('json')->success('删除成功');
         } else {
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
         }
     }
 }

@@ -1,15 +1,5 @@
 <template>
-  <div
-    class="mobile-page"
-    :style="{
-      marginTop: mTOP + 'px',
-      paddingTop: topConfig + 'px',
-      paddingBottom: bottomConfig + 'px',
-      paddingLeft: prConfig + 'px',
-      paddingRight: prConfig + 'px',
-      background: bottomBgColor,
-    }"
-  >
+  <common_wrapper :config="configObj">
     <div class="wrapper" v-if="styleConfig == 0">
       <div
         class="item"
@@ -236,7 +226,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </common_wrapper>
 </template>
 
 <script>
@@ -301,6 +291,7 @@ export default {
       // 默认初始化数据禁止修改
       defaultConfig: {
         cname: '文章列表',
+        desc: '文章列表介绍',
         name: 'articleList',
         timestamp: this.num,
         isHide: false,
@@ -312,6 +303,67 @@ export default {
         titleArticle: '文章设置',
         titleList: '列表设置',
         titleCurrency: '通用样式',
+        zIndexConfig: {
+          title: '组件上浮',
+          val: 0,
+          min: 0,
+        },
+        borderConfig: {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Hide, 1: Show
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              { name: '实线', style: 'solid' },
+              { name: '虚线', style: 'dashed' },
+              { name: '点状', style: 'dotted' },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
+        },
+        shadowConfig: {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0,
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: 'rgba(0,0,0,0.1)' }],
+            color: [{ item: 'rgba(0,0,0,0.1)' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+          },
+        },
         styleConfig: {
           title: '选择风格',
           tabVal: 1,
@@ -320,10 +372,10 @@ export default {
               name: '大图展示',
             },
             {
-              name: '两列展示(纵向)',
+              name: '单列纵向',
             },
             {
-              name: '两列展示(横向)',
+              name: '两列横向',
             },
           ],
         },
@@ -386,7 +438,7 @@ export default {
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
         nameConfig: {
-          title: '商品名称',
+          title: '文章标题',
           tabVal: 1,
           tabList: [
             {
@@ -423,7 +475,7 @@ export default {
           ],
         },
         nameColor: {
-          title: '商品名称',
+          title: '文章标题',
           default: [
             {
               item: '#333333',
@@ -473,6 +525,29 @@ export default {
               item: '#999999',
             },
           ],
+        },
+        componentBgConfig: {
+          title: '背景设置',
+          tabVal: 0,
+          tabList: [{ name: '颜色' }, { name: '图片' }],
+          colorConfig: {
+            title: '背景颜色',
+            default: [{ item: '#F5F5F5' }, { item: '#F5F5F5' }],
+            color: [{ item: '#F5F5F5' }, { item: '#F5F5F5' }],
+          },
+          colorDirection: {
+            title: '渐变方向',
+            tabVal: 0,
+            tabList: [{ name: '横向' }, { name: '纵向' }, { name: '左斜' }, { name: '右斜' }],
+          },
+          imageConfig: {
+            header: '背景图片',
+            title: '',
+            name: '上传图片',
+            type: 'code',
+            url: '',
+            info: '建议尺寸：750px * 400px',
+          },
         },
         bgColor: {
           title: '组件背景',
@@ -546,7 +621,6 @@ export default {
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
       },
-      mTOP: 0,
       bgColorLeft: '',
       bgColorRight: '',
       itemStyle: 0,
@@ -566,6 +640,8 @@ export default {
       // likeColor: '',
       statisticColor: '',
       bottomBgColor: '',
+      configObj: {},
+      pageData: {},
       topConfig: 0,
       bottomConfig: 0,
       toneConfig: 0,
@@ -594,36 +670,69 @@ export default {
     },
     setConfig(data) {
       if (!data) return;
-      if (data.mbConfig) {
-        this.styleConfig = data.styleConfig.tabVal;
-        this.checkboxList = data.checkboxList.type;
-        this.filletImg = data.filletImg.type;
-        this.filletValImg = data.filletImg.val;
-        this.valListImg = data.filletImg.valList;
-        this.fillet = data.fillet.type;
-        this.filletVal = data.fillet.val;
-        this.valList = data.fillet.valList;
-        this.bgColorLeft = data.bgColor.color[0].item;
-        this.bgColorRight = data.bgColor.color[1].item;
-        this.nameConfig = data.nameConfig.tabVal;
-        this.nameColor = data.nameColor.color[0].item;
-        this.timeColor = data.timeColor.color[0].item;
-        this.browseColor = data.browseColor.color[0].item;
-        // this.likeColor = data.likeColor.color[0].item;
-        this.likeSuccessColor = data.likeSuccessColor.color[0].item;
-        this.statisticColor = data.statisticColor.color[0].item;
-        this.bottomBgColor = data.bottomBgColor.color[0].item;
-        this.topConfig = data.topConfig.val;
-        this.bottomConfig = data.bottomConfig.val;
-        this.toneConfig = data.toneConfig.tabVal;
-        this.mTOP = data.mbConfig.val;
-        this.prConfig = data.prConfig.val;
-        const selectList = data.selectList.list || [];
-        if (selectList.length) {
-          this.list = selectList;
-        } else {
-          this.list = data.numConfig.val;
+      for (let key in this.defaultConfig) {
+        if (data[key] == undefined) {
+          this.$set(data, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
         }
+      }
+      this.styleConfig = data.styleConfig.tabVal;
+      this.checkboxList = data.checkboxList.type;
+      this.filletImg = data.filletImg.type;
+      this.filletValImg = data.filletImg.val;
+      this.valListImg = data.filletImg.valList;
+      this.fillet = data.fillet.type;
+      this.filletVal = data.fillet.val;
+      this.valList = data.fillet.valList;
+      this.bgColorLeft = data.bgColor.color[0].item;
+      this.bgColorRight = data.bgColor.color[1].item;
+      this.nameConfig = data.nameConfig.tabVal;
+      this.nameColor = data.nameColor.color[0].item;
+      this.timeColor = data.timeColor.color[0].item;
+      this.browseColor = data.browseColor.color[0].item;
+      // this.likeColor = data.likeColor.color[0].item;
+      this.likeSuccessColor = data.likeSuccessColor.color[0].item;
+      this.statisticColor = data.statisticColor.color[0].item;
+      this.bottomBgColor = data.bottomBgColor.color[0].item;
+      this.topConfig = data.topConfig.val;
+      this.bottomConfig = data.bottomConfig.val;
+      this.toneConfig = data.toneConfig.tabVal;
+      this.mTOP = data.mbConfig ? data.mbConfig.val : 0;
+      this.prConfig = data.prConfig.val;
+
+      this.configObj = data;
+
+      if (!data.paddingConfig) {
+        let paddingConfig = {
+          title: '内边距',
+          val: 0,
+          min: 0,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        };
+        paddingConfig.valList[0].val = data.topConfig.val;
+        paddingConfig.valList[2].val = data.bottomConfig.val;
+        paddingConfig.valList[1].val = data.prConfig.val;
+        paddingConfig.valList[3].val = data.prConfig.val;
+        this.$set(this.configObj, 'paddingConfig', paddingConfig);
+      }
+
+      if (!data.marginConfig) {
+        let marginConfig = {
+          title: '外边距',
+          val: 0,
+          min: 0,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        };
+        marginConfig.valList[0].val = data.mbConfig ? data.mbConfig.val : 0;
+        this.$set(this.configObj, 'marginConfig', marginConfig);
+      }
+
+      const selectList = data.selectList.list || [];
+      if (selectList.length) {
+        this.list = selectList;
+      } else {
+        this.list = data.numConfig.val;
       }
     },
   },
@@ -631,6 +740,10 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.mobile-page {
+  display: inline-block;
+  width: -webkit-fill-available;
+}
 .empty-box {
   background: #f3f9ff;
   img {

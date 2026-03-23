@@ -1,6 +1,13 @@
 <?php
-
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\api\controller\v1\user;
 
 
@@ -45,10 +52,10 @@ class DivisionController
             ['images', []]
         ]);
         $verifyCode = CacheService::get('code_' . $data['phone']);
-        if ($verifyCode != $data['code']) return app('json')->fail(410010);
-        if ($data['division_invite'] == 0) return app('json')->fail(500028);
+        if ($verifyCode != $data['code']) return app('json')->fail('验证码错误');
+        if ($data['division_invite'] == 0) return app('json')->fail('请填写邀请码');
         $this->services->applyAgent($data, $id);
-        return app('json')->success(100017);
+        return app('json')->success('提交成功');
     }
 
     /**
@@ -110,13 +117,13 @@ class DivisionController
             ['uid', 0],
         ], true);
         $agentId = $request->uid();
-        if (!$uid) return app('json')->fail(100100);
+        if (!$uid) return app('json')->fail('参数错误');
         /** @var UserServices $userService */
         $userService = app()->make(UserServices::class);
         $upPercent = $userService->value(['uid' => $agentId], 'division_percent');
-        if ($agentPercent >= $upPercent) return app('json')->fail(410164);
+        if ($agentPercent >= $upPercent) return app('json')->fail('比例不能大于您的比例');
         $userService->update(['uid' => $uid, 'agent_id' => $agentId], ['division_percent' => $agentPercent]);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -127,12 +134,12 @@ class DivisionController
      */
     public function delStaff(Request $request, $uid)
     {
-        if (!$uid) return app('json')->fail(100100);
+        if (!$uid) return app('json')->fail('参数错误');
         $agentId = $request->uid();
         /** @var UserServices $userService */
         $userService = app()->make(UserServices::class);
         $userService->update(['uid' => $uid, 'agent_id' => $agentId], ['division_percent' => 0, 'agent_id' => 0, 'division_id' => 0, 'staff_id' => 0, 'division_type' => 0, 'is_staff' => 0]);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**

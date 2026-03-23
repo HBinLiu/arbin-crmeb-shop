@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -37,14 +37,14 @@ class LiveRoomValidate extends Validate
      * @var array
      */
     protected $message = [
-        'name.require' => '400342',
-        'cover_img.require' => '400343',
-        'share_img.require' => '400344',
-        'anchor_wechat.require' => '400345',
-        'start_time.require' => '400346',
-        'start_time.checkStartTime' => '400346',
-        'phone.require' => '400333',
-        'phone.checkPhone' => '400252',
+        'name.require' => '请输入直播间名称',
+        'cover_img.require' => '请选择背景图',
+        'share_img.require' => '请选择分享图',
+        'anchor_wechat.require' => '请选择主播',
+        'start_time.require' => '请选择直播开始、结束时间',
+        'start_time.checkStartTime' => '请选择直播开始、结束时间',
+        'phone.require' => '请填写手机号码',
+        'phone.checkPhone' => '手机号格式错误',
     ];
 
     protected function checkPhone($value): bool

@@ -8,6 +8,13 @@
   ],
   "subPackages": [
     {
+      "root": "pages/goods_details",
+      "pages": [
+        "index"
+      ],
+      "name": "goods_details"
+    },
+    {
       "root": "pages/extension",
       "pages": [
         "customer_list/chat",
@@ -98,13 +105,6 @@
       }
     },
     {
-      "root": "pages/goods_details",
-      "pages": [
-        "index"
-      ],
-      "name": "goods_details"
-    },
-    {
       "root": "pages/activity",
       "pages": [
         "goods_bargain/index",
@@ -123,11 +123,24 @@
     {
       "root": "pages/admin",
       "pages": [
+        "distribution/index",
+        "distribution/scanning/index",
+        "distribution/scanning/detail/index",
+        "distribution/orderDetail/index",
         "custom_date/index",
         "order/index",
         "orderList/index",
         "orderDetail/index",
         "delivery/index",
+        "refund/index",
+        "logistics/index",
+        "refund_order_list/index",
+        "refund_order_detail/index",
+        "goods/index",
+        "goods/specs",
+        "goods/addGoods",
+        "user/list",
+        "user/index",
         "statistics/index",
         "order_cancellation/index"
       ],
@@ -169,6 +182,13 @@
         "integral_order_details",
         "logistics_details"
       ]
+    },
+    {
+      "root": "subpackage/diyComponents",
+      "pages": [
+        "pages/placeholder"
+      ],
+      "name": "diyComponents"
     }
   ],
   "window": {
@@ -228,7 +248,8 @@
     "page-loading": "/components/pageLoading",
     "easy-loadimage": "/components/easy-loadimage/easy-loadimage",
     "base-money": "/components/BaseMoney",
-    "base-tag": "/components/BaseTag"
+    "base-tag": "/components/BaseTag",
+    "base-drawer": "/components/tuiDrawer/tui-drawer"
   },
   "sitemapLocation": "sitemap.json"
 }

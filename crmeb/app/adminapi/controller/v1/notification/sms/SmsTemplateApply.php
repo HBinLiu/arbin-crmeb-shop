@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -86,12 +86,12 @@ class SmsTemplateApply extends AuthController
             ['type', 0]
         ]);
         if (!strlen(trim($data['title']))) {
-            return app('json')->fail(400142);
+            return app('json')->fail('请输入模板名称');
         }
         if (!strlen(trim($data['content']))) {
-            return app('json')->fail(400143);
+            return app('json')->fail('请输入模板内容');
         }
         $this->services->sms()->apply($data['title'], $data['content'], $data['type']);
-        return app('json')->success(100027);
+        return app('json')->success('申请成功');
     }
 }

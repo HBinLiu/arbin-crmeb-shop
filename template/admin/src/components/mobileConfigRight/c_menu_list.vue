@@ -3,20 +3,69 @@
     <div class="title" v-if="configData.title">
       {{ configData.title }}
     </div>
+    <div
+      class="type-switch"
+      style="margin-bottom: 15px"
+      v-if="
+        (defaults.name == 'menus' ||
+          defaults.name == 'member' ||
+          configNme == 'menuConfig' ||
+          configNme == 'shortcutConfig') &&
+        configNme != 'assetConfig'
+      "
+    >
+      <div class="type-title">{{ configData.listStyleName || '图文内容' }}</div>
+      <el-radio-group v-if="configData.listStyle != -1" v-model="configData.listStyle" size="small">
+        <el-radio :label="0">图片</el-radio>
+        <el-radio :label="1">图标</el-radio>
+      </el-radio-group>
+    </div>
+    <div class="type-switch" style="margin-bottom: 15px" v-if="configNme == 'assetConfig'">
+      <!-- <span class="type-title">展示样式</span> -->
+      <el-radio-group v-model="configData.listStyle" size="small">
+        <el-radio v-if="configData.assetMode == 0" :label="2">数字(上)</el-radio>
+        <el-radio v-if="configData.assetMode == 0" :label="3">数字(左)</el-radio>
+        <el-radio :label="0">图片</el-radio>
+        <el-radio :label="1">图标</el-radio>
+      </el-radio-group>
+    </div>
     <div class="list-box">
       <draggable class="dragArea list-group" :list="configData.list" group="peoples" handle=".move-icon">
         <div class="item" v-for="(item, index) in configData.list" :key="index">
           <div class="delect-btn" @click.stop="bindDelete(item, index)" v-if="!configData.isCube">
-            <span class="iconfont-diy icondel_1"></span>
+            <span class="iconfont icondel_1"></span>
           </div>
           <div class="move-icon">
-            <span class="iconfont-diy iconxingzhuangjiehe"></span>
+            <span class="iconfont iconxingzhuangjiehe"></span>
           </div>
-          <div class="img-box" @click="modalPicTap('单选', index)">
+          <div
+            class="img-box"
+            @click="modalPicTap('单选', index)"
+            v-if="configData.listStyle == 0 || configData.listStyle == -1"
+          >
             <img :src="item.img" alt="" v-if="item.img" />
             <div class="upload-box" v-else>
-              <!-- <i class="el-icon-plus"></i> -->
               <i class="el-icon-plus"></i>
+            </div>
+          </div>
+          <div class="img-box" @click="openIconModal(index)" v-else-if="configData.listStyle == 1">
+            <div class="upload-box" v-if="!item.icon">
+              <i class="el-icon-plus"></i>
+            </div>
+            <div
+              style="
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #fff;
+                border: 1px solid #eee;
+                border-radius: 4px;
+              "
+              v-else
+            >
+              <span :class="['mb-iconfont', item.icon]" style="font-size: 30px; color: #666"></span>
             </div>
           </div>
           <div class="info">
@@ -24,7 +73,13 @@
               <span class="span">{{ infos.title }}</span>
               <div class="input-box">
                 <el-input v-model="infos.value" :placeholder="infos.tips" :maxlength="infos.max">
-                  <i v-if="infos.title == '链接'"  class="el-icon-link" slot="suffix" @blur="onBlur" @click="getLink(index, key, item.info)" />
+                  <i
+                    v-if="infos.title == '链接'"
+                    class="el-icon-link"
+                    slot="suffix"
+                    @blur="onBlur"
+                    @click="getLink(index, key, item.info)"
+                  />
                 </el-input>
               </div>
             </div>
@@ -55,6 +110,7 @@
       </div>
     </template>
     <linkaddress ref="linkaddres" @linkUrl="linkUrl"></linkaddress>
+    <c_icon_select ref="iconSelect" @select="handleIconSelect"></c_icon_select>
   </div>
 </template>
 
@@ -79,6 +135,7 @@ export default {
     draggable: vuedraggable,
     linkaddress,
     uploadPictures,
+    c_icon_select: () => import('./c_icon_select'),
   },
   data() {
     return {
@@ -116,6 +173,9 @@ export default {
     this.$nextTick(() => {
       this.defaults = this.configObj;
       this.configData = this.configObj[this.configNme];
+      if (this.configData && this.configData.listStyle === undefined) {
+        this.$set(this.configData, 'listStyle', 0);
+      }
     });
   },
   watch: {
@@ -123,6 +183,9 @@ export default {
       handler(nVal, oVal) {
         this.defaults = nVal;
         this.configData = nVal[this.configNme];
+        if (this.configData && this.configData.listStyle === undefined) {
+          this.$set(this.configData, 'listStyle', 0);
+        }
       },
       deep: true,
     },
@@ -136,9 +199,9 @@ export default {
     },
     getLink(index, key, item) {
       this.indexLast = item.length - 1;
-      if (key != item.length - 1) {
-        return;
-      }
+      // if (key != item.length - 1) {
+      //   return;
+      // }
       this.activeIndex = index;
       this.$refs.linkaddres.modals = true;
     },
@@ -147,12 +210,16 @@ export default {
         this.lastObj.img = '';
         this.lastObj.info[0].value = '';
         this.lastObj.info[1].value = '';
+        this.lastObj.type = 0;
+        this.lastObj.icon = '';
         this.configData.list.push(this.lastObj);
       } else {
         let obj = JSON.parse(JSON.stringify(this.configData.list[this.configData.list.length - 1]));
         obj.img = '';
         obj.info[0].value = '';
         obj.info[1].value = '';
+        obj.type = 0;
+        obj.icon = '';
         this.configData.list.push(obj);
       }
     },
@@ -160,6 +227,13 @@ export default {
     modalPicTap(title, index) {
       this.activeIndex = index;
       this.modalPic = true;
+    },
+    openIconModal(index) {
+      this.activeIndex = index;
+      this.$refs.iconSelect.show();
+    },
+    handleIconSelect(icon) {
+      this.$set(this.configData.list[this.activeIndex], 'icon', icon);
     },
     // 添加自定义弹窗
     addCustomDialog(editorId) {
@@ -231,13 +305,25 @@ export default {
 
 .hot_imgs {
   margin: 0 15px 20px 15px;
+  .type-title {
+    width: 61px;
+    font-size: 12px;
+    color: #999;
+    margin-right: 30px;
+  }
 
+  ::v-deep .el-radio {
+    margin-bottom: 0px;
+  }
   .title {
     padding-bottom: 21px;
     color: #999;
     font-size: 12px;
   }
-
+  .type-switch {
+    display: flex;
+    align-items: center;
+  }
   .list-box {
     .item {
       position: relative;
@@ -253,7 +339,7 @@ export default {
         right: -13px;
         top: -16px;
 
-        .iconfont-diy {
+        .iconfont {
           font-size: 25px;
           color: #ccc;
         }
@@ -335,7 +421,7 @@ export default {
   color: #ccc;
 }
 
-.iconfont-diy {
+.iconfont {
   color: #dddddd;
   font-size: 16px;
 }

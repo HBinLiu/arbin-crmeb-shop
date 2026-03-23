@@ -12,6 +12,7 @@
         <el-input
           v-model="formValidate.remark"
           :maxlength="200"
+          :rows="4"
           show-word-limit
           type="textarea"
           placeholder="订单备注"

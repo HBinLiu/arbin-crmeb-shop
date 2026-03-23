@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -52,7 +52,7 @@ class LiveRoom extends AuthController
      */
     public function detail($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         return app('json')->success($this->services->get((int)$id)->toArray());
     }
 
@@ -79,11 +79,11 @@ class LiveRoom extends AuthController
             ['sort', 0]
         ]);
         if (mb_strlen($data['name']) < 6 || mb_strlen($data['name']) > 17) {
-            return app('json')->fail(500030);
+            return app('json')->fail('名称长度需在6-17个字符之间');
         }
         $this->validate($data, \app\adminapi\validate\marketing\LiveRoomValidate::class, 'save');
         $this->services->add($data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -100,7 +100,7 @@ class LiveRoom extends AuthController
             ['goods_ids', []]
         ], true);
         $this->services->exportGoods((int)$room_id, $goods_ids);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -115,7 +115,7 @@ class LiveRoom extends AuthController
             ['msg', '']
         ], true);
         $this->services->apply((int)$id, $status, $msg);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -127,7 +127,7 @@ class LiveRoom extends AuthController
     public function setShow($id, $is_show)
     {
         $this->services->isShow((int)$id, $is_show);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -138,7 +138,7 @@ class LiveRoom extends AuthController
     public function delete($id)
     {
         $this->services->delete($id);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -148,7 +148,7 @@ class LiveRoom extends AuthController
     public function syncRoom()
     {
         $this->services->syncRoomStatus();
-        return app('json')->success(100038);
+        return app('json')->success('同步成功');
     }
 
 }

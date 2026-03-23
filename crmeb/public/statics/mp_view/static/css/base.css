@@ -313,8 +313,8 @@ checkbox .uni-checkbox-input {
 }
 
 checkbox .uni-checkbox-input.uni-checkbox-input-checked {
-	border: 1px solid var(--view-theme) !important;
-	background-color: var(--view-theme) !important;
+	border: 1px solid var(--view-theme);
+	background-color: var(--view-theme);
 	color: #fff !important
 }
 

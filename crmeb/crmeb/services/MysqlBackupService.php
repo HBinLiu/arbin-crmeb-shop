@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -66,7 +66,7 @@ class MysqlBackupService
         $this->setDbConn();
         //检查文件是否可写
         if (!$this->checkPath($this->config['path'])) {
-            throw new AdminException(400734);
+            throw new AdminException('文件不可写');
         }
     }
 
@@ -198,7 +198,7 @@ class MysqlBackupService
     {
         //
         if (!is_numeric($time)) {
-            throw new AdminException(400735);
+            throw new AdminException('时间格式不正确');
         }
         switch ($type) {
             case 'time':
@@ -220,7 +220,7 @@ class MysqlBackupService
                 if (count($list) === $last[0]) {
                     return $list;
                 } else {
-                    throw new AdminException(400736);
+                    throw new AdminException('文件可能损坏，请检查');
                 }
             case 'pathname':
                 return "{$this->config['path']}{$this->file['name']}-{$this->file['part']}.sql";
@@ -246,12 +246,12 @@ class MysqlBackupService
             $file = $this->getFile('time', $time);
             array_map("unlink", $this->getFile('time', $time));
             if (count($this->getFile('time', $time))) {
-                throw new AdminException(100008);
+                throw new AdminException('删除失败');
             } else {
                 return $time;
             }
         } else {
-            throw new AdminException(400735);
+            throw new AdminException('时间格式不正确');
         }
     }
 
@@ -281,7 +281,7 @@ class MysqlBackupService
             header('Content-Disposition: attachment; filename=' . basename($fileName));
             return readfile($fileName);
         } else {
-            throw new AdminException(400736);
+            throw new AdminException('文件可能损坏，请检查');
         }
     }
 
@@ -407,11 +407,11 @@ class MysqlBackupService
                 $list = $db->query("OPTIMIZE TABLE {$tables}");
             }
             if (!$list) {
-                throw new AdminException(400737);
+                throw new AdminException('修复错误，请重试');
             }
             return $list;
         } else {
-            throw new AdminException(400738);
+            throw new AdminException('请指定要修复的表');
         }
     }
 
@@ -436,10 +436,10 @@ class MysqlBackupService
             if ($list) {
                 return $list;
             } else {
-                throw new AdminException(400737);
+                throw new AdminException('修复错误，请重试');
             }
         } else {
-            throw new AdminException(400738);
+            throw new AdminException('请指定要修复的表');
         }
     }
 

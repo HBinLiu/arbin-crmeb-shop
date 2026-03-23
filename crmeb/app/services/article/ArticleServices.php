@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -84,7 +84,7 @@ class ArticleServices extends BaseServices
                 $res = $info && $articleContentService->save($content);
             }
             if (!$res) {
-                throw new AdminException(100006);
+                throw new AdminException('保存失败');
             } else {
                 return $info;
             }
@@ -121,7 +121,7 @@ class ArticleServices extends BaseServices
             $res = $this->dao->delete($id);
             $res = $res && $articleContentService->del($id);
             if (!$res) {
-                throw new AdminException(100008);
+                throw new AdminException('删除失败');
             }
         });
     }
@@ -162,7 +162,7 @@ class ArticleServices extends BaseServices
         $info = $this->dao->read($id);
         $info->visit = intval($info['visit']) + 1;
         if (!$info->save())
-            throw new AdminException(400456);
+            throw new AdminException('请稍后查看');
         if ($info) {
             $info = $info->toArray();
             $info['visit'] = (int)$info['visit'];
@@ -196,5 +196,65 @@ class ArticleServices extends BaseServices
     public function articlesList($new_id)
     {
         return $this->dao->articleContentList($new_id);
+    }
+
+    /**
+     * 自定义组件-文章
+     * @param $where
+     * @return array
+     * @throws \ReflectionException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2026/1/12
+     */
+    public function getThemeArticle($where)
+    {
+        $sort = $where['sort'] ? 'desc' : 'asc';
+        switch ($where['order']) {
+            case 0:
+                $order = 'visit ' . $sort;
+                break;
+            case 1:
+                $order = 'add_time ' . $sort;
+                break;
+            default:
+                $order = 'sort desc';
+                break;
+        }
+        if ($where['ids'] != '') {
+            $where['in_ids'] = explode(',', $where['ids']);
+            $where['limit'] = 1000;
+        } else {
+            $where['in_ids'] = [];
+        }
+        $limit = (int)$where['limit'];
+        unset($where['order'], $where['sort'], $where['limit'], $where['ids']);
+        $list = $this->dao->getList($where, 1, $limit, $order);
+        $data = [];
+        foreach ($list as &$item) {
+            $data[] = [
+                'title' => $item['title'],
+                'id' => $item['id'],
+                'image' => $item['image_input'][0],
+                'cid_name' => $item['catename'],
+                'synopsis' => $item['synopsis'],
+                'visit' => $item['visit'],
+                'add_time' => date('Y-m-d H:i:s', $item['add_time']),
+            ];
+        }
+        if (empty($where['in_ids'])) return $data;
+        // 将$list转换为以id为键的数组
+        $list = array_column($data, null, 'id');
+        $data = [];
+        // 遍历where中的ids，按顺序取出对应文章
+        foreach ($where['in_ids'] as $id) {
+            if (isset($list[$id])) {
+                $data[] = $list[$id];
+            }
+        }
+        return $data;
     }
 }

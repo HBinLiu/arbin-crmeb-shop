@@ -60,7 +60,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   .c_label {
     &.on {
       color: #666;

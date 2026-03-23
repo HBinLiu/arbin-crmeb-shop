@@ -2,7 +2,7 @@
   <div>
     <pages-header
       ref="pageHeader"
-      :title="$route.params.id ? '编辑拼团商品' : '添加拼团商品'"
+      :title="$route.params.id && !$route.params.copy ? '编辑拼团商品' : '添加拼团商品'"
       :backUrl="$routeProStr + '/marketing/store_combination/index'"
     ></pages-header>
     <el-card :bordered="false" shadow="never" class="mt16">
@@ -128,7 +128,7 @@
                   </el-checkbox-group>
                 </el-form-item>
               </el-col>
-              <el-col :span="24" v-if="formValidate.virtual_type == 0">
+              <el-col :span="24" v-if="formValidate.virtual_type == 0 && formValidate.logistics.includes('1')">
                 <el-form-item label="运费设置：" :prop="formValidate.freight != 1 ? 'freight' : ''">
                   <el-radio-group v-model="formValidate.freight">
                     <el-radio :label="2">固定邮费</el-radio>
@@ -138,7 +138,12 @@
               </el-col>
               <el-col
                 :span="24"
-                v-if="formValidate.freight != 3 && formValidate.freight != 1 && formValidate.virtual_type == 0"
+                v-if="
+                  formValidate.freight != 3 &&
+                  formValidate.freight != 1 &&
+                  formValidate.virtual_type == 0 &&
+                  formValidate.logistics.includes('1')
+                "
               >
                 <el-form-item label="">
                   <div class="acea-row">

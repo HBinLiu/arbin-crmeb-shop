@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -35,11 +35,11 @@ class LiveGoodsValidate extends Validate
      * @var array
      */
     protected $message = [
-        'id.require' => '400337',
-        'store_name.require' => '400338',
-        'image.require' => '400339',
-        'price.require' => '400340',
-        'price.gt' => '400341',
+        'id.require' => '请选择商品',
+        'store_name.require' => '请输入商品名称',
+        'image.require' => '请选择背景图',
+        'price.require' => '请输入直播价格',
+        'price.gt' => '直播价格必须大于0',
     ];
 
     protected $scene = [

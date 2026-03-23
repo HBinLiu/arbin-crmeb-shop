@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -34,6 +34,10 @@ use app\jobs\OtherOrderJob;
  */
 class OtherOrderServices extends BaseServices
 {
+    /**
+     * @var OtherOrderDao
+     */
+    protected $dao;
 
     /**
      * 初始化，获得dao层句柄
@@ -52,7 +56,7 @@ class OtherOrderServices extends BaseServices
      */
     public function addOtherOrderData(array $data)
     {
-        if (!$data) throw new ApiException(100026);
+        if (!$data) throw new ApiException('数据不存在');
         $add = [
             'uid' => $data['uid'],
             'type' => $data['type'] ?? 1,
@@ -225,7 +229,7 @@ class OtherOrderServices extends BaseServices
             'member_code' => "",
         ];
         if ($type != 3) { //区别 0：免费领取会员 1：购买会员  2：卡密领取会员  3：线下付款
-            if (!$memberType) throw new ApiException(410228);
+            if (!$memberType) throw new ApiException('会员类型不存在');
             list($memberPrice, $isFree, $isPermanent, $overdueTime, $type, $newMemberRight) = $this->checkPayMemberType($memberType, $payPrice, $type, $uid, $mcId);
             $orderInfo['member_price'] = $memberPrice;
             $orderInfo['money'] = $memberPrice;
@@ -244,7 +248,7 @@ class OtherOrderServices extends BaseServices
         }
         $memberOrder = $this->addOtherOrderData($orderInfo);
         if (!$memberOrder) {
-            throw new ApiException(410200);
+            throw new ApiException('订单生成失败');
         }
         /** @var OtherOrderStatusServices $statusService */
         $statusService = app()->make(OtherOrderStatusServices::class);
@@ -266,10 +270,10 @@ class OtherOrderServices extends BaseServices
     public function zeroYuanPayment($orderInfo)
     {
         if ($orderInfo['paid']) {
-            throw new ApiException(410174);
+            throw new ApiException('订单已支付');
         }
         if ($orderInfo['member_type'] != 'free') {
-            throw new ApiException(410216);
+            throw new ApiException('支付失败');
         }
         $res = $this->paySuccess($orderInfo, 'yue');//余额支付成功
         return $res;
@@ -414,16 +418,16 @@ class OtherOrderServices extends BaseServices
         /** @var UserServices $userService */
         $userService = app()->make(UserServices::class);
         $userInfo = $userService->get($uid);
-        if ($userInfo['is_money_level'] > 0 && $userInfo['is_ever_level'] > 0) throw new ApiException(410229);
+        if ($userInfo['is_money_level'] > 0 && $userInfo['is_ever_level'] > 0) throw new ApiException('您已是永久会员无需再购买');
         $newMemberRight = $memberCardService->getMemberTypeValue();
-        if (!array_key_exists($mcId, $newMemberRight)) throw new ApiException(410230);
+        if (!array_key_exists($mcId, $newMemberRight)) throw new ApiException('该会员卡暂时无法购买');
         $price = $newMemberRight[$mcId]['pre_price'];
-        if ($payPrice != $price || ($memberType != 'free' && $payPrice <= 0)) throw new ApiException(100100);
-        if ($memberType == 'free' && $newMemberRight[$mcId]['vip_day'] <= 0) throw new ApiException(100100);
+        if ($payPrice != $price || ($memberType != 'free' && $payPrice <= 0)) throw new ApiException('参数错误');
+        if ($memberType == 'free' && $newMemberRight[$mcId]['vip_day'] <= 0) throw new ApiException('参数错误');
         switch ($memberType) {
             case "free"://免费会员
                 $isCanGetFree = $this->isCanGetFree($uid);
-                if ($isCanGetFree['is_record'] == 1) throw new ApiException(410231);
+                if ($isCanGetFree['is_record'] == 1) throw new ApiException('您已经领取过免费会员');
                 $memberPrice = 0.00; //会员卡价格
                 $isFree = 1;//代表免费
                 $isPermanent = 0;//代表非永久
@@ -442,10 +446,10 @@ class OtherOrderServices extends BaseServices
                 $memberPrice = $price;
                 $isFree = 0;
                 $isPermanent = 1;
-                $overdueTime = -1;
+                $overdueTime = 0;
                 break;
             default:
-                throw new ApiException(410232);
+                throw new ApiException('此类型会员卡暂未开售');
         }
         //return compact('member_price', 'is_free', 'is_permanent', 'overdue_time', 'type');
         return [$memberPrice, $isFree, $isPermanent, $overdueTime, $type, $newMemberRight];
@@ -551,7 +555,7 @@ class OtherOrderServices extends BaseServices
             $shipInfo = array_column($shipInfo, 'title', 'type');
             $shipInfo['owner'] = '自定义';
             foreach ($list as &$v) {
-                $v['member_type'] = $v['member_type'] ? $shipInfo[$v['member_type']] : '其他';
+                $v['member_type'] = $v['member_type'] ? $shipInfo[$v['member_type']] ?? '其他' : '其他';
                 $v['pay_time'] = date('Y-m-d H:i:s', $v['pay_time']);
                 $v['add_time'] = date('Y-m-d H:i:s', $v['add_time']);
                 $v['overdue_time'] = date('Y-m-d H:i:s', $v['overdue_time']);

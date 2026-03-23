@@ -131,7 +131,6 @@ export default {
       this.$refs['upload'].$refs['upload-inner'].handleClick();
     },
     handleSuccess(res, file, fileList) {
-      console.log(res, '2');
       if (res.status === 200) {
         this.fileUrl = res.data.src;
       }

@@ -11,19 +11,14 @@
             v-if="defaults.goodsList.list.length"
           >
             <img :src="goods.image" alt="" />
-            <span class="iconfont-diy icondel_1" @click.stop="bindDelete(index)"></span>
+            <span class="iconfont icondel_1" @click.stop="bindDelete(index)"></span>
           </div>
-          <div class="add-item item" @click="modals = true"><span class="iconfont-diy iconaddto"></span></div>
+          <div class="add-item item" @click="modals = true"><span class="iconfont iconaddto"></span></div>
         </draggable>
       </div>
     </div>
 
-    <el-dialog
-      :visible.sync="modals"
-      title="商品列表"
-      class="paymentFooter"
-      width="900"
-    >
+    <el-dialog :visible.sync="modals" title="商品列表" class="paymentFooter" width="900">
       <goods-list
         ref="goodslist"
         :ischeckbox="true"
@@ -118,7 +113,7 @@ export default {
     justify-content: center;
     border-radius: 4px;
     border: 1px solid #eee;
-    .iconfont-diy {
+    .iconfont {
       font-size: 24px;
       color: #d8d8d8;
     }
@@ -140,7 +135,7 @@ export default {
       position: absolute;
       right: -5px;
       top: -12px;
-      color: #999999;
+      color: #ccc;
       font-size: 22px;
       cursor: pointer;
     }

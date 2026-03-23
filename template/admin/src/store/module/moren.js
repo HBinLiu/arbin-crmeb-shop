@@ -19,6 +19,399 @@ export default {
   state: {
     activeName: {},
     defaultConfig: {
+      customComponent: {
+        defaultVal: {
+          customComponent: {
+            setUp: {
+              tabVal: 0,
+            },
+            selectType: {
+              title: '选择信息',
+              activeValue: 'user',
+              list: [
+                { activeValue: 'user', title: '用户' },
+                { activeValue: 'article', title: '文章' },
+                { activeValue: 'coupon', title: '优惠券' },
+                { activeValue: 'goods', title: '商品' },
+              ],
+            },
+            // Article Config
+            articleDisplayMode: {
+              title: '展示方式',
+              tabVal: 0,
+              tabList: [{ name: '纵向平铺' }, { name: '横向滑动' }],
+            },
+            articleColumnStyle: {
+              title: '排列方式',
+              tabVal: 0,
+              tabList: [{ name: '1列' }, { name: '2列' }, { name: '3列' }, { name: '4列' }],
+            },
+            articleDataSource: {
+              title: '数据选择',
+              tabVal: 0,
+              tabList: [{ name: '指定数据' }, { name: '筛选数据' }],
+            },
+            articleList: {
+              list: [],
+            },
+            articleClass: {
+              title: '文章分类',
+              activeValue: '',
+              list: [],
+            },
+            articleNum: {
+              title: '显示数量',
+              val: 1,
+              min: 1,
+            },
+            articleSort: {
+              title: '排序类型',
+              tabVal: 0,
+              tabList: [{ name: '综合' }, { name: '浏览量' }, { name: '发布时间' }],
+            },
+            articleSortRule: {
+              title: '排序规则',
+              tabVal: 0,
+              tabList: [{ name: '升序' }, { name: '降序' }],
+            },
+
+            // Coupon Config
+            couponDisplayMode: {
+              title: '展示方式',
+              tabVal: 0,
+              tabList: [{ name: '纵向平铺' }, { name: '横向滑动' }],
+            },
+            couponColumnStyle: {
+              title: '排列方式',
+              tabVal: 0,
+              tabList: [{ name: '1列' }, { name: '2列' }, { name: '3列' }, { name: '4列' }],
+            },
+            couponDataSource: {
+              title: '数据选择',
+              tabVal: 0,
+              tabList: [{ name: '指定数据' }, { name: '筛选数据' }],
+            },
+            couponList: {
+              list: [],
+            },
+            couponType: {
+              title: '优惠券类型',
+              activeValue: '',
+              list: [
+                { activeValue: '', title: '全部' },
+                { activeValue: '0', title: '通用券' },
+                { activeValue: '1', title: '品类券' },
+                { activeValue: '2', title: '商品券' },
+              ],
+            },
+            couponSendType: {
+              title: '发送方式',
+              activeValue: '',
+              list: [
+                { activeValue: '', title: '全部' },
+                { activeValue: '1', title: '手动领取' },
+                { activeValue: '3', title: '赠送券' },
+              ],
+            },
+            couponUserType: {
+              title: '用户类型',
+              activeValue: '',
+              list: [
+                { activeValue: '', title: '全部' },
+                { activeValue: '1', title: '普通用户' },
+                { activeValue: '2', title: '会员用户' },
+              ],
+            },
+            couponThreshold: {
+              title: '使用门槛',
+              tabVal: 0,
+              tabList: [{ name: '无门槛' }, { name: '有门槛' }],
+            },
+            couponThresholdValue: {
+              title: '门槛金额',
+              val: 0,
+              min: 0,
+              max: 100000,
+            },
+            couponTime: {
+              title: '领取时间',
+              val: [],
+            },
+            couponSort: {
+              title: '排序类型',
+              tabVal: 0,
+              tabList: [{ name: '面值大小' }, { name: '发布时间' }],
+            },
+            couponSortRule: {
+              title: '排序规则',
+              tabVal: 0,
+              tabList: [{ name: '升序' }, { name: '降序' }],
+            },
+            couponNum: {
+              title: '显示数量',
+              val: 1,
+              min: 1,
+            },
+
+            // Goods Config
+            goodsDisplayMode: {
+              title: '展示方式',
+              tabVal: 0,
+              tabList: [{ name: '纵向平铺' }, { name: '横向滑动' }],
+            },
+            goodsColumnStyle: {
+              title: '排列方式',
+              tabVal: 0,
+              tabList: [{ name: '1列' }, { name: '2列' }, { name: '3列' }, { name: '4列' }],
+            },
+            goodsDataSource: {
+              title: '数据选择',
+              tabVal: 0,
+              tabList: [{ name: '指定数据' }, { name: '指定分类' }],
+            },
+            goodsList: {
+              title: '商品列表',
+              max: 20,
+              list: [],
+            },
+            goodsClass: {
+              title: '商品分类',
+              activeValue: '',
+              list: [],
+            },
+            goodsNum: {
+              title: '显示数量',
+              val: 6,
+              min: 1,
+            },
+            goodsSort: {
+              title: '商品排序',
+              name: 'goodsSort',
+              type: 0,
+              list: [
+                {
+                  val: '综合',
+                  icon: 'iconComm_whole',
+                },
+                {
+                  val: '销量',
+                  icon: 'iconComm_number',
+                },
+                {
+                  val: '价格',
+                  icon: 'iconjiage',
+                },
+              ],
+            },
+
+            // Common Styles
+            paddingConfig: {
+              isAll: false,
+              title: '内边距',
+              val: 0,
+              min: 0,
+              max: 100,
+              valList: [{ val: 10 }, { val: 10 }, { val: 10 }, { val: 10 }],
+            },
+            marginConfig: {
+              isAll: false,
+              title: '外边距',
+              val: 0,
+              min: 0,
+              max: 100,
+              valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+            },
+            c_common_style: {
+              color: 'rgba(255,255,255,1)',
+              color2: 'rgba(255,255,255,1)',
+              lr: 0,
+              type: 0,
+            },
+          },
+        },
+        default: {
+          customComponent: {
+            setUp: {
+              tabVal: 0,
+            },
+            selectType: {
+              title: '选择信息',
+              activeValue: 'user',
+              list: [
+                { activeValue: 'user', title: '用户' },
+                { activeValue: 'article', title: '文章' },
+                { activeValue: 'coupon', title: '优惠券' },
+                { activeValue: 'goods', title: '商品' },
+              ],
+            },
+            // Article Config
+            articleDisplayMode: {
+              title: '展示方式',
+              tabVal: 0,
+              tabList: [{ name: '纵向平铺' }, { name: '横向滑动' }],
+            },
+            articleColumnStyle: {
+              title: '排列方式',
+              tabVal: 0,
+              tabList: [{ name: '1列' }, { name: '2列' }, { name: '3列' }, { name: '4列' }],
+            },
+            articleDataSource: {
+              title: '数据选择',
+              tabVal: 0,
+              tabList: [{ name: '指定数据' }, { name: '动态数据' }],
+            },
+            articleNum: {
+              title: '显示数量',
+              val: 1,
+              min: 1,
+            },
+
+            // Coupon Config
+            couponDisplayMode: {
+              title: '展示方式',
+              tabVal: 0,
+              tabList: [{ name: '纵向平铺' }, { name: '横向滑动' }],
+            },
+            couponColumnStyle: {
+              title: '排列方式',
+              tabVal: 0,
+              tabList: [{ name: '1列' }, { name: '2列' }, { name: '3列' }, { name: '4列' }],
+            },
+            couponDataSource: {
+              title: '数据选择',
+              tabVal: 0,
+              tabList: [{ name: '指定数据' }, { name: '筛选数据' }],
+            },
+            couponList: {
+              list: [],
+            },
+            couponType: {
+              title: '优惠券类型',
+              activeValue: '',
+              list: [
+                { activeValue: '', title: '全部' },
+                { activeValue: '0', title: '通用券' },
+                { activeValue: '1', title: '品类券' },
+                { activeValue: '2', title: '商品券' },
+              ],
+            },
+            couponSendType: {
+              title: '发送方式',
+              activeValue: '',
+              list: [
+                { activeValue: '', title: '全部' },
+                { activeValue: '1', title: '手动领取' },
+                { activeValue: '3', title: '赠送券' },
+              ],
+            },
+            couponUserType: {
+              title: '用户类型',
+              activeValue: '',
+              list: [
+                { activeValue: '', title: '全部' },
+                { activeValue: '1', title: '普通用户' },
+                { activeValue: '2', title: '会员用户' },
+              ],
+            },
+            couponThreshold: {
+              title: '使用门槛',
+              tabVal: 0,
+              tabList: [{ name: '无门槛' }, { name: '有门槛' }],
+            },
+            couponThresholdValue: {
+              title: '门槛金额',
+              val: 0,
+              min: 0,
+              max: 100000,
+            },
+            couponTime: {
+              title: '领取时间',
+              val: [],
+            },
+            couponSort: {
+              title: '排序类型',
+              tabVal: 0,
+              tabList: [{ name: '面值大小' }, { name: '发布时间' }],
+            },
+            couponSortRule: {
+              title: '排序规则',
+              tabVal: 0,
+              tabList: [{ name: '升序' }, { name: '降序' }],
+            },
+            couponNum: {
+              title: '显示数量',
+              val: 1,
+              min: 1,
+            },
+
+            // Goods Config
+            goodsDisplayMode: {
+              title: '展示方式',
+              tabVal: 0,
+              tabList: [{ name: '纵向平铺' }, { name: '横向滑动' }],
+            },
+            goodsColumnStyle: {
+              title: '排列方式',
+              tabVal: 0,
+              tabList: [{ name: '1列' }, { name: '2列' }, { name: '3列' }, { name: '4列' }],
+            },
+            goodsDataSource: {
+              title: '数据选择',
+              tabVal: 0,
+              tabList: [{ name: '指定数据' }, { name: '指定分类' }],
+            },
+            goodsList: {
+              title: '商品列表',
+              max: 20,
+              list: [],
+            },
+            goodsClass: {
+              title: '商品分类',
+              activeValue: '',
+              list: [],
+            },
+            goodsNum: {
+              title: '显示数量',
+              val: 6,
+              min: 1,
+            },
+            goodsSort: {
+              title: '商品排序',
+              tabVal: 0,
+              tabList: [{ name: '综合' }, { name: '销量' }, { name: '价格' }],
+            },
+            goodsSortRule: {
+              title: '排序规则',
+              tabVal: 0,
+              tabList: [{ name: '降序' }, { name: '升序' }],
+            },
+
+            // Common Styles
+            paddingConfig: {
+              isAll: false,
+              title: '内边距',
+              val: 0,
+              min: 0,
+              max: 100,
+              valList: [{ val: 10 }, { val: 10 }, { val: 10 }, { val: 10 }],
+            },
+            marginConfig: {
+              isAll: false,
+              title: '外边距',
+              val: 0,
+              min: 0,
+              max: 100,
+              valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+            },
+            c_common_style: {
+              color: 'rgba(255,255,255,1)',
+              color2: 'rgba(255,255,255,1)',
+              lr: 0,
+              type: 0,
+            },
+          },
+        },
+      },
       headerSerch: {
         defaultVal: {
           isShow: {
@@ -1819,6 +2212,14 @@ export default {
     },
 
     component: {
+      customComponent: {
+        list: [
+          {
+            components: toolCom.c_custom_component,
+            configNme: 'customComponent',
+          },
+        ],
+      },
       headerSerch: {
         list: [
           {

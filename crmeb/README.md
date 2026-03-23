@@ -1,4 +1,4 @@
-CRMEB v5 后端程序目录
+CRMEB-KY v6.0.0 后端程序目录
 ===============
 
 ## docker一键运行
@@ -25,9 +25,9 @@ docker run -d --name crmeb \
 > 详细说明请到 [帮助文档](https://gitee.com/ZhongBangKeJi/CRMEB/blob/master/help/docker/README.md) 查看。
 
 
-## 安装
-
 > 运行环境要求PHP7.1-7.4。
+
+## 安装
 
 ## 一键安装
 上传你的代码，站点入口目录设置/public
@@ -92,11 +92,6 @@ QUEUE_NAME = xxxx #队列前缀
 http://域名/admin
 默认账号：admin 密码：crmeb.com
 
-
-## 消息队列
-```sh
-php think queue:listen --queue
-```
 
 ## 定时任务
 在自动收货,库存预警等功能使用到
@@ -291,6 +286,10 @@ ThinkPHP6.0遵循PSR-2命名规范和PSR-4自动加载规范，并且注意如�
 [使用手册](https://doc.crmeb.com)
 [TP6开发手册](https://www.kancloud.cn/manual/thinkphp6_0/content)
 
+
+## 参与开发
+
+请参阅 [CRMEB](https://github.com/crmeb/CRMEB)。
 
 ## 版权信息
 

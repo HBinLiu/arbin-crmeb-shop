@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -36,13 +36,13 @@ class ServeValidata extends Validate
      * @var array
      */
     protected $message = [
-        'phone.require' => '400333',
-        'phone.number' => '400019',
-        'phone.mobile' => '400252',
-        'password.require' => '400020',
-        'verify_code.require' => '400137',
-        'verify_code.number' => '400021',
-        'account.require' => '400133',
+        'phone.require' => '请填写手机号码',
+        'phone.number' => '您输入的手机号码必须为数字',
+        'phone.mobile' => '手机号格式错误',
+        'password.require' => '密码必须填写',
+        'verify_code.require' => '请填写验证码',
+        'verify_code.number' => '短信验证码必须为数字',
+        'account.require' => '请填写账号',
     ];
 
     protected $scene = [

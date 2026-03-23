@@ -1,6 +1,11 @@
 <template>
-  <div class="mobile-page paddingBox" v-if="bgColor.length > 0">
-    <div class="home-hot" :style="{ marginTop: slider + 'px', background: boxColor }">
+  <common_wrapper :config="configObj" v-if="bgColor.length > 0">
+    <div
+      class="home-hot"
+      :style="{
+        background: boxColor,
+      }"
+    >
       <div class="hd">
         <p class="txt" :style="{ color: txtColor }">{{ titleTxt }}</p>
         <p class="color-txt" :style="`background: linear-gradient(90deg,${bgColor[0].item},${bgColor[1].item});`">
@@ -16,12 +21,12 @@
           </div>
           <div class="img-box">
             <img :src="item.img" alt="" v-if="item.img" />
-            <div class="empty-box on" v-else><span class="iconfont-diy icontupian"></span></div>
+            <div class="empty-box on" v-else><span class="iconfont icontupian"></span></div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </common_wrapper>
 </template>
 
 <script>
@@ -31,7 +36,7 @@ export default {
   cname: '活动魔方',
   icon: 'iconhuodongmofang1',
   configName: 'c_home_hot',
-  type: 3, // 0 基础组件 1 营销组件 2工具组件
+  type: -1, // -1 doing 0 基础组件 1 营销组件 2工具组件
   defaultName: 'activeParty', // 外面匹配名称
   props: {
     index: {
@@ -233,11 +238,119 @@ export default {
             },
           ],
         },
-        // 页面间距
-        mbConfig: {
-          title: '页面间距',
+        titleCurrency: '通用样式',
+        bottomBgColor: {
+          title: '底部背景',
+          default: [
+            {
+              item: '#F5F5F5',
+            },
+          ],
+          color: [
+            {
+              item: '#F5F5F5',
+            },
+          ],
+        },
+        paddingConfig: {
+          title: '内边距',
           val: 0,
           min: 0,
+          max: 100,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        },
+        marginConfig: {
+          title: '外边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        },
+        componentBgConfig: {
+          title: '背景设置',
+          tabVal: 0,
+          tabList: [{ name: '颜色' }, { name: '图片' }],
+          colorConfig: {
+            title: '背景颜色',
+            default: [{ item: '#FFFFFF' }, { item: '#FFFFFF' }],
+            color: [{ item: '#FFFFFF' }, { item: '#FFFFFF' }],
+          },
+          colorDirection: {
+            title: '渐变方向',
+            tabVal: 0,
+            tabList: [{ name: '横向' }, { name: '纵向' }, { name: '左斜' }, { name: '右斜' }],
+          },
+          imageConfig: {
+            header: '背景图片',
+            title: '',
+            name: '上传图片',
+            type: 'code',
+            url: '',
+            info: '建议尺寸：750px * 400px',
+          },
+        },
+        zIndexConfig: {
+          title: '组件上浮',
+          val: 0,
+          min: 0,
+        },
+        borderConfig: {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Hide, 1: Show
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              { name: '实线', style: 'solid' },
+              { name: '虚线', style: 'dashed' },
+              { name: '点状', style: 'dotted' },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
+        },
+        shadowConfig: {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Off, 1: On
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: 'rgba(0,0,0,0.1)' }],
+            color: [{ item: 'rgba(0,0,0,0.1)' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+          },
         },
       },
       titleTxt: '',
@@ -247,6 +360,7 @@ export default {
       txtColor: '',
       bgColor: [],
       pageData: {},
+      configObj: {},
       boxColor: '',
     };
   },
@@ -259,23 +373,48 @@ export default {
   methods: {
     setConfig(data) {
       if (!data) return;
-      if (data.mbConfig) {
-        this.titleTxt = data.titleConfig.value;
-        this.msgTxt = data.desConfig.value;
-        this.slider = data.mbConfig.val;
-        this.hotList = data.menuConfig.list;
-        this.txtColor = data.themeColor.color[0].item;
-        this.bgColor = data.bgColor.color;
-        this.boxColor = data.boxColor.color[0].item;
+      this.configObj = data;
+      for (let key in this.defaultConfig) {
+        if (data[key] == undefined) {
+          this.$set(data, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+        }
       }
-      // if (Object.keys(data).length > 0) {
-      //     this.titleTxt = data.inputList[0].value;
-      //     this.msgTxt = data.inputList[1].value;
-      //     this.slider = data.sliderList[0].val;
-      //     this.hotList = data.menu;
-      //     this.txtColor = data.colorList[0].color[0].item;
-      //     this.bgColor = data.colorList[1].color;
-      // }
+      this.titleTxt = data.titleConfig.value;
+      this.msgTxt = data.desConfig.value;
+      this.slider = data.mbConfig ? data.mbConfig.val : 0;
+      this.hotList = data.menuConfig.list;
+      this.txtColor = data.themeColor.color[0].item;
+      this.bgColor = data.bgColor.color;
+      this.boxColor = data.boxColor.color[0].item;
+      // this.bottomBgColor = data.bottomBgColor ? data.bottomBgColor.color[0].item : '#F5F5F5';
+      if (!this.configObj.paddingConfig) {
+        this.$set(this.configObj, 'paddingConfig', {
+          title: '内边距',
+          isAll: false,
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+      }
+      if (!this.configObj.marginConfig) {
+        this.$set(this.configObj, 'marginConfig', {
+          title: '外边距',
+          isAll: false,
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+        if (data.mbConfig) {
+          this.configObj.marginConfig.valList[0].val = data.mbConfig.val;
+        }
+      }
+      for (let key in this.defaultConfig) {
+        if (this.configObj[key] === undefined) {
+          this.$set(this.configObj, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+        }
+      }
     },
   },
 };

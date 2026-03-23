@@ -1,14 +1,5 @@
 <template>
-  <div
-    :style="{
-      background: bottomBgColor,
-      marginTop: mTop + 'px',
-      paddingTop: topConfig + 'px',
-      paddingBottom: bottomConfig + 'px',
-      paddingLeft: prConfig + 'px',
-      paddingRight: prConfig + 'px',
-    }"
-  >
+  <common_wrapper :config="configObj">
     <div
       v-if="styleConfig"
       class="userInfor acea-row row-between-wrapper"
@@ -109,7 +100,6 @@
             <!--<div class="phone"><span class="iconfont iconshouji"></span>13000000000</div>-->
           </div>
         </div>
-        
       </div>
       <div class="list acea-row row-around">
         <div class="item" v-if="checkType.indexOf(1) != -1">
@@ -129,7 +119,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </common_wrapper>
 </template>
 
 <script>
@@ -181,6 +171,7 @@ export default {
   // mixins: [theme],
   data() {
     return {
+      configObj: null,
       // 默认初始化数据禁止修改
       defaultConfig: {
         cname: '用户信息',
@@ -189,6 +180,67 @@ export default {
         isHide: false,
         setUp: {
           tabVal: 0,
+        },
+        zIndexConfig: {
+          title: '组件上浮',
+          val: 0,
+          min: 0,
+        },
+        borderConfig: {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Hide, 1: Show
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              { name: '实线', style: 'solid' },
+              { name: '虚线', style: 'dashed' },
+              { name: '点状', style: 'dotted' },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
+        },
+        shadowConfig: {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Off, 1: On
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: 'rgba(0,0,0,0.1)' }],
+            color: [{ item: 'rgba(0,0,0,0.1)' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+          },
         },
         titleLeft: '展示设置',
         titleImg: '默认头像',
@@ -355,6 +407,22 @@ export default {
           min: 0,
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
+        paddingConfig: {
+          title: '内边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        },
+        marginConfig: {
+          title: '外边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        },
       },
       pageData: {},
       styleConfig: 0,
@@ -373,6 +441,22 @@ export default {
       bgRadius: 0,
       toneConfig: 0,
       themeColor: '',
+      paddingConfig: {
+        title: '内边距',
+        val: 0,
+        min: 0,
+        max: 100,
+        isAll: false,
+        valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+      },
+      marginConfig: {
+        title: '外边距',
+        val: 0,
+        min: 0,
+        max: 100,
+        isAll: false,
+        valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+      },
     };
   },
   mounted() {
@@ -384,29 +468,58 @@ export default {
   methods: {
     setConfig(data) {
       if (!data) return;
-      if (data.mbConfig) {
-        this.styleConfig = data.styleConfig.tabVal;
-        this.checkType = data.checkboxInfo.type;
-        this.logoConfig = data.logoConfig.url;
-        this.toneConfig = data.toneConfig.tabVal;
-        this.progressLeft = data.progressColor.color[0].item;
-        this.progressRight = data.progressColor.color[1].item;
-        this.progressBgColor = data.progressBgColor.color[0].item;
-        this.bgColorLeft = data.moduleColor.color[0].item;
-        this.bgColorRight = data.moduleColor.color[1].item;
-        this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
-        this.bottomBgColor = data.bottomBgColor.color[0].item;
-        this.topConfig = data.topConfig.val;
-        this.bottomConfig = data.bottomConfig.val;
-        this.prConfig = data.prConfig.val;
-        this.mTop = data.mbConfig.val;
-        let fillet = data.fillet.type;
-        let filletVal = data.fillet.val;
-        let valList = data.fillet.valList;
-        this.bgRadius = fillet
-          ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
-          : filletVal + 'px';
+      this.configObj = data;
+      for (let key in this.defaultConfig) {
+        if (data[key] === undefined) {
+          this.$set(data, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+        }
       }
+      this.paddingConfig = data.paddingConfig || {
+        title: '内边距',
+        isAll: false,
+        val: 0,
+        min: 0,
+        valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+      };
+      this.marginConfig = data.marginConfig || {
+        title: '外边距',
+        isAll: false,
+        val: 0,
+        min: 0,
+        valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+      };
+      if (!data.paddingConfig) {
+        if (data.topConfig) this.paddingConfig.valList[0].val = data.topConfig.val;
+        if (data.bottomConfig) this.paddingConfig.valList[2].val = data.bottomConfig.val;
+        if (data.prConfig) {
+          this.paddingConfig.valList[1].val = data.prConfig.val;
+          this.paddingConfig.valList[3].val = data.prConfig.val;
+        }
+      }
+      if (!data.marginConfig) {
+        if (data.mbConfig) this.marginConfig.valList[0].val = data.mbConfig.val;
+      }
+      this.styleConfig = data.styleConfig.tabVal;
+      this.checkType = data.checkboxInfo.type;
+      this.logoConfig = data.logoConfig.url;
+      this.toneConfig = data.toneConfig.tabVal;
+      this.progressLeft = data.progressColor.color[0].item;
+      this.progressRight = data.progressColor.color[1].item;
+      this.progressBgColor = data.progressBgColor.color[0].item;
+      this.bgColorLeft = data.moduleColor.color[0].item;
+      this.bgColorRight = data.moduleColor.color[1].item;
+      this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
+      // this.bottomBgColor = data.bottomBgColor.color[0].item;
+      // this.topConfig = data.topConfig.val;
+      // this.bottomConfig = data.bottomConfig.val;
+      // this.prConfig = data.prConfig.val;
+      // this.mTop = data.mbConfig.val;
+      let fillet = data.fillet.type;
+      let filletVal = data.fillet.val;
+      let valList = data.fillet.valList;
+      this.bgRadius = fillet
+        ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
+        : filletVal + 'px';
     },
   },
 };
@@ -472,7 +585,7 @@ export default {
         border-radius: 50%;
         background-color: #f3f9ff;
         border: 1px solid #eeeeee;
-        .iconfont-diy {
+        .iconfont {
           font-size: 20px;
         }
         img {

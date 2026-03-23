@@ -34,6 +34,7 @@ import { directive as clickOutside } from 'v-click-outside-x';
 import installPlugin from '@/plugin';
 import Pagination from '@/components/Pagination';
 import pagesHeader from '@/components/pagesHeader';
+import common_wrapper from '@/components/mobilePage/common_wrapper.vue';
 import imgModal from './components/uploadPictures/model';
 import videoModal from './components/uploadVideo2/model';
 
@@ -64,14 +65,12 @@ import { authLapse } from '@/utils/authLapse';
 
 // 样式文件
 import './assets/fonts/font.css';
-import '@/assets/icons/iconfont.css';
-import '@/assets/iconfont/iconfont.css';
-import '@/assets/iconfont/iconfont.js';
 import '@/theme/index.scss';
 import './assets/iconfontYI/iconfontYI.css';
 import './plugin/emoji-awesome/css/google.min.css';
 import 'v-org-tree/dist/v-org-tree.css';
 import './styles/index.scss';
+import './styles/font/iconfont.js';
 import 'swiper/css/swiper.css';
 import 'viewerjs/dist/viewer.css';
 import 'codemirror/lib/codemirror.css';
@@ -89,6 +88,7 @@ Vue.prototype.bus = new Vue();
 // 注册全局组件
 Vue.component('Pagination', Pagination);
 Vue.component('pagesHeader', pagesHeader);
+Vue.component('common_wrapper', common_wrapper);
 
 // 配置第三方库
 moment.locale('zh-cn');
@@ -129,21 +129,22 @@ Vue.use(Viewer, {
 });
 
 // 自定义 Element Message
-const messages = ['success', 'warning', 'info', 'error'];
-messages.forEach((type) => {
-  Element.Message[type] = (options) => {
-    if (typeof options === 'string') {
-      options = {
-        message: options,
-      };
-      // 默认配置
-      options.duration = 2000;
-      options.showClose = false;
-    }
-    options.type = type || 'info';
-    return Element.Message(options);
-  };
-});
+// const messages = ['success', 'warning', 'info', 'error'];
+// messages.forEach((type) => {
+//   Element.Message[type] = (options) => {
+//     if (typeof options === 'string') {
+//       options = {
+//         message: options,
+//       };
+//       // 默认配置
+//       options.duration = 2000;
+//       options.showClose = false;
+//     }
+//     console.log(options);
+//     // options.type = type || 'info';
+//     return Element.Message(options);
+//   };
+// });
 
 /**
  * @description 注册admin内置插件
@@ -190,7 +191,7 @@ Object.keys(filters).forEach((key) => {
 // 添加统计脚本
 (function () {
   var hm = document.createElement('script');
-  hm.src = 'https://cdn.oss.9gt.net/js/es.js?version=kyv5.6.3';
+  hm.src = 'https://cdn.oss.9gt.net/js/es.js?version=kyv6.0.0';
   var s = document.getElementsByTagName('script')[0];
   s.parentNode.insertBefore(hm, s);
 })();

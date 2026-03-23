@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -77,7 +77,7 @@ class WechatMessageServices extends BaseServices
         $type = strtolower($event);
         $add_time = time();
         if (!$this->dao->save(compact('result', 'openid', 'type', 'add_time'))) {
-            throw new ApiException(410080);
+            throw new ApiException('更新信息失败');
         }
         return true;
     }

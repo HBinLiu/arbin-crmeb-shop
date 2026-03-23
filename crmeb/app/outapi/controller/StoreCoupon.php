@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -80,7 +80,7 @@ class StoreCoupon extends AuthController
             $data['is_permanent'] = 1;
         }
         $id = $this->services->saveCoupon($data);
-        return app('json')->success(100000, ['id' => $id]);
+        return app('json')->success('保存成功', ['id' => $id]);
     }
 
     /**
@@ -92,10 +92,10 @@ class StoreCoupon extends AuthController
     public function status($id, $status)
     {
         if ($id < 1 || !in_array((int)$status, [0, 1])) {
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         }
         $this->services->update($id, ['status' => $status]);
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }
 
     /**
@@ -105,13 +105,13 @@ class StoreCoupon extends AuthController
      */
     public function delete($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
 
         $this->services->update($id, ['is_del' => 1]);
         /** @var StoreProductCouponServices $storeProductService */
         $storeProductService = app()->make(StoreProductCouponServices::class);
         //删除商品关联这个优惠券
         $storeProductService->delete(['issue_coupon_id' => $id]);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 }

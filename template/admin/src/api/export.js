@@ -116,3 +116,14 @@ export function exportmberCardList(id) {
     method: 'get',
   });
 }
+
+/**
+ * @description 核销订单导出；
+ */
+export function exportverifyOrderApi(data) {
+  return request({
+    url: `export/verify_order`,
+    method: 'get',
+    params: data,
+  });
+}

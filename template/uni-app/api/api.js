@@ -14,15 +14,15 @@ import request from "@/utils/request.js";
  *
  */
 export function getAjcaptcha(data) {
-	return request.get("ajcaptcha", data, {
-		noAuth: true
-	});
+  return request.get("ajcaptcha", data, {
+    noAuth: true,
+  });
 }
 
 export function ajcaptchaCheck(data) {
-	return request.post("ajcheck", data, {
-		noAuth: true
-	});
+  return request.post("ajcheck", data, {
+    noAuth: true,
+  });
 }
 
 /**
@@ -30,18 +30,26 @@ export function ajcaptchaCheck(data) {
  *
  */
 export function getIndexData() {
-	return request.get("v2/index", {}, {
-		noAuth: true
-	});
+  return request.get(
+    "v2/index",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 /**
  * 获取服务器类型
  *
  */
 export function getServerType() {
-	return request.get("v2/site_serve", {}, {
-		noAuth: true
-	});
+  return request.get(
+    "v2/site_serve",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
@@ -49,20 +57,23 @@ export function getServerType() {
  *
  */
 export function getLogo() {
-	return request.get('wechat/get_logo', {}, {
-		noAuth: true
-	});
+  return request.get(
+    "wechat/get_logo",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
-
 
 /**
  * 保存form_id
  * @param string formId
  */
 export function setFormId(formId) {
-	return request.post("wechat/set_form_id", {
-		formId: formId
-	});
+  return request.post("wechat/set_form_id", {
+    formId: formId,
+  });
 }
 
 /**
@@ -71,27 +82,27 @@ export function setFormId(formId) {
  *
  */
 export function setCouponReceive(couponId) {
-	return request.post('coupon/receive', {
-		couponId: couponId
-	});
+  return request.post("coupon/receive", {
+    couponId: couponId,
+  });
 }
 /**
  * 优惠券列表
  * @param object data
  */
 export function getCoupons(data) {
-	return request.get('v2/coupons', data, {
-		noAuth: true
-	})
+  return request.get("v2/coupons", data, {
+    noAuth: true,
+  });
 }
 /**
  * 首页优惠券列表组件数据
  * @param object data
  */
 export function getCouponsIndex(data) {
-	return request.get('coupons', data, {
-		noAuth: true
-	})
+  return request.get("coupons", data, {
+    noAuth: true,
+  });
 }
 
 /**
@@ -99,7 +110,7 @@ export function getCouponsIndex(data) {
  * @param int types 0全部  1未使用 2已使用
  */
 export function getUserCoupons(types, data) {
-	return request.get('coupons/user/' + types, data)
+  return request.get("coupons/user/" + types, data);
 }
 
 /**
@@ -107,7 +118,7 @@ export function getUserCoupons(types, data) {
  *
  */
 export function getNewCoupon() {
-	return request.get('v2/new_coupon')
+  return request.get("v2/new_coupon");
 }
 
 /**
@@ -115,9 +126,13 @@ export function getNewCoupon() {
  *
  */
 export function getArticleCategoryList() {
-	return request.get('article/category/list', {}, {
-		noAuth: true
-	})
+  return request.get(
+    "article/category/list",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
@@ -126,9 +141,9 @@ export function getArticleCategoryList() {
  *
  */
 export function getArticleList(cid, data) {
-	return request.get('article/list/' + cid, data, {
-		noAuth: true
-	})
+  return request.get("article/list/" + cid, data, {
+    noAuth: true,
+  });
 }
 
 /**
@@ -136,9 +151,13 @@ export function getArticleList(cid, data) {
  *
  */
 export function getArticleHotList() {
-	return request.get('article/hot/list', {}, {
-		noAuth: true
-	});
+  return request.get(
+    "article/hot/list",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
@@ -146,9 +165,13 @@ export function getArticleHotList() {
  *
  */
 export function getArticleBannerList() {
-	return request.get('article/banner/list', {}, {
-		noAuth: true
-	})
+  return request.get(
+    "article/banner/list",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
@@ -157,9 +180,13 @@ export function getArticleBannerList() {
  *
  */
 export function getArticleDetails(id) {
-	return request.get('article/details/' + id, {}, {
-		noAuth: true
-	});
+  return request.get(
+    "article/details/" + id,
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
@@ -167,9 +194,9 @@ export function getArticleDetails(id) {
  * @param object data
  */
 export function loginMobile(data) {
-	return request.post('login/mobile', data, {
-		noAuth: true
-	})
+  return request.post("login/mobile", data, {
+    noAuth: true,
+  });
 }
 
 /**
@@ -177,25 +204,39 @@ export function loginMobile(data) {
  * @param object phone
  */
 export function verifyCode() {
-	return request.get('verify_code', {}, {
-		noAuth: true
-	})
+  return request.get(
+    "verify_code",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
  * 验证码发送
  * @param object phone
  */
-export function registerVerify(phone, reset, key, captchaType, captchaVerification) {
-	return request.post('register/verify', {
-		phone: phone,
-		type: reset === undefined ? 'reset' : reset,
-		key: key,
-		captchaType: captchaType,
-		captchaVerification: captchaVerification
-	}, {
-		noAuth: true
-	})
+export function registerVerify(
+  phone,
+  reset,
+  key,
+  captchaType,
+  captchaVerification,
+) {
+  return request.post(
+    "register/verify",
+    {
+      phone: phone,
+      type: reset === undefined ? "reset" : reset,
+      key: key,
+      captchaType: captchaType,
+      captchaVerification: captchaVerification,
+    },
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
@@ -204,9 +245,9 @@ export function registerVerify(phone, reset, key, captchaType, captchaVerificati
  *
  */
 export function phoneRegister(data) {
-	return request.post('register', data, {
-		noAuth: true
-	});
+  return request.post("register", data, {
+    noAuth: true,
+  });
 }
 
 /**
@@ -215,9 +256,9 @@ export function phoneRegister(data) {
  *
  */
 export function phoneRegisterReset(data) {
-	return request.post('register/reset', data, {
-		noAuth: true
-	})
+  return request.post("register/reset", data, {
+    noAuth: true,
+  });
 }
 
 /**
@@ -226,9 +267,9 @@ export function phoneRegisterReset(data) {
  *
  */
 export function phoneLogin(data) {
-	return request.post('login', data, {
-		noAuth: true
-	})
+  return request.post("login", data, {
+    noAuth: true,
+  });
 }
 
 /**
@@ -237,9 +278,9 @@ export function phoneLogin(data) {
  */
 // #ifdef MP
 export function switchH5Login() {
-	return request.post('switch_h5', {
-		'from': 'routine'
-	});
+  return request.post("switch_h5", {
+    from: "routine",
+  });
 }
 // #endif
 
@@ -248,9 +289,9 @@ export function switchH5Login() {
  * */
 // #ifdef H5
 export function switchH5Login() {
-	return request.post("switch_h5", {
-		'from': "wechat"
-	});
+  return request.post("switch_h5", {
+    from: "wechat",
+  });
 }
 // #endif
 
@@ -259,19 +300,17 @@ export function switchH5Login() {
  *
  */
 export function bindingPhone(data) {
-	return request.post('binding', data, {
-		noAuth: true
-	});
+  return request.post("binding", data, {
+    noAuth: true,
+  });
 }
-
-
 
 /**
  * 绑定手机号
  *
  */
 export function bindingUserPhone(data) {
-	return request.post('user/binding', data);
+  return request.post("user/binding", data);
 }
 
 /**
@@ -279,64 +318,88 @@ export function bindingUserPhone(data) {
  *
  */
 export function logout() {
-	return request.get('logout');
+  return request.get("logout");
 }
 
 /**
  * 获取订阅消息id
  */
 export function getTempIds() {
-	return request.get('wechat/temp_ids', {}, {
-		noAuth: true
-	});
+  return request.get(
+    "wechat/temp_ids",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
  * 首页拼团数据
  */
 export function pink() {
-	return request.get('pink', {}, {
-		noAuth: true
-	});
+  return request.get(
+    "pink",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
  * 获取城市信息
  */
 export function getCity() {
-	return request.get('city_list', {}, {
-		noAuth: true
-	});
+  return request.get(
+    "city_list",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
  * 获取列表
  */
 export function getLiveList(page, limit) {
-	return request.get('wechat/live', {
-		page,
-		limit
-	}, {
-		noAuth: true
-	});
+  return request.get(
+    "wechat/live",
+    {
+      page,
+      limit,
+    },
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
  * 获取首页DIY；
  */
 export function getDiy(id) {
-	return request.get(`v2/diy/get_diy/default${id ? '?id='+id:''}`, {}, {
-		noAuth: true
-	});
+  return request.get(
+    `v2/diy/get_diy/default${id ? "?id=" + id : ""}`,
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
  * 一键换色；
  */
 export function colorChange(name) {
-	return request.get('v2/diy/color_change/' + name, {}, {
-		noAuth: true
-	});
+  return request.get(
+    "v2/diy/color_change/" + name,
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
@@ -344,9 +407,13 @@ export function colorChange(name) {
  * @returns {*}
  */
 export function follow() {
-	return request.get("wechat/follow", {}, {
-		noAuth: true
-	});
+  return request.get(
+    "wechat/follow",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
@@ -354,9 +421,9 @@ export function follow() {
  * @returns {*}
  */
 export function updatePhone(data) {
-	return request.post("user/updatePhone", data, {
-		noAuth: true
-	});
+  return request.post("user/updatePhone", data, {
+    noAuth: true,
+  });
 }
 
 /**
@@ -364,9 +431,13 @@ export function updatePhone(data) {
  * @returns {*}
  */
 export function getCouponV2() {
-	return request.get("v2/get_today_coupon", {}, {
-		noAuth: true
-	});
+  return request.get(
+    "v2/get_today_coupon",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
@@ -374,9 +445,13 @@ export function getCouponV2() {
  * @returns {*}
  */
 export function getCouponNewUser() {
-	return request.get("v2/new_coupon", {}, {
-		noAuth: true
-	});
+  return request.get(
+    "v2/new_coupon",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
@@ -384,9 +459,9 @@ export function getCouponNewUser() {
  * @param {Object} data
  */
 export function category(data) {
-	return request.get("category", data, {
-		noAuth: true
-	});
+  return request.get("category", data, {
+    noAuth: true,
+  });
 }
 
 /**
@@ -394,24 +469,24 @@ export function category(data) {
  * @param {Object} data
  */
 export function searchList(data) {
-	return request.get('v2/user/search_list', data, {
-		noAuth: true
-	});
+  return request.get("v2/user/search_list", data, {
+    noAuth: true,
+  });
 }
 
 /**
  * 删除搜索历史
  */
 export function clearSearch() {
-	return request.get('v2/user/clean_search');
+  return request.get("v2/user/clean_search");
 }
 /**
  * 获取网站基础配置
  */
 export function siteConfig(data) {
-	return request.get('site_config', data, {
-		noAuth: true
-	});
+  return request.get("site_config", data, {
+    noAuth: true,
+  });
 }
 
 /**
@@ -419,18 +494,22 @@ export function siteConfig(data) {
  * @returns {*}
  */
 export function wechatAppAuth(data) {
-	return request.post("wechat/app_auth", data, {
-		noAuth: true
-	});
+  return request.post("wechat/app_auth", data, {
+    noAuth: true,
+  });
 }
 /**
  * 获取客服类型
  * @returns {*}
  */
 export function getCustomerType(data) {
-	return request.get("get_customer_type", {}, {
-		noAuth: true
-	});
+  return request.get(
+    "get_customer_type",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
@@ -438,27 +517,48 @@ export function getCustomerType(data) {
  * @returns {*}
  */
 export function getOpenAdv(data) {
-	return request.get("get_open_adv", {}, {
-		noAuth: true
-	});
+  return request.get(
+    "get_open_adv",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 
 /**
  * 获取版权信息
  */
 export function getCrmebCopyRight() {
-	return request.get('copyright', {}, {
-		noAuth: true
-	})
+  return request.get(
+    "copyright",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }
 /**
  * 获取DIY版本接口
  * @param {Object} id
  */
 export function getDiyVersion(name) {
-	return request.get(`v2/diy/get_version/${name}`, {}, {
-		noAuth: true
-	});
+  return request.get(
+    `v2/diy/get_version/${name}`,
+    {},
+    {
+      noAuth: true,
+    },
+  );
+}
+/**
+ * 获取主题信息接口
+ * @param {Object} id
+ */
+export function getThemeInfo(type, data) {
+  return request.get(`theme_info/${type}`, data || {}, {
+    noAuth: true,
+  });
 }
 
 /**
@@ -466,7 +566,49 @@ export function getDiyVersion(name) {
  * @param {Object} id
  */
 export function getSign() {
-	return request.get('v2/diy/sign', {}, {
-		noAuth: true
-	});
+  return request.get(
+    "v2/diy/sign",
+    {},
+    {
+      noAuth: true,
+    },
+  );
+}
+/**
+ * @description 获取主题商品列表
+ */
+export function getThemeProduct(data) {
+  return request.get("theme/product", data, {
+    noAuth: true,
+  });
+}
+/**
+ * @description 获取文章列表
+ */
+export function getThemeArticle(data) {
+  return request.get("theme/article", data, {
+    noAuth: true,
+  });
+}
+/**
+ * @description 获取优惠券列表
+ */
+export function getThemeCoupon(data) {
+  return request.get("theme/coupon", data, {
+    noAuth: true,
+  });
+}
+
+/**
+ * 获取用户信息(DIY)
+ *
+ */
+export function getThemeUser() {
+  return request.get(
+    "theme/user",
+    {},
+    {
+      noAuth: true,
+    },
+  );
 }

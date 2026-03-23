@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -326,7 +326,7 @@ class Local extends BaseUpload
                         $data = $down->path($this->thumbWaterPath)->downloadImage($waterConfig['watermark_image'], $name);
                         $watermark_image = $data['path'] ?? '';
                     } catch (\Throwable $e) {
-                        throw new AdminException(400724);
+                        throw new AdminException('远程水印图片下载失败');
                     }
                 }
             } else {
@@ -334,7 +334,7 @@ class Local extends BaseUpload
             }
         }
         if (!$watermark_image) {
-            throw new AdminException(400722);
+            throw new AdminException('请先配置水印图片');
         }
         $savePath = public_path() . $filePath;
         try {
@@ -358,7 +358,7 @@ class Local extends BaseUpload
             $waterConfig = $this->waterConfig;
         }
         if (!$waterConfig['watermark_text']) {
-            throw new AdminException(400723);
+            throw new AdminException('请先配置水印文字');
         }
         $savePath = public_path() . $filePath;
         try {

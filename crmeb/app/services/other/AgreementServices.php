@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -36,12 +36,12 @@ class AgreementServices extends BaseServices
     public function saveAgreement(array $data, $id = 0)
     {
         if (!$data) return false;
-        if (!isset($data['type']) || !$data['type'] || $data['type'] == 0) throw new AdminException(400548);
-        if (!isset($data['title']) || !$data['title']) throw new AdminException(400549);
-        if (!isset($data['content']) || !$data['content']) throw new AdminException(400550);
+        if (!isset($data['type']) || !$data['type'] || $data['type'] == 0) throw new AdminException('协议类型缺失');
+        if (!isset($data['title']) || !$data['title']) throw new AdminException('请填写协议名称');
+        if (!isset($data['content']) || !$data['content']) throw new AdminException('请填写协议内容');
         if (!$id) {
             $getOne = $this->getAgreementBytype($data['type']);
-            if ($getOne) throw new AdminException(400551);
+            if ($getOne) throw new AdminException('该类型协议已经存在');
         }
         return $this->dao->saveAgreement($data, $id);
     }

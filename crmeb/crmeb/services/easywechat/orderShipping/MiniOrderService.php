@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace crmeb\services\easywechat\orderShipping;
 
 use crmeb\services\easywechat\Application;
@@ -66,6 +74,20 @@ class MiniOrderService
     public static function shippingByTradeNo(string $out_trade_no, int $logistics_type, array $shipping_list, string $payer_openid, string $path, int $delivery_mode = 1, bool $is_all_delivered = true)
     {
         return self::order()->shippingByTradeNo($out_trade_no, $logistics_type, $shipping_list, $payer_openid, $path, $delivery_mode, $is_all_delivered);
+    }
+
+    /**
+     * 获取小程序发货管理订单列表
+     * @param array $params
+     * @return array
+     * @throws HttpException
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2025/8/14
+     */
+    public static function shippingOrderList($params = [])
+    {
+        return self::order()->shippingOrderList($params);
     }
 
     /**

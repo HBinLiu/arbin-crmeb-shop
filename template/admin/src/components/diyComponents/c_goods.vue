@@ -189,7 +189,7 @@ export default {
       position: absolute;
       right: -10px;
       top: -16px;
-      color: #999999;
+      color: #ccc;
       font-size: 28px;
       cursor: pointer;
     }

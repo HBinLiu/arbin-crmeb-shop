@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -127,8 +127,8 @@ class StoreOrderInvoiceServices extends BaseServices
      */
     public function makeUp(int $uid, $order_id, int $invoice_id)
     {
-        if (!$order_id) throw new AdminException(100100);
-        if (!$invoice_id) throw new AdminException(410325);
+        if (!$order_id) throw new AdminException('参数错误');
+        if (!$invoice_id) throw new AdminException('请选择发票');
 
         /** @var StoreOrderServices $storeOrderServices */
         $storeOrderServices = app()->make(StoreOrderServices::class);
@@ -136,19 +136,19 @@ class StoreOrderInvoiceServices extends BaseServices
         $userInvoiceServices = app()->make(UserInvoiceServices::class);
         $order = $storeOrderServices->getOne(['order_id|id' => $order_id, 'is_del' => 0]);
         if (!$order) {
-            throw new AdminException(410173);
+            throw new AdminException('订单不存在');
         }
         //检测再带查询
         $invoice = $userInvoiceServices->checkInvoice($invoice_id, $uid);
 
         if ($this->dao->getOne(['order_id' => $order['id'], 'uid' => $uid])) {
-            throw new AdminException(410249);
+            throw new AdminException('发票已申请');
         }
         if ($order['refund_status'] == 2) {
-            throw new AdminException(410226);
+            throw new AdminException('订单已退款');
         }
         if ($order['refund_status'] == 1) {
-            throw new AdminException(410250);
+            throw new AdminException('正在申请退款中');
         }
         unset($invoice['id'], $invoice['add_time']);
         $data = [];
@@ -159,7 +159,7 @@ class StoreOrderInvoiceServices extends BaseServices
         $data['is_pay'] = $order['paid'] == 1 ? 1 : 0;
         $data = array_merge($data, $invoice);
         if (!$re = $this->dao->save($data)) {
-            throw new AdminException(410251);
+            throw new AdminException('申请失败');
         }
         if (sys_config('elec_invoice', 1) == 1 && sys_config('auto_invoice', 1) == 1 && $data['is_pay'] == 1) {
             //自动开票
@@ -182,13 +182,13 @@ class StoreOrderInvoiceServices extends BaseServices
     {
         $orderInvoice = $this->dao->get($id);
         if (!$orderInvoice) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         if ($data['is_invoice'] == 1) {
             $data['invoice_time'] = time();
         }
         if (!$this->dao->update($id, $data, 'id')) {
-            throw new AdminException(100015);
+            throw new AdminException('设置失败');
         }
         return true;
     }
@@ -207,7 +207,7 @@ class StoreOrderInvoiceServices extends BaseServices
         $storeOrderServices = app()->make(StoreOrderServices::class);
         $orderInfo = $storeOrderServices->getOne(['id' => $oid, 'is_del' => 0]);
         if (!$orderInfo) {
-            throw new AdminException(410173);
+            throw new AdminException('订单不存在');
         }
         $pid = $orderInfo['pid'] > 0 ? $orderInfo['pid'] : $orderInfo['id'];
         //查询开票记录

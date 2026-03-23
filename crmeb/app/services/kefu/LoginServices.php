@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -50,13 +50,13 @@ class LoginServices extends BaseServices
     {
         $kefuInfo = $this->dao->get(['account' => $account]);
         if (!$kefuInfo) {
-            throw new AuthException(410141);
+            throw new AuthException('没有此用户');
         }
         if ($password && !password_verify($password, $kefuInfo->password)) {
-            throw new AuthException(410025);
+            throw new AuthException('账号或密码错误');
         }
         if (!$kefuInfo->status) {
-            throw new AuthException(410027);
+            throw new AuthException('您已被禁止登录，请联系管理员');
         }
         $token = $this->createToken($kefuInfo->id, 'kefu');
         $kefuInfo->update_time = time();
@@ -85,10 +85,10 @@ class LoginServices extends BaseServices
         //检测token是否过期
         $md5Token = md5($token);
         if (!$token || !CacheService::has($md5Token) || !(CacheService::get($md5Token, '', NULL, 'kefu'))) {
-            throw new AuthException(110005);
+            throw new AuthException('请登录', [], 402);
         }
         if ($token === 'undefined') {
-            throw new AuthException(110005);
+            throw new AuthException('请登录', [], 402);
         }
 
         /** @var JwtAuth $jwtAuth */
@@ -101,14 +101,14 @@ class LoginServices extends BaseServices
             $jwtAuth->verifyToken();
         } catch (\Throwable $e) {
             $noCli && CacheService::delete($md5Token);
-            throw new AuthException(110006);
+            throw new AuthException('登录已过期,请重新登录', [], 402);
         }
 
         //获取管理员信息
         $adminInfo = $this->dao->get($id);
         if (!$adminInfo || !$adminInfo->id) {
             $noCli && CacheService::delete($md5Token);
-            throw new AuthException(110007);
+            throw new AuthException('登录状态有误,请重新登录', [], 402);
         }
 
         $adminInfo->type = $type;
@@ -127,20 +127,20 @@ class LoginServices extends BaseServices
         $oauth = app()->make(OAuth::class);
         $original = $oauth->oauth(null, ['open' => true]);
         if (!isset($original['unionid'])) {
-            throw new AuthException(410132);
+            throw new AuthException('unionid不存在');
         }
         /** @var WechatUserServices $userService */
         $userService = app()->make(WechatUserServices::class);
         $uid = $userService->value(['unionid' => $original['unionid']], 'uid');
         if (!$uid) {
-            throw new AuthException(410133);
+            throw new AuthException('获取用户UID失败');
         }
         $kefuInfo = $this->dao->get(['uid' => $uid]);
         if (!$kefuInfo) {
-            throw new AuthException(410142);
+            throw new AuthException('客服不存在');
         }
         if (!$kefuInfo->status) {
-            throw new AuthException(410027);
+            throw new AuthException('您已被禁止登录，请联系管理员');
         }
         $token = $this->createToken($kefuInfo->id, 'kefu');
         $kefuInfo->update_time = time();

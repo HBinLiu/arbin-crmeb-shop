@@ -6,14 +6,19 @@
         <div class="item" v-for="(item, index) in configData.list" :key="index" @click="activeBtn(index)">
           <!-- v-model="configData.tabCur" -->
           <div class="move-icon">
-            <span class="iconfont-diy iconxingzhuangjiehe"></span>
+            <span class="iconfont iconxingzhuangjiehe"></span>
           </div>
           <div class="content">
             <div class="con-item" v-for="(list, key) in item.chiild" :key="key">
               <span>{{ list.title }}</span>
               <div style="width: 100%">
                 <el-input v-model="list.val" :placeholder="list.pla">
-                  <i v-if="list.title == '链接'" class="el-icon-link" slot="suffix" @click="getLink(index, key, item)" />
+                  <i
+                    v-if="list.title == '链接'"
+                    class="el-icon-link"
+                    slot="suffix"
+                    @click="getLink(index, key, item)"
+                  />
                 </el-input>
               </div>
             </div>
@@ -34,7 +39,7 @@
             </div>
           </div>
           <div class="delete" @click.stop="bindDelete(index)">
-            <i class="el-icon-circle-close"  style="font-size: 20px" />
+            <i class="el-icon-circle-close" style="font-size: 20px" />
           </div>
         </div>
       </draggable>
@@ -115,10 +120,9 @@ export default {
         this.configData.list.push(this.itemObj);
       } else {
         let obj = JSON.parse(JSON.stringify(this.configData.list[this.configData.list.length - 1]));
-        if (obj.chiild[0].empty) {
-          obj.chiild[0].val = '';
-          obj.chiild[1].val = '';
-        }
+        obj.chiild.forEach((item) => {
+          item.val = '';
+        });
         this.configData.list.push(obj);
       }
     },
@@ -232,7 +236,7 @@ export default {
   color: #999;
 }
 
-.iconfont-diy {
+.iconfont {
   color: #dddddd;
   font-size: 16px;
 }

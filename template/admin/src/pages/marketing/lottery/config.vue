@@ -59,7 +59,6 @@ export default {
       factorListApi().then((res) => {
         this.list = res.data;
         this.formData = res.data.info;
-        console.log(res);
       });
     },
     save() {

@@ -15,10 +15,10 @@ import request from "@/utils/request.js";
  * @param data object 用户账号密码
  */
 export function kefuLogin(data) {
-	return request.post("login", data, {
-		noAuth: true,
-		kefu: true
-	});
+  return request.post("login", data, {
+    noAuth: true,
+    kefu: true,
+  });
 }
 
 /**
@@ -26,10 +26,10 @@ export function kefuLogin(data) {
  * @constructor
  */
 export function record(data) {
-	return request.get("user/record", data, {
-		noAuth: true,
-		kefu: true
-	});
+  return request.get("user/record", data, {
+    noAuth: true,
+    kefu: true,
+  });
 }
 
 /**
@@ -37,10 +37,10 @@ export function record(data) {
  * @constructor
  */
 export function speeChcraft(data) {
-	return request.get("service/speechcraft", data, {
-		noAuth: true,
-		kefu: true
-	});
+  return request.get("service/speechcraft", data, {
+    noAuth: true,
+    kefu: true,
+  });
 }
 
 /**
@@ -48,10 +48,10 @@ export function speeChcraft(data) {
  * @constructor
  */
 export function transferList(data) {
-	return request.get("service/transfer_list", data, {
-		noAuth: true,
-		kefu: true
-	});
+  return request.get("service/transfer_list", data, {
+    noAuth: true,
+    kefu: true,
+  });
 }
 
 /**
@@ -59,10 +59,10 @@ export function transferList(data) {
  * @constructor
  */
 export function productCart(id, data) {
-	return request.get("product/cart/" + id, data, {
-		noAuth: true,
-		kefu: true
-	});
+  return request.get("product/cart/" + id, data, {
+    noAuth: true,
+    kefu: true,
+  });
 }
 
 /**
@@ -70,10 +70,10 @@ export function productCart(id, data) {
  * @constructor
  */
 export function productHot(id, data) {
-	return request.get("product/hot/" + id, data, {
-		noAuth: true,
-		kefu: true
-	});
+  return request.get("product/hot/" + id, data, {
+    noAuth: true,
+    kefu: true,
+  });
 }
 
 /**
@@ -81,10 +81,10 @@ export function productHot(id, data) {
  * @constructor
  */
 export function productVisit(id, data) {
-	return request.get("product/visit/" + id, data, {
-		noAuth: true,
-		kefu: true
-	});
+  return request.get("product/visit/" + id, data, {
+    noAuth: true,
+    kefu: true,
+  });
 }
 
 /**
@@ -92,10 +92,10 @@ export function productVisit(id, data) {
  * @constructor
  */
 export function serviceList(data) {
-	return request.get("service/list", data, {
-		noAuth: true,
-		kefu: true
-	});
+  return request.get("service/list", data, {
+    noAuth: true,
+    kefu: true,
+  });
 }
 
 /**
@@ -103,10 +103,10 @@ export function serviceList(data) {
  * @constructor
  */
 export function serviceTransfer(data) {
-	return request.post("service/transfer", data, {
-		noAuth: true,
-		kefu: true
-	});
+  return request.post("service/transfer", data, {
+    noAuth: true,
+    kefu: true,
+  });
 }
 
 /**
@@ -114,10 +114,10 @@ export function serviceTransfer(data) {
  * @constructor
  */
 export function serviceInfo(data) {
-	return request.get("service/info", data, {
-		noAuth: true,
-		kefu: true
-	});
+  return request.get("service/info", data, {
+    noAuth: true,
+    kefu: true,
+  });
 }
 
 /**
@@ -125,7 +125,7 @@ export function serviceInfo(data) {
  * @constructor
  */
 export function serviceFeedBack() {
-	return request.get("user/service/feedback");
+  return request.get("user/service/feedback");
 }
 
 /**
@@ -133,7 +133,7 @@ export function serviceFeedBack() {
  * @constructor
  */
 export function feedBackPost(data) {
-	return request.post("user/service/feedback", data);
+  return request.post("user/service/feedback", data);
 }
 
 /**
@@ -141,16 +141,20 @@ export function feedBackPost(data) {
  * @constructor
  */
 export function codeStauts(data) {
-	return request.get("user/code", data);
+  return request.get("user/code", data);
 }
 /**
  * 获取客服端口
  * @constructor
  */
 export function getWorkermanUrl(data) {
-	return request.get('get_workerman_url', {}, {
-		noAuth: true
-	})
+  return request.get(
+    "get_workerman_url",
+    {},
+    {
+      noAuth: true,
+    }
+  );
 }
 
 /**
@@ -158,5 +162,5 @@ export function getWorkermanUrl(data) {
  * @constructor
  */
 export function kefuScanLogin(data) {
-	return request.post("user/code", data);
+  return request.post("user/code", data);
 }

@@ -133,18 +133,10 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="操作" fixed="right" width="130">
+      <el-table-column label="操作" fixed="right" width="170">
         <template slot-scope="scope">
-          <a
-            v-db-click
-            @click="edit(scope.row)"
-            v-if="scope.row._status === 1 && scope.row.is_del !== 1 && scope.row.is_cancel !== 1"
-            >编辑</a
-          >
-          <el-divider
-            direction="vertical"
-            v-if="scope.row._status === 1 && scope.row.is_del !== 1 && scope.row.is_cancel !== 1"
-          />
+          <a v-db-click @click="changeMenu(scope.row, '2')">详情</a>
+          <el-divider direction="vertical" />
           <a
             v-db-click
             @click="sendOrder(scope.row)"
@@ -208,11 +200,12 @@
                   "
                   >确认付款</el-dropdown-item
                 >
-                <el-dropdown-item command="2">订单详情</el-dropdown-item>
+                <el-dropdown-item v-show="scope.row._status === 1 && scope.row.is_del !== 1 && scope.row.is_cancel !== 1" command="15">订单编辑</el-dropdown-item>
                 <el-dropdown-item command="11" v-show="scope.row._status >= 3 && scope.row.express_dump"
                   >电子面单打印</el-dropdown-item
                 >
                 <el-dropdown-item command="10" v-show="scope.row._status >= 2">小票打印</el-dropdown-item>
+                <el-dropdown-item command="14" v-show="scope.row.status === 0">修改地址</el-dropdown-item>
                 <el-dropdown-item
                   command="4"
                   v-show="
@@ -345,6 +338,7 @@
         <div class="el-upload__text">批量发货单,拖入上传或<em>点击上传</em></div>
       </el-upload>
     </el-dialog>
+    <orderAddress ref="address" :addressData="addressData" @submitSuccess="submitSuccess"></orderAddress>
   </div>
 </template>
 
@@ -363,6 +357,7 @@ import {
   shipmentCancelOrder,
   putWrite,
   importExpress,
+  editAddress,
 } from '@/api/order';
 import { mapState, mapMutations } from 'vuex';
 import editFrom from '../../../../components/from/from';
@@ -376,7 +371,7 @@ import Setting from '@/setting';
 import { getCookies } from '@/libs/util';
 import createWorkBook from '@/vendor/newToExcel.js';
 import { isFileUpload } from '@/utils';
-
+import orderAddress from '../handle/orderAddress.vue';
 export default {
   name: 'table_list',
   components: {
@@ -387,6 +382,7 @@ export default {
     orderSend,
     orderShipment,
     orderRefund,
+    orderAddress,
   },
   data() {
     const codeNum = (rule, value, callback) => {
@@ -448,6 +444,7 @@ export default {
         confirm: 0,
       },
       modals2: false,
+      addressData: {},
     };
   },
   computed: {
@@ -591,6 +588,18 @@ export default {
           });
           window.open(pathInfo.href, '_blank');
           break;
+        case '14':
+          this.addressData = {
+            id: row.id,
+            real_name: row.real_name,
+            user_phone: row.user_phone,
+            user_address: row.user_address,
+          };
+          this.$refs.address.modals = true;
+          break;
+        case '15':
+          this.edit(row);
+          break;  
         default:
           this.delfromData = {
             title: '删除订单',
@@ -731,6 +740,13 @@ export default {
         .catch((res) => {
           this.$message.error(res.msg);
         });
+    },
+    submitSuccess() {
+      editAddress(this.addressData).then(() => {
+        this.$message.success('修改成功');
+        this.addressData = {};
+        this.$refs.address.modals = false;
+      });
     },
     // 修改成功
     submitFail() {

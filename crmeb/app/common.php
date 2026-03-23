@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -38,6 +38,7 @@ if (!function_exists('crmebLog')) {
         Log::write($msg, 'crmeb');
     }
 }
+
 if (!function_exists('success')) {
     /**
      * 响应助手函数
@@ -52,6 +53,7 @@ if (!function_exists('success')) {
         return app('json')->success($msg, $data, $replace);
     }
 }
+
 if (!function_exists('fail')) {
     /**
      * 失败响应助手函数
@@ -66,6 +68,7 @@ if (!function_exists('fail')) {
         return app('json')->fail($msg, $data, $replace);
     }
 }
+
 if (!function_exists('getWorkerManUrl')) {
 
     /**
@@ -310,12 +313,13 @@ if (!function_exists('set_file_url')) {
 if (!function_exists('set_http_type')) {
     /**
      * 修改 https 和 http
-     * @param $url $url 域名
+     * @param string $url 域名
      * @param int $type 0 返回https 1 返回 http
      * @return string
      */
-    function set_http_type(string $url, int $type = 0): string
+    function set_http_type($url, $type = 0)
     {
+
         // 基本验证
         if (empty($url)) {
             return $url;
@@ -333,7 +337,7 @@ if (!function_exists('set_http_type')) {
                 // 转换为 HTTPS
                 $url = preg_replace('/^http:/i', 'https:', $url);
             }
-        } 
+        }
         
         return $url;
     }
@@ -750,6 +754,23 @@ if (!function_exists('get_crmeb_version')) {
     }
 }
 
+if (!function_exists('get_crmeb_version_vode')) {
+    /**
+     * 获取CRMEB系统版本号
+     * @param string $default
+     * @return string
+     */
+    function get_crmeb_version_vode($default = '0')
+    {
+        try {
+            $version = parse_ini_file(app()->getRootPath() . '.version');
+            return $version['version_code'] ?? $default;
+        } catch (\Throwable $e) {
+            return $default;
+        }
+    }
+}
+
 if (!function_exists('get_file_link')) {
     /**
      * 获取文件带域名的完整路径
@@ -1026,16 +1047,39 @@ if (!function_exists('get_thumb_water')) {
 
 if (!function_exists('getLang')) {
     /**
-     * 多语言
-     * @param $code
-     * @param array $replace
-     * @return array|string|string[]
+     * 多语言翻译函数：根据当前语言环境将传入的“中文语言标识”翻译成对应语言文本，并支持变量替换
+     *
+     * 执行流程：
+     * 1. 异常捕获：整个逻辑包裹在 try-catch 中，任何环节出错直接返回原标识，避免系统因语言模块异常而中断
+     * 2. 依赖注入：一次性获取三个核心服务实例
+     *    - LangCountryServices：负责国家/地区与语言类型的映射
+     *    - LangTypeServices：负责语言类型（如 zh-CN、en-US）的元数据
+     *    - LangCodeServices：负责语言码表（code => 翻译文本）的读取
+     * 3. 语言范围（range）判定优先级：
+     *    ① 优先读取请求头 cb-lang（前端/接口主动指定）
+     *    ② 若无，则读取系统默认语言（LangTypeServices.is_default = 1）
+     *    ③ 若系统未配置默认语言，则读取浏览器 Accept-Language 首个语言标签
+     *    ④ 若仍为空，则强制 fallback 到 zh-CN，确保后续逻辑有值可用
+     * 4. 缓存加速：所有“一经写入、极少变动”的数据统一使用 CacheService::remember() 缓存 3600 秒，降低数据库压力
+     *    - sys_lang_source_map：中文 remarks => code 的映射，用于把传入的“中文标识”转成内部 code
+     *    - type_id_{range}：根据语言简码（如 zh-CN）反查对应的 type_id
+     *    - lang_type_data：所有启用的语言类型 id => file_name 映射表，用于校验语言是否合法
+     *    - lang_{file_name}：具体语言包 code => 翻译文本 的完整数组
+     * 5. 翻译过程：
+     *    - 若语言类型不存在，直接返回原标识
+     *    - 若“中文标识”在映射表中存在且对应 code 在语言包中存在，则取翻译文本；否则返回原标识
+     * 6. 变量替换：支持 {:变量名} 语法，将翻译文本中的占位符批量替换为 $replace 数组中的值
+     * 7. 异常兜底：catch 中记录详细错误日志（文件名/行号/异常信息），依旧返回原标识，保证业务继续
+     *
+     * @param string $msg   中文语言标识（remarks），如 "用户名不能为空"
+     * @param array  $replace 可选的变量映射，如 ['name' => '手机号']，会将文本中的 {:name} 替换为“手机号”
+     * @return string       最终翻译后的文本；任何异常或找不到翻译时返回原标识
      */
-    function getLang($code, array $replace = [])
+    function getLang($msg, array $replace = [])
     {
-        //确保获取语言的时候不会报错
+        /* 整个翻译过程一旦出错，直接返回原标识，避免中断业务 */
         try {
-
+            /* --------------- 1. 依赖注入：获取语言相关服务 --------------- */
             /** @var LangCountryServices $langCountryServices */
             $langCountryServices = app()->make(LangCountryServices::class);
             /** @var LangTypeServices $langTypeServices */
@@ -1043,61 +1087,79 @@ if (!function_exists('getLang')) {
             /** @var LangCodeServices $langCodeServices */
             $langCodeServices = app()->make(LangCodeServices::class);
 
+            /* --------------- 2. 确定当前语言范围（range） --------------- */
             $request = app()->request;
-            //获取接口传入的语言类型
-            if (!$range = $request->header('cb-lang')) {
-                //没有传入则使用系统默认语言显示
+            // 优先取前端/接口指定的语言
+            $range = $request->header('cb-lang');
+            if (!$range) {
+                // 未指定时，读取系统默认语言
                 $range = CacheService::remember('range_name', function () use ($langTypeServices) {
                     return $langTypeServices->value(['is_default' => 1], 'file_name');
                 });
                 if (!$range) {
-                    //系统没有设置默认语言的话，根据浏览器语言显示，如果浏览器语言在库中找不到，则使用简体中文
+                    // 系统也未配置默认语言，则尝试使用浏览器 Accept-Language
                     if ($request->header('accept-language') !== null) {
                         $range = explode(',', $request->header('accept-language'))[0];
                     } else {
+                        // 最终兜底：简体中文
                         $range = 'zh-CN';
                     }
                 }
             }
 
-            // 获取type_id
+            /* --------------- 3. 读取各类映射数据（带缓存） --------------- */
+            // 中文 remarks => code 映射表，用于把传入的“中文标识”转成内部 code
+            $langZhCn = CacheService::remember('sys_lang_source_map', function () use ($langCodeServices) {
+                return $langCodeServices->getColumn(['type_id' => 1], 'code', 'remarks');
+            }, 3600);
+
+            // 根据语言简码（如 zh-CN）反查对应的 type_id
             $typeId = CacheService::remember('type_id_' . $range, function () use ($langCountryServices, $range) {
                 return $langCountryServices->value(['code' => $range], 'type_id') ?: 1;
             }, 3600);
 
-            // 获取类型
+            // 所有启用的语言类型 id => file_name 映射表
             $langData = CacheService::remember('lang_type_data', function () use ($langTypeServices) {
                 return $langTypeServices->getColumn(['status' => 1, 'is_del' => 0], 'file_name', 'id');
             }, 3600);
 
-            // 获取缓存key
-            $langStr = 'lang_' . str_replace('-', '_', $langData[$typeId]);
+            /* --------------- 4. 校验语言类型是否合法 --------------- */
+            if (!isset($langData[$typeId])) {
+                return $msg;
+            }
 
-            //读取当前语言的语言包
-            $lang = CacheService::remember($langStr, function () use ($typeId, $range, $langCodeServices) {
-                return $langCodeServices->getColumn(['type_id' => $typeId, 'is_admin' => 1], 'lang_explain', 'code');
+            /* --------------- 5. 读取当前语言包（code => 翻译文本） --------------- */
+            $langStr = 'lang_' . str_replace('-', '_', $langData[$typeId]); // 构造缓存 key
+            $lang = CacheService::remember($langStr, function () use ($typeId, $langCodeServices) {
+                return $langCodeServices->getColumn(['type_id' => $typeId], 'lang_explain', 'code');
             }, 3600);
-            //获取返回文字
-            $message = (string)($lang[$code] ?? 'Code Error');
 
-            //替换变量
+            /* --------------- 6. 获取翻译文本 --------------- */
+            if (isset($langZhCn[$msg]) && isset($lang[$langZhCn[$msg]])) {
+                // 映射表存在且语言包中存在对应 code，则使用翻译文本
+                $message = (string)$lang[$langZhCn[$msg]];
+            } else {
+                // 找不到翻译，返回原标识
+                $message = $msg;
+            }
+
+            /* --------------- 7. 变量替换（支持 {:变量名} 语法） --------------- */
             if (!empty($replace) && is_array($replace)) {
-                // 关联索引解析
-                $key = array_keys($replace);
-                foreach ($key as &$v) {
-                    $v = "{:{$v}}";
-                }
-                $message = str_replace($key, $replace, $message);
+                // 构造占位符数组，如 ['name'] -> ['{:name}']
+                $key = array_map(function ($v) { return "{:{$v}}"; }, array_keys($replace));
+                // 批量替换
+                $message = str_replace($key, array_values($replace), $message);
             }
 
             return $message;
         } catch (\Throwable $e) {
-            Log::error('获取语言code：' . $code . '发成错误，错误原因是：' . json_encode([
-                    'file' => $e->getFile(),
+            /* 记录详细错误日志，依旧返回原标识，保证业务继续 */
+            Log::error('获取语言msg：' . $msg . '发生错误，错误原因是：' . json_encode([
+                    'file'  => $e->getFile(),
                     'message' => $e->getMessage(),
-                    'line' => $e->getLine()
+                    'line'  => $e->getLine()
                 ]));
-            return $code;
+            return $msg;
         }
     }
 }
@@ -1212,7 +1274,7 @@ if (!function_exists('toIntArray')) {
      */
     function toIntArray($data, string $separator = ',')
     {
-        if (!is_string($data)) {
+        if (!is_string($data) && !is_int($data)) {
             return array_unique(array_diff(array_map('intval', $data), [0]));
         } else {
             return !empty($data) ? array_unique(array_diff(array_map('intval', explode($separator, $data)), [0])) : [];

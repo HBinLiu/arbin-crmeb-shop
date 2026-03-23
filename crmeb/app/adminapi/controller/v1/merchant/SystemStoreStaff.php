@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -110,10 +110,10 @@ class SystemStoreStaff extends AuthController
         ]);
         if (!$id) {
             if ($data['image'] == '') {
-                return app('json')->fail(400250);
+                return app('json')->fail('请选择用户');
             }
             if ($this->services->count(['uid' => $data['image']['uid']])) {
-                return app('json')->fail(400126);
+                return app('json')->fail('添加的核销员用户已存在');
             }
             $data['uid'] = $data['image']['uid'];
             $data['avatar'] = $data['image']['image'];
@@ -121,32 +121,32 @@ class SystemStoreStaff extends AuthController
             $data['avatar'] = $data['image'];
         }
         if ($data['uid'] == 0) {
-            return app('json')->fail(400250);
+            return app('json')->fail('请选择用户');
         }
         if ($data['store_id'] == '') {
-            return app('json')->fail(400127);
+            return app('json')->fail('请选择所属提货点');
         }
         if ($data['staff_name'] == ''){
-            return app('json')->fail(400128);
+            return app('json')->fail('请填写核销员名称');
         }
         if ($data['phone'] == ''){
-            return app('json')->fail(400129);
+            return app('json')->fail('请填写核销员电话');
         }
         unset($data['image']);
         if ($id) {
             $res = $this->services->update($id, $data);
             if ($res) {
-                return app('json')->success(100001);
+                return app('json')->success('修改成功');
             } else {
-                return app('json')->fail(100007);
+                return app('json')->fail('修改失败');
             }
         } else {
             $data['add_time'] = time();
             $res = $this->services->save($data);
             if ($res) {
-                return app('json')->success(400130);
+                return app('json')->success('核销员添加成功');
             } else {
-                return app('json')->fail(400131);
+                return app('json')->fail('核销员添加失败');
             }
         }
     }
@@ -160,13 +160,13 @@ class SystemStoreStaff extends AuthController
     public function set_show($is_show = '', $id = '')
     {
         if ($is_show == '' || $id == '') {
-            app('json')->fail(100100);
+            app('json')->fail('参数错误');
         }
         $res = $this->services->update($id, ['status' => (int)$is_show]);
         if ($res) {
-            return app('json')->success(100014);
+            return app('json')->success('设置成功');
         } else {
-            return app('json')->fail(100015);
+            return app('json')->fail('设置失败');
         }
     }
 
@@ -177,10 +177,10 @@ class SystemStoreStaff extends AuthController
      */
     public function delete($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         if (!$this->services->delete($id))
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
         else
-            return app('json')->success(100002);
+            return app('json')->success('删除成功');
     }
 }

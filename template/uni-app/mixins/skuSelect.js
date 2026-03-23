@@ -67,7 +67,7 @@ export default {
 				this.$set(this.attr.productSelect, "price", productSelect.price);
 				this.$set(this.attr.productSelect, "stock", productSelect.stock);
 				this.$set(this.attr.productSelect, "unique", productSelect.unique);
-				this.$set(this.attr.productSelect, "cart_num", 1);
+				this.$set(this.attr.productSelect, "cart_num", this.storeInfo.min_qty);
 				this.$set(this.attr.productSelect, 'vip_price', productSelect.vip_price);
 				this.$set(this, "attrValue", value.join(","));
 			} else if (!productSelect && productAttr.length) {
@@ -83,7 +83,7 @@ export default {
 				this.$set(this.attr.productSelect, "price", this.storeInfo.price);
 				this.$set(this.attr.productSelect, "stock", this.storeInfo.stock);
 				this.$set(this.attr.productSelect,"unique",this.storeInfo.unique || "");
-				this.$set(this.attr.productSelect, "cart_num", 1);
+				this.$set(this.attr.productSelect, "cart_num", this.storeInfo.min_qty);
 				this.$set(this, "attrValue", "");
 				this.$set(this.attr.productSelect, 'vip_price', this.storeInfo.vip_price);
 			}
@@ -100,7 +100,7 @@ export default {
 				this.$set(this.attr.productSelect, "stock", productSelect.stock);
 				this.$set(this.attr.productSelect, "unique", productSelect.unique);
 				this.$set(this.attr.productSelect, 'vip_price', productSelect.vip_price);
-				this.$set(this.attr.productSelect, "cart_num", 1);
+				this.$set(this.attr.productSelect, "cart_num", this.storeInfo.min_qty);
 				this.$set(this, "attrValue", res);
 			} else {
 				this.$set(this.attr.productSelect, 'image', this.storeInfo.image);
@@ -121,7 +121,16 @@ export default {
 		 *
 		 */
 		iptCartNum: function(e) {
-			this.$set(this.attr.productSelect, 'cart_num', e);
+			// this.$set(this.attr.productSelect, 'cart_num', e);
+			if (e) {
+				let number = this.storeInfo.min_qty;
+				if (Number.isInteger(parseInt(e)) && parseInt(e) >= this.storeInfo.min_qty) {
+					number = parseInt(e);
+				}
+				this.$nextTick((e) => {
+					this.$set(this.attr.productSelect, 'cart_num', e < 0 ? this.storeInfo.min_qty : number);
+				});
+			}
 		},
 		onMyEvent: function() {
 			this.$set(this.attr, 'cartAttr', false);
@@ -205,8 +214,8 @@ export default {
 				num.cart_num++;
 				if (num.cart_num > stock) {
 					if (isDuo) {
-						this.$set(this.attr.productSelect, "cart_num", stock ? stock : 1);
-						this.$set(this, "cart_num", stock ? stock : 1);
+						this.$set(this.attr.productSelect, 'cart_num', stock ? stock : this.storeInfo.min_qty);
+						this.$set(this, 'cart_num', stock ? stock : 1);
 					} else {
 						num.cart_num = stock ? stock : 0;
 						this.$set(this, 'tempArr', this.tempArr);
@@ -230,14 +239,14 @@ export default {
 				if (num.cart_num == 0) {
 					this.cartData.cartList.splice(index, 1);
 					if (isDuo) {
-						this.$set(this.attr.productSelect, "cart_num", 1);
-						this.$set(this, "cart_num", 1);
+					this.$set(this.attr.productSelect, 'cart_num', this.storeInfo.min_qty);
+					this.$set(this, 'cart_num', 1);
 					}
 				}
 				if (num.cart_num < 0) {
 					if (isDuo) {
-						this.$set(this.attr.productSelect, "cart_num", 1);
-						this.$set(this, "cart_num", 1);
+						this.$set(this.attr.productSelect, 'cart_num', this.storeInfo.min_qty);
+						this.$set(this, 'cart_num', 1);
 					} else {
 						num.cart_num = 0;
 						this.$set(this, 'tempArr', this.tempArr);

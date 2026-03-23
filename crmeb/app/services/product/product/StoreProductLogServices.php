@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -43,10 +43,10 @@ class StoreProductLogServices extends BaseServices
     public function createLog(string $type, array $data)
     {
         if (!in_array($type, ['order', 'pay', 'refund']) && (!isset($data['product_id']) || !$data['product_id'])) {
-            throw new AdminException(400562);
+            throw new AdminException('缺少商品ID');
         }
         if ($type != 'visit' && (!isset($data['uid']) || !$data['uid'])) {
-            throw new AdminException(400563);
+            throw new AdminException('缺少用户UID');
         }
         $log_data = $log_data_all = [];
         $log_data['type'] = $type;
@@ -65,7 +65,7 @@ class StoreProductLogServices extends BaseServices
                 break;
             case 'order'://下单
                 if (!isset($data['order_id']) || !$data['order_id']) {
-                    throw new AdminException(400564);
+                    throw new AdminException('缺少订单ID');
                 }
                 /** @var StoreOrderCartInfoServices $cartInfoServices */
                 $cartInfoServices = app()->make(StoreOrderCartInfoServices::class);
@@ -79,7 +79,7 @@ class StoreProductLogServices extends BaseServices
                 break;
             case 'pay'://支付
                 if (!isset($data['order_id']) || !$data['order_id']) {
-                    throw new AdminException(400564);
+                    throw new AdminException('缺少订单ID');
                 }
                 /** @var StoreOrderCartInfoServices $cartInfoServices */
                 $cartInfoServices = app()->make(StoreOrderCartInfoServices::class);
@@ -96,7 +96,7 @@ class StoreProductLogServices extends BaseServices
                 break;
             case 'refund'://退款
                 if (!isset($data['order_id']) || !$data['order_id']) {
-                    throw new AdminException(400564);
+                    throw new AdminException('缺少订单ID');
                 }
                 /** @var StoreOrderCartInfoServices $cartInfoServices */
                 $cartInfoServices = app()->make(StoreOrderCartInfoServices::class);
@@ -112,7 +112,7 @@ class StoreProductLogServices extends BaseServices
                 }
                 break;
             default:
-                throw new AdminException(400565);
+                throw new AdminException('暂不支持该类型记录');
         }
         if ($log_data_all) {
             $res = $this->dao->saveAll($log_data_all);
@@ -120,7 +120,7 @@ class StoreProductLogServices extends BaseServices
             $res = $this->dao->save($log_data);
         }
         if (!$res) {
-            throw new AdminException(400566);
+            throw new AdminException('添加商品记录失败');
         }
         return true;
     }

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -120,12 +120,12 @@ class AccessTokenServeService extends HttpService
         $response = $this->postRequest($this->get(self::USER_LOGIN), $params);
         $response = json_decode($response, true);
         if (!$response) {
-            throw new ApiException(410085, ['msg' => '']);
+            throw new ApiException('获取token失败{:msg}', ['msg' => '']);
         }
         if ($response['status'] === 200) {
             return $response['data'];
         } else {
-            throw new ApiException(410085, ['msg' => ':' . $response['msg']]);
+            throw new ApiException('获取token失败{:msg}', ['msg' => ':' . $response['msg']]);
         }
     }
 
@@ -142,14 +142,14 @@ class AccessTokenServeService extends HttpService
         if ($isHeader) {
             $this->getToken();
             if (!$this->accessToken) {
-                throw new ApiException(410086);
+                throw new ApiException('配置已更改或token已失效');
             }
             $header = array_merge($header, ['Authorization:Bearer-' . $this->accessToken]);
         }
 
         $res = $this->request($this->get($url), $method, $data, $header);
         if (!$res) {
-            throw new ApiException(410087);
+            throw new ApiException('平台错误：发生异常，请稍后重试');
 
         }
         $result = json_decode($res, true) ?: false;

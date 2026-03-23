@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -183,7 +183,7 @@ class SystemMenusServices extends BaseServices
     {
         $menusInfo = $this->dao->get($id);
         if (!$menusInfo) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         return create_form('修改权限', $this->createMenusForm($menusInfo->getData()), $this->url('/setting/update/' . $id), 'PUT');
     }
@@ -197,7 +197,7 @@ class SystemMenusServices extends BaseServices
     {
         $menusInfo = $this->dao->get($id);
         if (!$menusInfo) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         $menu = $menusInfo->getData();
         $menu['pid'] = (int)$menu['pid'];

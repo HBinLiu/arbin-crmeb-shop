@@ -388,6 +388,15 @@ export default {
       component: () => import('@/pages/setting/themeStyle/index'),
     },
     {
+      path: 'theme/micro_page',
+      name: `${pre}microPage`,
+      meta: {
+        auth: ['setting-theme-micro_page'],
+        title: '微页面',
+      },
+      component: () => import('@/pages/setting/theme/micro_page/index'),
+    },
+    {
       path: 'pages',
       name: `${pre}page`,
       header: 'setting',
@@ -786,6 +795,31 @@ export default {
         activeMenu: routePre + '/setting/ticket',
       },
       component: () => import('@/pages/setting/ticket/content'),
+    },
+    {
+      path: 'my_theme',
+      name: `${pre}myTheme`,
+      meta: {
+        title: '我的主题',
+      },
+      component: () => import('@/pages/setting/theme/myTheme/index'),
+    },
+    {
+      path: 'mall_theme',
+      name: `${pre}mallTheme`,
+      meta: {
+        title: '商城主题',
+      },
+      component: () => import('@/pages/setting/theme/mallTheme/index'),
+    },
+    {
+      path: 'edit_theme',
+      name: `${pre}editTheme`,
+      meta: {
+        title: '主题风格',
+        fullScreen: true, //是否全屏显示main区域
+      },
+      component: () => import('@/pages/setting/theme/editTheme/index'),
     },
   ],
 };

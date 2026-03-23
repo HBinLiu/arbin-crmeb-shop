@@ -11,7 +11,13 @@
           inline
         >
           <el-form-item label="保障名称：">
-            <el-input clearable placeholder="请输入保障名称" v-model="formValidate.title" class="form_content_width" @change="userSearchs" />
+            <el-input
+              clearable
+              placeholder="请输入保障名称"
+              v-model="formValidate.title"
+              class="form_content_width"
+              @change="userSearchs"
+            />
           </el-form-item>
           <el-form-item>
             <el-button type="primary" v-db-click @click="userSearchs">查询</el-button>
@@ -21,49 +27,62 @@
     </el-card>
     <el-card :bordered="false" shadow="never">
       <el-button v-auth="['cms-category-create']" type="primary" v-db-click @click="add">添加保障</el-button>
-      <vxe-table
-        class="vxeTable mt14"
-        highlight-hover-row
-        :loading="loading"
-        header-row-class-name="false"
-        :tree-config="{ children: 'children' }"
+
+      <el-table
         :data="categoryList"
+        ref="table"
+        class="mt14"
+        v-loading="loading"
+        highlight-current-row
+        row-key="id"
+        :tree-props="{ children: 'children' }"
       >
-        <vxe-table-column field="id" title="ID" tooltip width="80"></vxe-table-column>
-        <vxe-table-column field="title" tree-node title="保障名称" min-width="130"></vxe-table-column>
-        <vxe-table-column field="image" title="保障图片" min-width="130">
-          <template v-slot="{ row }">
-            <div class="tabBox_img" v-viewer v-if="row.image">
-              <img v-lazy="row.image" />
+        <el-table-column label="ID" prop="id" width="80">
+          <template slot-scope="scope">
+            <span>{{ scope.row.id }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="保障名称" prop="title" min-width="130">
+          <template slot-scope="scope">
+            <span>{{ scope.row.title }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="保障图片" prop="image" min-width="130">
+          <template slot-scope="scope">
+            <div class="tabBox_img" v-viewer v-if="scope.row.image">
+              <img v-lazy="scope.row.image" />
             </div>
           </template>
-        </vxe-table-column>
-        <vxe-table-column field="status" title="状态" min-width="120">
-          <template v-slot="{ row }">
+        </el-table-column>
+        <el-table-column label="状态" prop="status" min-width="120">
+          <template slot-scope="scope">
             <el-switch
               class="defineSwitch"
               :active-value="1"
               :inactive-value="0"
-              v-model="row.status"
-              :value="row.status"
-              @change="onchangeIsShow(row)"
+              v-model="scope.row.status"
+              :value="scope.row.status"
+              @change="onchangeIsShow(scope.row)"
               size="large"
               active-text="开启"
               inactive-text="关闭"
             >
             </el-switch>
           </template>
-        </vxe-table-column>
-        <vxe-table-column field="sort" title="排序" min-width="130"></vxe-table-column>
-
-        <vxe-table-column field="date" title="操作" width="120" fixed="right">
-          <template v-slot="{ row }">
-            <a v-db-click @click="edit(row)">编辑</a>
-            <el-divider direction="vertical"></el-divider>
-            <a v-db-click @click="del(row, '删除保障')">删除</a>
+        </el-table-column>
+        <el-table-column label="排序" prop="sort" min-width="130">
+          <template slot-scope="scope">
+            <span>{{ scope.row.sort }}</span>
           </template>
-        </vxe-table-column>
-      </vxe-table>
+        </el-table-column>
+        <el-table-column label="操作" width="120" fixed="right">
+          <template slot-scope="scope">
+            <a v-db-click @click="edit(scope.row)">编辑</a>
+            <el-divider direction="vertical"></el-divider>
+            <a v-db-click @click="del(scope.row, '删除保障')">删除</a>
+          </template>
+        </el-table-column>
+      </el-table>
       <div class="acea-row row-right page">
         <pagination
           v-if="total"

@@ -79,6 +79,7 @@ return array(
     'Doctrine\\Common\\Lexer\\' => array($vendorDir . '/doctrine/lexer/lib/Doctrine/Common/Lexer'),
     'Darabonba\\OpenApi\\' => array($vendorDir . '/alibabacloud/darabonba-openapi/src'),
     'Darabonba\\GatewaySpi\\' => array($vendorDir . '/alibabacloud/gateway-spi/src'),
+    'Crmeb\\Easypay\\' => array($vendorDir . '/crmeb/easypay/src'),
     'Complex\\' => array($vendorDir . '/markbaker/complex/classes/src'),
     'Channel\\' => array($vendorDir . '/workerman/channel/src'),
     'Carbon\\' => array($vendorDir . '/nesbot/carbon/src/Carbon'),

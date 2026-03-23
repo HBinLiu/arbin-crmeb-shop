@@ -44,7 +44,6 @@ export default {
   },
   mounted() {
     this.getAuth();
-    console.log(this.userInfo, 'userInfo');
   },
   methods: {
     getAuth() {

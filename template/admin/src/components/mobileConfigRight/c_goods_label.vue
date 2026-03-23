@@ -7,7 +7,7 @@
       <el-col :span="18">
         <div class="labelInput acea-row row-between-wrapper" @click="openStoreLabel">
           <div style="width: 90%">
-            <div v-if="configData.list.length">
+            <div v-if="configData.list && configData.list.length">
               <el-tag closable v-for="(item, index) in configData.list" :key="index" @close="closeStoreLabel(item)">{{
                 item.label_name
               }}</el-tag>

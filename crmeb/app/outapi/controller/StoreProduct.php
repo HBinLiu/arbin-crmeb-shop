@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -67,9 +67,9 @@ class StoreProduct extends AuthController
      */
     public function set_show($id = '', $is_show = '')
     {
-        if ($id == '' || $is_show == '') return app('json')->fail(100100);
+        if ($id == '' || $is_show == '') return app('json')->fail('参数错误');
         $this->services->setShow((int)$id, (int)$is_show);
-        return app('json')->success($is_show == 1 ? 100003 : 100004);
+        return app('json')->success($is_show == 1 ? '显示成功' : '隐藏成功');
     }
 
     /**
@@ -129,7 +129,7 @@ class StoreProduct extends AuthController
             ['limit_num', 0]//限购数量
         ]);
         $id = $this->services->save(0, $data);
-        return app('json')->success(100000, ['id' => $id]);
+        return app('json')->success('保存成功', ['id' => $id]);
     }
 
     /**
@@ -177,7 +177,7 @@ class StoreProduct extends AuthController
             ['limit_num', 0]//限购数量
         ]);
         $this->services->save((int)$id, $data);
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }
 
     /**
@@ -206,15 +206,15 @@ class StoreProduct extends AuthController
 
         foreach ($items as $item) {
             if (!isset($item['bar_code']) || !isset($item['bar_code_number']) || !isset($item['qty'])) {
-                return app('json')->fail(400742);
+                return app('json')->fail('请检查属性编码或库存数量');
             }
         }
 
         if (count($items) > 100) {
-            return app('json')->fail(400743);
+            return app('json')->fail('同步条数不能超过100');
         }
 
         $this->services->syncStock($items);
-        return app('json')->success(100010);
+        return app('json')->success('操作成功');
     }
 }

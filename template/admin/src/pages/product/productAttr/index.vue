@@ -46,12 +46,12 @@
             <span>{{ scope.row.id }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="规格名称" min-width="130">
+        <el-table-column label="模版名称" min-width="130">
           <template slot-scope="scope">
             <span>{{ scope.row.rule_name }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="商品规格" min-width="130">
+        <el-table-column label="规格名称" min-width="130">
           <template slot-scope="scope">
             <span>{{ scope.row.attr_name }}</span>
           </template>

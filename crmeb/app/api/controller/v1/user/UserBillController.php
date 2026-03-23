@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -125,7 +125,7 @@ class UserBillController
         $systemConfigServices = app()->make(SystemConfigServices::class);
         $spreadBanner = $systemConfigServices->getSpreadBanner() ?? [];
         $bannerCount = count($spreadBanner);
-        if (!$bannerCount) return app('json')->fail(410166);
+        if (!$bannerCount) return app('json')->fail('暂无海报');
         $routineSpreadBanner = [];
         foreach ($spreadBanner as $item) {
             $routineSpreadBanner[] = ['pic' => $item];
@@ -186,7 +186,7 @@ class UserBillController
                     } else {
                         $res = false;
                     }
-                    if (!$res) return app('json')->fail(410167);
+                    if (!$res) return app('json')->fail('二维码生成失败');
                     $uploadType = (int)sys_config('upload_type', 1);
                     $upload = UploadService::init();
                     $uploadRes = $upload->to('routine/spread/code')->validate()->setAuthThumb(false)->stream($res['res'], $name);
@@ -205,8 +205,8 @@ class UserBillController
                     'Bold' => 'statics' . DS . 'font' . DS . 'Alibaba-PuHuiTi-Regular.otf',
                     'Normal' => 'statics' . DS . 'font' . DS . 'Alibaba-PuHuiTi-Regular.otf',
                 ];
-                if (!file_exists($filelink['Bold'])) return app('json')->fail(410168);
-                if (!file_exists($filelink['Normal'])) return app('json')->fail(410169);
+                if (!file_exists($filelink['Bold'])) return app('json')->fail('缺少字体文件Bold');
+                if (!file_exists($filelink['Normal'])) return app('json')->fail('缺少字体文件Normal');
                 foreach ($routineSpreadBanner as $key => &$item) {
                     $posterInfo = '海报生成失败:(';
                     $config = array(
@@ -268,7 +268,7 @@ class UserBillController
                 if (!$imageInfo) {
                     $codeUrl = set_http_type($siteUrl . '?spread=' . $user['uid'], $request->isSsl() ? 0 : 1);//二维码链接
                     $imageInfo = PosterServices::getQRCodePath($codeUrl, $name);
-                    if (is_string($imageInfo)) return app('json')->fail(410167, ['error' => $imageInfo]);
+                    if (is_string($imageInfo)) return app('json')->fail('二维码生成失败', ['error' => $imageInfo]);
                     $systemAttachment->attachmentAdd($imageInfo['name'], $imageInfo['size'], $imageInfo['type'], $imageInfo['dir'], $imageInfo['thumb_path'], 1, $imageInfo['image_type'], $imageInfo['time'], 2);
                     $urlCode = $imageInfo['dir'];
                 } else $urlCode = $imageInfo['att_dir'];
@@ -278,8 +278,8 @@ class UserBillController
                     'Bold' => 'statics' . DS . 'font' . DS . 'Alibaba-PuHuiTi-Regular.otf',
                     'Normal' => 'statics' . DS . 'font' . DS . 'Alibaba-PuHuiTi-Regular.otf',
                 ];
-                if (!file_exists($filelink['Bold'])) return app('json')->fail(410168);
-                if (!file_exists($filelink['Normal'])) return app('json')->fail(410169);
+                if (!file_exists($filelink['Bold'])) return app('json')->fail('缺少字体文件Bold');
+                if (!file_exists($filelink['Normal'])) return app('json')->fail('缺少字体文件Normal');
                 foreach ($routineSpreadBanner as $key => &$item) {
                     $posterInfo = '海报生成失败:(';
                     $config = array(
@@ -330,9 +330,9 @@ class UserBillController
                 }
             }
             if ($resRoutine && $resWap) return app('json')->success($routineSpreadBanner);
-            else return app('json')->fail(410170);
+            else return app('json')->fail('生成图片失败');
         } catch (\Exception $e) {
-            return app('json')->fail(410171, ['line' => $e->getLine(), 'message' => $e->getMessage(), 'file' => $e->getFile()]);
+            return app('json')->fail('生成图片时，系统错误', ['line' => $e->getLine(), 'message' => $e->getMessage(), 'file' => $e->getFile()]);
         }
     }
 
@@ -369,7 +369,7 @@ class UserBillController
             } else {
                 $res = false;
             }
-            if (!$res) return app('json')->fail(410167);
+            if (!$res) return app('json')->fail('二维码生成失败');
             $uploadType = (int)sys_config('upload_type', 1);
             $upload = UploadService::init();
             $uploadRes = $upload->to('routine/spread/code')->validate()->setAuthThumb(false)->stream($res['res'], $name);

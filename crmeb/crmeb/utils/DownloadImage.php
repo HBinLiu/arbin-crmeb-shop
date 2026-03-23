@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -77,12 +77,12 @@ class DownloadImage
             $downloadImageInfo = $this->getImageExtname($url);
             $ext = $downloadImageInfo['ext_name'];
             $name = $downloadImageInfo['file_name'];
-            if (!$name) throw new AdminException(400725);
+            if (!$name) throw new AdminException('上传图片不存在');
         } else {
             $ext = $this->getImageExtname($name)['ext_name'];
         }
         if (!in_array($ext, Config::get('upload.fileExt'))) {
-            throw new AdminException(400558);
+            throw new AdminException('格式错误');
         }
         if (strstr($url, 'http://') === false && strstr($url, 'https://') === false) {
             $url = 'http:' . $url;
@@ -101,9 +101,9 @@ class DownloadImage
             $content = ob_get_contents();
             ob_end_clean();
             $size = strlen(trim($content));
-            if (!$content || $size <= 2) throw new AdminException(400726);
+            if (!$content || $size <= 2) throw new AdminException('图片流获取失败');
             if ($upload->to($to_path)->down($content, $name) === false) {
-                throw new AdminException(400727);
+                throw new AdminException('图片下载失败');
             }
             $imageInfo = $upload->getDownloadInfo();
             $path = $imageInfo['dir'];

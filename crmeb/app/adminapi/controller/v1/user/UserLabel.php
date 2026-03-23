@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -76,9 +76,9 @@ class UserLabel extends AuthController
             ['label_cate', 0],
             ['label_name', ''],
         ]);
-        if (!$data['label_name'] = trim($data['label_name'])) return app('json')->fail(400322);
+        if (!$data['label_name'] = trim($data['label_name'])) return app('json')->fail('会员标签不能为空');
         $this->services->save((int)$data['id'], $data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -91,9 +91,9 @@ class UserLabel extends AuthController
         list($id) = $this->request->getMore([
             ['id', 0],
         ], true);
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         $this->services->delLabel((int)$id);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -119,12 +119,12 @@ class UserLabel extends AuthController
             ['un_label_ids', []]
         ], true);
         if (!count($labels) && !count($unLabelIds)) {
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         }
-        if ($services->setUserLable($uid, $labels) && $services->unUserLabel($uid, $unLabelIds)) {
-            return app('json')->success(100014);
+        if ($services->setUserLabel($uid, $labels) && $services->unUserLabel($uid, $unLabelIds)) {
+            return app('json')->success('设置成功');
         } else {
-            return app('json')->fail(100015);
+            return app('json')->fail('设置失败');
         }
     }
 

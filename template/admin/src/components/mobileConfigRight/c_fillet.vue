@@ -1,43 +1,29 @@
 <template>
-  <div class="fillets" v-if="configData">
-    <div class="c_row-item flex justify-between">
-      <div class="c_label">
-        {{ configData.title }}
-        <span>{{ configData.list[configData.type].val }}</span>
+  <div class="margin-style-config" v-if="configData">
+    <div class="c_row">
+      <div class="c_label">{{ configData.title }}</div>
+      <div class="c_content">
+        <div class="main-setting">
+          <el-slider v-model="configData.val" show-input :min="configData.min" :max="configData.max || 100"></el-slider>
+          <div class="expand-icon" :class="configData.type ? 'selected' : ''" @click="toggleExpand">
+            <span class="iconfont iconcaozuo-bianjiao"></span>
+          </div>
+        </div>
+        <div class="sub-settings" v-if="configData.type">
+          <div class="sub-item" v-for="(item, index) in configData.valList" :key="index">
+            <div class="input-box">
+              <span class="prefix-icon iconfont" :class="getIcon(index)"></span>
+              <el-input-number
+                v-model="item.val"
+                :min="configData.min"
+                :max="configData.max || 100"
+                size="small"
+                controls-position="right"
+              ></el-input-number>
+            </div>
+          </div>
+        </div>
       </div>
-      <el-radio-group v-model="configData.type" type="button" size="mini" @input="radioChange($event)">
-        <el-radio-button :label="key" v-for="(radio, key) in configData.list" :key="key">
-          <span class="iconfont-diy" :class="radio.icon" v-if="radio.icon"></span>
-          <span v-else>{{ radio.val }}</span>
-        </el-radio-button>
-      </el-radio-group>
-    </div>
-    <div class="c_row-item on" v-if="configData.type">
-      <div class="c_label">{{ configData.valName }}</div>
-      <div class="right">
-        <el-input
-          class="input"
-          :class="index > 1 ? '' : 'on'"
-          v-model="configData.valList[index].val"
-          v-for="(item, index) in configData.valList"
-          :key="index"
-        >
-          <template #prefix>
-            <span class="iconfont iconzuoshangjiao" v-if="index == 0"></span>
-            <span class="iconfont iconyoushangjiao" v-if="index == 1"></span>
-            <span class="iconfont iconzuoxiajiao" v-if="index == 2"></span>
-            <span class="iconfont iconyouxiajiao" v-if="index == 3"></span>
-          </template>
-        </el-input>
-      </div>
-    </div>
-    <div class="c_row-item" v-else>
-      <el-col class="c_label" :span="4" v-if="configData.valName">
-        {{ configData.valName }}
-      </el-col>
-      <el-col :span="18">
-        <el-slider v-model="configData.val" show-input :min="configData.min"></el-slider>
-      </el-col>
     </div>
   </div>
 </template>
@@ -55,82 +41,152 @@ export default {
   },
   data() {
     return {
-      defaults: {},
       configData: {},
     };
   },
   created() {
-    this.defaults = this.configObj;
-    this.configData = this.configObj[this.configNme];
+    if (this.configObj) {
+      this.configData = this.configObj[this.configNme];
+    }
   },
   watch: {
     configObj: {
       handler(nVal, oVal) {
-        this.defaults = nVal;
+        if (!nVal) return;
         this.configData = nVal[this.configNme];
       },
       immediate: true,
       deep: true,
     },
+    'configData.val': {
+      handler(nVal) {
+        if (this.configData && this.configData.type == 0 && this.configData.valList) {
+          this.configData.valList.forEach((item) => {
+            item.val = nVal;
+          });
+        }
+      },
+    },
+    'configData.type': {
+      handler(nVal) {
+        if (nVal == 0 && this.configData && this.configData.valList) {
+          this.configData.valList.forEach((item) => {
+            item.val = this.configData.val;
+          });
+        }
+      },
+    },
   },
   methods: {
-    radioChange(e) {
-      this.$emit('getConfig', { name: 'radio', values: e });
+    toggleExpand() {
+      if (!this.configData) return;
+      this.$set(this.configData, 'type', this.configData.type ? 0 : 1);
     },
-    sliderChange(e) {},
+    getIcon(index) {
+      const icons = ['iconzuoshangjiao', 'iconyoushangjiao', 'iconzuoxiajiao', 'iconyouxiajiao'];
+      // Adjust index order if needed: Top-Left, Top-Right, Bottom-Left, Bottom-Right
+      // valList usually [TL, TR, BL, BR] or [TL, TR, BR, BL]?
+      // home_bottom_menu: valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+      // Common order in CSS: TL, TR, BR, BL.
+      // But c_fillet old code: 0: zuoshang, 1: youshang, 2: zuoxia, 3: youxia. (TL, TR, BL, BR)
+      // Check c_margin_style: icons[index].
+      // Old c_fillet: index 2 is zuoxia (BL), index 3 is youxia (BR).
+      // So order is TL, TR, BL, BR.
+      return icons[index] || '';
+    },
   },
 };
 </script>
 
 <style scoped lang="scss">
-.fillets {
-  padding: 0 15px;
-}
-.txt_tab {
-  margin-top: 20px;
-}
-.c_row-item {
-  margin-bottom: 20px;
-  &.on {
-    align-items: flex-start;
-    .c_label {
-      margin-top: 8px;
-    }
+.margin-style-config {
+  padding: 0px 15px 0 15px;
+  .c_row {
+    display: flex;
+    justify-content: space-between;
   }
   .c_label {
     font-size: 12px;
-    span {
-      margin-left: 34px;
-    }
+    color: #999;
+    line-height: 38px;
+    margin-bottom: 10px;
+    white-space: nowrap;
   }
-  .right {
-    width: 204px;
+  .c_content {
+    width: 75%;
+  }
+  .main-setting {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    ::v-deep .el-input__inner {
-      text-align: center;
+    .expand-icon {
+      margin-left: 10px;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      color: #606266;
+      &:hover {
+        color: #409eff;
+        border-color: #c6e2ff;
+      }
+      .iconfont {
+        font-size: 18px;
+      }
     }
-    .input {
-      width: 95px;
-      &.on {
-        margin-bottom: 14px;
+    .expand-icon.selected {
+      color: #409eff;
+      border-color: #c6e2ff;
+    }
+    ::v-deep .el-slider {
+      flex: 1;
+      margin-right: 0;
+      .el-slider__input {
+        width: 90px;
+      }
+      .el-slider__runway {
+        margin-right: 100px;
       }
     }
   }
-  ::v-deep .el-input__prefix {
-    top: 6px;
-    left: 10px;
+  .sub-settings {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    margin-right: -10px;
+    .sub-item {
+      width: 50%;
+      padding-right: 10px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+      .input-box {
+        display: flex;
+        align-items: center;
+        border: 1px solid #dcdfe6;
+        border-radius: 4px;
+        padding-left: 5px;
+        &:hover {
+          border-color: #c0c4cc;
+        }
+        .prefix-icon {
+          color: #909399;
+          font-size: 14px;
+          margin-right: 5px;
+        }
+        ::v-deep .el-input-number {
+          width: 100%;
+          border: none;
+          .el-input__inner {
+            border: none;
+            padding-left: 5px;
+            text-align: left;
+          }
+        }
+      }
+    }
   }
-}
-.row-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.iconfont {
-  font-size: 10px;
-  color: #666666;
 }
 </style>

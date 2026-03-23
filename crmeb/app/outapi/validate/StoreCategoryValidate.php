@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -36,15 +36,15 @@ class StoreCategoryValidate extends Validate
      * @var array
      */
     protected $message = [
-        'pid.number' => '400745',
-        'pid.egt' => '400745',
-        'cate_name.require' => '410095',
-        'cate_name.max' => '400746',
-        'pic.max' => '400747',
-        'big_pic.max' => '400748',
-        'sort.number' => '400749',
-        'sort.egt' => '400750',
-        'is_show.in' => '400751',
+        'pid.number' => '父级ID参数类型错误',
+        'pid.egt' => '父级ID参数类型错误',
+        'cate_name.require' => '分类名称不能为空',
+        'cate_name.max' => '分类名称长度不能超过25个字符',
+        'pic.max' => '分类图标长度不能超过128个字符',
+        'big_pic.max' => '分类大图长度不能超过200个字符',
+        'sort.number' => '排序参数类型错误',
+        'sort.egt' => '排序不能小于0',
+        'is_show.in' => '状态必须是0-1之间的整数',
     ];
 
     protected $scene = [

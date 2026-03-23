@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -87,7 +87,7 @@ class StoreOrderComputedServices extends BaseServices
             $userServices = app()->make(UserServices::class);
             $userInfo = $userServices->getUserInfo($uid);
             if (!$userInfo) {
-                throw new ApiException(410032);
+                throw new ApiException('用户不存在');
             }
         }
         $cartInfo = $cartGroup['cartInfo'];
@@ -157,7 +157,7 @@ class StoreOrderComputedServices extends BaseServices
             $couponServices = app()->make(StoreCouponUserServices::class);
             $couponInfo = $couponServices->getOne([['id', '=', $couponId], ['uid', '=', $uid], ['is_fail', '=', 0], ['status', '=', 0], ['start_time', '<', time()], ['end_time', '>', time()]], '*', ['issue']);
             if (!$couponInfo) {
-                throw new ApiException(410242);
+                throw new ApiException('选择的优惠劵无效');
             }
             $type = $couponInfo['applicable_type'] ?? 0;
             $flag = false;
@@ -199,7 +199,7 @@ class StoreOrderComputedServices extends BaseServices
                 $flag = true;
             }
             if (!$flag) {
-                throw new ApiException(410243);
+                throw new ApiException('不满足优惠劵的使用条件');
             }
             if ($isCreate) {
                 $res1 = $couponServices->useCoupon($couponId);
@@ -210,7 +210,7 @@ class StoreOrderComputedServices extends BaseServices
             $couponPrice = 0;
         }
         if (!$res1) {
-            throw new ApiException(410244);
+            throw new ApiException('使用优惠劵失败');
         }
         return [$payPrice, $couponPrice];
     }

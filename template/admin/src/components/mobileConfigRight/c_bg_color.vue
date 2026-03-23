@@ -15,7 +15,6 @@
 </template>
 
 <script>
-let restColor = '';
 export default {
   name: 'c_bg_color',
   props: {

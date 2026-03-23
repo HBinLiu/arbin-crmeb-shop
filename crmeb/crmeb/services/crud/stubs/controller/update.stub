@@ -7,7 +7,7 @@
     public function update($id)
     {
         if (!$id) {
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         }
 
         $data = $this->request->postMore([
@@ -18,5 +18,5 @@
 {%OTHER_PHP%}
         $this->service->crudUpdate((int)$id, $data);
 
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }

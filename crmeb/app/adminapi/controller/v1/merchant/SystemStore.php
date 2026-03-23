@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -83,7 +83,7 @@ class SystemStore extends AuthController
     public function select_address()
     {
         $key = sys_config('tengxun_map_key');
-        if (!$key) return app('json')->fail(400124);
+        if (!$key) return app('json')->fail('请配置腾讯地图KEY');
         return app('json')->success(compact('key'));
     }
 
@@ -95,12 +95,12 @@ class SystemStore extends AuthController
      */
     public function set_show($is_show = '', $id = '')
     {
-        ($is_show == '' || $id == '') && app('json')->fail(100100);
+        ($is_show == '' || $id == '') && app('json')->fail('参数错误');
         $res = $this->services->update((int)$id, ['is_show' => (int)$is_show]);
         if ($res) {
-            return app('json')->success(100014);
+            return app('json')->success('设置成功');
         } else {
-            return app('json')->fail(100015);
+            return app('json')->fail('设置失败');
         }
     }
 
@@ -127,7 +127,7 @@ class SystemStore extends AuthController
         $data['address'] = implode(',', $data['address']);
         $data['latlng'] = explode(',', $data['latlng']);
         if (!isset($data['latlng'][0]) || !isset($data['latlng'][1])) {
-            return app('json')->fail(400125);
+            return app('json')->fail('请选择门店位置');
         }
         $data['latitude'] = $data['latlng'][0];
         $data['longitude'] = $data['latlng'][1];
@@ -138,7 +138,7 @@ class SystemStore extends AuthController
             $data['image'] = $site_url . $data['image'];
         }
         $this->services->saveStore((int)$id, $data);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -148,23 +148,23 @@ class SystemStore extends AuthController
      */
     public function delete($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         $storeInfo = $this->services->get($id);
         if (!$storeInfo) {
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         }
         if ($storeInfo->is_del == 1) {
             $storeInfo->is_del = 0;
             if (!$storeInfo->save())
-                return app('json')->fail(100041);
+                return app('json')->fail('恢复失败');
             else
-                return app('json')->success(100040);
+                return app('json')->success('恢复成功');
         } else {
             $storeInfo->is_del = 1;
             if (!$storeInfo->save())
-                return app('json')->fail(100008);
+                return app('json')->fail('删除失败');
             else
-                return app('json')->success(100002);
+                return app('json')->success('删除成功');
         }
     }
 }

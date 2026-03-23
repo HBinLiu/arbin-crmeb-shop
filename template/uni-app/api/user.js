@@ -18,6 +18,7 @@ export function getUserInfo() {
 	return request.get('user');
 }
 
+
 /**
  * 设置用户分享
  * 

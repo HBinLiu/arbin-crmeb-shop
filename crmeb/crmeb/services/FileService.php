@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -180,6 +180,10 @@ class FileService
             $i = 0;
             $j = 0;
             while (false !== ($file = readdir($handle))) {
+                // 跳过 . 和 .. 目录，避免 open_basedir 限制问题
+                if ($file == '.' || $file == '..') {
+                    continue;
+                }
                 if (is_dir($dir . $file)) { //判断是否文件夹
                     $dirArray ['dir'] [$i] = $file;
                     $i++;
@@ -956,7 +960,7 @@ class FileService
     {
         if (!$filePath) return false;
         $pathInfo = pathinfo($filePath, PATHINFO_EXTENSION);
-        if (!$pathInfo || ($pathInfo != "xlsx" && $pathInfo != "xls")) throw new AdminException(400728);
+        if (!$pathInfo || ($pathInfo != "xlsx" && $pathInfo != "xls")) throw new AdminException('必须上传xlsx格式文件');
         //加载读取模型
         $readModel = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($suffix);
         // 创建读操作
@@ -969,7 +973,7 @@ class FileService
             $highestRow = $sheet->getHighestRow();
             $lines = $highestRow - 1;
             if ($lines <= 0) {
-                throw new AdminException(400729);
+                throw new AdminException('数据不能为空');
             }
             // 用于存储表格数据
             $data = [];

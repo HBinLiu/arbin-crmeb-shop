@@ -44,6 +44,6 @@ export default {
 
 <style scoped>
 .c_row-item {
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 </style>

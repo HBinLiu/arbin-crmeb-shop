@@ -231,13 +231,14 @@ body {
 
   .el-input-number--small .el-input__inner {
     padding-left: 15px;
+    padding-right: 15px;
   }
 
   .el-input--small .el-input__inner {
     height: 32px;
     line-height: 32px;
   }
-  .el-select .el-input.is-focus .el-input__inner{
+  .el-select .el-input.is-focus .el-input__inner {
     border-color: var(--prev-color-primary-light-5);
   }
   // input-number
@@ -1243,8 +1244,7 @@ body {
   line-height: 31px !important;
 }
 
-
 .vxe-table--render-default .vxe-cell--checkbox.is--checked .vxe-checkbox--icon,
-.vxe-table--render-default .vxe-cell--checkbox.is--indeterminate .vxe-checkbox--icon{
+.vxe-table--render-default .vxe-cell--checkbox.is--indeterminate .vxe-checkbox--icon {
   color: var(--prev-color-primary) !important;
 }

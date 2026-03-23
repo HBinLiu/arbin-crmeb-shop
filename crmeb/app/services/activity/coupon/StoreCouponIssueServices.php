@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -98,16 +98,16 @@ class StoreCouponIssueServices extends BaseServices
                 'receive_limit' => $data['receive_limit'],
                 'status' => $data['status'],
             ]);
-            if (!$res) throw new AdminException(100007);
+            if (!$res) throw new AdminException('修改失败');
             return (int)$data['id'];
         }
 
         if (empty($data['coupon_title'])) {
-            throw new AdminException(400759);
+            throw new AdminException('请输入优惠券名称');
         }
 
         if (!in_array((int)$data['receive_type'], [1, 2, 3, 4])) {
-            throw new AdminException(400758);
+            throw new AdminException('请核对领取方式');
         }
 
         if ($data['user_type'] == 2) {
@@ -120,7 +120,7 @@ class StoreCouponIssueServices extends BaseServices
         }
 
         if (!in_array((int)$data['is_permanent'], [0, 1])) {
-            throw new AdminException(400758);
+            throw new AdminException('请核对领取方式');
         }
 
         $data['start_use_time'] = strtotime((string)$data['start_use_time']);
@@ -137,7 +137,7 @@ class StoreCouponIssueServices extends BaseServices
                 throw new AdminException('开始使用时间不能小于当前时间');
             }
             if ($data['start_use_time'] < $data['start_time']) {
-                throw new AdminException(400513);
+                throw new AdminException('使用开始时间不能小于领取开始时间');
             }
         }
 
@@ -178,7 +178,7 @@ class StoreCouponIssueServices extends BaseServices
             $storeCouponProductService = app()->make(StoreCouponProductServices::class);
             $storeCouponProductService->saveAll($couponData);
         }
-        if (!$res) throw new AdminException(100022);
+        if (!$res) throw new AdminException('添加失败');
         return (int)$res->id;
     }
 
@@ -192,7 +192,7 @@ class StoreCouponIssueServices extends BaseServices
     public function createForm(int $id)
     {
         $issueInfo = $this->dao->get($id);
-        if (-1 == $issueInfo['status'] || 1 == $issueInfo['is_del']) throw new AdminException(100007);
+        if (-1 == $issueInfo['status'] || 1 == $issueInfo['is_del']) throw new AdminException('修改失败');
         $f = [FormBuilder::radio('status', '是否开启', $issueInfo['status'])->options([['label' => '开启', 'value' => 1], ['label' => '关闭', 'value' => 0]])];
         return create_form('状态修改', $f, $this->url('/marketing/coupon/released/status/' . $id), 'PUT');
     }
@@ -206,7 +206,7 @@ class StoreCouponIssueServices extends BaseServices
     {
         $coupon = $this->dao->get($id);
         if (!$coupon) {
-            throw new AdminException(400515);
+            throw new AdminException('优惠券不存在');
         }
         if ($coupon['receive_type'] != 4) {
             /** @var StoreCouponIssueUserServices $storeCouponIssueUserService */
@@ -313,12 +313,12 @@ class StoreCouponIssueServices extends BaseServices
                 /** @var StoreCouponUserServices $storeCouponUser */
                 $storeCouponUser = app()->make(StoreCouponUserServices::class);
                 if (!$storeCouponUser->saveAll($couponData)) {
-                    throw new AdminException(100030);
+                    throw new AdminException('发送成功');
                 }
             }
             if ($issueUserData) {
                 if (!$issueUser->saveAll($issueUserData)) {
-                    throw new AdminException(100031);
+                    throw new AdminException('发送失败');
                 }
             }
         }
@@ -398,7 +398,7 @@ class StoreCouponIssueServices extends BaseServices
     public function issueUserCoupon($id, $user, bool $is_receive = false)
     {
         $issueCouponInfo = $this->dao->getInfo((int)$id);
-        if (!$issueCouponInfo) throw new ApiException(400516);
+        if (!$issueCouponInfo) throw new ApiException('领取的优惠劵已领完或已过期');
         if ($user->is_money_level <= 0 && $issueCouponInfo['receive_type'] == 4) {
             throw new ApiException('请先开通付费会员才能领取会员券');
         }
@@ -468,7 +468,7 @@ class StoreCouponIssueServices extends BaseServices
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
         if (!$userServices->getUserInfo($uid)) {
-            throw new ApiException(100100);
+            throw new ApiException('参数错误');
         }
         /** @var StoreCouponUserServices $storeConponUser */
         $storeConponUser = app()->make(StoreCouponUserServices::class);
@@ -510,10 +510,10 @@ class StoreCouponIssueServices extends BaseServices
         }
         if (!empty($data)) {
             if (!$storeCouponUser->saveAll($data)) {
-                throw new AdminException(100030);
+                throw new AdminException('发送成功');
             }
             if (!$storeCouponIssueUser->saveAll($issueData)) {
-                throw new AdminException(100031);
+                throw new AdminException('发送失败');
             }
             return true;
         }
@@ -551,7 +551,7 @@ class StoreCouponIssueServices extends BaseServices
      */
     public function getOne(array $where)
     {
-        if (!$where) throw new AdminException(100100);
+        if (!$where) throw new AdminException('参数错误');
         return $this->dao->getOne($where);
 
     }
@@ -695,5 +695,47 @@ class StoreCouponIssueServices extends BaseServices
         $list = $this->dao->getList($where, $page, $limit, $field);
         $count = $this->dao->count($where);
         return compact('list', 'count');
+    }
+
+    /**
+     * 自定义组件-优惠券
+     * @param $where
+     * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2026/1/13
+     */
+    public function getThemeCoupon($where)
+    {
+        $sort = $where['sort'] ? 'desc' : 'asc';
+        $order = 'id desc';
+        switch ($where['order']) {
+            case 0:
+                $order = 'coupon_price ' . $sort;
+                break;
+            case 1:
+                $order = 'add_time ' . $sort;
+                break;
+        }
+        $limit = $where['ids'] == '' ? (int)$where['limit'] : 1000;
+        $where['receive_type'] = $where['send_type'];
+        if ($where['is_min_price'] == 0) $where['min_price'] = 0;
+        unset($where['order'], $where['sort'], $where['limit'], $where['is_min_price'], $where['send_type']);
+        $where['is_del'] = 0;
+        $list = $this->dao->getThemeCoupon($where, $order, $limit);
+        if ($where['ids'] == '') return $list;
+        // 将$list转换为以id为键的数组
+        $list = array_column($list, null, 'id');
+        $data = [];
+        // 遍历where中的ids，按顺序取出对应商品
+        foreach (explode(',', $where['ids']) as $id) {
+            if (isset($list[$id])) {
+                $data[] = $list[$id];
+            }
+        }
+        return $data;
     }
 }

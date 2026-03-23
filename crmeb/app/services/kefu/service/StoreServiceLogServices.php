@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -185,6 +185,7 @@ class StoreServiceLogServices extends BaseServices
                     $item['avatar'] = $toUser['avatar'] ?? '';
                 }
             }
+            if ($item['avatar']) $item['avatar'] = set_file_url($item['avatar']);
         }
         return $list;
     }

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -50,7 +50,7 @@ class OtherOrderController
     {
         list($pay_price) = $request->getMore([['pay_price', 0]], true);
         $old_price = $pay_price;
-        if (!$pay_price || !is_numeric($pay_price)) return app('json')->fail(410190);
+        if (!$pay_price || !is_numeric($pay_price)) return app('json')->fail('请输入付款金额');
         $uid = $request->uid();
         /** @var UserServices $userService */
         $userService = app()->make(UserServices::class);
@@ -95,20 +95,20 @@ class OtherOrderController
             ['quitUrl', ''],
             ['mc_id', 0]
         ], true);
-        if ($money <= 0.00) return app('json')->fail(410191);
+        if ($money <= 0.00) return app('json')->fail('支付金额不能为0元');
         $payType = strtolower($payType);
         if (in_array($type, [1, 2])) {
             /** @var MemberCardServices $memberCardService */
             $memberCardService = app()->make(MemberCardServices::class);
             $isOpenMember = $memberCardService->isOpenMemberCard();
-            if (!$isOpenMember) return app('json')->fail(410192);
+            if (!$isOpenMember) return app('json')->fail('付费会员功能暂未开启');
         }
         $channelType = $userServices->getUserInfo($uid)['user_type'];
         $order = $OtherOrderServices->createOrder($uid, $channelType, $memberType, $price, $payType, $type, $money, $mcId);
-        if ($order === false) return app('json')->fail(410193);
+        if ($order === false) return app('json')->fail('支付数据生成失败');
         $order_id = $order['order_id'];
         $orderInfo = $OtherOrderServices->getOne(['order_id' => $order_id]);
-        if (!$orderInfo) return app('json')->fail(410194);
+        if (!$orderInfo) return app('json')->fail('支付订单不存在');
         $orderInfo = $orderInfo->toArray();
 
         $info = compact('order_id');
@@ -120,7 +120,7 @@ class OtherOrderController
             //创建订单jspay支付
             $payPriceStatus = $OtherOrderServices->zeroYuanPayment($orderInfo);
             if ($payPriceStatus)//0元支付成功
-                return app('json')->status('success', 410217, $info);
+                return app('json')->status('success', '支付成功', $info);
             else
                 return app('json')->status('pay_error');
         }
@@ -132,7 +132,7 @@ class OtherOrderController
                     $yueServices = app()->make(YuePayServices::class);
                     $pay = $yueServices->yueOrderPay($orderInfo, $uid);
                     if ($pay['status'] === true)
-                        return app('json')->status('success', 410197, $info);
+                        return app('json')->status('success', '余额支付成功', $info);
                     else {
                         if (is_array($pay))
                             return app('json')->status($pay['status'], $pay['msg'], $info);
@@ -140,13 +140,13 @@ class OtherOrderController
                             return app('json')->status('pay_error', $pay);
                     }
                 case PayServices::OFFLINE_PAY:
-                    return app('json')->status('success', 410196, $info);
+                    return app('json')->status('success', '前往支付', $info);
                 default:
                     $payServices = app()->make(OrderPayServices::class);
                     $payInfo = $payServices->beforePay($order->toArray(), $payType, ['quitUrl' => $quitUrl]);
                     return app('json')->status($payInfo['status'], $payInfo['payInfo']);
             }
-        } else return app('json')->fail(410200);
+        } else return app('json')->fail('订单生成失败');
     }
 
     /**

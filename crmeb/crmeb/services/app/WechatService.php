@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -365,10 +365,10 @@ class WechatService
     {
         $options = self::options();
         if (!isset($options['payment']['cert_path'])) {
-            throw new ApiException(410088);
+            throw new ApiException('企业微信支付到零钱需要支付证书，检测到您没有上传');
         }
         if (!$options['payment']['cert_path']) {
-            throw new ApiException(410088);
+            throw new ApiException('企业微信支付到零钱需要支付证书，检测到您没有上传');
         }
         $merchantPayData = [
             'partner_trade_no' => $orderId, //随机字符串作为订单号，跟红包和支付一个概念。
@@ -382,7 +382,7 @@ class WechatService
         if ($result->return_code == 'SUCCESS' && $result->result_code != 'FAIL') {
             return true;
         } else {
-            throw new ApiException($result->err_code_des ?? 400658);
+            throw new ApiException($result->err_code_des ?? '企业付款到零钱失败，请稍后再试');
         }
     }
 
@@ -584,7 +584,7 @@ class WechatService
 
     public static function payOrderRefund($orderNo, array $opt)
     {
-        if (!isset($opt['pay_price'])) throw new AdminException(400730);
+        if (!isset($opt['pay_price'])) throw new AdminException('缺少pay_price');
         $totalFee = floatval(bcmul($opt['pay_price'], 100, 0));
         $refundFee = isset($opt['refund_price']) ? floatval(bcmul($opt['refund_price'], 100, 0)) : null;
         $refundReason = $opt['desc'] ?? '';
@@ -597,8 +597,8 @@ class WechatService
         $refundAccount = $opt['refund_account'] ?? 'REFUND_SOURCE_UNSETTLED_FUNDS';
         try {
             $res = (self::refund($orderNo, $refundNo, $totalFee, $refundFee, $opUserId, $refundReason, $type, $refundAccount));
-            if ($res->return_code == 'FAIL') throw new AdminException(400731, ['msg' => $res->return_msg]);
-            if (isset($res->err_code)) throw new AdminException(400731, ['msg' => $res->err_code_des]);
+            if ($res->return_code == 'FAIL') throw new AdminException('退款失败:{:msg}', ['msg' => $res->return_msg]);
+            if (isset($res->err_code)) throw new AdminException('退款失败:{:msg}', ['msg' => $res->err_code_des]);
         } catch (\Exception $e) {
             throw new AdminException($e->getMessage());
         }
@@ -784,7 +784,7 @@ class WechatService
                 if (isset($res['user_info_list'])) {
                     $userInfo = $res['user_info_list'];
                 } else {
-                    throw new AdminException(400732);
+                    throw new AdminException('获取微信粉丝信息失败');
                 }
             } else {
                 $userInfo = $userService->get($openid);

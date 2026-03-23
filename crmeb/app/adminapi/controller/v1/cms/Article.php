@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -78,7 +78,7 @@ class Article extends AuthController
             ['status', 1]
         ]);
         $this->service->save($data);
-        return app('json')->success(100021);
+        return app('json')->success('添加成功');
     }
 
     /**
@@ -92,7 +92,7 @@ class Article extends AuthController
      */
     public function read($id = 0)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         $info = $this->service->read($id);
         return app('json')->success($info);
     }
@@ -104,9 +104,9 @@ class Article extends AuthController
      */
     public function delete($id = 0)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         $this->service->del($id);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -116,15 +116,15 @@ class Article extends AuthController
      */
     public function relation($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         list($product_id) = $this->request->postMore([
             ['product_id', 0]
         ], true);
         $res = $this->service->bindProduct($id, $product_id);
         if ($res) {
-            return app('json')->success(400300);
+            return app('json')->success('关联成功');
         } else {
-            return app('json')->fail(400301);
+            return app('json')->fail('关联失败');
         }
     }
 
@@ -135,12 +135,12 @@ class Article extends AuthController
      */
     public function unrelation($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         $res = $this->service->bindProduct($id);
         if ($res) {
-            return app('json')->success(100019);
+            return app('json')->success('取消成功');
         } else {
-            return app('json')->fail(100020);
+            return app('json')->fail('取消失败');
         }
     }
 }

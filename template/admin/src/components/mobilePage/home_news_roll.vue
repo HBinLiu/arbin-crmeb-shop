@@ -1,98 +1,89 @@
 <template>
-  <div
-    class="news-box"
-    :style="{
-      background: bottomBgColor,
-      marginTop: slider + 'px',
-      paddingTop: topConfig + 'px',
-      paddingBottom: bottomConfig + 'px',
-      paddingLeft: prConfig + 'px',
-      paddingRight: prConfig + 'px',
-    }"
-    v-if="list.length"
-  >
-    <div
-      class="item"
-      :style="{
-        background: `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`,
-        borderRadius: bgRadius,
-      }"
-      v-if="styleConfig == 0"
-    >
-      <div class="img-box" v-if="titleConfig == 0"><img :src="imgUrl" alt="" /></div>
+  <common_wrapper :config="configObj" v-if="list.length">
+    <div class="news-box">
       <div
-        class="top"
-        v-else
+        class="item"
         :style="{
-          color: toneConfig ? titleColor : '#fff',
-          background: toneConfig
-            ? `linear-gradient(90deg,${titleBgColorLeft} 0%,${titleBgColorRight} 100%)`
-            : colorStyle.theme,
+          background: `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`,
+          borderRadius: bgRadius,
         }"
+        v-if="styleConfig == 0"
       >
-        {{ titleTxtConfig || '商城头条' }}
-      </div>
-      <div
-        class="right-box"
-        :style="{
-          color: newsColor,
-        }"
-      >
-        {{ list[0].chiild[0].val }}
-      </div>
-      <span
-        class="iconfont iconjinru"
-        :style="{
-          color: bntColor,
-        }"
-        v-if="!buttonConfig"
-      ></span>
-    </div>
-    <div
-      class="list"
-      v-else
-      :style="{
-        background: `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`,
-        borderRadius: bgRadius,
-      }"
-    >
-      <div class="title acea-row row-between-wrapper">
-        <div class="pictrue" v-if="titleConfig == 0">
-          <img :src="imgUrl" alt="" />
-        </div>
+        <div class="img-box" v-if="titleConfig == 0"><img :src="imgUrl" alt="" /></div>
         <div
-        class="top"
-        v-else
-        :style="{
-          color: !toneConfig ? titleColor : colorStyle.theme,
-        }"
+          class="top"
+          v-else
+          :style="{
+            color: toneConfig ? titleColor : '#fff',
+            background: toneConfig
+              ? `linear-gradient(90deg,${titleBgColorLeft} 0%,${titleBgColorRight} 100%)`
+              : colorStyle.theme,
+          }"
         >
           {{ titleTxtConfig || '商城头条' }}
         </div>
         <div
-          v-if="!buttonConfig"
+          class="right-box"
+          :style="{
+            color: newsColor,
+          }"
+        >
+          {{ list[0].chiild[0].val }}
+        </div>
+        <span
+          class="iconfont iconjinru"
           :style="{
             color: bntColor,
           }"
-        >
-          {{ textConfig }}<span class="iconfont iconjinru"></span>
-        </div>
+          v-if="!buttonConfig"
+        ></span>
       </div>
       <div
-        class="text line1"
-        v-for="(item, index) in list"
-        :key="index"
+        class="list"
+        v-else
         :style="{
-          color: newsColor,
+          background: `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`,
+          borderRadius: bgRadius,
         }"
       >
-        <span class="num" :class="index == 0 ? 'on' : index == 1 ? 'on2' : index == 2 ? 'on3' : ''">{{
-          index + 1
-        }}</span
-        >{{ item.chiild[0].val }}
+        <div class="title acea-row row-between-wrapper">
+          <div class="pictrue" v-if="titleConfig == 0">
+            <img :src="imgUrl" alt="" />
+          </div>
+          <div
+            class="top"
+            v-else
+            :style="{
+              color: !toneConfig ? titleColor : colorStyle.theme,
+            }"
+          >
+            {{ titleTxtConfig || '商城头条' }}
+          </div>
+          <div
+            v-if="!buttonConfig"
+            :style="{
+              color: bntColor,
+            }"
+          >
+            {{ textConfig }}<span class="iconfont iconjinru"></span>
+          </div>
+        </div>
+        <div
+          class="text line1"
+          v-for="(item, index) in list"
+          :key="index"
+          :style="{
+            color: newsColor,
+          }"
+        >
+          <span class="num" :class="index == 0 ? 'on' : index == 1 ? 'on2' : index == 2 ? 'on3' : ''">{{
+            index + 1
+          }}</span
+          >{{ item.chiild[0].val }}
+        </div>
       </div>
     </div>
-  </div>
+  </common_wrapper>
 </template>
 
 <script>
@@ -147,6 +138,7 @@ export default {
       // 默认初始化数据禁止修改
       defaultConfig: {
         cname: '新闻公告',
+        desc: '新闻公告',
         name: 'news',
         timestamp: this.num,
         isHide: false,
@@ -357,25 +349,105 @@ export default {
             },
           ],
         },
-        topConfig: {
-          title: '上边距',
+        paddingConfig: {
+          title: '内边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        },
+        marginConfig: {
+          title: '外边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        },
+        zIndexConfig: {
+          title: '组件上浮',
           val: 0,
           min: 0,
         },
-        bottomConfig: {
-          title: '下边距',
-          val: 0,
-          min: 0,
+        borderConfig: {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Hide, 1: Show
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              { name: '实线', style: 'solid' },
+              { name: '虚线', style: 'dashed' },
+              { name: '点状', style: 'dotted' },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
         },
-        prConfig: {
-          title: '左右边距',
-          val: 0,
-          min: 0,
+        shadowConfig: {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Off, 1: On
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: 'rgba(0,0,0,0.1)' }],
+            color: [{ item: 'rgba(0,0,0,0.1)' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+          },
         },
-        mbConfig: {
-          title: '页面上间距',
-          val: 0,
-          min: 0,
+        componentBgConfig: {
+          title: '组件背景',
+          tabVal: 0,
+          tabList: [{ name: '颜色' }, { name: '图片' }],
+          colorConfig: {
+            title: '背景颜色',
+            default: [{ item: '#fff' }, { item: '#fff' }],
+            color: [{ item: '#fff' }, { item: '#fff' }],
+          },
+          colorDirection: {
+            title: '渐变方向',
+            tabVal: 0,
+            tabList: [{ name: '横向' }, { name: '纵向' }, { name: '左斜' }, { name: '右斜' }],
+          },
+          imageConfig: {
+            header: '背景图片',
+            title: '',
+            name: '上传图片',
+            type: 'code',
+            url: '',
+            info: '建议尺寸：750px * 400px',
+          },
         },
         fillet: {
           title: '背景圆角',
@@ -405,7 +477,7 @@ export default {
       rollStyle: '',
       txtPosition: '',
       pageData: {},
-
+      configObj: {},
       list: [],
       slider: 0,
       styleConfig: 0,
@@ -417,10 +489,6 @@ export default {
       bntColor: '',
       bgColorLeft: '',
       bgColorRight: '',
-      bottomBgColor: '',
-      topConfig: 0,
-      bottomConfig: 0,
-      prConfig: 0,
       bgRadius: 0,
       titleConfig: 0,
       titleBgColorLeft: '',
@@ -438,42 +506,74 @@ export default {
   methods: {
     setConfig(data) {
       if (!data) return;
-      if (data.mbConfig) {
-        this.slider = data.mbConfig.val;
-        this.styleConfig = data.styleConfig.tabVal;
-        this.imgUrl = data.imgConfig.url;
-        this.buttonConfig = data.buttonConfig.tabVal;
-        this.textConfig = data.textConfig.value;
-        let lists = data.listConfig.list;
-        let list = [];
-        lists.forEach((item) => {
-          if (item.show) {
-            list.push(item);
-          }
+      this.configObj = data;
+      if (!this.configObj.paddingConfig) {
+        this.$set(this.configObj, 'paddingConfig', {
+          title: '内边距',
+          isAll: false,
+          val: 0,
+          min: 0,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         });
-        console.log(data.titleColor,'data.titleColor')
-        this.list = list;
-        this.toneConfig = data.toneConfig.tabVal;
-        this.newsColor = data.newsColor.color[0].item;
-        this.bntColor = data.bntColor.color[0].item;
-        this.bgColorLeft = data.moduleColor.color[0].item;
-        this.bgColorRight = data.moduleColor.color[1].item;
-        this.bottomBgColor = data.bottomBgColor.color[0].item;
-        this.prConfig = data.prConfig.val;
-        this.topConfig = data.topConfig.val;
-        this.bottomConfig = data.bottomConfig.val;
-        this.titleConfig = data.titleConfig.tabVal;
-        this.titleBgColorLeft = data.titleBgColor.color[0].item;
-        this.titleBgColorRight = data.titleBgColor.color[1].item;
-        this.titleColor = data.titleColor.color[0].item;
-        this.titleTxtConfig = data.titleTxtConfig.value;
-        let fillet = data.fillet.type;
-        let filletVal = data.fillet.val;
-        let valList = data.fillet.valList;
-        this.bgRadius = fillet
-          ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
-          : filletVal + 'px';
+        if (data.topConfig) this.configObj.paddingConfig.valList[0].val = data.topConfig.val;
+        if (data.bottomConfig) this.configObj.paddingConfig.valList[2].val = data.bottomConfig.val;
+        if (data.prConfig) {
+          this.configObj.paddingConfig.valList[1].val = data.prConfig.val;
+          this.configObj.paddingConfig.valList[3].val = data.prConfig.val;
+        }
       }
+      if (!this.configObj.marginConfig) {
+        this.$set(this.configObj, 'marginConfig', {
+          title: '外边距',
+          isAll: false,
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+        if (data.mbConfig) {
+          this.configObj.marginConfig.valList[0].val = data.mbConfig.val;
+        }
+      }
+      for (let key in this.defaultConfig) {
+        if (this.configObj[key] === undefined) {
+          this.$set(this.configObj, key, this.defaultConfig[key]);
+        }
+      }
+      this.rollStyle = data.rollConfig.tabVal;
+      this.txtPosition = data.textConfig.tabVal;
+      // this.slider = this.marginConfig.valList[0].val;
+      this.styleConfig = data.styleConfig.tabVal;
+      this.imgUrl = data.imgConfig.url;
+      this.buttonConfig = data.buttonConfig.tabVal;
+      this.textConfig = data.textConfig.value;
+      let lists = data.listConfig.list;
+      let list = [];
+      lists.forEach((item) => {
+        if (item.show) {
+          list.push(item);
+        }
+      });
+      this.list = list;
+      this.toneConfig = data.toneConfig.tabVal;
+      this.newsColor = data.newsColor.color[0].item;
+      this.bntColor = data.bntColor.color[0].item;
+      this.bgColorLeft = data.moduleColor.color[0].item;
+      this.bgColorRight = data.moduleColor.color[1].item;
+      // this.prConfig = this.paddingConfig.valList[1].val;
+      // this.topConfig = this.paddingConfig.valList[0].val;
+      // this.bottomConfig = this.paddingConfig.valList[2].val;
+      this.titleConfig = data.titleConfig.tabVal;
+      this.titleBgColorLeft = data.titleBgColor.color[0].item;
+      this.titleBgColorRight = data.titleBgColor.color[1].item;
+      this.titleColor = data.titleColor.color[0].item;
+      this.titleTxtConfig = data.titleTxtConfig.value;
+      let fillet = data.fillet.type;
+      let filletVal = data.fillet.val;
+      let valList = data.fillet.valList;
+      this.bgRadius = fillet
+        ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
+        : filletVal + 'px';
     },
   },
 };
@@ -484,6 +584,8 @@ export default {
   border-radius: 6px !important;
 }
 .news-box {
+  display: inline-block;
+  width: -webkit-fill-available;
   .list {
     padding: 0 12px 16px 12px;
     .title {

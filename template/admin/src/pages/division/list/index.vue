@@ -63,7 +63,7 @@
             <el-table-column label="名称" min-width="130">
               <template slot-scope="scope">
                 <div class="acea-row">
-                  <div v-text="scope.row.division_name" class="ml10"></div>
+                  <div v-text="scope.row.division_name"></div>
                 </div>
               </template>
             </el-table-column>

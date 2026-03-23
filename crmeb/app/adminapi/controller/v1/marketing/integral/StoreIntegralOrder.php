@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -97,9 +97,9 @@ class StoreIntegralOrder extends AuthController
             ['where', []],
         ], true);
         if ($this->services->delOrders($ids)) {
-            return app('json')->success(100002);
+            return app('json')->success('删除成功');
         } else {
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
         }
     }
 
@@ -111,9 +111,9 @@ class StoreIntegralOrder extends AuthController
     public function del($id)
     {
         if ($this->services->delOrder($id)) {
-            return app('json')->success(100002);
+            return app('json')->success('删除成功');
         } else {
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
         }
     }
 
@@ -143,7 +143,7 @@ class StoreIntegralOrder extends AuthController
             ['fictitious_content', '']//虚拟发货内容
         ]);
         $this->services->delivery((int)$id, $data);
-        return app('json')->success(100010);
+        return app('json')->success('操作成功');
     }
 
     /**
@@ -153,19 +153,19 @@ class StoreIntegralOrder extends AuthController
      */
     public function take_delivery($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         $order = $this->services->get($id);
         if (!$order)
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         if ($order['status'] == 3)
-            return app('json')->fail(400114);
+            return app('json')->fail('不能重复收货');
         if ($order['status'] == 2)
             $data['status'] = 3;
         else
-            return app('json')->fail(400115);
+            return app('json')->fail('请先发货或者送货');
 
         if (!$this->services->update($id, $data)) {
-            return app('json')->fail(400116);
+            return app('json')->fail('收货失败,请稍候再试');
         } else {
             //增加收货订单状态
             /** @var StoreIntegralOrderStatusServices $statusService */
@@ -176,7 +176,7 @@ class StoreIntegralOrder extends AuthController
                 'change_message' => '已收货',
                 'change_time' => time()
             ]);
-            return app('json')->success(400117);
+            return app('json')->success('收货成功');
         }
     }
 
@@ -188,12 +188,12 @@ class StoreIntegralOrder extends AuthController
     public function order_info($id)
     {
         if (!$id || !($orderInfo = $this->services->get($id))) {
-            return app('json')->fail(400118);
+            return app('json')->fail('订单不存在');
         }
         /** @var UserServices $services */
         $services = app()->make(UserServices::class);
         $userInfo = $services->get($orderInfo['uid']);
-        if (!$userInfo) return app('json')->fail(400119);
+        if (!$userInfo) return app('json')->fail('用户信息不存在');
         $userInfo = $userInfo->hidden(['pwd', 'add_ip', 'last_ip', 'login_type']);
         $orderInfo = $this->services->tidyOrder($orderInfo->toArray());
         $userInfo = $userInfo->toArray();
@@ -208,9 +208,9 @@ class StoreIntegralOrder extends AuthController
     public function get_express($id, ExpressServices $services)
     {
         if (!$id || !($orderInfo = $this->services->get($id)))
-            return app('json')->fail(400118);
+            return app('json')->fail('订单不存在');
         if ($orderInfo['delivery_type'] != 'express' || !$orderInfo['delivery_id'])
-            return app('json')->fail(400120);
+            return app('json')->fail('快递单号不存在');
 
         $cacheName = 'integral' . $orderInfo['order_id'] . $orderInfo['delivery_id'];
 
@@ -229,7 +229,7 @@ class StoreIntegralOrder extends AuthController
     public function distribution($id)
     {
         if (!$id) {
-            return app('json')->fail(400118);
+            return app('json')->fail('订单不存在');
         }
         return app('json')->success($this->services->distributionForm((int)$id));
     }
@@ -242,9 +242,9 @@ class StoreIntegralOrder extends AuthController
     public function update_distribution($id)
     {
         $data = $this->request->postMore([['delivery_name', ''], ['delivery_code', ''], ['delivery_id', '']]);
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         $this->services->updateDistribution($id, $data);
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }
 
 
@@ -257,9 +257,9 @@ class StoreIntegralOrder extends AuthController
     {
         $data = $this->request->postMore([['remark', '']]);
         if ($this->services->remark($id, $data['remark'])) {
-            return app('json')->success(100024);
+            return app('json')->success('备注成功');
         } else {
-            return app('json')->fail(100025);
+            return app('json')->fail('备注失败');
         }
     }
 
@@ -270,7 +270,7 @@ class StoreIntegralOrder extends AuthController
      */
     public function status(StoreIntegralOrderStatusServices $services, $id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         return app('json')->success($services->getStatusList(['oid' => $id])['list']);
     }
 
@@ -281,16 +281,16 @@ class StoreIntegralOrder extends AuthController
      */
     public function order_print($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         $order = $this->services->get($id);
         if (!$order) {
-            return app('json')->fail(400118);
+            return app('json')->fail('订单不存在');
         }
         $res = $this->services->orderPrint($order);
         if ($res) {
-            return app('json')->success(400121);
+            return app('json')->success('打印成功');
         } else {
-            return app('json')->fail(400122);
+            return app('json')->fail('打印失败');
         }
     }
 
@@ -302,7 +302,7 @@ class StoreIntegralOrder extends AuthController
     public function expr_temp(ServeServices $services, $com)
     {
         if (!$com) {
-            return app('json')->fail(400123);
+            return app('json')->fail('快递公司编号缺失');
         }
         $list = $services->express()->temp($com);
         return app('json')->success($list);

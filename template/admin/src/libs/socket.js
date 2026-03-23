@@ -87,6 +87,10 @@ class wsSocket {
   $on(...args) {
     vm.$on(...args);
   }
+
+  $off(...args) {
+    vm.$off(...args);
+  }
 }
 
 function createSocket(key) {
@@ -101,6 +105,7 @@ function createSocket(key) {
       key,
       open() {
         resolve(ws);
+        vm.$emit('socket_open', key);
       },
       error(e) {
         reject(e);
@@ -110,7 +115,7 @@ function createSocket(key) {
         vm.$emit(type, data);
       },
       close(e) {
-        vm.$emit('close', e);
+        vm.$emit('close', { e, key });
       },
     });
   });

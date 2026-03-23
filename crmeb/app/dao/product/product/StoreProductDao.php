@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -362,5 +362,35 @@ class StoreProductDao extends BaseDao
     public function downAdvance()
     {
         $this->getModel()->where('presale', 1)->where('presale_end_time', '<', time())->update(['is_show' => 0]);
+    }
+
+    /**
+     * 自定义组件-商品
+     * @param $where
+     * @param $order
+     * @param $limit
+     * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2026/1/13
+     */
+    public function getThemeProduct($where, $order, $limit)
+    {
+        $model = $this->getModel()->with('cateName')->where('is_del', 0)->where('is_show', 1);
+        if ($where['ids'] != '') {
+            $ids = explode(',', $where['ids']);
+            $list = $model->whereIn('id', $ids)->order($order)->limit($limit)->select()->toArray();
+        } else {
+            $list = $model->when($where['cate_ids'] != '', function ($query) use ($where) {
+                $cate_ids = explode(',', $where['cate_ids']);
+                $query->whereIn('id', function ($query) use ($cate_ids) {
+                    $query->name('store_product_cate')->where('cate_id', 'in', $cate_ids)->whereOr('cate_pid', 'in', $cate_ids)->field('product_id')->select();
+                });
+            })->order($order)->limit($limit)->select()->toArray();
+        }
+        return $list;
     }
 }

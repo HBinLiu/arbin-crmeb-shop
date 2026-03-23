@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace crmeb\command;
 
 
@@ -137,7 +145,7 @@ class Util extends Command
                     Db::execute($item);
                 }
             } catch (\Throwable $e) {
-                throw new AdminException(400612, ['msg' => $e->getMessage()]);
+                throw new AdminException('替换失败,失败原因:{:msg}', ['msg' => $e->getMessage()]);
             }
         });
     }

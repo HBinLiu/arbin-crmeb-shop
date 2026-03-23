@@ -68,7 +68,7 @@
         </el-table-column>
         <el-table-column label="关联商品" min-width="130">
           <template slot-scope="scope">
-            <span>{{ scope.row.store_name }}</span>
+            <span>{{ scope.row.store_name || '--' }}</span>
           </template>
         </el-table-column>
         <el-table-column label="浏览量" min-width="80">
@@ -81,7 +81,7 @@
             <span>{{ scope.row.add_time | formatDate }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right" width="210">
+        <el-table-column label="操作" fixed="right" width="300">
           <template slot-scope="scope">
             <a v-db-click @click="edit(scope.row)">编辑</a>
             <el-divider direction="vertical"></el-divider>

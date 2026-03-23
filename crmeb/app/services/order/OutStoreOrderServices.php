@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -116,7 +116,7 @@ class OutStoreOrderServices extends BaseServices
         }
 
         if (!$orderInfo = $this->dao->get($where, $field, ['invoice'])) {
-            throw new ApiException(400118);
+            throw new ApiException('订单不存在');
         }
 
         if (!$orderInfo['invoice']) {
@@ -292,7 +292,7 @@ class OutStoreOrderServices extends BaseServices
     {
         $order = $this->dao->get(['order_id' => $orderId]);
         if (!$order) {
-            throw new ApiException(400118);
+            throw new ApiException('订单不存在');
         }
 
         $list = [];
@@ -317,27 +317,27 @@ class OutStoreOrderServices extends BaseServices
     {
         $order = $this->dao->get(['order_id' => $orderId]);
         if (!$order) {
-            throw new ApiException(400118);
+            throw new ApiException('订单不存在');
         }
 
         if ($order['status'] == 2) {
-            throw new ApiException(400114);
+            throw new ApiException('不能重复收货');
         }
 
         if (($order['paid'] == 1 && $order['status'] == 1) || $order['pay_type'] == 'offline') {
             $data['status'] = 2;
         } else {
-            throw new ApiException(400115);
+            throw new ApiException('请先发货或者送货');
         }
 
         if (!$this->dao->update($order['id'], $data)) {
-            throw new ApiException(400116);
+            throw new ApiException('收货失败,请稍候再试');
         }
 
         /** @var StoreOrderTakeServices $takeServices */
         $takeServices = app()->make(StoreOrderTakeServices::class);
         if (!$takeServices->storeProductOrderUserTakeDelivery($order)) {
-            throw new ApiException(400116);
+            throw new ApiException('收货失败,请稍候再试');
         }
         return true;
     }
@@ -355,7 +355,7 @@ class OutStoreOrderServices extends BaseServices
     {
         $orderInfo = $this->dao->get(['order_id' => $orderId]);
         if (!$orderInfo) {
-            throw new ApiException(400470);
+            throw new ApiException('订单未能查到,不能发货');
         }
 
         /** @var StoreOrderDeliveryServices $deliveryServices */
@@ -376,7 +376,7 @@ class OutStoreOrderServices extends BaseServices
     {
         $orderInfo = $this->dao->get(['order_id' => $orderId]);
         if (!$orderInfo) {
-            throw new ApiException(400470);
+            throw new ApiException('订单未能查到,不能发货');
         }
 
         /** @var StoreOrderDeliveryServices $deliveryServices */
@@ -397,11 +397,11 @@ class OutStoreOrderServices extends BaseServices
     {
         $orderInfo = $this->dao->get(['order_id' => $orderId], ['id'], ['invoice']);
         if (!$orderInfo) {
-            throw new AdminException(400118);
+            throw new AdminException('订单不存在');
         }
 
         if (!$orderInfo->invoice || !$invoiceId = $orderInfo->invoice->id) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
 
         /** @var StoreOrderInvoiceServices $invoiceServices */
@@ -419,7 +419,7 @@ class OutStoreOrderServices extends BaseServices
     {
         $orderInfo = $this->dao->get(['order_id' => $orderId]);
         if (!$orderInfo) {
-            throw new AdminException(400118);
+            throw new AdminException('订单不存在');
         }
 
         /** @var StoreOrderDeliveryServices $deliveryServices */

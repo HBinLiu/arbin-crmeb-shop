@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -150,7 +150,7 @@ class StoreOrderCreateServices extends BaseServices
         $bargainServices = app()->make(StoreBargainServices::class);
         $cartGroup = $storeOrderServices->getCacheOrderInfo($uid, $key);
         if (!$cartGroup) {
-            throw new ApiException(410208);
+            throw new ApiException('订单已过期,请刷新当前页面');
         }
         //下单前砍价验证
         if ($bargainId) {
@@ -162,9 +162,9 @@ class StoreOrderCreateServices extends BaseServices
             /** @var StorePinkServices $pinkServices */
             $pinkServices = app()->make(StorePinkServices::class);
             if ($pinkServices->isPink($pinkId, $uid))
-                throw new ApiStatusException('ORDER_EXIST', 410210, ['orderId' => $storeOrderServices->getStoreIdPink($pinkId, $uid)]);
+                throw new ApiStatusException('ORDER_EXIST', '订单生成失败，你已经在该团内不能再参加了', ['orderId' => $storeOrderServices->getStoreIdPink($pinkId, $uid)]);
             if ($storeOrderServices->getIsOrderPink($pinkId, $uid))
-                throw new ApiStatusException('ORDER_EXIST', 410211, ['orderId' => $storeOrderServices->getStoreIdPink($pinkId, $uid)]);
+                throw new ApiStatusException('ORDER_EXIST', '订单生成失败，你已经参加该团了，请先支付订单', ['orderId' => $storeOrderServices->getStoreIdPink($pinkId, $uid)]);
         }
         $virtual_type = $cartGroup['cartInfo'][0]['productInfo']['virtual_type'] ?? 0;
 
@@ -183,14 +183,14 @@ class StoreOrderCreateServices extends BaseServices
         if ($is_gift == 0) {
             if ($shippingType == 1 && $virtual_type == 0) {
                 if (!$addressId) {
-                    throw new ApiException(410045);
+                    throw new ApiException('请选择收货地址');
                 }
                 if (!$addressInfo = $addressServices->getOne(['uid' => $uid, 'id' => $addressId, 'is_del' => 0]))
-                    throw new ApiException(410046);
+                    throw new ApiException('地址选择有误');
                 $addressInfo = $addressInfo->toArray();
             } else {
                 if ((!$real_name || !$phone) && $virtual_type == 0) {
-                    throw new ApiException(410245);
+                    throw new ApiException('请填写姓名和电话');
                 }
                 $addressInfo['real_name'] = $real_name;
                 $addressInfo['phone'] = $phone;
@@ -289,7 +289,7 @@ class StoreOrderCreateServices extends BaseServices
             $storeServices = app()->make(SystemStoreServices::class);
             $orderInfo['store_id'] = $storeServices->getStoreDispose($storeId, 'id');
             if (!$orderInfo['store_id']) {
-                throw new ApiException(410247);
+                throw new ApiException('暂无门店无法选择门店自提');
             }
         }
         /** @var StoreOrderCartInfoServices $cartServices */
@@ -299,7 +299,7 @@ class StoreOrderCreateServices extends BaseServices
             //创建订单
             $order = $this->dao->save($orderInfo);
             if (!$order) {
-                throw new ApiException(410200);
+                throw new ApiException('订单生成失败');
             }
             //记录自提人电话和姓名
             /** @var UserServices $userService */
@@ -377,7 +377,7 @@ class StoreOrderCreateServices extends BaseServices
             $res2 = $res2 && false != $res3;
         }
         if (!$res2) {
-            throw new ApiException(410227);
+            throw new ApiException('使用积分抵扣失败');
         }
     }
 
@@ -411,10 +411,10 @@ class StoreOrderCreateServices extends BaseServices
                 else $res5 = $res5 && $services->decProductStock((int)$cart['cart_num'], (int)$cart['productInfo']['id'], isset($cart['productInfo']['attrInfo']) ? $cart['productInfo']['attrInfo']['unique'] : '');
             }
             if (!$res5) {
-                throw new ApiException(410238);
+                throw new ApiException('选择的规格库存不足');
             }
         } catch (\Throwable $e) {
-            throw new ApiException(410238);
+            throw new ApiException('选择的规格库存不足');
         }
     }
 
@@ -530,7 +530,7 @@ class StoreOrderCreateServices extends BaseServices
             $cartInfo = $this->computeOrderProductIntegral($cartInfo, $priceData);
         } catch (\Throwable $e) {
             Log::error('订单商品结算失败,File：' . $e->getFile() . ',Line：' . $e->getLine() . ',Message：' . $e->getMessage());
-            throw new ApiException(410248);
+            throw new ApiException('订单商品结算失败');
         }
         //truePice实际支付单价（存在）
         //几件商品总体优惠 以及积分抵扣金额
@@ -554,7 +554,7 @@ class StoreOrderCreateServices extends BaseServices
             [$cartInfo, $spread_ids] = $this->computeOrderProductBrokerage($uid, $cartInfo);
         } catch (\Throwable $e) {
             Log::error('订单商品结算失败,File：' . $e->getFile() . ',Line：' . $e->getLine() . ',Message：' . $e->getMessage());
-            throw new ApiException(410248);
+            throw new ApiException('订单商品结算失败');
         }
         return [$cartInfo, $spread_ids];
     }

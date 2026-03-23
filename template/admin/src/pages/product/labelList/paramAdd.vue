@@ -182,7 +182,6 @@ export default {
     },
     //修改排序
     onDragDrop(a, b) {
-      console.log(a, b);
       this.formDynamic.value.splice(b, 1, ...this.formDynamic.value.splice(a, 1, this.formDynamic.value[b]));
     },
     // 详情

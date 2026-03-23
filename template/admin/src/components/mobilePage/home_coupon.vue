@@ -1,178 +1,62 @@
 <template>
-  <div
-    class="couponCon"
-    :style="{
-      background: bottomBgColor,
-      marginTop: mTop + 'px',
-      paddingTop: topConfig + 'px',
-      paddingBottom: bottomConfig + 'px',
-      paddingLeft: prConfig + 'px',
-      paddingRight: prConfig + 'px',
-    }"
-  >
+  <common_wrapper :config="configObj">
     <div
-      class="coupon1 acea-row row-middle"
-      :style="{
-        background: moduleColor2,
-        borderRadius: bgRadius,
-      }"
-      v-if="styleConfig == 0"
-    >
-      <div class="list acea-row row-middle">
-        <div
-          class="item"
-          v-for="(item, index) in numberConfig"
-          :key="index"
-          :style="{
-            marginRight: spacingConfig + 'px',
-            background: toneConfig ? couponBgColor : colorStyle.theme,
-          }"
-        >
-          <div
-            class="money"
-            :style="{
-              color: toneConfig ? couponMoneyColor : colorStyle.theme,
-            }"
-          >
-            <div><span class="lable">¥</span>70</div>
-            <div class="tips">满5000可用</div>
-          </div>
-          <div
-            class="sill"
-            :style="{
-              background: toneConfig
-                ? `linear-gradient(90deg,${bntBgColorRight} 0%,${bntBgColorLeft} 100%)`
-                : themeColor,
-            }"
-          >
-            满200可用
-          </div>
-          <img src="../../assets/images/newVip02.png" />
-        </div>
-      </div>
-    </div>
-    <div
-      class="coupon2 acea-row row-middle"
+      class="couponCon"
       :style="{
         background: moduleColor,
         borderRadius: bgRadius,
       }"
-      v-else-if="styleConfig == 1"
-    >
-      <div class="list acea-row row-middle">
-        <div
-          class="item"
-          :style="{
-            marginRight: spacingConfig + 'px',
-          }"
-          v-for="(item, index) in numberConfig"
-          :key="index"
-        >
-          <div class="type">品类券</div>
-          <div
-            class="money"
-            :style="{
-              color: toneConfig ? couponMoneyColor : colorStyle.theme,
-            }"
-          >
-            <span class="label">¥</span>50
-          </div>
-          <div
-            class="tips"
-            :style="{
-              color: toneConfig ? couponMoneyColor : colorStyle.theme,
-            }"
-          >
-            满500元可用
-          </div>
-          <div
-            class="bnt"
-            :style="{
-              background: toneConfig
-                ? `linear-gradient(90deg,${bntBgColorRight} 0%,${bntBgColorLeft} 100%)`
-                : themeColor,
-            }"
-          >
-            去领取
-          </div>
-        </div>
-      </div>
-    </div>
-    <div
-      class="coupon acea-row row-middle"
-      :style="{
-        background: moduleColor2,
-        borderRadius: bgRadius,
-      }"
-      v-else-if="styleConfig == 2"
-    >
-      <div class="list acea-row row-middle">
-        <div
-          class="itemCon"
-          :style="{
-            marginRight: spacingConfig + 'px',
-            background: toneConfig ? couponMoneyColor : colorStyle.theme,
-          }"
-          v-for="(item, index) in numberConfig"
-          :key="index"
-        >
-          <div
-            class="item"
-            :style="{
-              borderColor: toneConfig ? couponMoneyColor : colorStyle.theme,
-            }"
-          >
-            <div
-              class="left"
-              :style="{
-                color: toneConfig ? couponMoneyColor : colorStyle.theme,
-              }"
-            >
-              <div class="num"><span>￥</span>50</div>
-              <div class="txt">满100元可用</div>
-            </div>
-            <div
-              class="right"
-              :style="{
-                color: toneConfig ? couponMoneyColor : colorStyle.theme,
-                borderLeftColor: toneConfig ? couponMoneyColor : colorStyle.theme,
-              }"
-            >
-              <div class="rightCon">立即领取</div>
-            </div>
-            <div
-              class="roll up-roll"
-              :style="{
-                background: moduleColor2,
-                borderColor: toneConfig ? couponMoneyColor : colorStyle.theme,
-              }"
-            ></div>
-            <div
-              class="roll down-roll"
-              :style="{
-                background: moduleColor2,
-                borderColor: toneConfig ? couponMoneyColor : colorStyle.theme,
-              }"
-            ></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div
-      class="coupon4"
-      :style="{
-        background: moduleColor2,
-        borderRadius: bgRadius,
-      }"
-      v-else-if="styleConfig == 3"
     >
       <div
-        class="list acea-row row-middle"
+        class="coupon1 acea-row row-middle"
         :style="{
-          background: toneConfig ? couponBgColor : colorStyle.theme,
+          borderRadius: bgRadius,
         }"
+        v-if="styleConfig == 0"
       >
-        <div class="listCon acea-row row-middle">
+        <div class="list acea-row row-middle">
+          <div
+            class="item"
+            v-for="(item, index) in numberConfig"
+            :key="index"
+            :style="{
+              marginRight: spacingConfig + 'px',
+              background: toneConfig ? couponBgColor : colorStyle.theme,
+            }"
+          >
+            <div class="money">
+              <div
+                :style="{
+                  color: toneConfig ? couponMoneyColor : colorStyle.theme,
+                }"
+              >
+                <span class="lable">¥</span>70
+              </div>
+              <div class="tips">满5000可用</div>
+            </div>
+            <div
+              class="sill"
+              :style="{
+                background: toneConfig
+                  ? `linear-gradient(90deg,${bntBgColorRight} 0%,${bntBgColorLeft} 100%)`
+                  : themeColor,
+              }"
+            >
+              满200可用
+            </div>
+            <img src="../../assets/images/newVip02.png" />
+          </div>
+        </div>
+      </div>
+      <div
+        class="coupon2 acea-row row-middle"
+        :style="{
+          background: moduleColor,
+          borderRadius: bgRadius,
+        }"
+        v-else-if="styleConfig == 1"
+      >
+        <div class="list acea-row row-middle">
           <div
             class="item"
             :style="{
@@ -180,17 +64,8 @@
             }"
             v-for="(item, index) in numberConfig"
             :key="index"
-            v-if="index < 4"
           >
-            <div
-              class="type"
-              :style="{
-                color: toneConfig ? couponMoneyColor : colorStyle.theme,
-                background: toneConfig ? couponMoneyColor : colorStyle.theme,
-              }"
-            >
-              <div class="typeCon">通用券</div>
-            </div>
+            <div class="type">品类券</div>
             <div
               class="money"
               :style="{
@@ -199,69 +74,150 @@
             >
               <span class="label">¥</span>50
             </div>
-            <div class="tips">满5000可用</div>
+            <div class="tips">满500元可用</div>
+            <div
+              class="bnt"
+              :style="{
+                background: toneConfig
+                  ? `linear-gradient(90deg,${bntBgColorRight} 0%,${bntBgColorLeft} 100%)`
+                  : themeColor,
+              }"
+            >
+              去领取
+            </div>
           </div>
         </div>
+      </div>
+      <div
+        class="coupon acea-row row-middle"
+        :style="{
+          borderRadius: bgRadius,
+        }"
+        v-else-if="styleConfig == 2"
+      >
+        <div class="list acea-row row-middle">
+          <div
+            class="itemCon"
+            :style="{
+              marginRight: spacingConfig + 'px',
+            }"
+            v-for="(item, index) in numberConfig"
+            :key="index"
+          >
+            <div class="item">
+              <div class="left">
+                <div
+                  class="num"
+                  :style="{
+                    color: toneConfig ? couponMoneyColor : colorStyle.theme,
+                  }"
+                >
+                  <span>￥</span>50
+                </div>
+                <div class="txt">满100元可用</div>
+              </div>
+              <div class="right">
+                <div class="rightCon">立即领取</div>
+              </div>
+              <div class="roll up-roll"></div>
+              <div class="roll down-roll"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="coupon4"
+        :style="{
+          borderRadius: bgRadius,
+        }"
+        v-else-if="styleConfig == 3"
+      >
         <div
-          class="pocket"
+          class="list acea-row row-middle"
           :style="{
-            background: toneConfig ? `linear-gradient(0deg,${bntBgColorRight} 0%,${bntBgColorLeft} 100%)` : themeColor2,
+            background: toneConfig ? couponBgColor : colorStyle.theme,
           }"
         >
-          <div class="tips">先领券 再购物</div>
-          <div class="info">领券下单·享购物优惠</div>
+          <div class="listCon acea-row row-middle">
+            <template v-for="(item, index) in numberConfig">
+              <div
+                class="item"
+                :style="{
+                  marginRight: spacingConfig + 'px',
+                }"
+                :key="index"
+                v-if="index < 4"
+              >
+                <div class="type">
+                  <div class="typeCon">通用券</div>
+                </div>
+                <div
+                  class="money"
+                  :style="{
+                    color: toneConfig ? couponMoneyColor : colorStyle.theme,
+                  }"
+                >
+                  <span class="label">¥</span>50
+                </div>
+                <div class="tips">满5000可用</div>
+              </div>
+            </template>
+          </div>
           <div
-            class="bnt"
+            class="pocket"
             :style="{
-              color: toneConfig ? couponMoneyColor : colorStyle.theme,
-              background: toneConfig ? couponMoneyColor : colorStyle.theme,
+              background: toneConfig
+                ? `linear-gradient(0deg,${bntBgColorRight} 0%,${bntBgColorLeft} 100%)`
+                : themeColor2,
             }"
           >
-            <div class="bntCon">立即领取</div>
+            <div class="tips">先领券 再购物</div>
+            <div class="info">领券下单·享购物优惠</div>
+            <div class="bnt">
+              <div class="bntCon">立即领取</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="coupon5 acea-row row-middle"
+        :style="{
+          borderRadius: bgRadius,
+        }"
+        v-else
+      >
+        <div class="list acea-row row-middle">
+          <div
+            class="item acea-row row-middle"
+            :style="{
+              marginRight: spacingConfig + 'px',
+              background: toneConfig
+                ? `linear-gradient(0deg,${bntBgColorRight} 0%,${bntBgColorLeft} 100%)`
+                : themeColor2,
+            }"
+            v-for="(item, index) in numberConfig"
+            :key="index"
+          >
+            <div class="left">
+              <div
+                class="money"
+                :style="{
+                  color: toneConfig ? couponMoneyColor : colorStyle.theme,
+                }"
+              >
+                <span class="label">¥</span>50
+              </div>
+              <div class="tips">满5000可用</div>
+            </div>
+            <div class="right acea-row row-center">
+              <div class="rightCon">领取</div>
+            </div>
+            <div class="roll"></div>
           </div>
         </div>
       </div>
     </div>
-    <div
-      class="coupon5 acea-row row-middle"
-      :style="{
-        background: moduleColor2,
-        borderRadius: bgRadius,
-      }"
-      v-else
-    >
-      <div class="list acea-row row-middle">
-        <div
-          class="item acea-row row-middle"
-          :style="{
-            marginRight: spacingConfig + 'px',
-            background: toneConfig ? `linear-gradient(0deg,${bntBgColorRight} 0%,${bntBgColorLeft} 100%)` : themeColor2,
-          }"
-          v-for="(item, index) in numberConfig"
-          :key="index"
-        >
-          <div
-            class="left"
-            :style="{
-              color: toneConfig ? couponMoneyColor : colorStyle.theme,
-            }"
-          >
-            <div class="money"><span class="label">¥</span>50</div>
-            <div class="tips">满5000可用</div>
-          </div>
-          <div class="right acea-row row-center">
-            <div class="rightCon">领取</div>
-          </div>
-          <div
-            class="roll"
-            :style="{
-              background: moduleColor2,
-            }"
-          ></div>
-        </div>
-      </div>
-    </div>
-  </div>
+  </common_wrapper>
 </template>
 
 <script>
@@ -317,10 +273,96 @@ export default {
       defaultConfig: {
         cname: '优惠券',
         name: 'coupon',
+        desc: '优惠券的介绍',
         timestamp: this.num,
         isHide: false,
         setUp: {
           tabVal: 0,
+        },
+        zIndexConfig: {
+          title: '组件上浮',
+          val: 0,
+          min: 0,
+        },
+        borderConfig: {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [
+            {
+              name: '隐藏',
+            },
+            {
+              name: '显示',
+            },
+          ],
+          val: 0,
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              {
+                name: '实线',
+                style: 'solid',
+              },
+              {
+                name: '虚线',
+                style: 'dashed',
+              },
+              {
+                name: '点状',
+                style: 'dotted',
+              },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [
+              {
+                item: '#e5e5e5',
+              },
+            ],
+            color: [
+              {
+                item: '#e5e5e5',
+              },
+            ],
+          },
+        },
+        shadowConfig: {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0,
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: 'rgba(0,0,0,0.1)' }],
+            color: [{ item: 'rgba(0,0,0,0.1)' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+          },
         },
         titleLeft: '展示设置',
         titleData: '优惠券数据',
@@ -329,7 +371,20 @@ export default {
         styleConfig: {
           title: '选择风格',
           tabVal: 0,
-          type: 'coupon',
+          tabList: [
+            {
+              name: '风格一',
+            },
+            {
+              name: '风格二',
+            },
+            {
+              name: '风格三',
+            },
+            {
+              name: '风格四',
+            },
+          ],
         },
         numberConfig: {
           title: '展示数量',
@@ -418,18 +473,28 @@ export default {
             },
           ],
         },
-        moduleColor2: {
-          title: '组件背景',
-          default: [
-            {
-              item: '#ffffff',
-            },
-          ],
-          color: [
-            {
-              item: '#ffffff',
-            },
-          ],
+        componentBgConfig: {
+          title: '背景设置',
+          tabVal: 0,
+          tabList: [{ name: '颜色' }, { name: '图片' }],
+          colorConfig: {
+            title: '背景颜色',
+            default: [{ item: '#F5F5F5' }, { item: '#F5F5F5' }],
+            color: [{ item: '#F5F5F5' }, { item: '#F5F5F5' }],
+          },
+          colorDirection: {
+            title: '渐变方向',
+            tabVal: 0,
+            tabList: [{ name: '横向' }, { name: '纵向' }, { name: '左斜' }, { name: '右斜' }],
+          },
+          imageConfig: {
+            header: '背景图片',
+            title: '',
+            name: '上传图片',
+            type: 'code',
+            url: '',
+            info: '建议尺寸：750px * 400px',
+          },
         },
         bottomBgColor: {
           title: '底部背景',
@@ -444,25 +509,19 @@ export default {
             },
           ],
         },
-        topConfig: {
-          title: '上边距',
-          val: 0,
-          min: 0,
-        },
-        bottomConfig: {
-          title: '下边距',
-          val: 0,
-          min: 0,
-        },
-        prConfig: {
-          title: '左右边距',
+        paddingConfig: {
+          title: '内边距',
+          isAll: false,
           val: 10,
           min: 0,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-        mbConfig: {
-          title: '页面上间距',
+        marginConfig: {
+          title: '外边距',
+          isAll: false,
           val: 0,
           min: 0,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
         fillet: {
           title: '背景圆角',
@@ -487,21 +546,13 @@ export default {
       numberConfig: 0,
       styleConfig: 0,
       toneConfig: 0,
+      couponBgColor: '',
       couponMoneyColor: '',
       bntBgColorLeft: '',
       bntBgColorRight: '',
-      couponBgColor: '',
-      spacingConfig: 0,
       moduleColor: '',
-      moduleColor2: '',
-      topConfig: 0,
-      bottomConfig: 0,
-      prConfig: 0,
+      configObj: null,
       bgRadius: 0,
-      mTop: 0,
-      bottomBgColor: '',
-      themeColor: '',
-      themeColor2: '',
     };
   },
   mounted() {
@@ -513,33 +564,31 @@ export default {
   methods: {
     setConfig(data) {
       if (!data) return;
-      if (data.mbConfig) {
-        this.numberConfig = data.numberConfig.val;
-        this.styleConfig = data.styleConfig.tabVal;
-        this.toneConfig = data.toneConfig.tabVal;
-        this.couponMoneyColor = data.couponMoneyColor.color[0].item;
-        this.bntBgColorLeft = data.bntBgColor.color[0].item;
-        this.bntBgColorRight = data.bntBgColor.color[1].item;
-        this.couponBgColor = data.couponBgColor.color[0].item;
-        this.spacingConfig = data.spacingConfig.val;
-        let moduleColorLeft = data.moduleColor.color[0].item;
-        let moduleColorRight = data.moduleColor.color[1].item;
-        this.moduleColor = `linear-gradient(90deg,${moduleColorLeft} 0%,${moduleColorRight} 100%)`;
-        this.moduleColor2 = data.moduleColor2.color[0].item;
-        this.topConfig = data.topConfig.val;
-        this.bottomConfig = data.bottomConfig.val;
-        this.prConfig = data.prConfig.val;
-        let fillet = data.fillet.type;
-        let filletVal = data.fillet.val;
-        let valList = data.fillet.valList;
-        this.bgRadius = fillet
-          ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
-          : filletVal + 'px';
-        this.mTop = data.mbConfig.val;
-        this.bottomBgColor = data.bottomBgColor.color[0].item;
-        this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
-        this.themeColor2 = `linear-gradient(0deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
+      for (let key in this.defaultConfig) {
+        if (data[key] == undefined) {
+          this.$set(data, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+        }
       }
+      this.numberConfig = data.numberConfig.val;
+      this.styleConfig = data.styleConfig.tabVal;
+      this.toneConfig = data.toneConfig.tabVal;
+      this.couponMoneyColor = data.couponMoneyColor.color[0].item;
+      this.bntBgColorLeft = data.bntBgColor.color[0].item;
+      this.bntBgColorRight = data.bntBgColor.color[1].item;
+      this.couponBgColor = data.couponBgColor.color[0].item;
+      this.spacingConfig = data.spacingConfig.val;
+      let moduleColorLeft = data.moduleColor.color[0].item;
+      let moduleColorRight = data.moduleColor.color[1].item;
+      this.moduleColor = `linear-gradient(90deg,${moduleColorLeft} 0%,${moduleColorRight} 100%)`;
+      let fillet = data.fillet.type;
+      let filletVal = data.fillet.val;
+      let valList = data.fillet.valList;
+      this.bgRadius = fillet
+        ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
+        : filletVal + 'px';
+      this.configObj = data;
+      this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
+      this.themeColor2 = `linear-gradient(0deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
     },
   },
 };
@@ -547,6 +596,8 @@ export default {
 
 <style scoped lang="scss">
 .couponCon {
+  // display: inline-block;
+  width: -webkit-fill-available;
   overflow: hidden;
 }
 .coupon5 {
@@ -611,10 +662,7 @@ export default {
 }
 .coupon4 {
   width: 100%;
-  height: 110px;
-  background: #ffffff;
   border-radius: 8px;
-  padding: 12px 10px;
 
   .list {
     background: #e93323;
@@ -755,10 +803,10 @@ export default {
   }
 }
 .coupon1 {
-  padding: 19px 0 12px 12px;
   overflow: hidden;
+  padding: 6px;
   .list {
-    margin-top: 12px;
+    margin-top: 18px;
     display: inline-flex;
     flex-wrap: nowrap;
 
@@ -817,11 +865,9 @@ export default {
   }
 }
 .coupon {
-  height: 99px;
-  background: #fff;
   overflow: hidden;
-  padding-left: 12px;
   width: 100%;
+  padding: 12px;
   .list {
     flex-wrap: nowrap;
   }

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -138,9 +138,9 @@ class UserExtractServices extends BaseServices
             $now_brokerage = bcadd((string)$user['brokerage_price'], (string)$extract_number, 2);
             $userBrokerageServices->income('extract_fail', $uid, $extract_number, $now_brokerage, $id);
             if (!$userServices->update($uid, ['brokerage_price' => bcadd((string)$user['brokerage_price'], (string)$extract_number, 2)], 'uid'))
-                throw new AdminException(400657);
+                throw new AdminException('增加用户佣金失败');
             if (!$this->dao->update($id, ['fail_time' => $fail_time, 'fail_msg' => $message, 'status' => $status])) {
-                throw new AdminException(100007);
+                throw new AdminException('修改失败');
             }
         });
 
@@ -265,7 +265,7 @@ class UserExtractServices extends BaseServices
             }
 
             if (!$res) {
-                throw new ApiException(400658);
+                throw new ApiException('企业付款到零钱失败，请稍后再试');
             }
         }
         if (sys_config('alipay_extract_type', 0) && $userExtract['extract_type'] == 'alipay') {
@@ -321,7 +321,7 @@ class UserExtractServices extends BaseServices
         ], 'extract');
 
         if (!$this->dao->update($id, ['status' => 1])) {
-            throw new AdminException(100007);
+            throw new AdminException('修改失败');
         }
         event('NoticeListener', [['uid' => $userExtract['uid'], 'userType' => strtolower($userType), 'extractNumber' => $extractNumber, 'nickname' => $nickname], 'user_extract']);
 
@@ -385,7 +385,7 @@ class UserExtractServices extends BaseServices
     {
         $UserExtract = $this->getExtract($id);
         if (!$UserExtract) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         $f = array();
         $f[] = Form::input('real_name', '姓名', $UserExtract['real_name']);
@@ -406,7 +406,7 @@ class UserExtractServices extends BaseServices
     public function update(int $id, array $data)
     {
         if (!$this->dao->update($id, $data))
-            throw new AdminException(100007);
+            throw new AdminException('修改失败');
         else
             return true;
     }
@@ -420,19 +420,19 @@ class UserExtractServices extends BaseServices
     {
         $extract = $this->getExtract($id);
         if (!$extract) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         if ($extract->status == 1) {
-            throw new AdminException(400659);
+            throw new AdminException('已经提现');
         }
         if ($extract->status == -1) {
-            throw new AdminException(400660);
+            throw new AdminException('您的提现申请已被拒绝');
         }
         $res = $this->changeFail($id, $extract, $message);
         if ($res) {
             return true;
         } else {
-            throw new AdminException(100005);
+            throw new AdminException('操作失败');
         }
     }
 
@@ -447,19 +447,19 @@ class UserExtractServices extends BaseServices
     {
         $extract = $this->getExtract($id);
         if (!$extract) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         if ($extract->status == 1) {
-            throw new AdminException(400659);
+            throw new AdminException('已经提现');
         }
         if ($extract->status == -1) {
-            throw new AdminException(400660);
+            throw new AdminException('您的提现申请已被拒绝');
         }
         $res = $this->changeSuccess($id, $extract);
         if ($res) {
             return $res;
         } else {
-            throw new AdminException(100005);
+            throw new AdminException('操作失败');
         }
     }
 
@@ -482,7 +482,7 @@ class UserExtractServices extends BaseServices
         $userService = app()->make(UserServices::class);
         $user = $userService->getUserInfo($uid, 'brokerage_price,uid');
         if (!$user) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
         /** @var UserBrokerageServices $services */
         $services = app()->make(UserBrokerageServices::class);
@@ -513,11 +513,11 @@ class UserExtractServices extends BaseServices
         $userService = app()->make(UserServices::class);
         $user = $userService->getUserInfo($uid);
         if (!$user) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
 
         if ($data['extract_type'] == 'weixin' && !sys_config('weixin_extract_type', 0) && !$data['weixin']) {
-            throw new ApiException(400110);
+            throw new ApiException('请输入微信账号');
         }
 
         if ($data['extract_type'] == 'weixin' && bccomp($data['money'], '0.1', 2) < 0) {
@@ -530,7 +530,7 @@ class UserExtractServices extends BaseServices
         if (!$openid) $openid = $wechatServices->uidToOpenid($uid, 'routine');
 
         if ($data['extract_type'] == 'weixin' && sys_config('weixin_extract_type', 0) && !$openid) {
-            throw new ApiException(410024);
+            throw new ApiException('请先关注公众号');
         }
 
         /** @var UserBrokerageServices $services */
@@ -542,22 +542,22 @@ class UserExtractServices extends BaseServices
         //可提现佣金
         $commissionCount = bcsub((string)$data['brokerage_price'], (string)$data['broken_commission'], 2);
         if ($data['money'] > $commissionCount) {
-            throw new ApiException(400661);
+            throw new ApiException('可提现佣金不足');
         }
 
         $extractPrice = $user['brokerage_price'];
         $userExtractMinPrice = sys_config('user_extract_min_price');
         if ($data['money'] < $userExtractMinPrice) {
-            throw new ApiException(400662, ['money' => $userExtractMinPrice]);
+            throw new ApiException('提现金额不能小于{:money}元', ['money' => $userExtractMinPrice]);
         }
         if ($extractPrice < 0) {
-            throw new ApiException(400663, ['money' => $data['money']]);
+            throw new ApiException('提现佣金不足{:money}元', ['money' => $data['money']]);
         }
         if ($data['money'] > $extractPrice) {
-            throw new ApiException(400663, ['money' => $data['money']]);
+            throw new ApiException('提现佣金不足{:money}元', ['money' => $data['money']]);
         }
         if ($data['money'] <= 0) {
-            throw new ApiException(400664);
+            throw new ApiException('提现佣金大于0');
         }
         $data['extract_price'] = bcmul($data['money'], '1', 2);
         $insertData = [
@@ -596,17 +596,17 @@ class UserExtractServices extends BaseServices
             $mark = '使用微信提现' . $insertData['extract_price'] . '元' . $feeMark;
             if (sys_config('weixin_extract_type', 0) && $openid) {
                 if ($data['extract_price'] < 0.1) {
-                    throw new ApiException(400665);
+                    throw new ApiException('企业微信付款到零钱最低金额为1元');
                 }
             }
         }
         $res1 = $this->transaction(function () use ($insertData, $data, $uid, $userService, $user, $mark) {
             if (!$res1 = $this->dao->save($insertData)) {
-                throw new ApiException(410121);
+                throw new ApiException('申请提现失败');
             }
             $balance = bcsub((string)$user['brokerage_price'], $data['extract_price'], 2) ?? 0;
             if (!$userService->update($uid, ['brokerage_price' => $balance], 'uid')) {
-                throw new ApiException(410121);
+                throw new ApiException('申请提现失败');
             }
 
             //保存佣金记录

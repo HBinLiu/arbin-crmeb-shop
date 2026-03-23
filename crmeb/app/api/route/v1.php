@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -65,7 +65,7 @@ Route::group(function () {
     ->option(['mark' => 'base', 'mark_name' => '基础接口']);
 
 
-//管理员订单操作类
+//移动端商家管理
 Route::group(function () {
     Route::get('admin/order/statistics', 'v1.admin.StoreOrderController/statistics')->name('adminOrderStatistics')->option(['real_name' => '订单数据统计']);//订单数据统计
     Route::get('admin/order/data', 'v1.admin.StoreOrderController/data')->name('adminOrderData')->option(['real_name' => '订单每月统计数据']);//订单每月统计数据
@@ -88,6 +88,30 @@ Route::group(function () {
     Route::get('admin/order/export_temp', 'v1.admin.StoreOrderController/getExportTemp')->name('getExportTemp')->option(['real_name' => '获取电子面单模板获取']);//获取电子面单模板获取
     Route::get('admin/order/export_all', 'v1.admin.StoreOrderController/getExportAll')->name('getExportAll')->option(['real_name' => '获取物流公司']);//获取物流公司
     Route::get('admin/order/express/:uni/[:type]', 'v1.admin.StoreOrderController/express')->name('orderExpress')->option(['real_name' => '订单查看物流']); //订单查看物流
+
+    // 商家管理首页
+    Route::get('admin/manage/statistics', 'v1.admin.StoreManageController/statistics');
+    // 商家管理商品管理
+    Route::get('admin/manage/product', 'v1.admin.StoreManageController/product');
+    Route::post('admin/manage/product/set_show', 'v1.admin.StoreManageController/productShow');
+    Route::get('admin/manage/product/label', 'v1.admin.StoreManageController/productLabel');
+    Route::post('admin/manage/product/save_label', 'v1.admin.StoreManageController/saveProductLabel');
+    Route::get('admin/manage/product/cate', 'v1.admin.StoreManageController/productCate');
+    Route::post('admin/manage/product/save_cate', 'v1.admin.StoreManageController/saveProductCate');
+    Route::get('admin/manage/product/attr/:id', 'v1.admin.StoreManageController/productAttr');
+    Route::post('admin/manage/product/save_attr/:id', 'v1.admin.StoreManageController/saveProductAttr');
+    Route::get('admin/manage/product/shipping_temp', 'v1.admin.StoreManageController/shippingTemp');
+    Route::post('admin/manage/product/create', 'v1.admin.StoreManageController/createProduct');
+    // 商家管理用户管理
+    Route::get('admin/manage/user', 'v1.admin.StoreManageController/user');
+    Route::get('admin/manage/user/group', 'v1.admin.StoreManageController/userGroup');
+    Route::get('admin/manage/user/level', 'v1.admin.StoreManageController/userLevel');
+    Route::get('admin/manage/user/label/[:uid]', 'v1.admin.StoreManageController/userLabel');
+    Route::get('admin/manage/user/coupon', 'v1.admin.StoreManageController/userCoupon');
+    Route::post('admin/manage/user/update/:uid', 'v1.admin.StoreManageController/userUpdate');
+    Route::get('admin/manage/user/info/:uid', 'v1.admin.StoreManageController/userInfo');
+
+
 })->middleware(\app\http\middleware\AllowOriginMiddleware::class)
     ->middleware(\app\api\middleware\StationOpenMiddleware::class)
     ->middleware(\app\api\middleware\AuthTokenMiddleware::class, true)
@@ -360,6 +384,15 @@ Route::group(function () {
         //DIY接口
         Route::get('diy/get_diy/[:id]', 'v1.PublicController/getDiy');
         Route::get('home/products', 'v1.PublicController/home_products_list')->name('homeProductsList')->option(['real_name' => '获取首页推荐不同类型商品的轮播图和商品']);//获取首页推荐不同类型商品的轮播图和商品
+
+        Route::get('theme_info/:type', 'v1.PublicController/themeInfo')->name('themeInfo')->option(['real_name' => '主题详情']);
+        Route::get('theme_version', 'v1.PublicController/themeVersion')->name('themeVersion')->option(['real_name' => '主题版本']);
+        Route::get('theme/user', 'v1.PublicController/themeUser')->name('themeUser')->option(['real_name' => '自定义组件-用户']);
+        Route::get('theme/article', 'v1.PublicController/themeArticle')->name('themeArticle')->option(['real_name' => '自定义组件-文章']);
+        Route::get('theme/coupon', 'v1.PublicController/themeCoupon')->name('themeCoupon')->option(['real_name' => '自定义组件-优惠券']);
+        Route::get('theme/product', 'v1.PublicController/themeProduct')->name('themeProduct')->option(['real_name' => '自定义组件-商品']);
+        Route::get('theme/navigation', 'v1.PublicController/themeNavigation')->name('themeNavigation')->option(['real_name' => '导航']);
+
     })->option(['mark' => 'index', 'mark_name' => '主页接口']);
 
     Route::group(function () {

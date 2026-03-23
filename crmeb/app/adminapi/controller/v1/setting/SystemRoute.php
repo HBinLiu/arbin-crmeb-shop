@@ -1,15 +1,13 @@
 <?php
-/**
- *  +----------------------------------------------------------------------
- *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
- *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
- *  +----------------------------------------------------------------------
- *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
- *  +----------------------------------------------------------------------
- *  | Author: CRMEB Team <admin@crmeb.com>
- *  +----------------------------------------------------------------------
- */
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 
 namespace app\adminapi\controller\v1\setting;
 
@@ -52,7 +50,7 @@ class SystemRoute extends AuthController
     {
         $this->services->syncRoute($appName);
 
-        return app('json')->success(100038);
+        return app('json')->success('同步成功');
     }
 
     /**
@@ -116,16 +114,16 @@ class SystemRoute extends AuthController
         ]);
 
 //        if (!$data['name']) {
-//            return app('json')->fail(500031);
+//            return app('json')->fail('接口名不能为空');
 //        }
 //        if (!$data['path']) {
-//            return app('json')->fail(500032);
+//            return app('json')->fail('接口地址不能为空');
 //        }
 //        if (!$data['method']) {
-//            return app('json')->fail(500033);
+//            return app('json')->fail('请求方式不能为空');
 //        }
 //        if (!$data['app_name']) {
-//            return app('json')->fail(500034);
+//            return app('json')->fail('模块分类不能为空');
 //        }
         if ($id) {
             $this->services->update($id, $data);
@@ -135,7 +133,7 @@ class SystemRoute extends AuthController
         }
         CacheService::clear();
 
-        return app('json')->success($id ? 100001 : 100021);
+        return app('json')->success($id ? '修改成功' : '添加成功');
     }
 
     /**
@@ -160,11 +158,11 @@ class SystemRoute extends AuthController
     public function delete($id)
     {
         if (!$id) {
-            return app('json')->fail(500035);
+            return app('json')->fail('接口不存在');
         }
 
         $this->services->destroy($id);
 
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 }

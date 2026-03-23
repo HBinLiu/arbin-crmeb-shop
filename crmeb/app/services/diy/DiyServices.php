@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -75,12 +75,12 @@ class DiyServices extends BaseServices
         if ($id) {
             $data['update_time'] = time();
             $res = $this->dao->update($id, $data);
-            if (!$res) throw new AdminException(100007);
+            if (!$res) throw new AdminException('修改失败');
         } else {
             $data['add_time'] = time();
             $data['update_time'] = time();
             $res = $this->dao->save($data);
-            if (!$res) throw new AdminException(100006);
+            if (!$res) throw new AdminException('保存失败');
             $id = $res->id;
         }
 
@@ -93,11 +93,11 @@ class DiyServices extends BaseServices
      */
     public function del(int $id)
     {
-        if ($id == 1) throw new AdminException(400457);
+        if ($id == 1) throw new AdminException('默认模板不能删除');
         $count = $this->dao->getCount(['id' => $id, 'status' => 1]);
-        if ($count) throw new AdminException(400458);
+        if ($count) throw new AdminException('该模板使用中，无法删除');
         $res = $this->dao->update($id, ['is_del' => 1]);
-        if (!$res) throw new AdminException(100008);
+        if (!$res) throw new AdminException('删除失败');
 
         CacheService::clear();
     }
@@ -336,8 +336,16 @@ class DiyServices extends BaseServices
         $banner_gid = $systemGroupServices->value(['config_name' => 'routine_my_banner'], 'id');
         $routine_my_menus = $systemGroupDataServices->getGroupDataList(['gid' => $menus_gid], 'all');
         $routine_my_menus = $routine_my_menus['list'] ?? [];
+        foreach ($routine_my_menus as &$item) {
+            if (!isset($item['is_show']) || $item['is_show'] === '') {
+                $item['is_show'] = '1';
+            }
+        }
         $routine_my_banner = $systemGroupDataServices->getGroupDataList(['gid' => $banner_gid], 'all');
         $routine_my_banner = $routine_my_banner['list'] ?? [];
+        foreach ($routine_my_banner as &$bannerItem) {
+            $bannerItem['is_show'] = strval($bannerItem['status']);
+        }
         $my_banner_status = boolval($info['my_banner_status']);
         return compact('status', 'order_status', 'routine_my_menus', 'routine_my_banner', 'color_change', 'my_banner_status');
     }
@@ -354,7 +362,7 @@ class DiyServices extends BaseServices
     {
         /** @var SystemGroupDataServices $systemGroupDataServices */
         $systemGroupDataServices = app()->make(SystemGroupDataServices::class);
-        if (!$data['status']) throw new AdminException(100100);
+        if (!$data['status']) throw new AdminException('参数错误');
         $info = $this->dao->get(['template_name' => 'member', 'type' => 1]);
         if ($info) {
             $info->my_banner_status = $data['my_banner_status'];
@@ -365,7 +373,7 @@ class DiyServices extends BaseServices
             $info->update_time = time();
             $res = $info->save();
         } else {
-            throw new AdminException(400459);
+            throw new AdminException('个人中心模板不存在');
         }
         $systemGroupDataServices->saveAllData($data['routine_my_banner'], 'routine_my_banner');
         $systemGroupDataServices->saveAllData($data['routine_my_menus'], 'routine_my_menus');
@@ -409,7 +417,7 @@ class DiyServices extends BaseServices
     {
         $diy = $this->dao->getOne(['id' => $id, 'is_del' => 0]);
         if (!$diy) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         /** @var QrcodeServices $QrcodeService */
         $QrcodeService = app()->make(QrcodeServices::class);

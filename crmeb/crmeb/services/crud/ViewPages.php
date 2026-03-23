@@ -1,15 +1,13 @@
 <?php
-/**
- *  +----------------------------------------------------------------------
- *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
- *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
- *  +----------------------------------------------------------------------
- *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
- *  +----------------------------------------------------------------------
- *  | Author: CRMEB Team <admin@crmeb.com>
- *  +----------------------------------------------------------------------
- */
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 
 namespace crmeb\services\crud;
 
@@ -153,7 +151,7 @@ CONTENT;
                         $contentVue[] = <<<CONTENT
 $tab<el-table-column label="$item[name]">
 $tab3<template slot-scope="scope">
-$tab4<<el-switch  :active-value="1" :inactive-value="0" v-model="scope.row.{$fieldValue}" :value="scope.row.{$fieldValue}" size="large" @change="updateStatus(scope.row,'{$fieldValue}')" />
+$tab4<el-switch  :active-value="1" :inactive-value="0" v-model="scope.row.{$fieldValue}" :value="scope.row.{$fieldValue}" size="large" @change="updateStatus(scope.row,'{$fieldValue}')" />
 $tab3</template>
 $tab</el-table-column>
 CONTENT;
@@ -293,11 +291,11 @@ CONTENT;
 
             if (FormTypeEnum::FRAME_IMAGES === $item['from_type']) {
                 $descriptionContent .= <<<CONTENT
-$tab<el-descriptions-item label="$item[comment]"><el-image v-for="item in info.$fieldValue" :src="item" :preview-src-list="info.$fieldValue"></el-descriptions-item>\n
+$tab<el-descriptions-item label="$item[comment]"><el-image v-for="item in info.$fieldValue" :src="item" :preview-src-list="info.$fieldValue" /></el-descriptions-item>\n
 CONTENT;
             } else if (FormTypeEnum::FRAME_IMAGE_ONE === $item['from_type']) {
                 $descriptionContent .= <<<CONTENT
-$tab<el-descriptions-item label="$item[comment]"><el-image :src="info.$fieldValue" :preview-src-list="info.$fieldValue"></el-descriptions-item>\n
+$tab<el-descriptions-item label="$item[comment]"><el-image :src="info.$fieldValue" :preview-src-list="[info.$fieldValue]" /></el-descriptions-item>\n
 CONTENT;
             } else {
                 $descriptionContent .= <<<CONTENT

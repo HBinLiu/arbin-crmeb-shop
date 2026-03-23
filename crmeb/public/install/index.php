@@ -27,6 +27,7 @@ if (phpversion() >= '8.0.0') {
 date_default_timezone_set('PRC');
 error_reporting(E_ALL & ~E_NOTICE);
 header('Content-Type: text/html; charset=UTF-8');
+
 //mysql数据库配置容器中获取
 $MYSQL_HOST_IP = getenv('MYSQL_HOST_IP') ?: '127.0.0.1';
 $MYSQL_PORT = getenv('MYSQL_PORT') ?: '3306';
@@ -38,6 +39,7 @@ $REDIS_HOST_IP = getenv('REDIS_HOST_IP') ?: '127.0.0.1';
 $REDIS_PORT = getenv('REDIS_PORT') ?: '6379';
 $REDIS_DATABASE = getenv('REDIS_DATABASE') ?: 0;
 $REDIS_PASSWORD = getenv('REDIS_PASSWORD') ?: '';
+
 //数据库
 $sqlFile = 'crmeb.sql';
 $configFile = '.env';
@@ -328,35 +330,37 @@ switch ($step) {
             if (!$_POST['demo']) {
                 $result = mysqli_query($conn, "show tables");
                 $tables = mysqli_fetch_all($result);//参数MYSQL_ASSOC、MYSQLI_NUM、MYSQLI_BOTH规定产生数组类型
-                $bl_table = array('eb_system_admin'
-                , 'eb_system_role'
-                , 'eb_cache'
-                , 'eb_agent_level'
-                , 'eb_page_link'
-                , 'eb_page_categroy'
-                , 'eb_system_config'
-                , 'eb_system_config_tab'
-                , 'eb_system_menus'
-                , 'eb_system_notification'
-                , 'eb_express'
-                , 'eb_system_group'
-                , 'eb_system_group_data'
-                , 'eb_lang_code'
-                , 'eb_lang_country'
-                , 'eb_lang_type'
-                , 'eb_template_message'
-                , 'eb_shipping_templates'
-                , "eb_shipping_templates_region"
-                , 'eb_system_city'
-                , 'eb_diy'
-                , 'eb_member_ship'
-                , 'eb_system_timer'
-                , 'eb_member_right'
-                , 'eb_agreement'
-                , 'eb_store_service_speechcraft'
-                , 'eb_system_user_level'
-                , 'eb_out_interface'
-                , 'eb_cache');
+                $bl_table = array(
+                    'eb_agent_level',
+                    'eb_agreement',
+                    'eb_cache',
+                    'eb_diy',
+                    'eb_express',
+                    'eb_lang_code',
+                    'eb_lang_country',
+                    'eb_lang_type',
+                    'eb_member_right',
+                    'eb_member_ship',
+                    'eb_out_interface',
+                    'eb_page_categroy',
+                    'eb_page_link',
+                    'eb_shipping_templates',
+                    'eb_shipping_templates_region',
+                    'eb_system_admin',
+                    'eb_system_city',
+                    'eb_system_config',
+                    'eb_system_config_tab',
+                    'eb_system_event_data',
+                    'eb_system_file_info',
+                    'eb_system_group',
+                    'eb_system_group_data',
+                    'eb_system_menus',
+                    'eb_system_notification',
+                    'eb_system_route',
+                    'eb_system_route_cate',
+                    'eb_system_timer',
+                    'eb_system_user_level'
+                );
                 foreach ($bl_table as $k => $v) {
                     $bl_table[$k] = str_replace('eb_', $dbPrefix, $v);
                 }
@@ -427,12 +431,12 @@ switch ($step) {
         $ip = get_client_ip();
         $host = $_SERVER['HTTP_HOST'];
         $curent_version = getversion();
+        $uid = getUid();
         $version = trim($curent_version['version']);
         $platform = trim($curent_version['platform']);
         installlog();
         include_once("./templates/step5.php");
         @touch('../install.lock');
-        generateSignature();
         exit();
 }
 //读取版本号
@@ -445,6 +449,13 @@ function getversion()
         $version_arr[$k] = $v;
     }
     return $version_arr;
+}
+
+function getUid()
+{
+    $config = include_once APP_DIR.'/config/plat.php';
+
+    return $config['stores']['sms']['template_id']['ADMIN_ORDER_UID'] ?? 0;
 }
 
 //写入安装信息
@@ -662,43 +673,6 @@ function getFileSignature(string $path)
         }
         closedir($dh);
     }
-}
-
-/**
- * 写入签名
- * @return void
- * @throws Exception
- */
-function generateSignature()
-{
-    $file = APP_DIR . '.version';
-    if (!$data = @file($file)) {
-        throw new Exception('.version读取失败');
-    }
-    $list = [];
-    if (!empty($data)) {
-        foreach ($data as $datum) {
-            list($name, $value) = explode('=', $datum);
-            $list[$name] = rtrim($value);
-        }
-    }
-
-    if (!isset($list['project_signature'])) {
-        $list['project_signature'] = '';
-    }
-
-    global $fileValue;
-    getFileSignature(APP_DIR . DIRECTORY_SEPARATOR . 'app');
-    getFileSignature(APP_DIR . DIRECTORY_SEPARATOR . 'crmeb');
-
-    $list['project_signature'] = md5($fileValue);
-
-    $str = "";
-    foreach ($list as $key => $item) {
-        $str .= "{$key}={$item}\n";
-    }
-
-    file_put_contents($file, $str);
 }
 
 function getSchemeAndHost()

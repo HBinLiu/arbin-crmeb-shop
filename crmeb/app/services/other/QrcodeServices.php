@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -59,7 +59,7 @@ class QrcodeServices extends BaseServices
             $this->createTemporaryQrcode($id, $type, $res['id']);
             $res = $this->getTemporaryQrcode($type, $id);
         }
-        if (!$res['ticket']) throw new AdminException(400552);
+        if (!$res['ticket']) throw new AdminException('临时二维码获取错误');
         return $res;
     }
 
@@ -105,7 +105,7 @@ class QrcodeServices extends BaseServices
             $this->createForeverQrcode($id, $type);
             $res = $this->getForeverQrcode($type, $id);
         }
-        if (!$res['ticket']) throw new AdminException(400553);
+        if (!$res['ticket']) throw new AdminException('永久二维码获取错误');
         return $res;
     }
 
@@ -357,7 +357,7 @@ class QrcodeServices extends BaseServices
         $data['url_time'] = '';
         $data['qrcode_url'] = $qrCodeLink;
         if (!$re = $this->dao->save($data)) {
-            throw new AdminException(400237);
+            throw new AdminException('二维码生成失败');
         }
         return $re;
     }
@@ -372,10 +372,10 @@ class QrcodeServices extends BaseServices
     {
         if (!$id) return false;
         if (!$this->dao->get((int)$id)) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         if (!$re = $this->dao->update($id, $data, 'id')) {
-            throw new AdminException(100007);
+            throw new AdminException('修改失败');
         }
         return $re;
     }

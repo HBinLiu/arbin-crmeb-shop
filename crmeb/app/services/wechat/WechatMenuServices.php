@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -65,11 +65,11 @@ class WechatMenuServices extends BaseServices
                 $msgData = json_decode($msgData, true);
                 $errcode = $msgData['errcode'] ?? 0;
                 if ($errcode == 40164) {
-                    throw new AdminException(400704);
+                    throw new AdminException('您得ip不再白名单中,请前往腾讯微信公众平台添加ip白名单');
                 }
             }
             if (strstr($e->getMessage(), 'invalid weapp appid')) {
-                throw new AdminException(400705);
+                throw new AdminException('您填写得appid无效,请检查');
             }
             throw new AdminException(WechatService::getMessage($e->getMessage()));
         }

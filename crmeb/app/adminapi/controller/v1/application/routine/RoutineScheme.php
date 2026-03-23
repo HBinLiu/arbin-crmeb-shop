@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\adminapi\controller\v1\application\routine;
 
 use app\adminapi\controller\AuthController;
@@ -36,13 +44,13 @@ class RoutineScheme extends AuthController
             ['expire_num', 0],
         ]);
         $this->services->schemeSave($id, $data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     public function schemeDel($id)
     {
         $res = $this->services->delete($id);
-        if (!$res) return app('json')->fail(100008);
-        return app('json')->success(100002);
+        if (!$res) return app('json')->fail('删除失败');
+        return app('json')->success('删除成功');
     }
 }

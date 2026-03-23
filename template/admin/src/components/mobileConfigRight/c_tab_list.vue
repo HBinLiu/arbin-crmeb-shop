@@ -5,7 +5,7 @@
       <draggable class="dragArea list-group" :list="configData.list" group="peoples" handle=".move-icon">
         <div class="item" v-for="(item, index) in configData.list" :key="index">
           <div class="move-icon">
-            <span class="iconfont-diy iconxingzhuangjiehe"></span>
+            <span class="iconfont iconxingzhuangjiehe"></span>
           </div>
           <div>
             <div class="con-item">
@@ -142,7 +142,6 @@ export default {
     },
     //商品分类
     sliderChange(e) {
-      console.log(e);
       // this.configData.list[this.configData.tabCur].selectConfig.activeValue = e;
       // this.$emit('getConfig', { name: 'cascader', values: e });
       this.configData.list[this.activeIndex].classPage.id = e;
@@ -150,7 +149,6 @@ export default {
       this.configData.list[this.activeIndex].classPage.name = name;
     },
     linkUrl(e) {
-      console.log(e, this.configData.list[this.activeIndex].dataType.tabVal, '111');
       if (this.configData.list[this.activeIndex].dataType.tabVal) {
         let obj = e.split('?')[1];
         let obj2 = obj.split('&');
@@ -228,7 +226,7 @@ export default {
 ::v-deep .ivu-input-icon {
   color: #bbbbbb;
 }
-::v-deep .el-radio{
+::v-deep .el-radio {
   margin-bottom: 1px !important;
 }
 .c_product {
@@ -300,7 +298,7 @@ export default {
   color: #999;
 }
 
-.iconfont-diy {
+.iconfont {
   color: #dddddd;
   font-size: 16px;
 }

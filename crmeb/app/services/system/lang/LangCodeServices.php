@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\services\system\lang;
 
 use app\dao\system\lang\LangCodeDao;
@@ -60,7 +68,7 @@ class LangCodeServices extends BaseServices
      */
     public function langCodeInfo($code)
     {
-        if (!$code) throw new AdminException(100026);
+        if (!$code) throw new AdminException('数据不存在');
         /** @var LangTypeServices $langTypeServices */
         $langTypeServices = app()->make(LangTypeServices::class);
         $typeList = $langTypeServices->getColumn([['status', '=', 1], ['is_del', '=', 0]], 'language_name,file_name,id', 'id');
@@ -83,8 +91,8 @@ class LangCodeServices extends BaseServices
         if ($data['edit'] == 0) {
             if ($data['is_admin'] == 1) {
                 $code = $this->dao->getMax(['is_admin' => 1], 'code');
-                if ($code < 500000) {
-                    $code = 500000;
+                if ($code < '发起退款查询失败') {
+                    $code = '发起退款查询失败';
                 } else {
                     $code = $code + 1;
                 }
@@ -123,7 +131,7 @@ class LangCodeServices extends BaseServices
         $res = $this->dao->delete(['code' => $code]);
         $this->clearLangCache();
         if ($res) return true;
-        throw new AdminException(100008);
+        throw new AdminException('删除失败');
     }
 
     /**

@@ -1,4 +1,13 @@
 <?php
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 /**
  * @author: liaofei<136327134@qq.com>
  * @day: 2020/7/6
@@ -612,5 +621,18 @@ abstract class BaseDao
     public function getOrderOne(array $where = [], string $order = 'id desc')
     {
         return $this->getModel()->where($where)->order($order)->find();
+    }
+
+    /**
+     * 插入数据并返回自增ID
+     * @param array $data
+     * @return int|string
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2025/12/11
+     */
+    public function insertGetId(array $data)
+    {
+        return $this->getModel()->insertGetId($data);
     }
 }

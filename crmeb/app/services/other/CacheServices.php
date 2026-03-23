@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -56,7 +56,6 @@ class CacheServices extends BaseServices
             }
             return null;
         }
-
     }
 
     /**
@@ -100,4 +99,24 @@ class CacheServices extends BaseServices
             return false;
     }
 
+    /**
+     * 检查缓存是否存在
+     * @param string $key
+     * @param $result
+     * @return bool
+     * @throws \ReflectionException
+     */
+    public function checkDbCache(string $key = '', $result = ''): bool
+    {
+        // 检查缓存是否存在，如果$value存在则检查缓存值是否一致
+        if ($key) {
+            if ($result) {
+                return $this->dao->count(['key' => $key, 'result' => json_encode($result)]) > 0;
+            } else {
+                return $this->dao->count(['key' => $key]) > 0;
+            }
+        } else {
+            return false;
+        }
+    }
 }

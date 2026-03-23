@@ -41,11 +41,31 @@ export default {
     return {
       configObj: {},
       rCom: [
+        // {
+        //   components: toolCom.c_title,
+        //   configNme: 'titleLeft',
+        // },
+        {
+          components: toolCom.c_card_select,
+          configNme: 'styleConfig',
+        },
         {
           components: toolCom.c_set_up,
           configNme: 'setUp',
         },
       ],
+      // 内容设置部分
+      contentStyle: [
+        {
+          components: toolCom.c_title,
+          configNme: 'titleContent',
+        },
+        {
+          components: toolCom.c_swipers_list,
+          configNme: 'swiperConfig',
+        },
+      ],
+      // 样式设置 - 指示器部分
       oneStyle: [
         {
           components: toolCom.c_title,
@@ -92,33 +112,12 @@ export default {
       ],
       oneCurrencyStyle: [
         {
-          components: toolCom.c_title,
-          configNme: 'titleCurrency',
-        },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'bgColor',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'topConfig',
+          components: toolCom.c_common_style,
+          configNme: 'commonStyle',
         },
       ],
-      twoCurrencyStyle: [
-        {
-          components: toolCom.c_slider,
-          configNme: 'bottomConfig',
-        },
-      ],
+      twoCurrencyStyle: [],
       threeCurrencyStyle: [
-        {
-          components: toolCom.c_slider,
-          configNme: 'prConfig',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'mbConfig',
-        },
         {
           components: toolCom.c_fillet,
           configNme: 'fillet',
@@ -132,7 +131,7 @@ export default {
   watch: {
     num(nVal) {
       let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[nVal]));
-      this.configObj = value;
+      this.configObj = this.patchConfig(value);
     },
     configObj: {
       handler(nVal, oVal) {
@@ -143,28 +142,25 @@ export default {
     'configObj.setUp.tabVal': {
       handler(nVal, oVal) {
         this.setUp = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          // {
+          //   components: toolCom.c_title,
+          //   configNme: 'titleLeft',
+          // },
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (nVal == 0) {
-          let tempArr = [
-            {
-              components: toolCom.c_title,
-              configNme: 'titleLeft',
-            },
-            {
-              components: toolCom.c_radio,
-              configNme: 'styleConfig',
-            },
-            {
-              components: toolCom.c_title,
-              configNme: 'titleContent',
-            },
-            {
-              components: toolCom.c_swipers_list,
-              configNme: 'swiperConfig',
-            },
-          ];
-          this.rCom = arr.concat(tempArr);
+          // 内容设置
+          this.rCom = arr.concat(this.contentStyle);
         } else {
+          // 样式设置
           if (this.type2 == 2) {
             if (this.type) {
               this.rCom = [
@@ -175,7 +171,6 @@ export default {
                 ...this.fourStyle,
                 ...this.oneCurrencyStyle,
                 ...this.twoCurrencyStyle,
-                ...this.threeCurrencyStyle,
               ];
             } else {
               this.rCom = [
@@ -185,27 +180,13 @@ export default {
                 ...this.fourStyle,
                 ...this.oneCurrencyStyle,
                 ...this.twoCurrencyStyle,
-                ...this.threeCurrencyStyle,
               ];
             }
           } else if (this.type2 == 1) {
             if (this.type) {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.twoStyle,
-                ...this.threeStyle,
-                ...this.oneCurrencyStyle,
-                ...this.threeCurrencyStyle,
-              ];
+              this.rCom = [...arr, ...this.oneStyle, ...this.twoStyle, ...this.threeStyle, ...this.oneCurrencyStyle];
             } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.threeStyle,
-                ...this.oneCurrencyStyle,
-                ...this.threeCurrencyStyle,
-              ];
+              this.rCom = [...arr, ...this.oneStyle, ...this.threeStyle, ...this.oneCurrencyStyle];
             }
           } else {
             if (this.type) {
@@ -216,7 +197,6 @@ export default {
                 ...this.threeStyle,
                 ...this.oneCurrencyStyle,
                 ...this.twoCurrencyStyle,
-                ...this.threeCurrencyStyle,
               ];
             } else {
               this.rCom = [
@@ -225,7 +205,6 @@ export default {
                 ...this.threeStyle,
                 ...this.oneCurrencyStyle,
                 ...this.twoCurrencyStyle,
-                ...this.threeCurrencyStyle,
               ];
             }
           }
@@ -236,7 +215,20 @@ export default {
     'configObj.styleConfig.tabVal': {
       handler(nVal, oVal) {
         this.type2 = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          // {
+          //   components: toolCom.c_title,
+          //   configNme: 'titleLeft',
+          // },
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (this.setUp) {
           if (nVal == 2) {
             if (this.type) {
@@ -248,7 +240,6 @@ export default {
                 ...this.fourStyle,
                 ...this.oneCurrencyStyle,
                 ...this.twoCurrencyStyle,
-                ...this.threeCurrencyStyle,
               ];
             } else {
               this.rCom = [
@@ -258,27 +249,13 @@ export default {
                 ...this.fourStyle,
                 ...this.oneCurrencyStyle,
                 ...this.twoCurrencyStyle,
-                ...this.threeCurrencyStyle,
               ];
             }
           } else if (nVal == 1) {
             if (this.type) {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.twoStyle,
-                ...this.threeStyle,
-                ...this.oneCurrencyStyle,
-                ...this.threeCurrencyStyle,
-              ];
+              this.rCom = [...arr, ...this.oneStyle, ...this.twoStyle, ...this.threeStyle, ...this.oneCurrencyStyle];
             } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.threeStyle,
-                ...this.oneCurrencyStyle,
-                ...this.threeCurrencyStyle,
-              ];
+              this.rCom = [...arr, ...this.oneStyle, ...this.threeStyle, ...this.oneCurrencyStyle];
             }
           } else {
             if (this.type) {
@@ -289,7 +266,6 @@ export default {
                 ...this.threeStyle,
                 ...this.oneCurrencyStyle,
                 ...this.twoCurrencyStyle,
-                ...this.threeCurrencyStyle,
               ];
             } else {
               this.rCom = [
@@ -298,7 +274,6 @@ export default {
                 ...this.threeStyle,
                 ...this.oneCurrencyStyle,
                 ...this.twoCurrencyStyle,
-                ...this.threeCurrencyStyle,
               ];
             }
           }
@@ -309,7 +284,20 @@ export default {
     'configObj.toneConfig.tabVal': {
       handler(nVal, oVal) {
         this.type = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          // {
+          //   components: toolCom.c_title,
+          //   configNme: 'titleLeft',
+          // },
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (this.setUp) {
           if (this.type2 == 2) {
             if (nVal) {
@@ -321,7 +309,6 @@ export default {
                 ...this.fourStyle,
                 ...this.oneCurrencyStyle,
                 ...this.twoCurrencyStyle,
-                ...this.threeCurrencyStyle,
               ];
             } else {
               this.rCom = [
@@ -331,7 +318,6 @@ export default {
                 ...this.fourStyle,
                 ...this.oneCurrencyStyle,
                 ...this.twoCurrencyStyle,
-                ...this.threeCurrencyStyle,
               ];
             }
           } else if (this.type2 == 1) {
@@ -343,7 +329,6 @@ export default {
                 ...this.threeStyle,
                 ...this.oneCurrencyStyle,
                 ...this.twoCurrencyStyle,
-                ...this.threeCurrencyStyle,
               ];
             } else {
               this.rCom = [
@@ -352,7 +337,6 @@ export default {
                 ...this.threeStyle,
                 ...this.oneCurrencyStyle,
                 ...this.twoCurrencyStyle,
-                ...this.threeCurrencyStyle,
               ];
             }
           } else {
@@ -364,7 +348,6 @@ export default {
                 ...this.threeStyle,
                 ...this.oneCurrencyStyle,
                 ...this.twoCurrencyStyle,
-                ...this.threeCurrencyStyle,
               ];
             } else {
               this.rCom = [
@@ -373,7 +356,6 @@ export default {
                 ...this.threeStyle,
                 ...this.oneCurrencyStyle,
                 ...this.twoCurrencyStyle,
-                ...this.threeCurrencyStyle,
               ];
             }
           }
@@ -385,10 +367,50 @@ export default {
   mounted() {
     this.$nextTick(() => {
       let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[this.num]));
-      this.configObj = value;
+      this.configObj = this.patchConfig(value);
     });
   },
   methods: {
+    patchConfig(data) {
+      if (!data) return data;
+      // 兼容旧数据：底部背景
+      if (data.bgColor && !data.bottomBgColor) {
+        this.$set(data, 'bottomBgColor', {
+          title: '底部背景',
+          default: [{ item: data.bgColor.color[0].item }],
+          color: [{ item: data.bgColor.color[0].item }],
+        });
+      }
+      if (!data.paddingConfig) {
+        this.$set(data, 'paddingConfig', {
+          title: '内边距',
+          isAll: false,
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+        if (data.topConfig) data.paddingConfig.valList[0].val = data.topConfig.val;
+        if (data.prConfig) {
+          data.paddingConfig.valList[1].val = data.prConfig.val;
+          data.paddingConfig.valList[3].val = data.prConfig.val;
+        }
+        if (data.bottomConfig) data.paddingConfig.valList[2].val = data.bottomConfig.val;
+      }
+      if (!data.marginConfig) {
+        this.$set(data, 'marginConfig', {
+          title: '外边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+        if (data.mbConfig) data.marginConfig.valList[0].val = data.mbConfig.val;
+      }
+      return data;
+    },
+    // 提交
     handleSubmit(name) {
       let obj = {};
       obj.activeIndex = this.activeIndex;

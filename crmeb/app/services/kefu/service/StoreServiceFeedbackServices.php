@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -63,7 +63,7 @@ class StoreServiceFeedbackServices extends BaseServices
     {
         $feedInfo = $this->dao->get($id);
         if (!$feedInfo) {
-            throw new AdminException(400460);
+            throw new AdminException('反馈内容没有查到');
         }
         $feedInfo = $feedInfo->toArray();
         $field = [

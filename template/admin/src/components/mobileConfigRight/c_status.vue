@@ -3,7 +3,7 @@
     <div class="c_row-item" v-if="configData">
       <el-col span="8" class="c_label">{{ configData.title }}</el-col>
       <el-col span="14" class="color-box">
-        <el-switch  v-model="configData.status" @change="change" />
+        <el-switch v-model="configData.status" @change="change" />
       </el-col>
     </div>
   </div>
@@ -56,7 +56,7 @@ export default {
 <style scoped lang="scss">
 .c_row-item {
   margin-top: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 .color-box {

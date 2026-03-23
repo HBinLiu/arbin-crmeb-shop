@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -100,53 +100,53 @@ class StoreService extends AuthController
             ['nickname', ''],
             ['status', 1],
         ]);
-        if ($data['image'] == '') return app('json')->fail(400250);
+        if ($data['image'] == '') return app('json')->fail('请选择用户');
         $data['uid'] = $data['image']['uid'];
         /** @var UserServices $userService */
         $userService = app()->make(UserServices::class);
         $userInfo = $userService->get($data['uid']);
         if ($data['phone'] == '') {
             if (!$userInfo['phone']) {
-                throw new AdminException(400251);
+                throw new AdminException('该用户没有绑定手机号，请手动填写');
             } else {
                 $data['phone'] = $userInfo['phone'];
             }
         } else {
             if (!check_phone($data['phone'])) {
-                throw new AdminException(400252);
+                throw new AdminException('手机号格式错误');
             }
         }
         if ($data['nickname'] == '') $data['nickname'] = $userInfo['nickname'];
         $data['avatar'] = $data['image']['image'];
         if ($this->services->count(['uid' => $data['uid']])) {
-            return app('json')->fail(400253);
+            return app('json')->fail('客服已存在');
         }
         unset($data['image']);
         $data['add_time'] = time();
         if (!$data['account']) {
-            return app('json')->fail(400254);
+            return app('json')->fail('请输入账号');
         }
         if (!preg_match('/^[a-zA-Z0-9]{4,30}$/', $data['account'])) {
-            return app('json')->fail(400255);
+            return app('json')->fail('账号必须为数字或者字母的组合4-30位');
         }
         if (!$data['password']) {
-            return app('json')->fail(400256);
+            return app('json')->fail('请输入密码');
         }
         if (!preg_match('/^[0-9a-z_$]{6,20}$/i', $data['password'])) {
-            return app('json')->fail(400257);
+            return app('json')->fail('密码必须为数字或者字母的组合6-20位');
         }
         if ($this->services->count(['phone' => $data['phone']])) {
-            return app('json')->fail(400258);
+            return app('json')->fail('该手机号的客服已存在');
         }
         if ($this->services->count(['account' => $data['account']])) {
-            return app('json')->fail(400259);
+            return app('json')->fail('该客服账号已存在');
         }
         $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
         $res = $this->services->save($data);
         if ($res) {
-            return app('json')->success(400260);
+            return app('json')->success('客服添加成功');
         } else {
-            return app('json')->fail(400261);
+            return app('json')->fail('客服添加失败');
         }
     }
 
@@ -181,33 +181,33 @@ class StoreService extends AuthController
         ]);
         $customer = $this->services->get((int)$id);
         if (!$customer) {
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         }
         if ($data["nickname"] == '') {
-            return app('json')->fail(400262);
+            return app('json')->fail('客服名称不能为空');
         }
         if (!check_phone($data['phone'])) {
-            return app('json')->fail(400252);
+            return app('json')->fail('手机号格式错误');
         }
         if ($customer['phone'] != $data['phone'] && $this->services->count(['phone' => $data['phone']])) {
-            return app('json')->fail(400258);
+            return app('json')->fail('该手机号的客服已存在');
         }
         if ($data['password']) {
             if (!preg_match('/^[0-9a-z_$]{6,16}$/i', $data['password'])) {
-                return app('json')->fail(400257);
+                return app('json')->fail('密码必须为数字或者字母的组合6-20位');
             }
             if (!$data['true_password']) {
-                return app('json')->fail(400263);
+                return app('json')->fail('请输入确认密码');
             }
             if ($data['password'] != $data['true_password']) {
-                return app('json')->fail(400264);
+                return app('json')->fail('两次输入的密码不一致');
             }
             $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
         } else {
             unset($data['password']);
         }
         $this->services->update($id, $data);
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }
 
     /**
@@ -218,9 +218,9 @@ class StoreService extends AuthController
     public function delete($id)
     {
         if (!$this->services->delete($id))
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
         else
-            return app('json')->success(100002);
+            return app('json')->success('删除成功');
     }
 
     /**
@@ -232,16 +232,16 @@ class StoreService extends AuthController
      */
     public function set_status(UserServices $services, $id, $status)
     {
-        if ($status == '' || $id == 0) return app('json')->fail(100100);
+        if ($status == '' || $id == 0) return app('json')->fail('参数错误');
         $info = $this->services->get($id, ['status', 'uid']);
         if (!$services->count(['uid' => $info['uid']])) {
             $info->status = 1;
             $info->save();
-            return app('json')->fail(400265);
+            return app('json')->fail('用户不存在，客服将强制禁止登录');
         }
         $info->status = $status;
         $info->save();
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -256,7 +256,7 @@ class StoreService extends AuthController
     {
         $uid = $this->services->value(['id' => $id], 'uid');
         if (!$uid) {
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         }
         return app('json')->success($this->services->getChatUser((int)$uid));
     }
@@ -305,10 +305,10 @@ class StoreService extends AuthController
     {
         $serviceInfo = $services->get($id);
         if (!$serviceInfo) {
-            return app('json')->fail(400266);
+            return app('json')->fail('登录的客服不存在');
         }
         if (!$serviceInfo->account || !$serviceInfo->password) {
-            return app('json')->fail(400267);
+            return app('json')->fail('请先填写客服账号和密码再尝试进入客服平台');
         }
         return app('json')->success($services->authLogin($serviceInfo->account));
     }

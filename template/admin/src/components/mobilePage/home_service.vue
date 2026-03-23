@@ -1,12 +1,14 @@
 <template>
-  <div class="service-box" :class="positions ? '' : 'on'" :style="{ marginTop: mTop + 'px' }">
-    <div class="img-box">
-      <img :src="imgUrl" alt="" v-if="imgUrl" />
-      <div class="empty-box on" v-else>
-        <img src="../../assets/images/shan.png" />
+  <common_wrapper :config="configObj">
+    <div class="service-box" :class="positions ? '' : 'on'">
+      <div class="img-box">
+        <img :src="imgUrl" alt="" v-if="imgUrl" />
+        <div class="empty-box on" v-else>
+          <img src="../../assets/images/shan.png" />
+        </div>
       </div>
     </div>
-  </div>
+  </common_wrapper>
 </template>
 
 <script>
@@ -94,17 +96,99 @@ export default {
           url: '',
           link: '',
         },
-        // 页面间距
-        topConfig: {
-          title: '上下偏移',
+        zIndexConfig: {
+          title: '组件上浮',
           val: 0,
           min: 0,
+        },
+        borderConfig: {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Hide, 1: Show
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              { name: '实线', style: 'solid' },
+              { name: '虚线', style: 'dashed' },
+              { name: '点状', style: 'dotted' },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
+        },
+        shadowConfig: {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Hide, 1: Show
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: 'rgba(0,0,0,0.1)' }],
+            color: [{ item: 'rgba(0,0,0,0.1)' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+          },
+        },
+        componentBgConfig: {
+          title: '组件背景',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Hide, 1: Show
+          colorConfig: {
+            title: '背景颜色',
+            default: [{ item: '#fff' }],
+            color: [{ item: '#fff' }],
+          },
+        },
+        // 页面间距
+        paddingConfig: {
+          title: '内边距',
+          val: 0,
+          min: 0,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        },
+        marginConfig: {
+          title: '外边距',
+          val: 0,
+          min: 0,
+          isAll: false,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
       },
       imgUrl: '',
       pageData: {},
       mTop: 0,
       positions: 1, //展示位置
+      configObj: null,
     };
   },
   mounted() {
@@ -116,11 +200,14 @@ export default {
   methods: {
     setConfig(data) {
       if (!data) return;
-      if (data.topConfig) {
-        this.mTop = data.topConfig.val;
-        this.imgUrl = data.logoConfig.url;
-        this.positions = data.locationConfig.tabVal;
+      this.configObj = data;
+      for (let key in this.defaultConfig) {
+        if (this.configObj[key] === undefined) {
+          this.$set(this.configObj, key, this.defaultConfig[key]);
+        }
       }
+      this.imgUrl = data.logoConfig.url;
+      this.positions = data.locationConfig.tabVal;
     },
   },
 };
@@ -151,7 +238,7 @@ export default {
         width: 26px;
         height: 20px;
       }
-      .iconfont-diy {
+      .iconfont {
         font-size: 20px;
       }
     }

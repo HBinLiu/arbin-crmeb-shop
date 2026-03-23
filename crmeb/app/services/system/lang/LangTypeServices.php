@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\services\system\lang;
 
 use app\dao\system\lang\LangTypeDao;
@@ -84,7 +92,7 @@ class LangTypeServices extends BaseServices
                 $codeServices->BatchTranslation($res->id, $data['file_name']);
                 app()->make(LangCountryServices::class)->update(['code' => $data['file_name']], ['type_id' => $res->id]);
             } else {
-                throw new AdminException(100006);
+                throw new AdminException('保存失败');
             }
             $id = $res->id;
         }
@@ -115,7 +123,7 @@ class LangTypeServices extends BaseServices
     public function langTypeStatus($id, $status)
     {
         $res = $this->dao->update(['id' => $id], ['status' => $status]);
-        if (!$res) throw new AdminException(100015);
+        if (!$res) throw new AdminException('设置失败');
         $this->setDefaultLangName();
         return true;
     }

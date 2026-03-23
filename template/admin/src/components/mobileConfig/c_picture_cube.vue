@@ -52,7 +52,7 @@ export default {
   watch: {
     num(nVal) {
       let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[nVal]));
-      this.configObj = value;
+      this.configObj = this.patchConfig(value);
     },
     configObj: {
       handler(nVal, oVal) {
@@ -111,24 +111,8 @@ export default {
               configNme: 'titleCurrency',
             },
             {
-              components: toolCom.c_bg_color,
-              configNme: 'bottomBgColor',
-            },
-            {
-              components: toolCom.c_slider,
-              configNme: 'topConfig',
-            },
-            {
-              components: toolCom.c_slider,
-              configNme: 'bottomConfig',
-            },
-            {
-              components: toolCom.c_slider,
-              configNme: 'prConfig',
-            },
-            {
-              components: toolCom.c_slider,
-              configNme: 'mbConfig',
+              components: toolCom.c_common_style,
+              configNme: 'c_common_style',
             },
           ];
           this.rCom = arr.concat(tempArr);
@@ -140,10 +124,47 @@ export default {
   mounted() {
     this.$nextTick(() => {
       let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[this.num]));
-      this.configObj = value;
+      this.configObj = this.patchConfig(value);
     });
   },
-  methods: {},
+  methods: {
+    patchConfig(config) {
+      if (!config.paddingConfig) {
+        config.paddingConfig = {
+          isAll: false,
+          title: '内边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [
+            { val: config.topConfig ? config.topConfig.val : 0 },
+            { val: config.prConfig ? config.prConfig.val : 0 },
+            { val: config.bottomConfig ? config.bottomConfig.val : 0 },
+            { val: config.prConfig ? config.prConfig.val : 0 },
+          ],
+        };
+      }
+      if (!config.marginConfig) {
+        config.marginConfig = {
+          isAll: false,
+          title: '外边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [{ val: config.mbConfig ? config.mbConfig.val : 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        };
+      }
+      if (!config.c_common_style) {
+        config.c_common_style = {
+          color: 'rgba(255,255,255,1)',
+          color2: 'rgba(255,255,255,1)',
+          lr: 0,
+          type: 0,
+        };
+      }
+      return config;
+    },
+  },
 };
 </script>
 

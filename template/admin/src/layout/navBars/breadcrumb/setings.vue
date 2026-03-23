@@ -290,7 +290,6 @@ export default {
       this.setLocalThemeConfig();
     },
     setLocalTheme(val) {
-      console.log(this.getThemeConfig.layout, val, 'layout');
       let themeSelect = themeList[val];
       themeSelect['--prev-border-color-lighter'] = '#ebeef5';
       /**

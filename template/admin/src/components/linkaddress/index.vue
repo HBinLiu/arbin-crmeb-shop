@@ -3,28 +3,15 @@
     <el-dialog :visible.sync="modals" title="选择链接" :close-on-click-modal="false" append-to-body width="1000px">
       <div class="table_box">
         <div class="left_box" v-if="fromType !== 'diyPage'">
-          <el-tree
-            :data="categoryData"
-            node-key="id"
-            default-expand-all
-            :props="props"
-            highlight-current
-            @node-click="handleCheckChange"
-            :current-node-key="treeId"
-          ></el-tree>
+          <el-tree :data="categoryData" node-key="id" default-expand-all :props="props" highlight-current
+            @node-click="handleCheckChange" :current-node-key="treeId"></el-tree>
         </div>
         <div class="right_box" v-if="currenType == 'link'">
           <div v-if="tableList.length">
             <div class="cont">请选择链接</div>
             <div class="Box">
-              <div
-                class="cont_box"
-                :class="currenId == item.id ? 'on' : ''"
-                v-for="(item, index) in tableList"
-                :key="index"
-                v-db-click
-                @click="getUrl(item)"
-              >
+              <div class="cont_box" :class="currenId == item.id ? 'on' : ''" v-for="(item, index) in tableList"
+                :key="index" v-db-click @click="getUrl(item)">
                 {{ item.name }}
               </div>
             </div>
@@ -34,14 +21,8 @@
           <div>
             <div class="cont">优惠券</div>
             <div class="Box">
-              <div
-                class="cont_box"
-                :class="currenId == item.id ? 'on' : ''"
-                v-for="(item, index) in coupon"
-                :key="index"
-                v-db-click
-                @click="getUrl(item)"
-              >
+              <div class="cont_box" :class="currenId == item.id ? 'on' : ''" v-for="(item, index) in coupon"
+                :key="index" v-db-click @click="getUrl(item)">
                 {{ item.name }}
               </div>
             </div>
@@ -50,14 +31,8 @@
             <div v-permission="'seckill'" v-if="basicsList.length">
               <div class="cont">秒杀</div>
               <div class="Box">
-                <div
-                  class="cont_box"
-                  :class="currenId == item.id ? 'on' : ''"
-                  v-for="(item, index) in basicsList"
-                  :key="index"
-                  v-db-click
-                  @click="getUrl(item)"
-                >
+                <div class="cont_box" :class="currenId == item.id ? 'on' : ''" v-for="(item, index) in basicsList"
+                  :key="index" v-db-click @click="getUrl(item)">
                   {{ item.name }}
                 </div>
               </div>
@@ -67,14 +42,8 @@
             <div v-permission="'bargain'" v-if="distributionList.length">
               <div class="cont">砍价</div>
               <div class="Box">
-                <div
-                  class="cont_box"
-                  :class="currenId == item.id ? 'on' : ''"
-                  v-for="(item, index) in distributionList"
-                  :key="index"
-                  v-db-click
-                  @click="getUrl(item)"
-                >
+                <div class="cont_box" :class="currenId == item.id ? 'on' : ''" v-for="(item, index) in distributionList"
+                  :key="index" v-db-click @click="getUrl(item)">
                   {{ item.name }}
                 </div>
               </div>
@@ -84,14 +53,8 @@
             <div v-permission="'combination'" v-if="userList.length">
               <div class="cont">拼团</div>
               <div class="Box">
-                <div
-                  class="cont_box"
-                  :class="currenId == item.id ? 'on' : ''"
-                  v-for="(item, index) in userList"
-                  :key="index"
-                  v-db-click
-                  @click="getUrl(item)"
-                >
+                <div class="cont_box" :class="currenId == item.id ? 'on' : ''" v-for="(item, index) in userList"
+                  :key="index" v-db-click @click="getUrl(item)">
                   {{ item.name }}
                 </div>
               </div>
@@ -100,14 +63,8 @@
           <div v-if="integral.length">
             <div class="cont">积分</div>
             <div class="Box">
-              <div
-                class="cont_box"
-                :class="currenId == item.id ? 'on' : ''"
-                v-for="(item, index) in integral"
-                :key="index"
-                v-db-click
-                @click="getUrl(item)"
-              >
+              <div class="cont_box" :class="currenId == item.id ? 'on' : ''" v-for="(item, index) in integral"
+                :key="index" v-db-click @click="getUrl(item)">
                 {{ item.name }}
               </div>
             </div>
@@ -115,35 +72,25 @@
           <div v-if="luckDraw.length">
             <div class="cont">抽奖</div>
             <div class="Box">
-              <div
-                class="cont_box"
-                :class="currenId == item.id ? 'on' : ''"
-                v-for="(item, index) in luckDraw"
-                :key="index"
-                v-db-click
-                @click="getUrl(item)"
-              >
+              <div class="cont_box" :class="currenId == item.id ? 'on' : ''" v-for="(item, index) in luckDraw"
+                :key="index" v-db-click @click="getUrl(item)">
                 {{ item.name }}
               </div>
             </div>
           </div>
         </div>
-        <div
-          class="right_box"
-          :class="fromType == 'diyPage' ? 'diy' : ''"
-          v-if="
-            currenType == 'special' ||
-            currenType == 'product_category' ||
-            currenType == 'product' ||
-            currenType == 'seckill' ||
-            currenType == 'bargain' ||
-            currenType == 'combination' ||
-            currenType == 'news' ||
-            currenType == 'advance' ||
-            currenType == 'integral' ||
-            currenType == 'lottery_list'
-          "
-        >
+        <div class="right_box" :class="fromType == 'diyPage' ? 'diy' : ''" v-if="
+          currenType == 'special' ||
+          currenType == 'product_category' ||
+          currenType == 'product' ||
+          currenType == 'seckill' ||
+          currenType == 'bargain' ||
+          currenType == 'combination' ||
+          currenType == 'news' ||
+          currenType == 'advance' ||
+          currenType == 'integral' ||
+          currenType == 'lottery_list'
+        ">
           <el-form ref="formValidate" :model="formValidate" class="tabform" v-if="currenType == 'product'">
             <el-row :gutter="24">
               <el-col :span="8">
@@ -157,98 +104,67 @@
                     >
                     </el-option>
                   </el-select> -->
-                  <el-cascader
-                    style="width: 180px"
-                    v-model="formValidate.cate_id"
-                    size="small"
-                    :options="treeSelect"
-                    :props="{ multiple: true, checkStrictly: true, emitPath: false }"
-                    filterable
-                    clearable
-                    @change="userSearchs"
-                  ></el-cascader>
+                  <el-cascader style="width: 180px" v-model="formValidate.cate_id" size="small" :options="treeSelect"
+                    :props="{ multiple: true, checkStrictly: true, emitPath: false }" filterable clearable
+                    @change="userSearchs"></el-cascader>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="" label-for="store_name">
-                  <el-input
-                    search
-                    enter-button
-                    placeholder="请输入商品名称,关键字,编号"
-                    v-model="formValidate.store_name"
-                    style="width: 200px"
-                    @change="userSearchs"
-                  />
+                  <el-input search enter-button placeholder="请输入商品名称,关键字,编号" v-model="formValidate.store_name"
+                    style="width: 200px" @change="userSearchs" />
                 </el-form-item>
               </el-col>
             </el-row>
           </el-form>
-          <el-table
-            row-key="id"
-            ref="table"
-            empty-text="暂无数据"
-            :data="tableList"
-            v-loading="loading"
-            :max-height="
-              currenType == 'product_category'
-                ? '460'
-                : currenType == 'product' ||
-                  currenType == 'seckill' ||
-                  currenType == 'bargain' ||
-                  currenType == 'advance' ||
-                  currenType == 'combination' ||
-                  currenType == 'news' ||
-                  currenType == 'integral'
+          <el-table row-key="id" ref="table" empty-text="暂无数据" :data="tableList" v-loading="loading" :max-height="currenType == 'product_category'
+              ? '460'
+              : currenType == 'product' ||
+                currenType == 'seckill' ||
+                currenType == 'bargain' ||
+                currenType == 'advance' ||
+                currenType == 'combination' ||
+                currenType == 'news' ||
+                currenType == 'integral'
                 ? '428'
                 : ''
-            "
-          >
-            <el-table-column
-              :width="currenType != 'product_category' ? 50 : 80"
-              v-if="
-                [
-                  'special',
-                  'product',
-                  'seckill',
-                  'product_category',
-                  'bargain',
-                  'combination',
-                  'advance',
-                  'integral',
-                  'news',
-                  'lottery_list',
-                  'link',
-                ].includes(currenType)
-              "
-            >
+            ">
+            <el-table-column :width="currenType != 'product_category' ? 50 : 80" v-if="
+              [
+                'special',
+                'product',
+                'seckill',
+                'product_category',
+                'bargain',
+                'combination',
+                'advance',
+                'integral',
+                'news',
+                'lottery_list',
+                'link',
+              ].includes(currenType)
+            ">
               <template slot-scope="scope">
-                <el-radio v-model="templateRadio" :label="scope.row.id" @change.native="getTemplateRow(scope.row)"
-                  >&nbsp;</el-radio
-                >
+                <el-radio v-model="templateRadio" :label="scope.row.id"
+                  @change.native="getTemplateRow(scope.row)">&nbsp;</el-radio>
               </template>
             </el-table-column>
-            <el-table-column
-              :label="item.title"
-              :width="item.width"
-              :min-width="item.minWidth"
-              v-for="(item, index) in currenType == 'special'
-                ? columns
-                : currenType == 'product_category'
+            <el-table-column :label="item.title" :width="item.width" :min-width="item.minWidth" v-for="(item, index) in currenType == 'special'
+              ? columns
+              : currenType == 'product_category'
                 ? columns7
                 : currenType == 'bargain' ||
                   currenType == 'combination' ||
                   currenType == 'advance' ||
                   currenType == 'integral'
-                ? bargain
-                : currenType == 'news'
-                ? news
-                : currenType == 'lottery_list'
-                ? lottery
-                : currenType == 'link'
-                ? diyLink
-                : columns8"
-              :key="index"
-            >
+                  ? bargain
+                  : currenType == 'news'
+                    ? news
+                    : currenType == 'lottery_list'
+                      ? lottery
+                      : currenType == 'link'
+                        ? diyLink
+                        : columns8" :key="index">
               <template slot-scope="scope">
                 <template v-if="item.key">
                   <div>
@@ -279,26 +195,18 @@
               </template>
             </el-table-column>
           </el-table>
-          <div
-            class="acea-row row-right page"
-            v-if="
-              currenType == 'product' ||
-              currenType == 'seckill' ||
-              currenType == 'bargain' ||
-              currenType == 'advance' ||
-              currenType == 'combination' ||
-              currenType == 'news' ||
-              currenType == 'integral' ||
-              currenType == 'lottery_list'
-            "
-          >
-            <pagination
-              v-if="total"
-              :total="total"
-              :page.sync="formValidate.page"
-              :limit.sync="formValidate.limit"
-              @pagination="getList"
-            />
+          <div class="acea-row row-right page" v-if="
+            currenType == 'product' ||
+            currenType == 'seckill' ||
+            currenType == 'bargain' ||
+            currenType == 'advance' ||
+            currenType == 'combination' ||
+            currenType == 'news' ||
+            currenType == 'integral' ||
+            currenType == 'lottery_list'
+          ">
+            <pagination v-if="total" :total="total" :page.sync="formValidate.page" :limit.sync="formValidate.limit"
+              @pagination="getList" />
           </div>
         </div>
         <div class="right_box" v-if="currenType == 'custom'">
@@ -341,9 +249,8 @@
       </div>
       <span slot="footer" class="dialog-footer">
         <el-button v-db-click @click="cancel">取 消</el-button>
-        <el-button type="primary" v-db-click @click="handleSubmit('customdate')" v-if="currenType == 'custom'"
-          >确 定</el-button
-        >
+        <el-button type="primary" v-db-click @click="handleSubmit('customdate')" v-if="currenType == 'custom'">确
+          定</el-button>
         <el-button type="primary" v-db-click @click="ok" v-else>确 定</el-button>
       </span>
     </el-dialog>
@@ -389,7 +296,7 @@ export default {
         },
         {
           title: '页面名称',
-          key: 'name',
+          key: 'title',
           width: 150,
         },
         {
@@ -535,7 +442,7 @@ export default {
           }
         })
         .catch((res) => {
-          this.$message.error(res.msg);
+          this.$message.error(res.msg || '删除失败');
         });
     },
     customLink() {
@@ -553,10 +460,10 @@ export default {
           this.tableList = res.data.list;
         })
         .catch((err) => {
-          this.$message.error(err.msg);
+          this.$message.error(err.msg || '获取自定义列表失败');
         });
     },
-    getLotteryList() {},
+    getLotteryList() { },
     handleSubmit(name) {
       this.$refs[name].validate((valid) => {
         if (valid) {
@@ -593,7 +500,7 @@ export default {
           this.treeSelect = res.data;
         })
         .catch((res) => {
-          this.$message.error(res.msg);
+          this.$message.error(res.msg || '获取商品分类失败');
         });
     },
     // 表格搜索
@@ -615,16 +522,23 @@ export default {
     getSort() {
       pageCategory()
         .then((res) => {
-          res.data[0].children[0].selected = true;
+          if (res.data.length) {
+            res.data[0].children[0].selected = true;
+          }
           this.categoryData = res.data;
-          if (this.fromType === 'diyPage') {
+          if (
+            this.fromType === 'diyPage' &&
+            res.data.length &&
+            res.data[0].children.length &&
+            res.data[0].children[2]
+          ) {
             this.handleCheckChange(res.data[0].children[2]);
-          } else {
+          } else if (res.data.length && res.data[0].children.length && res.data[0].children[0].children.length) {
             this.handleCheckChange(res.data[0].children[0].children[0]);
           }
         })
         .catch((err) => {
-          this.$message.error(err.msg);
+          this.$message.error(err.msg || '获取链接分类失败');
         });
     },
     getList() {
@@ -643,7 +557,7 @@ export default {
           })
           .catch((res) => {
             this.loading = false;
-            this.$message.error(res.msg);
+            this.$message.error(res.msg || '获取列表失败');
           });
       } else if (this.currenType == 'seckill') {
         seckillListApi(this.formValidate)
@@ -658,7 +572,7 @@ export default {
           })
           .catch((res) => {
             this.loading = false;
-            this.$message.error(res.msg);
+            this.$message.error(res.msg || '获取秒杀列表失败');
           });
       } else if (this.currenType == 'advance') {
         presellListApi(this.formValidate)
@@ -673,7 +587,7 @@ export default {
           })
           .catch((res) => {
             this.loading = false;
-            this.$message.error(res.msg);
+            this.$message.error(res.msg || '获取预售列表失败');
             advance;
           });
       } else if (this.currenType == 'bargain') {
@@ -689,7 +603,7 @@ export default {
           })
           .catch((res) => {
             this.loading = false;
-            this.$message.error(res.msg);
+            this.$message.error(res.msg || '获取砍价列表失败');
           });
       } else if (this.currenType == 'combination') {
         combinationListApi(this.formValidate)
@@ -704,7 +618,7 @@ export default {
           })
           .catch((res) => {
             this.loading = false;
-            this.$message.error(res.msg);
+            this.$message.error(res.msg || '获取拼团列表失败');
           });
       } else if (this.currenType == 'news') {
         cmsListApi(this.formValidate)
@@ -719,7 +633,7 @@ export default {
           })
           .catch((res) => {
             this.loading = false;
-            this.$message.error(res.msg);
+            this.$message.error(res.msg || '获取新闻列表失败');
           });
       } else if (this.currenType == 'lottery_list') {
         this.formValidate = {
@@ -739,7 +653,7 @@ export default {
           })
           .catch((res) => {
             this.loading = false;
-            this.$message.error(res.msg);
+            this.$message.error(res.msg || '获取抽奖列表失败');
           });
       } else if (this.currenType == 'integral') {
         integralProductListApi(this.formValidate)
@@ -754,7 +668,7 @@ export default {
           })
           .catch((res) => {
             this.loading = false;
-            this.$message.error(res.msg);
+            this.$message.error(res.msg || '获取积分商品列表失败');
           });
       }
     },
@@ -796,10 +710,8 @@ export default {
             if (this.currenType == 'special') {
               let list = [];
               data.forEach((e) => {
-                e.url = `/pages/annex/special/index?id=${e.id}&name=${e.name}`;
-                if (e.is_diy) {
-                  list.push(e);
-                }
+                e.url = `/pages/annex/special/index?theme_id=${e.id}&name=${e.title}`;
+                list.push(e);
               });
               this.tableList = list;
             } else {
@@ -856,7 +768,7 @@ export default {
           })
           .catch((err) => {
             this.loading = false;
-            this.$message.error(err.msg);
+            this.$message.error(err.msg || '获取链接列表失败');
           });
       }
     },
@@ -878,36 +790,43 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-::v-deep .el-dialog__body {
-}
+::v-deep .el-dialog__body {}
+
 ::v-deep .el-tree-node__content {
   height: 30px;
 }
-::v-deep .el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
+
+::v-deep .el-tree--highlight-current .el-tree-node.is-current>.el-tree-node__content {
   background-color: var(--prev-bg-menu-hover-ba-color) !important;
   border-right: 2px solid var(--prev-color-primary);
 }
+
 ::v-deep .ivu-tree-title-selected,
 ::v-deep .ivu-tree-title-selected:hover,
 ::v-deep .ivu-tree-title:hover {
   background-color: unset;
   color: var(--prev-color-primary);
 }
+
 ::v-deep .ivu-table-cell-tree {
   border: 0;
   font-size: 15px;
   background-color: unset;
 }
+
 ::v-deep .el-table .cell {
   display: flex;
   align-items: center;
 }
+
 ::v-deep .ivu-table-cell-tree .ivu-icon-ios-add:before {
   content: '\F11F';
 }
+
 ::v-deep .ivu-table-cell-tree .ivu-icon-ios-remove:before {
   content: '\F116';
 }
+
 .tabBox_img {
   width: 36px;
   height: 36px;
@@ -924,18 +843,23 @@ export default {
 ::-webkit-scrollbar-thumb {
   -webkit-box-shadow: inset 0 0 6px #ddd;
 }
+
 ::-webkit-scrollbar {
-  width: 4px !important; /* 对垂直流动条有效 */
+  width: 4px !important;
+  /* 对垂直流动条有效 */
 }
+
 .on {
   background-color: var(--prev-color-primary) !important;
   color: #fff !important;
 }
+
 .menu-item {
   position: relative;
   display: flex;
   justify-content: space-between;
   word-break: break-all;
+
   .icon-box {
     z-index: 3;
     position: absolute;
@@ -944,9 +868,11 @@ export default {
     transform: translateY(-50%);
     display: none;
   }
+
   &:hover .icon-box {
     display: block;
   }
+
   .right-menu {
     z-index: 10;
     position: absolute;
@@ -956,25 +882,30 @@ export default {
     min-width: 121px;
   }
 }
+
 .radioGroup {
   ::v-deep .ivu-radio-wrapper {
     margin-right: 30px;
   }
 }
+
 .table_box {
   display: flex;
   position: relative;
+
   .left_box {
     width: 171px;
     height: 470px;
     border-right: 1px solid #eeeeee;
     overflow-x: hidden;
     overflow-y: auto;
+
     .left_cont {
       margin-bottom: 12px;
       cursor: pointer;
     }
   }
+
   .right_box {
     margin-left: 23px;
     font-size: 13px;
@@ -983,15 +914,18 @@ export default {
     height: 470px;
     overflow-x: hidden;
     overflow-y: auto;
+
     .cont {
       font-weight: 500;
       color: #000000;
       font-weight: bold;
     }
+
     .Box {
       margin-top: 14px;
       display: flex;
       flex-wrap: wrap;
+
       .cont_box {
         font-weight: 400;
         color: rgba(0, 0, 0, 0.85);
@@ -1002,22 +936,27 @@ export default {
         margin-right: 10px;
         margin-bottom: 10px;
         cursor: pointer;
+
         &:hover {
           background-color: var(--prev-bg-menu-hover-ba-color);
           color: #333;
         }
       }
+
       .item {
         position: relative;
+
         .iconfont {
           display: none;
         }
+
         &:hover {
           .iconfont {
             display: block;
           }
         }
       }
+
       .iconfont {
         position: absolute;
         right: 9px;
@@ -1027,18 +966,22 @@ export default {
       }
     }
   }
+
   ::v-deep .el-table .cell {
     padding-right: 0;
   }
+
   ::v-deep .page {
     margin-top: 10px;
   }
+
   .Button {
     position: absolute;
     bottom: 15px;
     right: 15px;
     font-family: PingFangSC-Regular;
     text-align: center;
+
     .cancel {
       width: 70px;
       height: 32px;
@@ -1052,6 +995,7 @@ export default {
       margin-right: 10px;
       cursor: pointer;
     }
+
     .ok {
       width: 70px;
       height: 32px;

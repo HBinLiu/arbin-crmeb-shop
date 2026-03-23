@@ -62,7 +62,7 @@
 
 <script>
 	const app = getApp();
-	let statusBarHeight = uni.getSystemInfoSync().statusBarHeight + 'px';
+	let statusBarHeight = uni.getWindowInfo().statusBarHeight + 'px';
 	import sendVerifyCode from "@/mixins/SendVerifyCode";
 	import colors from '@/mixins/color.js';
 	import editUserModal from '@/components/eidtUserModal/index.vue'

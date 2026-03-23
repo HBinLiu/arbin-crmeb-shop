@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="setUpTop"></div>
+    <!-- <div class="setUpTop"></div> -->
     <div class="title" v-if="configData">{{ configData }}</div>
   </div>
 </template>
@@ -14,6 +14,10 @@ export default {
     },
     configNme: {
       type: String,
+    },
+    title: {
+      type: String,
+      default: '',
     },
   },
   data() {
@@ -34,7 +38,7 @@ export default {
   mounted() {
     this.$nextTick(() => {
       this.defaults = this.configObj;
-      this.configData = this.configObj[this.configNme];
+      this.configData = this.title || this.configObj[this.configNme];
     });
   },
   methods: {},
@@ -50,5 +54,7 @@ export default {
   padding: 20px 15px;
   font-size: 14px;
   color: #333333;
+  border-top: 6px solid #f0f2f5;
+  margin-top: -5px;
 }
 </style>

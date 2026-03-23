@@ -41,6 +41,14 @@ export default {
     return {
       configObj: {},
       rCom: [
+        // {
+        //   components: toolCom.c_title,
+        //   configNme: 'titleLeft',
+        // },
+        {
+          components: toolCom.c_card_select,
+          configNme: 'styleConfig',
+        },
         {
           components: toolCom.c_set_up,
           configNme: 'setUp',
@@ -49,11 +57,7 @@ export default {
       oneContent: [
         {
           components: toolCom.c_title,
-          configNme: 'titleLeft',
-        },
-        {
-          components: toolCom.c_radio,
-          configNme: 'styleConfig',
+          configNme: 'titleSearch',
         },
         {
           components: toolCom.c_radio,
@@ -67,10 +71,10 @@ export default {
           components: toolCom.c_radio,
           configNme: 'searchBox',
         },
-        {
-          components: toolCom.c_title,
-          configNme: 'titleSearch',
-        },
+        // {
+        //   components: toolCom.c_title,
+        //   configNme: 'titleSearch',
+        // },
       ],
       fixContent: [
         {
@@ -208,6 +212,12 @@ export default {
           configNme: 'gradientColor',
         },
       ],
+      commonStyle: [
+        {
+          components: toolCom.c_common_style,
+          configNme: 'commonStyle',
+        },
+      ],
       setUp: 0,
       type: 0,
       type2: 0,
@@ -218,6 +228,33 @@ export default {
   watch: {
     num(nVal) {
       const value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[nVal]));
+      if (!value.paddingConfig) {
+        this.$set(value, 'paddingConfig', {
+          isAll: false,
+          title: '内边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+        if (value.topConfig) value.paddingConfig.valList[0].val = value.topConfig.val;
+        if (value.prConfig) {
+          value.paddingConfig.valList[1].val = value.prConfig.val;
+          value.paddingConfig.valList[3].val = value.prConfig.val;
+        }
+        if (value.bottomConfig) value.paddingConfig.valList[2].val = value.bottomConfig.val;
+      }
+      if (!value.marginConfig) {
+        this.$set(value, 'marginConfig', {
+          isAll: false,
+          title: '外边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+        if (value.mbConfig) value.marginConfig.valList[0].val = value.mbConfig.val;
+      }
       this.configObj = value;
     },
     configObj: {
@@ -229,7 +266,20 @@ export default {
     'configObj.setUp.tabVal': {
       handler(nVal, oVal) {
         this.setUp = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          // {
+          //   components: toolCom.c_title,
+          //   configNme: 'titleLeft',
+          // },
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (nVal == 0) {
           this.getRComContent(arr);
         } else {
@@ -241,7 +291,20 @@ export default {
     'configObj.classConfig.tabVal': {
       handler(nVal, oVal) {
         this.type = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          // {
+          //   components: toolCom.c_title,
+          //   configNme: 'titleLeft',
+          // },
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (this.setUp == 0) {
           this.getRComContent(arr);
         } else {
@@ -253,7 +316,20 @@ export default {
     'configObj.searchBox.tabVal': {
       handler(nVal, oVal) {
         this.type2 = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          // {
+          //   components: toolCom.c_title,
+          //   configNme: 'titleLeft',
+          // },
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (this.setUp == 0) {
           this.getRComContent(arr);
         } else {
@@ -264,7 +340,20 @@ export default {
     'configObj.toneConfig.tabVal': {
       handler(nVal, oVal) {
         this.type3 = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          // {
+          //   components: toolCom.c_title,
+          //   configNme: 'titleLeft',
+          // },
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (this.setUp == 0) {
           this.getRComContent(arr);
         } else {
@@ -275,7 +364,20 @@ export default {
     'configObj.searchConfig.tabVal': {
       handler(nVal, oVal) {
         this.type4 = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          // {
+          //   components: toolCom.c_title,
+          //   configNme: 'titleLeft',
+          // },
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (this.setUp == 0) {
           this.getRComContent(arr);
         } else {
@@ -287,6 +389,33 @@ export default {
   mounted() {
     this.$nextTick(() => {
       const value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[this.num]));
+      if (!value.paddingConfig) {
+        this.$set(value, 'paddingConfig', {
+          isAll: false,
+          title: '内边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+        if (value.topConfig) value.paddingConfig.valList[0].val = value.topConfig.val;
+        if (value.prConfig) {
+          value.paddingConfig.valList[1].val = value.prConfig.val;
+          value.paddingConfig.valList[3].val = value.prConfig.val;
+        }
+        if (value.bottomConfig) value.paddingConfig.valList[2].val = value.bottomConfig.val;
+      }
+      if (!value.marginConfig) {
+        this.$set(value, 'marginConfig', {
+          isAll: false,
+          title: '外边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+        if (value.mbConfig) value.marginConfig.valList[0].val = value.mbConfig.val;
+      }
       this.configObj = value;
     });
   },
@@ -324,15 +453,22 @@ export default {
     getRComStyle(arr) {
       if (this.type == 0) {
         if (this.type3 == 0) {
-          this.rCom = [...arr, ...this.oneStyle, ...this.twoStyle, ...this.fourStyle];
+          this.rCom = [...arr, ...this.oneStyle, ...this.twoStyle, ...this.fourStyle, ...this.commonStyle];
         } else {
-          this.rCom = [...arr, ...this.oneStyle, ...this.twoStyle, ...this.threeStyle, ...this.fourStyle];
+          this.rCom = [
+            ...arr,
+            ...this.oneStyle,
+            ...this.twoStyle,
+            ...this.threeStyle,
+            ...this.fourStyle,
+            ...this.commonStyle,
+          ];
         }
       } else {
         if (this.type3 == 0) {
-          this.rCom = [...arr, ...this.twoStyle, ...this.fourStyle];
+          this.rCom = [...arr, ...this.twoStyle, ...this.fourStyle, ...this.commonStyle];
         } else {
-          this.rCom = [...arr, ...this.twoStyle, ...this.threeStyle, ...this.fourStyle];
+          this.rCom = [...arr, ...this.twoStyle, ...this.threeStyle, ...this.fourStyle, ...this.commonStyle];
         }
       }
     },

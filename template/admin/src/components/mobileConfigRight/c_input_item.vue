@@ -6,7 +6,12 @@
       </el-col>
       <el-col :span="configData.type == 'ranges' ? 24 : configData.type == 'form' ? 19 : 18" class="slider-box">
         <el-input v-model="configData.value" :placeholder="configData.place" :maxlength="configData.max">
-          <i v-if="configData.title == '链接'" class="el-icon-link" slot="suffix" @click="getLink(configData)" />
+          <i
+            v-if="configData.title == '链接' || configData.title == '按钮链接'"
+            class="el-icon-link"
+            slot="suffix"
+            @click="getLink(configData)"
+          />
         </el-input>
       </el-col>
     </div>
@@ -59,7 +64,7 @@ export default {
       this.configData.value = e;
     },
     getLink(configData) {
-      if (configData.title != '链接' && configData.type != 'link') {
+      if (configData.title != '链接' && configData.title != '按钮链接' && configData.type != 'link') {
         return;
       }
       this.$refs.linkaddres.modals = true;
@@ -93,7 +98,7 @@ export default {
 }
 
 .c_row-item {
-  margin-bottom: 13px;
+  margin-bottom: 10px;
 
   &.on {
     margin-bottom: 20px;

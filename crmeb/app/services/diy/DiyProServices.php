@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\services\diy;
 
 use app\dao\diy\DiyDao;
@@ -140,7 +148,7 @@ class DiyProServices extends BaseServices
         if ($id) {
             $data['update_time'] = time();
             $res = $this->dao->update($id, $data);
-            if (!$res) throw new AdminException(100007);
+            if (!$res) throw new AdminException('修改失败');
         } else {
             $data['add_time'] = time();
             $data['update_time'] = time();
@@ -148,7 +156,7 @@ class DiyProServices extends BaseServices
             $data['is_pro'] = 1;
             $data['type'] = 2;
             $res = $this->dao->save($data);
-            if (!$res) throw new AdminException(100006);
+            if (!$res) throw new AdminException('保存失败');
             $id = $res->id;
         }
 

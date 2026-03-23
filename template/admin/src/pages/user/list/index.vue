@@ -46,7 +46,7 @@
               </el-form-item>
             </div>
             <el-form-item class="search-form-sub">
-              <el-button type="primary" v-db-click @click="userSearchs">搜索</el-button>
+              <el-button type="primary" v-db-click @click="userSearchs">查询</el-button>
               <el-button class="ResetSearch" v-db-click @click="reset('userFrom')">重置</el-button>
               <a class="ivu-ml-8 font12 ml10" v-db-click @click="collapse = !collapse">
                 <template v-if="!collapse"> 展开 <i class="el-icon-arrow-down" /> </template>
@@ -471,6 +471,7 @@
         v-if="labelShow"
         :uid="labelActive.uid"
         :only_get="!labelActive.uid"
+        :is_batch="is_batch"
         @close="labelClose"
         @activeData="activeData"
         @onceGetList="onceGetList"
@@ -569,6 +570,7 @@ export default {
       labelShow: false,
       customerShow: false,
       promoterShow: false,
+      is_batch: false,
       labelActive: {
         uid: 0,
       },
@@ -835,6 +837,7 @@ export default {
       if (this.ids.length === 0) {
         this.$message.warning('请选择要设置标签的用户');
       } else {
+        this.is_batch = true;
         let uids = { uids: this.ids };
         this.labelActive.uid = 0;
         this.labelShow = true;
@@ -876,7 +879,7 @@ export default {
       // this.userSearchs();
     },
     // 批量设置标签
-    activeData(data) {
+    activeData(data, type) {
       let labels = [];
       if (!data.length) return;
       data.map((i) => {
@@ -885,6 +888,7 @@ export default {
       saveSetLabel({
         uids: this.ids.join(','),
         label_id: labels,
+        label_type: type,
       }).then((res) => {
         this.labelShow = false;
         this.selectedIds = new Set();
@@ -962,6 +966,7 @@ export default {
       return str;
     },
     openLabel(row) {
+      this.is_batch = false;
       this.labelShow = true;
       this.labelActive.uid = row.uid;
     },
@@ -1132,6 +1137,10 @@ export default {
 
     // 搜索
     userSearchs() {
+      // 清除已选用户
+      this.ids = [];
+      this.selectedIds = [];
+      this.selectionList = [];
       this.userFrom.page = 1;
       this.getList();
     },
@@ -1207,6 +1216,7 @@ export default {
     },
     // 点击发送优惠券
     onSend() {
+      console.log(this.ids);
       if (this.ids.length === 0) {
         this.$message.warning('请选择要发送优惠券的用户');
       } else {
@@ -1263,7 +1273,8 @@ export default {
       //将new Set()转化为数组
       this.ids = [...this.selectedIds];
       // 找到绑定的table的ref对应的dom，找到table的objData对象，objData保存的是当前页的数据
-      let objData = this.$refs.table.objData;
+      let objData = this.$refs.table?.objData;
+      if (!objData) return;
       for (let index in objData) {
         if (this.selectedIds.has(objData[index].uid)) {
           objData[index]._isChecked = true;

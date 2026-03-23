@@ -45,6 +45,10 @@ export default {
       configObj: {},
       rCom: [
         {
+          components: toolCom.c_card_select,
+          configNme: 'styleConfig',
+        },
+        {
           components: toolCom.c_set_up,
           configNme: 'setUp',
         },
@@ -95,36 +99,8 @@ export default {
           configNme: 'statisticColor',
         },
         {
-          components: toolCom.c_title,
-          configNme: 'titleCurrency',
-        },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'bgColor',
-        },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'bottomBgColor',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'topConfig',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'bottomConfig',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'prConfig',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'mbConfig',
-        },
-        {
-          components: toolCom.c_fillet,
-          configNme: 'fillet',
+          components: toolCom.c_common_style,
+          configNme: 'c_common_style',
         },
       ],
       setUp: 0,
@@ -146,17 +122,19 @@ export default {
     'configObj.setUp.tabVal': {
       handler(nVal, oVal) {
         this.setUp = nVal;
-        var arr = [this.rCom[0]];
+        // 取前两个
+        var arr = [
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (nVal == 0) {
           let tempArr = [
-            {
-              components: toolCom.c_title,
-              configNme: 'titleLeft',
-            },
-            {
-              components: toolCom.c_radio,
-              configNme: 'styleConfig',
-            },
             {
               components: toolCom.c_title,
               configNme: 'titleArticle',
@@ -192,7 +170,16 @@ export default {
     'configObj.toneConfig.tabVal': {
       handler(nVal, oVal) {
         this.type = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (this.setUp) {
           if (nVal) {
             this.rCom = [...arr, ...this.oneStyle, ...this.twoStyle, ...this.threeStyle];
@@ -206,11 +193,40 @@ export default {
   mounted() {
     this.$nextTick(() => {
       let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[this.num]));
-      this.configObj = value;
+      this.configObj = this.patchConfig(value);
       this.categoryList();
     });
   },
   methods: {
+    patchConfig(data) {
+      if (!data) return data;
+      if (!data.paddingConfig) {
+        this.$set(data, 'paddingConfig', {
+          isAll: false,
+          title: '内边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [
+            { val: data.topConfig ? data.topConfig.val : 0 },
+            { val: data.prConfig ? data.prConfig.val : 0 },
+            { val: data.bottomConfig ? data.bottomConfig.val : 0 },
+            { val: data.prConfig ? data.prConfig.val : 0 },
+          ],
+        });
+      }
+      if (!data.marginConfig) {
+        this.$set(data, 'marginConfig', {
+          isAll: false,
+          title: '外边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [{ val: data.mbConfig ? data.mbConfig.val : 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+      }
+      return data;
+    },
     categoryList() {
       categoryList()
         .then((res) => {

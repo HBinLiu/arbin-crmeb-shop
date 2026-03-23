@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -83,16 +83,16 @@ class LuckPrizeServices extends BaseServices
     {
         $data = array_merge($this->prize, array_intersect_key($data, $this->prize));
         if (!isset($data['name']) || !$data['name']) {
-            throw new AdminException(400538);
+            throw new AdminException('请填写奖品名称');
         }
         if (!isset($data['image']) || !$data['image']) {
-            throw new AdminException(400539);
+            throw new AdminException('请选择奖品图片');
         }
         if (!isset($data['percent']) || !$data['percent']) {
             throw new AdminException('请填写奖品中奖概率');
         }
         if (!isset($data['type']) || !isset($this->prize_type[$data['type']])) {
-            throw new AdminException(400541);
+            throw new AdminException('请选择奖品类型');
         }
         if (in_array($data['type'], [2, 3, 4]) && (!isset($data['num']) || !$data['num'])) {
             $msg = '';
@@ -107,13 +107,13 @@ class LuckPrizeServices extends BaseServices
                     $msg = '红包';
                     break;
             }
-            throw new AdminException(400542, ['type' => $msg]);
+            throw new AdminException('请填写奖品赠送{:type}数', ['type' => $msg]);
         }
         if ($data['type'] == 5 && (!isset($data['coupon_id']) || !$data['coupon_id'])) {
-            throw new AdminException(400543);
+            throw new AdminException('请选择优惠券');
         }
         if ($data['type'] == 6 && (!isset($data['product_id']) || !$data['product_id'])) {
-            throw new AdminException(400337);
+            throw new AdminException('请选择商品');
         }
         return $data;
     }
@@ -178,13 +178,13 @@ class LuckPrizeServices extends BaseServices
             $prize = $this->dao->get($id);
         }
         if (!$prize) {
-            throw new ApiException(410048);
+            throw new ApiException('奖品不存在');
         }
         //不是未中奖奖品 减少奖品数量
         if ($prize['type'] != 1 && $prize['total'] >= 1) {
             $total = $prize['total'] - 1;
             if (!$this->dao->update($id, ['total' => $total], 'id')) {
-                throw new ApiException(410070);
+                throw new ApiException('抽奖减少奖品总数失败');
             }
         }
         return true;

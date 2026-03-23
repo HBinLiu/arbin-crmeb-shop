@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -454,5 +454,29 @@ class ExportExcel extends AuthController
     {
         $data = $services->getExportData(['batch_card_id' => $id]);
         return app('json')->success($this->service->memberCard($data));
+    }
+
+    /**
+     * 核销订单导出
+     * @param StoreOrderServices $services
+     * @return \think\Response
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2025/9/9
+     */
+    public function verifyOrder(StoreOrderServices $services)
+    {
+        $where = $this->request->getMore([
+            ['data', '', '', 'time'],
+            ['real_name', ''],
+            ['store_id', ''],
+            ['type', ''],
+            ['field_key', ''],
+        ]);
+        $data = $services->getOrderList($where + ['status' => 6], ['*'], ['store', 'staff']);
+        return app('json')->success($this->service->verifyOrder($data['data']));
     }
 }

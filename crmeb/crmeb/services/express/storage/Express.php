@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -257,28 +257,28 @@ class Express extends BaseExpress
     {
         $param = $data;
         $param['com'] = $data['com'] ?? '';
-        if (!$param['com']) throw new AdminException(400713);
+        if (!$param['com']) throw new AdminException('快递公司编码缺失');
         $param['to_name'] = $data['to_name'] ?? '';
         $param['to_tel'] = $data['to_tel'] ?? '';
         $param['order_id'] = $data['order_id'] ?? '';
         $param['to_addr'] = $data['to_addr'] ?? '';
-        if (!$param['to_addr'] || !$param['to_tel'] || !$param['to_name']) throw new AdminException(400714);
+        if (!$param['to_addr'] || !$param['to_tel'] || !$param['to_name']) throw new AdminException('寄件人信息缺失');
         $param['from_name'] = $data['from_name'] ?? '';
         $param['from_tel'] = $data['from_tel'] ?? '';
         $param['from_addr'] = $data['from_addr'] ?? '';
-        if (!$param['from_name'] || !$param['from_tel'] || !$param['from_addr']) throw new AdminException(400715);
+        if (!$param['from_name'] || !$param['from_tel'] || !$param['from_addr']) throw new AdminException('收件人信息缺失');
         $param['temp_id'] = $data['temp_id'] ?? '';
         if (!$param['temp_id']) {
-            throw new AdminException(400712);
+            throw new AdminException('电子面单模板ID缺失');
         }
         $param['siid'] = sys_config('config_export_siid');
 //        if (!$param['siid']) {
-//            throw new AdminException(400716);
+//            throw new AdminException('云打印机编号缺失');
 //        }
         $param['count'] = $data['count'] ?? '';
         $param['cargo'] = $data['cargo'] ?? '';
         if (!$param['count']) {
-            throw new AdminException(400717);
+            throw new AdminException('商品数量缺失');
         }
         /** @var ExpressServices $expressServices */
         $expressServices = app()->make(ExpressServices::class);

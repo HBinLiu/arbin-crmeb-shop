@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -52,7 +52,7 @@ class RoutineTemplate extends AuthController
     public function syncSubscribe()
     {
         if (!sys_config('routine_appId') || !sys_config('routine_appsecret')) {
-            throw new AdminException(400236);
+            throw new AdminException('请先配置小程序appid、appSecret等参数');
         }
 
         $list = MiniProgramService::getSubscribeTemplateList();
@@ -65,7 +65,7 @@ class RoutineTemplate extends AuthController
             SyncMessageJob::dispatch('SyncSubscribe', [$key, $content]);
         }
 
-        return app('json')->success(100038);
+        return app('json')->success('同步成功');
     }
 
     /**
@@ -78,7 +78,7 @@ class RoutineTemplate extends AuthController
             ['name', ''],
             ['is_live', 0]
         ], true);
-        if (sys_config('routine_appId', '') == '') throw new AdminException(400236);
+        if (sys_config('routine_appId', '') == '') throw new AdminException('请先配置小程序appid、appSecret等参数');
         try {
             @unlink(public_path() . 'statics/download/routine.zip');
             //拷贝源文件
@@ -183,7 +183,7 @@ class RoutineTemplate extends AuthController
                 } else {
                     $res = false;
                 }
-                if (!$res) throw new ValidateException(400237);
+                if (!$res) throw new ValidateException('二维码生成失败');
                 $upload = UploadService::init(1);
                 if ($upload->to('routine/code')->setAuthThumb(false)->stream((string)$res['res'], $name) === false) {
                     return $upload->getError();

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -184,16 +184,16 @@ class UserRechargeServices extends BaseServices
     {
         $UserRecharge = $this->getRecharge($id);
         if (!$UserRecharge) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         if ($UserRecharge['paid'] != 1) {
-            throw new AdminException(400677);
+            throw new AdminException('订单未支付');
         }
         if ($UserRecharge['price'] == $UserRecharge['refund_price']) {
-            throw new AdminException(400147);
+            throw new AdminException('已退完支付金额，不能再退款了');
         }
         if ($UserRecharge['recharge_type'] == 'balance') {
-            throw new AdminException(400678);
+            throw new AdminException('佣金转入余额，不能退款');
         }
         $f = array();
         $f[] = Form::input('order_id', '退款单号', $UserRecharge->getData('order_id'))->disabled(true);
@@ -214,13 +214,13 @@ class UserRechargeServices extends BaseServices
     {
         $UserRecharge = $this->getRecharge($id);
         if (!$UserRecharge) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         if ($UserRecharge['price'] == $UserRecharge['refund_price']) {
-            throw new AdminException(400147);
+            throw new AdminException('已退完支付金额，不能再退款了');
         }
         if ($UserRecharge['recharge_type'] == 'balance') {
-            throw new AdminException(400678);
+            throw new AdminException('佣金转入余额，不能退款');
         }
         $data['refund_price'] = $UserRecharge['price'];
         $refund_data['pay_price'] = $UserRecharge['price'];
@@ -263,7 +263,7 @@ class UserRechargeServices extends BaseServices
             throw new AdminException($e->getMessage());
         }
         if (!$this->dao->update($id, $data)) {
-            throw new AdminException(100007);
+            throw new AdminException('修改失败');
         }
 
         //修改用户余额
@@ -319,14 +319,14 @@ class UserRechargeServices extends BaseServices
     public function delRecharge(int $id)
     {
         $rechargInfo = $this->getRecharge($id);
-        if (!$rechargInfo) throw new AdminException(100026);
+        if (!$rechargInfo) throw new AdminException('数据不存在');
         if ($rechargInfo->paid) {
-            throw new AdminException(400679);
+            throw new AdminException('已支付的订单记录无法删除');
         }
         if ($this->dao->delete($id))
             return true;
         else
-            throw new AdminException(100008);
+            throw new AdminException('删除失败');
     }
 
     /**
@@ -353,20 +353,20 @@ class UserRechargeServices extends BaseServices
         $userServices = app()->make(UserServices::class);
         $user = $userServices->getUserInfo($uid);
         if (!$user) {
-            throw new ApiException(100100);
+            throw new ApiException('参数错误');
         }
         /** @var UserBrokerageServices $frozenPrices */
         $frozenPrices = app()->make(UserBrokerageServices::class);
         $broken_commission = $frozenPrices->getUserFrozenPrice($uid);
         $commissionCount = bcsub((string)$user['brokerage_price'], (string)$broken_commission, 2);
         if ($price > $commissionCount) {
-            throw new ApiException(400680);
+            throw new ApiException('转入金额不能大于可提现佣金');
         }
         $edit_data = [];
         $edit_data['now_money'] = bcadd((string)$user['now_money'], (string)$price, 2);
         $edit_data['brokerage_price'] = $user['brokerage_price'] > $price ? bcsub((string)$user['brokerage_price'], (string)$price, 2) : 0;
         if (!$userServices->update($uid, $edit_data, 'uid')) {
-            throw new ApiException(100007);
+            throw new ApiException('修改失败');
         }
 
         //写入充值记录
@@ -381,7 +381,7 @@ class UserRechargeServices extends BaseServices
             'add_time' => time()
         ];
         if (!$re = $this->dao->save($rechargeInfo)) {
-            throw new ApiException(400681);
+            throw new ApiException('写入余额充值失败');
         }
 
         //余额记录
@@ -429,7 +429,7 @@ class UserRechargeServices extends BaseServices
         $userServices = app()->make(UserServices::class);
         $user = $userServices->getUserInfo($uid);
         if (!$user) {
-            throw new ApiException(400214);
+            throw new ApiException('用户不存在');
         }
         switch ((int)$type) {
             case 0: //支付充值余额
@@ -439,7 +439,7 @@ class UserRechargeServices extends BaseServices
                     $systemGroupData = app()->make(SystemGroupDataServices::class);
                     $data = $systemGroupData->getDateValue($recharId);
                     if ($data === false) {
-                        throw new ApiException(400682);
+                        throw new ApiException('您选择的充值方式已下架');
                     } else {
                         $paid_price = $data['give_money'] ?? 0;
                         $price = $data['price'] ?? 0;
@@ -455,7 +455,7 @@ class UserRechargeServices extends BaseServices
                 $recharge_data['give_price'] = $paid_price;
                 $recharge_data['channel_type'] = $user['user_type'];
                 if (!$rechargeOrder = $this->dao->save($recharge_data)) {
-                    throw new ApiException(400683);
+                    throw new ApiException('充值订单生成失败');
                 }
                 try {
                     /** @var RechargeServices $recharge */
@@ -472,7 +472,7 @@ class UserRechargeServices extends BaseServices
                 $this->importNowMoney($uid, $price);
                 return ['msg' => '转入余额成功', 'type' => $from, 'data' => []];
             default:
-                throw new ApiException(100100);
+                throw new ApiException('参数错误');
         }
     }
 
@@ -489,24 +489,24 @@ class UserRechargeServices extends BaseServices
     {
         $order = $this->dao->getOne(['order_id' => $orderId, 'paid' => 0]);
         if (!$order) {
-            throw new ApiException(410173);
+            throw new ApiException('订单不存在');
         }
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
         $user = $userServices->getUserInfo((int)$order['uid']);
         if (!$user) {
-            throw new ApiException(410032);
+            throw new ApiException('用户不存在');
         }
         $price = bcadd((string)$order['price'], (string)$order['give_price'], 2);
         if (!$this->dao->update($order['id'], ['paid' => 1, 'recharge_type' => $other['pay_type'], 'pay_time' => time(), 'trade_no' => $other['trade_no'] ?? ''], 'id')) {
-            throw new ApiException(410286);
+            throw new ApiException('修改订单失败');
         }
         $now_money = bcadd((string)$user['now_money'], (string)$price, 2);
         /** @var UserMoneyServices $userMoneyServices */
         $userMoneyServices = app()->make(UserMoneyServices::class);
         $userMoneyServices->income('user_recharge', $user['uid'], ['number' => $price, 'price' => $order['price'], 'give_price' => $order['give_price']], $now_money, $order['id']);
         if (!$userServices->update((int)$order['uid'], ['now_money' => $now_money], 'uid')) {
-            throw new ApiException(410287);
+            throw new ApiException('修改用户信息失败');
         }
 
         /** @var CapitalFlowServices $capitalFlowServices */

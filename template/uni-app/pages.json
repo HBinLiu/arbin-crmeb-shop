@@ -1,4 +1,8 @@
 {
+	"easycom": {
+		"autoscan": true,
+		"custom": {}
+	},
 	"pages": [ //pages数组中第一项表示应用启动页
 		{
 			"path": "pages/guide/index",
@@ -16,6 +20,11 @@
 				"navigationBarTextStyle": "black",
 				"app-plus": {
 					"scrollIndicator": "none"
+				},
+				"mp-weixin": {
+					"componentPlaceholder": {
+						"page-design": "view"
+					}
 				}
 			}
 		},
@@ -38,6 +47,11 @@
 			"style": {
 
 				"navigationBarTitleText": "个人中心",
+				"mp-weixin": {
+					"componentPlaceholder": {
+						"page-design": "view"
+					}
+				},
 				"enablePullDownRefresh": true
 					// #ifdef MP || APP-PLUS
 					,
@@ -63,7 +77,26 @@
 		}
 
 	],
-	"subPackages": [{ // 模块分包
+	// 模块分包
+	"subPackages": [
+			{
+			"root": "pages/goods_details",
+			"name": "goods_details",
+			"pages": [{
+					"path": "index",
+					"style": {
+						"navigationStyle": "custom",
+						"transparentTitle": "auto",
+						"mp-weixin": {
+							"componentPlaceholder": {
+								"page-design": "view",
+								"product-bottom": "view"
+							}
+						}
+					}
+				}]
+			},
+			{ 
 			"root": "pages/extension",
 			"name": "extension",
 			"pages": [{
@@ -111,7 +144,7 @@
 		}, {
 			"root": "pages/goods",
 			"name": "goods",
-			"pages": [{
+			"pages": [ {
 					"path": "goods_list/index",
 					"style": {
 						"navigationBarTitleText": "商品列表",
@@ -316,7 +349,7 @@
 							// #endif
 						}
 					}
-				},{
+				}, {
 					"path": "receive_gifts_status/index",
 					"style": {
 						"navigationBarTitleText": "领取结果",
@@ -344,7 +377,7 @@
 							// #endif
 						}
 					}
-				},{
+				}, {
 					"path": "cashier/index",
 					"style": {
 						"navigationBarTitleText": "收银台",
@@ -489,7 +522,7 @@
 							"scrollIndicator": "none"
 						}
 					}
-				}, 
+				},
 				{
 					"path": "binding_phone/index",
 					"style": {
@@ -706,7 +739,7 @@
 							// #endif
 						}
 					}
-				},{
+				}, {
 					"path": "user_spread_money/receiving",
 					"style": {
 						"navigationBarTitleText": "收款"
@@ -1015,31 +1048,7 @@
 				}
 			}
 		},
-		{
-			"root": "pages/goods_details",
-			"name": "goods_details",
-			"pages": [{
-				"path": "index",
-				"style": {
-					"navigationStyle": "custom",
-					"transparentTitle": "auto",
-					"app-plus": {
-						// #ifdef APP-PLUS
-						"titleNView": {
-							"padding-left": "10px",
-							"padding-right": "10px",
-							"type": "transparent",
-							"buttons": [ //原生标题栏按钮配置,
-								{
-									"type": "menu" //原生标题栏增加分享按钮，点击事件可通过页面的 onNavigationBarButtonTap 函数进行监听
-								}
-							]
-						}
-						// #endif
-					}
-				}
-			}]
-		},
+		
 		{
 			"root": "pages/activity",
 			"name": "activity",
@@ -1218,6 +1227,41 @@
 			"root": "pages/admin",
 			"name": "adminOrder",
 			"pages": [{
+					"path": "distribution/index",
+					"style": {
+						"navigationStyle": "custom",
+						"app-plus": {}
+					}
+				}, {
+					"path": "distribution/scanning/index",
+					"style": {
+						"navigationBarTitleText": "订单核销",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				}, {
+					"path": "distribution/scanning/detail/index",
+					"style": {
+						"navigationBarTitleText": "订单核销",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				}, {
+					"path": "distribution/orderDetail/index",
+					"style": {
+						"navigationStyle": "custom"
+					}
+				}, {
 					"path": "custom_date/index",
 					"style": {
 						"navigationBarTitleText": "选择日期"
@@ -1273,6 +1317,75 @@
 							}
 							// #endif
 						}
+					}
+			},
+			{
+					"path": "refund/index",
+					"style": {
+						"navigationBarTitleText": "售后退款",
+						"navigationStyle": "custom"
+					}
+				},
+				{
+					"path": "logistics/index",
+					"style": {
+						"navigationBarTitleText": "物流信息",
+						"navigationStyle": "custom"
+					}
+				},
+				{
+					"path": "refund_order_list/index",
+					"style": {
+						"navigationBarTitleText": "售后订单列表",
+						"navigationStyle": "custom"
+					}
+				},
+				{
+					"path": "refund_order_detail/index",
+					"style": {
+						"navigationBarTitleText": "售后订单详情",
+						"navigationStyle": "custom"
+					}
+				},
+				{
+					"path": "goods/index",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTitleText": "商品管理"
+					}
+				},
+				{
+					"path": "goods/specs",
+					"style": {
+						"navigationBarTitleText": "修改价格/库存",
+						"navigationBarBackgroundColor": "#F5F5F5",
+						"app-plus": {
+							// #ifdef APP-PLUS
+							"titleNView": {
+								"type": "default"
+							}
+							// #endif
+						}
+					}
+				},
+				{
+					"path": "goods/addGoods",
+					"style": {
+						"navigationBarTitleText": "添加商品"
+					}
+				},
+				{
+					"path": "user/list",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTitleText": "用户管理"
+					}
+				},
+				{
+					"path": "user/index",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTitleText": "用户详情"
 					}
 				},
 				{
@@ -1437,9 +1550,9 @@
 				{
 					"path": "special/index",
 					"style": {
-					"navigationBarTextStyle": "white",
-					"navigationBarBackgroundColor": "#333333",
-					"navigationBarTitleText": "专题页",
+						"navigationBarTextStyle": "white",
+						"navigationBarBackgroundColor": "#333333",
+						"navigationBarTitleText": "专题页",
 						"app-plus": {
 							"scrollIndicator": "none"
 						}
@@ -1588,7 +1701,18 @@
 					}
 				}
 			]
-		}
+		},
+		{
+			"root": "subpackage/diyComponents",
+			"name": "diyComponents",
+			"pages": [{
+				"path": "pages/placeholder",
+				"style": {
+					"navigationBarTitleText": ""
+				}
+			}]
+		}	
+
 	],
 	"tabBar": { // 底部菜单
 		"color": "#282828",

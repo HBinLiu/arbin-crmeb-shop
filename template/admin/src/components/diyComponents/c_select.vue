@@ -4,7 +4,7 @@
       <el-col class="label" :span="4" v-if="datas[name].title">
         {{ datas[name].title }}
       </el-col>
-      <el-col :span="19" class="slider-box">
+      <el-col :span="19">
         <el-select v-model="datas[name].activeValue" clearable style="width: 350px" @change="sliderChange">
           <el-option
             v-for="(item, index) in datas[name].list"
@@ -63,7 +63,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .slider-box {
   margin-top: 10px;
 }

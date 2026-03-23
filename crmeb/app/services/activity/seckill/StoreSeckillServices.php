@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -105,7 +105,7 @@ class StoreSeckillServices extends BaseServices
         if ($data['section_time']) {
             [$start_time, $end_time] = $data['section_time'];
             if (strtotime($end_time) + 86400 < time()) {
-                throw new AdminException(400507);
+                throw new AdminException('活动结束时间不能小于当前时间');
             }
         }
 
@@ -113,17 +113,17 @@ class StoreSeckillServices extends BaseServices
         if ($id) {
             $seckill = $this->get((int)$id);
             if (!$seckill) {
-                throw new AdminException(100026);
+                throw new AdminException('数据不存在');
             }
         }
         //限制编辑
 //        if ($data['copy'] == 0 && $seckill) {
 //            if ($seckill['stop_time'] + 86400 < time()) {
-//                throw new AdminException(400508);
+//                throw new AdminException('活动已结束,请重新添加或复制');
 //            }
 //        }
         if ($data['num'] < $data['once_num']) {
-            throw new AdminException(400500);
+            throw new AdminException('限制单次购买数量不能大于总购买数量');
         }
         if ($data['copy'] == 1) {
             $id = 0;
@@ -151,7 +151,7 @@ class StoreSeckillServices extends BaseServices
         /** @var StoreProductServices $storeProductServices */
         $storeProductServices = app()->make(StoreProductServices::class);
         if ($data['quota'] > $storeProductServices->value(['id' => $data['product_id']], 'stock')) {
-            throw new AdminException(400090);
+            throw new AdminException('限量不能超过商品库存');
         }
         $this->transaction(function () use ($id, $data, $description, $detail, $items, $storeDescriptionServices, $storeProductAttrServices, $storeProductServices) {
             if ($id) {
@@ -159,7 +159,7 @@ class StoreSeckillServices extends BaseServices
                 $storeDescriptionServices->saveDescription((int)$id, $description, 1);
                 $skuList = $storeProductServices->validateProductAttr($items, $detail, (int)$id, 1);
                 $valueGroup = $storeProductAttrServices->saveProductAttr($skuList, (int)$id, 1);
-                if (!$res) throw new AdminException(100007);
+                if (!$res) throw new AdminException('修改失败');
             } else {
                 if (!$storeProductServices->getOne(['is_del' => 0, 'id' => $data['product_id']])) {
                     throw new AdminException('无法添加回收站商品');
@@ -169,7 +169,7 @@ class StoreSeckillServices extends BaseServices
                 $storeDescriptionServices->saveDescription((int)$res->id, $description, 1);
                 $skuList = $storeProductServices->validateProductAttr($items, $detail, (int)$res->id, 1, 1, true);
                 $valueGroup = $storeProductAttrServices->saveProductAttr($skuList, (int)$res->id, 1);
-                if (!$res) throw new AdminException(100022);
+                if (!$res) throw new AdminException('添加失败');
             }
         });
     }
@@ -452,7 +452,7 @@ class StoreSeckillServices extends BaseServices
         $uid = (int)$request->uid();
         $storeInfo = $this->dao->getOne(['id' => $id], '*', ['description', 'product']);
         if (!$storeInfo) {
-            throw new ApiException(410294);
+            throw new ApiException('商品不存在');
         } else {
             $storeInfo = $storeInfo->toArray();
         }
@@ -502,7 +502,7 @@ class StoreSeckillServices extends BaseServices
                 $seckillTime = array_column($systemGroupDataService->getConfigNameValue('routine_seckill_time'), null, 'id');
                 $config = $seckillTime[$time_id] ?? false;
                 if (!$config) {
-                    throw new ApiException(410322);
+                    throw new ApiException('活动已结束');
                 }
                 $now_hour = date('H', time());
                 $start_hour = $config['time'];
@@ -602,23 +602,23 @@ class StoreSeckillServices extends BaseServices
         //检查商品活动状态
         $StoreSeckillinfo = $this->getSeckillCount($seckillId, '*,title as store_name');
         if ($StoreSeckillinfo['once_num'] < $cartNum) {
-            throw new ApiException(410313, ['num' => $StoreSeckillinfo['once_num']]);
+            throw new ApiException('每个订单限购{:num}件', ['num' => $StoreSeckillinfo['once_num']]);
         }
         /** @var StoreOrderServices $orderServices */
         $orderServices = app()->make(StoreOrderServices::class);
         $userBuyCount = $orderServices->getBuyCount($uid, 'seckill_id', $seckillId);
         if ($StoreSeckillinfo['num'] < ($userBuyCount + $cartNum)) {
-            throw new ApiException(410298, ['num' => $StoreSeckillinfo['num']]);
+            throw new ApiException('每人总共限购{:num}件', ['num' => $StoreSeckillinfo['num']]);
         }
         if ($StoreSeckillinfo['num'] < $cartNum) {
-            throw new ApiException(410317, ['num' => $StoreSeckillinfo['num']]);
+            throw new ApiException('每人限购{:num}件', ['num' => $StoreSeckillinfo['num']]);
         }
         $attrInfo = $attrValueServices->getOne(['product_id' => $seckillId, 'unique' => $unique, 'type' => 1]);
         if (!$attrInfo || $attrInfo['product_id'] != $seckillId) {
-            throw new ApiException(410305);
+            throw new ApiException('请选择有效的商品属性');
         }
         if ($cartNum > $attrInfo['quota']) {
-            throw new ApiException(410296);
+            throw new ApiException('该商品库存不足');
         }
         return [$attrInfo, $unique, $StoreSeckillinfo];
     }

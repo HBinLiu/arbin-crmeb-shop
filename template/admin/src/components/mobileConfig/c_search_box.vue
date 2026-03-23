@@ -117,10 +117,6 @@ export default {
         },
         {
           components: toolCom.c_bg_color,
-          configNme: 'searchBoxColor',
-        },
-        {
-          components: toolCom.c_bg_color,
           configNme: 'tipColor',
         },
         {
@@ -154,32 +150,8 @@ export default {
       ],
       currencyStyle: [
         {
-          components: toolCom.c_title,
-          configNme: 'titleCurrency',
-        },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'moduleColor',
-        },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'bottomBgColor',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'topConfig',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'bottomConfig',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'prConfig',
-        },
-        {
-          components: toolCom.c_fillet,
-          configNme: 'fillet',
+          components: toolCom.c_common_style,
+          configNme: 'c_common_style',
         },
       ],
       setUp: 0,
@@ -239,12 +211,137 @@ export default {
   mounted() {
     this.$nextTick(() => {
       let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[this.num]));
-      this.configObj = value;
+      this.configObj = this.patchConfig(value);
     });
   },
   methods: {
+    patchConfig(config) {
+      if (!config.paddingConfig) {
+        config.paddingConfig = {
+          title: '内边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          isAll: false,
+          valList: [
+            { val: config.topConfig ? config.topConfig.val : 0 },
+            { val: config.prConfig ? config.prConfig.val : 0 },
+            { val: config.bottomConfig ? config.bottomConfig.val : 0 },
+            { val: config.prConfig ? config.prConfig.val : 0 },
+          ],
+        };
+      }
+      if (!config.marginConfig) {
+        config.marginConfig = {
+          title: '外边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          isAll: false,
+          valList: [{ val: config.mbConfig ? config.mbConfig.val : 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        };
+      }
+      if (!config.componentBgConfig) {
+        config.componentBgConfig = {
+          title: '背景设置',
+          tabVal: 0,
+          tabList: [{ name: '颜色' }, { name: '图片' }],
+          colorConfig: {
+            title: '背景颜色',
+            default: [{ item: '#fff' }, { item: '#fff' }],
+            color: [{ item: '#fff' }, { item: '#fff' }],
+          },
+          colorDirection: {
+            title: '渐变方向',
+            tabVal: 0,
+            tabList: [{ name: '横向' }, { name: '纵向' }, { name: '左斜' }, { name: '右斜' }],
+          },
+          imageConfig: {
+            header: '背景图片',
+            title: '',
+            name: '上传图片',
+            type: 'code',
+            url: '',
+            info: '建议尺寸：750px * 400px',
+          },
+        };
+      }
+      if (!config.borderConfig) {
+        config.borderConfig = {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0,
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              { name: '实线', style: 'solid' },
+              { name: '虚线', style: 'dashed' },
+              { name: '点状', style: 'dotted' },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+            max: 20,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
+        };
+      }
+      if (!config.shadowConfig) {
+        config.shadowConfig = {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0,
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: 'rgba(0,0,0,0.1)' }],
+            color: [{ item: 'rgba(0,0,0,0.1)' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+            max: 50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+            max: 50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+            max: 50,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+            max: 50,
+          },
+        };
+      }
+      if (!config.c_common_style) {
+        config.c_common_style = {
+          color: 'rgba(255,255,255,1)',
+          color2: 'rgba(255,255,255,1)',
+          lr: 0,
+          type: 0,
+        };
+      }
+      return config;
+    },
     getRComContent(arr) {
-      console.log('11', this.type2);
       if (this.type == 1) {
         // this.rCom = [...arr, ...this.oneContent, ...this.threeContent];
         this.rCom = [...arr, ...this.oneContent, ...this.threeContent, ...this.oneContentFix];

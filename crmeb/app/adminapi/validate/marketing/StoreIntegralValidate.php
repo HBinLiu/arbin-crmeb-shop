@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -40,14 +40,14 @@ class StoreIntegralValidate extends Validate
      * @var array
      */
     protected $message = [
-        'product_id.require' => '400337',
-        'title.require' => '400338',
-        'info.require' => '400347',
-        'unit_name.require' => '400348',
-        'image.require' => '400349',
-        'images.require' => '400349',
-        'description.require' => '400361',
-        'attrs.require' => '400362',
+        'product_id.require' => '请选择商品',
+        'title.require' => '请输入商品名称',
+        'info.require' => '请填写活动简介',
+        'unit_name.require' => '请填写单位',
+        'image.require' => '请选择商品轮播图',
+        'images.require' => '请选择商品轮播图',
+        'description.require' => '请填写商品详情',
+        'attrs.require' => '请选择规格',
     ];
 
     protected $scene = [

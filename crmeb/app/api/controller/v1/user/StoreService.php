@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -71,14 +71,14 @@ class StoreService
             ['uidTo', 0]
         ], true);
         $serviceInfoList = $services->getServiceList(['status' => 1]);
-        if (!count($serviceInfoList)) return app('json')->fail(410136);
+        if (!count($serviceInfoList)) return app('json')->fail('暂无客服人员在线，请稍后联系');
         $uid = $request->uid();
         $uids = array_column($serviceInfoList['list'], 'uid');
         if (!$uidTo) {
             //自己是客服
             if (in_array($uid, $uids)) {
                 $uids = array_merge(array_diff($uids, [$uid]));
-                if (!$uids) return app('json')->fail(410137);
+                if (!$uids) return app('json')->fail('不能和自己聊天');
             }
         } else {
             if (in_array($uid, $uids)) {
@@ -86,7 +86,7 @@ class StoreService
             }
         }
         if (!$uids) {
-            return app('json')->fail(410136);
+            return app('json')->fail('暂无客服人员在线，请稍后联系');
         }
         //上次聊天客服优先对话
         $toUid = $recordServices->value(['user_id' => $uid], 'to_uid');
@@ -97,7 +97,7 @@ class StoreService
             $toUid = $uids[array_rand($uids)] ?? 0;
         }
 
-        if (!$toUid) return app('json')->fail(410136);
+        if (!$toUid) return app('json')->fail('暂无客服人员在线，请稍后联系');
         $result = ['serviceList' => [], 'uid' => $toUid];
         $serviceLogList = $this->services->getChatList(['uid' => $uid], $uid);
         if (!$serviceLogList) return app('json')->success($result);
@@ -139,7 +139,7 @@ class StoreService
         $data['add_time'] = time();
         $data['uid'] = $request->uid();
         $services->save($data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -161,20 +161,20 @@ class StoreService
     public function setLoginCode(Request $request, StoreServiceServices $services, string $code)
     {
         if (!$code) {
-            return app('json')->fail(410020);
+            return app('json')->fail('扫码失败请重新扫描');
         }
         $cacheCode = CacheService::get($code);
         if ($cacheCode === false || $cacheCode === null) {
-            return app('json')->fail(410021);
+            return app('json')->fail('二维码已过期请重新扫描');
         }
         $userInfo = $services->get(['uid' => $request->uid()]);
         if (!$userInfo) {
-            return app('json')->fail(410138);
+            return app('json')->fail('您不是客服无法登录');
         }
         $userInfo->uniqid = $code;
         $userInfo->save();
         CacheService::set($code, '0', 600);
-        return app('json')->success(410001);
+        return app('json')->success('登录成功');
     }
 
     /**

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -57,6 +57,20 @@ Route::group('app', function () {
         Route::get('routine/info', 'v1.application.routine.RoutineTemplate/getDownloadInfo')->option(['real_name' => '下载小程序页面数据']);
         //下载小程序模版
         Route::post('routine/download', 'v1.application.routine.RoutineTemplate/downloadTemp')->option(['real_name' => '下载小程序模版']);
+
+        // ==================== 小程序 CI 自动化上传 ====================
+        //获取运行环境状态
+        Route::get('routine/ci/environment', 'v1.application.routine.RoutineCI/environment')->option(['real_name' => '获取小程序CI运行环境']);
+        //获取安装指南
+        Route::get('routine/ci/guide', 'v1.application.routine.RoutineCI/installGuide')->option(['real_name' => '获取环境安装指南']);
+        //获取上传配置
+        Route::get('routine/ci/config', 'v1.application.routine.RoutineCI/uploadConfig')->option(['real_name' => '获取小程序上传配置']);
+        //保存上传密钥
+        Route::post('routine/ci/private_key', 'v1.application.routine.RoutineCI/savePrivateKey')->option(['real_name' => '保存小程序上传密钥']);
+        //上传小程序代码
+        Route::post('routine/ci/upload', 'v1.application.routine.RoutineCI/upload')->option(['real_name' => '上传小程序代码']);
+        //获取预览二维码
+        Route::post('routine/ci/preview', 'v1.application.routine.RoutineCI/preview')->option(['real_name' => '获取小程序预览二维码']);
 
         Route::get('routine/scheme_list', 'v1.application.routine.RoutineScheme/schemeList')->name('schemeList')->option(['real_name' => '小程序外链列表']);
         Route::get('routine/scheme_form/:id', 'v1.application.routine.RoutineScheme/schemeForm')->name('schemeForm')->option(['real_name' => '小程序外链添加修改表单']);

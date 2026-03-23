@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -90,14 +90,14 @@ class Service extends AuthController
         ]);
 
         if (!$data['name']) {
-            return app('json')->fail(410095);
+            return app('json')->fail('分类名称不能为空');
         }
         $data['add_time'] = time();
         $data['owner_id'] = $this->kefuId;
         $data['type'] = 1;
 
         $services->save($data);
-        return app('json')->success(100021);
+        return app('json')->success('添加成功');
     }
 
     /**
@@ -115,20 +115,20 @@ class Service extends AuthController
         ]);
 
         if (!$data['name']) {
-            return app('json')->fail(410095);
+            return app('json')->fail('分类名称不能为空');
         }
 
         $cateInfo = $services->get($id);
         if (!$cateInfo) {
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         }
         $cateInfo->name = $data['name'];
         $cateInfo->sort = $data['sort'];
 
         if ($cateInfo->save()) {
-            return app('json')->success(100001);
+            return app('json')->success('修改成功');
         } else {
-            return app('json')->fail(100007);
+            return app('json')->fail('修改失败');
         }
     }
 
@@ -142,13 +142,13 @@ class Service extends AuthController
     {
         $cateInfo = $services->get($id);
         if (!$cateInfo) {
-            return app('json')->fail(410096);
+            return app('json')->fail('分类不存在');
         }
 
         if ($cateInfo->delete()) {
-            return app('json')->success(100002);
+            return app('json')->success('删除成功');
         } else {
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
         }
     }
 
@@ -183,19 +183,19 @@ class Service extends AuthController
         validate(SpeechcraftValidate::class)->check($data);
 
         if (!$categoryServices->count(['owner_id' => $this->kefuId, 'type' => 1, 'id' => $data['cate_id']])) {
-            return app('json')->fail(410096);
+            return app('json')->fail('分类不存在');
         }
         if ($services->count(['message' => $data['message']])) {
-            return app('json')->fail(410097);
+            return app('json')->fail('添加的内容重复');
         }
         $data['add_time'] = time();
         $data['kefu_id'] = $this->kefuId;
 
         $res = $services->save($data);
         if ($res) {
-            return app('json')->success(100021, null, $res->toArray());
+            return app('json')->success('添加成功', null, $res->toArray());
         } else {
-            return app('json')->fail(100022);
+            return app('json')->fail('添加失败');
         }
     }
 
@@ -215,17 +215,17 @@ class Service extends AuthController
         ]);
 
         if (!$data['message']) {
-            return app('json')->fail(410102);
+            return app('json')->fail('话术标题内容不能为空');
         }
         if (!$categoryServices->count(['owner_id' => $this->kefuId, 'type' => 1, 'id' => $data['cate_id']])) {
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         }
         $speechcraft = $services->get($id);
         if (!$speechcraft) {
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         }
         if (!$speechcraft->kefu_id) {
-            return app('json')->fail(410101);
+            return app('json')->fail('公共话术不能修改');
         }
         $speechcraft->title = $data['title'];
         if ($data['cate_id']) {
@@ -234,9 +234,9 @@ class Service extends AuthController
         $speechcraft->message = $data['message'];
 
         if ($speechcraft->save()) {
-            return app('json')->success(100001);
+            return app('json')->success('修改成功');
         } else {
-            return app('json')->fail(100007);
+            return app('json')->fail('修改失败');
         }
     }
 
@@ -250,12 +250,12 @@ class Service extends AuthController
     {
         $speechcraft = $services->get($id);
         if (!$speechcraft) {
-            return app('json')->fail(410100);
+            return app('json')->fail('话术没有被查到');
         }
         if ($speechcraft->delete()) {
-            return app('json')->success(100002);
+            return app('json')->success('删除成功');
         } else {
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
         }
     }
 
@@ -275,7 +275,7 @@ class Service extends AuthController
             ['is_tourist', 0],
         ], true);
         if (!$uid) {
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         }
         return app('json')->success($this->services->getChatList($this->kefuInfo['uid'], $uid, (int)$upperId, $is_tourist));
     }
@@ -301,9 +301,9 @@ class Service extends AuthController
             ['uid', 0]
         ], true);
         if (!$kefuToUid || !$uid) {
-            return app('json')->fail(410098);
+            return app('json')->fail('缺少转接人id');
         }
         $this->services->setTransfer($this->kefuInfo['uid'], (int)$uid, (int)$kefuToUid);
-        return app('json')->success(410099);
+        return app('json')->success('转接成功');
     }
 }

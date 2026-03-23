@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -120,17 +120,17 @@ class OutUserServices extends BaseServices
     public function saveUser(int $uid, array $data): int
     {
         if (empty($data['real_name'])) {
-            throw new ApiException(400760);
+            throw new ApiException('请输入真实姓名');
         }
         if (empty($data['phone'])) {
-            throw new ApiException(400132);
+            throw new ApiException('请填写手机号');
         }
 
         if (!check_phone($data['phone'])) {
-            throw new ApiException(400252);
+            throw new ApiException('手机号格式错误');
         }
         if ($uid < 1 && $this->count(['phone' => $data['phone'], 'is_del' => 0])) {
-            throw new ApiException(400314);
+            throw new ApiException('手机号已经存在');
         }
 
         if ($data['pwd']) {
@@ -159,7 +159,7 @@ class OutUserServices extends BaseServices
                 $uid = (int)$userInfo->uid;
             }
             if (!$userInfo) {
-                throw new ApiException(100006);
+                throw new ApiException('保存失败');
             }
 
             /** @var UserServices $userServices */
@@ -168,7 +168,7 @@ class OutUserServices extends BaseServices
             $level = (int)$data['level'];
             if ($level) {
                 if (!$userServices->saveGiveLevel($uid, (int)$data['level'])) {
-                    throw new ApiException(400219);
+                    throw new ApiException('赠送失败');
                 }
             }
             return $uid;
@@ -203,7 +203,7 @@ class OutUserServices extends BaseServices
                 $issueService = app()->make(StoreCouponIssueServices::class);
                 $coupon = $issueService->get($data['id']);
                 if (!$coupon) {
-                    throw new ApiException(100026);
+                    throw new ApiException('数据不存在');
                 } else {
                     $coupon = $coupon->toArray();
                 }

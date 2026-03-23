@@ -1,5 +1,13 @@
 <?php
-
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 namespace app\services\agent;
 
 use app\services\BaseServices;
@@ -88,7 +96,7 @@ class DivisionServices extends BaseServices
         /** @var SystemAdminServices $adminService */
         $adminService = app()->make(SystemAdminServices::class);
         $userInfo = $userServices->getUserInfo($uid);
-        if ($uid && !$userInfo) throw new AdminException(100100);
+        if ($uid && !$userInfo) throw new AdminException('参数错误');
         if ($uid) {
             $adminInfo = $adminService->getInfo(['division_id' => $uid])->toArray();
             if (isset($adminInfo['roles'])) {
@@ -127,7 +135,7 @@ class DivisionServices extends BaseServices
     public function divisionSave($data)
     {
         if ((int)$data['uid'] == 0) $data['uid'] = $data['image']['uid'];
-        if ((int)$data['uid'] == 0) throw new AdminException(400450);
+        if ((int)$data['uid'] == 0) throw new AdminException('请填写用户UID');
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
         if ($data['aid'] == 0) {
@@ -174,24 +182,24 @@ class DivisionServices extends BaseServices
             $adminService = app()->make(SystemAdminServices::class);
             if (!$aid) {
                 if ($adminData['pwd']) {
-                    if (!$adminData['conf_pwd']) throw new AdminException(400263);
-                    if ($adminData['pwd'] != $adminData['conf_pwd']) throw new AdminException(400264);
+                    if (!$adminData['conf_pwd']) throw new AdminException('请输入确认密码');
+                    if ($adminData['pwd'] != $adminData['conf_pwd']) throw new AdminException('两次输入的密码不一致');
                     $adminService->create($adminData);
                 } else {
-                    throw new AdminException(400263);
+                    throw new AdminException('请输入确认密码');
                 }
             } else {
                 $adminInfo = $adminService->get($aid);
                 if (!$adminInfo)
-                    throw new AdminException(400451);
+                    throw new AdminException('管理员信息未查到');
                 if ($adminInfo->is_del) {
-                    throw new AdminException(400452);
+                    throw new AdminException('管理员已经删除');
                 }
                 if (!$adminData['real_name'])
-                    throw new AdminException(400453);
+                    throw new AdminException('管理员姓名不能为空');
                 if ($adminData['pwd']) {
-                    if (!$adminData['conf_pwd']) throw new AdminException(400263);
-                    if ($adminData['pwd'] != $adminData['conf_pwd']) throw new AdminException(400264);
+                    if (!$adminData['conf_pwd']) throw new AdminException('请输入确认密码');
+                    if ($adminData['pwd'] != $adminData['conf_pwd']) throw new AdminException('两次输入的密码不一致');
                     $adminInfo->pwd = $this->passwordHash($adminData['pwd']);
                 }
                 $adminInfo->real_name = $adminData['real_name'];
@@ -237,7 +245,7 @@ class DivisionServices extends BaseServices
         /** @var UserServices $userService */
         $userService = app()->make(UserServices::class);
         $userInfo = $userService->get($uid);
-        if ($uid && !$userInfo) throw new AdminException(400214);
+        if ($uid && !$userInfo) throw new AdminException('用户不存在');
         $field = [];
         $options = [];
         $divisionList = $userService->getDivisionList(['status' => 1, 'division_type' => 1], 'uid,division_name');
@@ -291,8 +299,8 @@ class DivisionServices extends BaseServices
         ];
         $division_info = $userServices->getUserInfo($data['division_id'], 'division_end_time,division_percent');
         if ($division_info) {
-            if ($agentData['division_percent'] > $division_info['division_percent']) throw new AdminException(400448);
-            if ($agentData['division_end_time'] > $division_info['division_end_time']) throw new AdminException(400449);
+            if ($agentData['division_percent'] > $division_info['division_percent']) throw new AdminException('代理商佣金比例不能大于事业部佣金比例');
+            if ($agentData['division_end_time'] > $division_info['division_end_time']) throw new AdminException('代理商到期时间不能大于事业部到期时间');
         }
         $res = $userServices->update($uid, $agentData);
         if ($res) return true;
@@ -316,7 +324,7 @@ class DivisionServices extends BaseServices
         if ($res) {
             return true;
         } else {
-            throw new AdminException(100005);
+            throw new AdminException('操作失败');
         }
     }
 
@@ -416,10 +424,10 @@ class DivisionServices extends BaseServices
             'division_end_time' => $agentInfo['division_end_time'],
             'is_promoter' => 1
         ];
-        if ($staffData['division_percent'] > $agentInfo['division_percent']) throw new AdminException(400448);
+        if ($staffData['division_percent'] > $agentInfo['division_percent']) throw new AdminException('代理商佣金比例不能大于事业部佣金比例');
         if ($userInfo['agent_id'] != 0 && $userInfo['agent_id'] != $agentInfo['agent_id']) {
             $userServices->update(['staff_id' => $userInfo['uid'], 'spread_uid' => $userInfo['uid']], ['spread_uid' => $agentInfo['agent_id'], 'staff_id' => 0]);
-            $userServices->update(['staff_id' => $userInfo['uid'], 'not_spread_uid' => $userInfo['uid']], ['staff_id' => 0]);
+            $userServices->getSearch(['staff_id' => $userInfo['uid'], 'not_spread_uid' => $userInfo['uid']])->update(['staff_id' => 0]);
         }
         $res = $userServices->update($data['uid'], $staffData);
         if ($res) return true;

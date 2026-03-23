@@ -7,7 +7,7 @@
     <div class="radio-box" :class="{ on: configData.type == 1 }">
       <el-radio-group v-model="configData.tabVal" type="button" size="large" @input="radioChange($event)">
         <el-radio :label="index" v-for="(item, index) in configData.tabList" :key="index">
-          <span class="iconfont-diy" :class="item.icon" v-if="item.icon"></span>
+          <span class="iconfont" :class="item.icon" v-if="item.icon"></span>
           <span v-else>{{ item.name }}</span>
         </el-radio>
       </el-radio-group>
@@ -79,7 +79,7 @@ export default {
     color: #999;
   }
 }
-.iconfont-diy {
+.iconfont {
   font-size: 20px;
   line-height: 18px;
 }

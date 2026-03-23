@@ -46,7 +46,7 @@
     </draggable>
     <el-button class="add-btn" @click="addMenu" v-if="footConfig.length < 5">+ 添加板块</el-button>
     <div>
-      <el-dialog :visible.sync="modalPic" width="960px" title="上传底部菜单" :mask-closable="false" :z-index="1">
+      <el-dialog :visible.sync="modalPic" width="960px" title="上传底部菜单" :mask-closable="false">
         <uploadPictures
           :isChoice="isChoice"
           @getPic="getPic"

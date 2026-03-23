@@ -71,20 +71,15 @@ export default {
   }
   .c_label {
     color: #000;
+    margin-top: 10px;
     margin-right: 15px;
     &.on {
       text-align: right;
       color: #666;
     }
   }
-  ::v-deep.ivu-radio-wrapper {
-    margin: 5px 25px 5px 0;
-    &:nth-last-child(1) {
-      margin-right: 0;
-    }
-  }
-  ::v-deep.ivu-radio {
-    margin-right: 6px;
+  .color-box {
+    margin-top: 10px;
   }
 }
 </style>

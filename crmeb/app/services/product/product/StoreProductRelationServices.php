@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -114,7 +114,7 @@ class StoreProductRelationServices extends BaseServices
         }
         $data['add_time'] = time();
         if (!$this->dao->save($data)) {
-            throw new ApiException(100006);
+            throw new ApiException('保存失败');
         }
         //收藏记录
         ProductLogJob::dispatch(['collect', ['uid' => $uid, 'product_id' => $productId]]);
@@ -148,7 +148,7 @@ class StoreProductRelationServices extends BaseServices
             ['type', '=', $relationType],
             ['category', '=', $category]
         ]);
-        if (!$storeProductRelation) throw new ApiException(100020);
+        if (!$storeProductRelation) throw new ApiException('取消失败');
         return true;
     }
 
@@ -174,7 +174,7 @@ class StoreProductRelationServices extends BaseServices
         }
         if ($relationData) {
             if (!$this->dao->saveAll($relationData)) {
-                throw new ApiException(100022);
+                throw new ApiException('添加失败');
             }
         }
         return true;

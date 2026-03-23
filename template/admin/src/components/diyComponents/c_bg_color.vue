@@ -75,8 +75,7 @@ export default {
 
 <style lang="scss" scoped>
 .c_row-item {
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
   ::v-deep .ivu-select-dropdown {
     left: -27px !important;
   }

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -113,12 +113,12 @@ class SystemMenus extends AuthController
         ]);
         $data['is_show_path'] = $data['is_show'];
         if (!$data['menu_name'])
-            return app('json')->fail(400198);
+            return app('json')->fail('请填写按钮名称');
         $data['path'] = implode('/', $data['path']);
         if ($this->services->save($data)) {
-            return app('json')->success(100021);
+            return app('json')->success('添加成功');
         } else {
-            return app('json')->fail(100022);
+            return app('json')->fail('添加失败');
         }
     }
 
@@ -133,7 +133,7 @@ class SystemMenus extends AuthController
     {
         $menus = $this->request->post('menus', []);
         if (!$menus) {
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         }
         $data = [];
 
@@ -167,7 +167,7 @@ class SystemMenus extends AuthController
 
         foreach ($menus as $menu) {
             if (empty($menu['menu_name'])) {
-                return app('json')->fail(400198);
+                return app('json')->fail('请填写按钮名称');
             }
             if (isset($menu['unique_auth']) && $menu['unique_auth']) {
                 $menu['unique_auth'] = explode('/', $menu['api_url']);
@@ -186,7 +186,7 @@ class SystemMenus extends AuthController
 
         $this->services->saveAll($data);
 
-        return app('json')->success(100021);
+        return app('json')->success('添加成功');
     }
 
     /**
@@ -198,7 +198,7 @@ class SystemMenus extends AuthController
     {
 
         if (!$id) {
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         }
         return app('json')->success($this->services->find((int)$id));
     }
@@ -211,7 +211,7 @@ class SystemMenus extends AuthController
     public function edit($id)
     {
         if (!$id) {
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         }
         return app('json')->success($this->services->updateMenus((int)$id));
     }
@@ -224,7 +224,7 @@ class SystemMenus extends AuthController
     public function update($id)
     {
         if (!$id || !($menu = $this->services->get($id)))
-            return app('json')->fail(100026);
+            return app('json')->fail('数据不存在');
         $data = $this->request->postMore([
             'menu_name',
             'controller',
@@ -247,12 +247,12 @@ class SystemMenus extends AuthController
             ['is_show_path', 0],
         ]);
         if (!$data['menu_name'])
-            return app('json')->fail(400198);
+            return app('json')->fail('请填写按钮名称');
         $data['path'] = implode('/', $data['path']);
         if ($this->services->update($id, $data))
-            return app('json')->success(100001);
+            return app('json')->success('修改成功');
         else
-            return app('json')->fail(100007);
+            return app('json')->fail('修改失败');
     }
 
     /**
@@ -264,13 +264,13 @@ class SystemMenus extends AuthController
     public function delete($id)
     {
         if (!$id) {
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         }
 
         if (!$this->services->delete((int)$id)) {
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
         } else {
-            return app('json')->success(100002);
+            return app('json')->success('删除成功');
         }
     }
 
@@ -282,7 +282,7 @@ class SystemMenus extends AuthController
     public function show($id)
     {
         if (!$id) {
-            return app('json')->fail(100100);
+            return app('json')->fail('参数错误');
         }
 
         [$isShow, $isShowPath] = $this->request->postMore([['is_show', 0], ['is_show_path', 0]], true);
@@ -293,9 +293,9 @@ class SystemMenus extends AuthController
         }
 
         if ($res) {
-            return app('json')->success(100001);
+            return app('json')->success('修改成功');
         } else {
-            return app('json')->fail(100007);
+            return app('json')->fail('修改失败');
         }
     }
 

@@ -72,6 +72,13 @@
                     <el-option label="是" value="1" />
                   </el-select>
                 </el-form-item>
+                <el-form-item label="是否礼物：">
+                  <el-select v-model="artFrom.is_gift" clearable placeholder="全部" class="form_content_width">
+                    <el-option label="全部" value="" />
+                    <el-option label="否" value="0" />
+                    <el-option label="是" value="1" />
+                  </el-select>
+                </el-form-item>
 
                 <el-form-item label="添加时间：">
                   <el-date-picker
@@ -180,6 +187,7 @@
               >批量上架</el-dropdown-item
             >
             <el-dropdown-item v-auth="['product-product-product_show']" :command="9">设置商品标签</el-dropdown-item>
+            <el-dropdown-item v-auth="['product-product-product_show']" :command="10">是否支持送礼</el-dropdown-item>
             <el-dropdown-item v-auth="['product-product-product_show']" v-if="artFrom.type !== '6'" :command="11"
               >移到回收站</el-dropdown-item
             >
@@ -486,6 +494,33 @@
                 <el-checkbox label="is_new">首发新品</el-checkbox>
                 <el-checkbox label="is_good">优品推荐</el-checkbox>
               </el-checkbox-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24" v-if="batchType == 10">
+            <el-form-item label="开启送礼：">
+              <el-switch
+                v-model="batchFormData.is_gift"
+                class="defineSwitch"
+                active-text="开启"
+                inactive-text="关闭"
+                :active-value="1"
+                :inactive-value="0"
+                size="large"
+              >
+              </el-switch>
+              <div class="tips-info">开启送礼后，移动端商品详情的底部菜单显示送礼按钮</div>
+            </el-form-item>
+            <el-form-item v-if="batchFormData.is_gift" label="礼品附加费：">
+              <el-input-number
+                :controls="false"
+                :min="0"
+                :max="100000"
+                v-model="batchFormData.gift_price"
+                placeholder="礼品附加费"
+                class="input-number-unit-class"
+                class-unit="元"
+              />
+              <div class="tips-info">送礼下单时，订单默认无运费，此费用可用于负担商品运费、产品包装等附加费用</div>
             </el-form-item>
           </el-col>
         </el-row>
@@ -884,7 +919,6 @@ export default {
     },
     // 选择商品标签
     activeGoodsLabel(data) {
-      console.log(data, 'data');
       this.tagShow = false;
       this.batchFormData.label_list = Array.from(new Set(data));
       this.batchSub();

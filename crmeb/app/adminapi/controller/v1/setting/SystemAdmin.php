@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -78,7 +78,7 @@ class SystemAdmin extends AuthController
 
         $data['level'] = $this->adminInfo['level'] + 1;
         $this->services->create($data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -90,7 +90,7 @@ class SystemAdmin extends AuthController
     public function edit($id)
     {
         if (!$id) {
-            return app('json')->fail(400182);
+            return app('json')->fail('管理员信息读取失败');
         }
 
         return app('json')->success($this->services->updateForm($this->adminInfo['level'] + 1, (int)$id));
@@ -115,9 +115,9 @@ class SystemAdmin extends AuthController
         $this->validate($data, \app\adminapi\validate\setting\SystemAdminValidata::class, 'update');
 
         if ($this->services->save((int)$id, $data)) {
-            return app('json')->success(100001);
+            return app('json')->success('修改成功');
         } else {
-            return app('json')->fail(100007);
+            return app('json')->fail('修改失败');
         }
     }
 
@@ -128,11 +128,11 @@ class SystemAdmin extends AuthController
      */
     public function delete($id)
     {
-        if (!$id) return app('json')->fail(100100);
+        if (!$id) return app('json')->fail('参数错误');
         if ($this->services->update((int)$id, ['is_del' => 1, 'status' => 0]))
-            return app('json')->success(100002);
+            return app('json')->success('删除成功');
         else
-            return app('json')->fail(100008);
+            return app('json')->fail('删除失败');
     }
 
     /**
@@ -144,7 +144,7 @@ class SystemAdmin extends AuthController
     public function set_status($id, $status)
     {
         $this->services->update((int)$id, ['status' => $status]);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -172,14 +172,14 @@ class SystemAdmin extends AuthController
 
         if ($data['pwd']) {
             if (!preg_match('/^(?![^a-zA-Z]+$)(?!\D+$).{6,}$/', $data['new_pwd'])) {
-                return app('json')->fail(400183);
+                return app('json')->fail('密码太过简单，请输入较为复杂的密码');
             }
         }
 
         if ($this->services->updateAdmin($this->adminId, $data))
-            return app('json')->success(100001);
+            return app('json')->success('修改成功');
         else
-            return app('json')->fail(100007);
+            return app('json')->fail('修改失败');
     }
 
     /**
@@ -193,12 +193,12 @@ class SystemAdmin extends AuthController
             ['conf_file_pwd', ''],
         ]);
         if (!preg_match('/^(?![^a-zA-Z]+$)(?!\D+$).{6,}$/', $data['file_pwd'])) {
-            return app('json')->fail(400183);
+            return app('json')->fail('密码太过简单，请输入较为复杂的密码');
         }
         if ($this->services->setFilePassword($this->adminId, $data))
-            return app('json')->success(100001);
+            return app('json')->success('修改成功');
         else
-            return app('json')->fail(100007);
+            return app('json')->fail('修改失败');
     }
 
     /**

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -111,10 +111,10 @@ class OrderPayServices
         $payType = $this->getPayType($payType);
 
         if ($orderInfo['paid']) {
-            throw new ApiException(410174);
+            throw new ApiException('订单已支付');
         }
         if ($orderInfo['pay_price'] <= 0) {
-            throw new ApiException(410274);
+            throw new ApiException('无需支付');
         }
 
         switch ($payType) {
@@ -130,7 +130,7 @@ class OrderPayServices
                     $services = app()->make(WechatUserServices::class);
                     $openid = $services->uidToOpenid($orderInfo['pay_uid'] ?? $orderInfo['uid'], $userType);
                     if (!$openid) {
-                        throw new ApiException(410275);
+                        throw new ApiException('获取用户openid失败,无法支付');
                     }
                 }
                 $options['openid'] = $openid;
@@ -167,7 +167,7 @@ class OrderPayServices
         }
 
         if (!$body) {
-            throw new ApiException(410276);
+            throw new ApiException('网站名称配置未填写,无法支付');
         }
 
         //发起支付

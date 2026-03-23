@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -521,7 +521,7 @@ class UserBillServices extends BaseServices
         $data['status'] = 1;
         $data['add_time'] = time();
         if (!$this->dao->save($data))
-            throw new AdminException(400655);
+            throw new AdminException('增加记录失败');
         return true;
     }
 
@@ -542,7 +542,7 @@ class UserBillServices extends BaseServices
         $data['status'] = 1;
         $data['add_time'] = time();
         if (!$this->dao->save($data))
-            throw new AdminException(400655);
+            throw new AdminException('增加记录失败');
         return true;
     }
 
@@ -563,7 +563,7 @@ class UserBillServices extends BaseServices
         $data['status'] = 1;
         $data['add_time'] = time();
         if (!$this->dao->save($data))
-            throw new AdminException(400655);
+            throw new AdminException('增加记录失败');
         return true;
     }
 
@@ -584,7 +584,7 @@ class UserBillServices extends BaseServices
         $data['status'] = 1;
         $data['add_time'] = time();
         if (!$this->dao->save($data))
-            throw new AdminException(400655);
+            throw new AdminException('增加记录失败');
         return true;
     }
 
@@ -793,7 +793,7 @@ class UserBillServices extends BaseServices
         $user = app()->make(UserServices::class);
         $user_info = $user->getUserInfo($uid, 'nickname,spread_uid,now_money,add_time,brokerage_price');
         if (!$user_info) {
-            throw new AdminException(400119);
+            throw new AdminException('用户信息不存在');
         }
         $user_info = $user_info->toArray();
         $user_info['number'] = $user_info['brokerage_price'];
@@ -814,7 +814,7 @@ class UserBillServices extends BaseServices
         $userServices = app()->make(UserServices::class);
         $user = $userServices->getUserInfo($uid);
         if (!$user) {
-            throw new AdminException(400119);
+            throw new AdminException('用户信息不存在');
         }
         $cachename = 'Share_' . $uid;
         if (CacheService::get($cachename)) {
@@ -822,7 +822,7 @@ class UserBillServices extends BaseServices
         }
         $data = ['title' => '用户分享记录', 'uid' => $uid, 'category' => 'share', 'type' => 'share', 'number' => 0, 'link_id' => 0, 'balance' => 0, 'mark' => date('Y-m-d H:i:s', time()) . ':用户分享'];
         if (!$this->dao->save($data)) {
-            throw new AdminException(400656);
+            throw new AdminException('记录分享记录失败');
         }
         CacheService::set($cachename, 1, $cd);
         return true;
@@ -1052,7 +1052,7 @@ class UserBillServices extends BaseServices
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
         if (!$userServices->getUserInfo($uid)) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
         /** @var UserExtractServices $userExtract */
         $userExtract = app()->make(UserExtractServices::class);
@@ -1083,7 +1083,7 @@ class UserBillServices extends BaseServices
         /** @var UserServices $userService */
         $userService = app()->make(UserServices::class);
         if (!$userService->getUserInfo($uid)) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
         return [
             'rank' => $this->brokerageRankList($type),
@@ -1160,7 +1160,7 @@ class UserBillServices extends BaseServices
         /** @var UserServices $userService */
         $userService = app()->make(UserServices::class);
         if (!$userService->getUserInfo($uid)) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
         $count = 0;
         if ($type == 3) {
@@ -1185,7 +1185,7 @@ class UserBillServices extends BaseServices
         /** @var UserServices $userService */
         $userService = app()->make(UserServices::class);
         if (!$userService->getUserInfo($uid, 'uid')) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
         $result = ['list' => [], 'time' => [], 'count' => 0];
         /** @var StoreOrderServices $storeOrderServices */
@@ -1265,7 +1265,7 @@ class UserBillServices extends BaseServices
         $storeOrderServices = app()->make(StoreOrderServices::class);
         $userInfo = $userService->getUserInfo($uid);
         if (!$userInfo) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
         $division_type = $userInfo['division_type'];
         [$page, $limit] = $this->getPageValue();

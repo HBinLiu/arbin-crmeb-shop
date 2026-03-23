@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -154,12 +154,12 @@ class StoreBargainController
             ['bargainId', 0],
             ['bargainUserUid', 0],
         ], true);
-        if (!$bargainId || !$bargainUserUid) return app('json')->fail(100100);
+        if (!$bargainId || !$bargainUserUid) return app('json')->fail('参数错误');
         /** @var UserServices $userServices */
         $userServices = app()->make(UserServices::class);
         $userInfo = $userServices->getUserInfo((int)$bargainUserUid);
         if (!$userInfo) {
-            return app('json')->fail(410044);
+            return app('json')->fail('用户信息获取失败');
         }
         return app('json')->success(['nickname' => $userInfo['nickname'], 'avatar' => $userInfo['avatar']]);
     }
@@ -188,12 +188,12 @@ class StoreBargainController
     public function user_cancel(Request $request)
     {
         list($bargainId) = $request->postMore([['bargainId', 0]], true);
-        if (!$bargainId) return app('json')->fail(100100);
+        if (!$bargainId) return app('json')->fail('参数错误');
         /** @var StoreBargainUserServices $bargainUser */
         $bargainUser = app()->make(StoreBargainUserServices::class);
         $res = $bargainUser->cancelBargain($bargainId, $request->uid());
-        if ($res) return app('json')->success(100019);
-        else return app('json')->success(100020);
+        if ($res) return app('json')->success('取消成功');
+        else return app('json')->success('取消失败');
     }
 
     /**
@@ -214,7 +214,7 @@ class StoreBargainController
         if ($posterUrl) {
             return app('json')->success(['url' => $posterUrl]);
         } else {
-            return app('json')->fail(410172);
+            return app('json')->fail('生成海报失败');
         }
     }
 

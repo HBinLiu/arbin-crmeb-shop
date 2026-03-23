@@ -1,16 +1,6 @@
 <template>
-  <div>
-    <div
-      class="seckill-box"
-      :style="{
-        background: bottomBgColor,
-        marginTop: mTop + 'px',
-        paddingTop: topConfig + 'px',
-        paddingBottom: bottomConfig + 'px',
-        paddingLeft: prConfig + 'px',
-        paddingRight: prConfig + 'px',
-      }"
-    >
+  <common_wrapper :config="configObj">
+    <div class="seckill-box">
       <div
         class="hd"
         :style="
@@ -88,139 +78,208 @@
           borderRadius: bgRadius2,
         }"
       >
-        <div v-if="goodStyleConfig == 0" class="itemOne acea-row" v-for="(item, index) in numberConfig" :key="index">
-          <div
-            class="empty-box"
-            :style="{
-              borderRadius: imgRadius,
-            }"
-          >
-            <img src="../../assets/images/shan.png" />
-          </div>
-          <div class="text">
-            <div class="top">
+        <template v-if="goodStyleConfig == 0">
+          <div class="itemOne acea-row" v-for="(item, index) in numberConfig" :key="index">
+            <div
+              class="empty-box"
+              :style="{
+                borderRadius: imgRadius,
+              }"
+            >
+              <img src="../../assets/images/shan.png" />
+            </div>
+            <div class="text">
+              <div class="top">
+                <div
+                  class="name line2"
+                  v-if="checkboxInfo.indexOf(0) != -1"
+                  :style="{
+                    fontWeight: goodsName,
+                    color: goodsNameColor,
+                  }"
+                >
+                  橙中爱马仕 黑标新骑士晚季橙中爱马仕 黑标新骑士晚季...
+                </div>
+                <div
+                  class="label"
+                  v-if="checkboxInfo.indexOf(1) != -1"
+                  :style="{
+                    background: toneConfig ? labelColor : colorStyle.theme,
+                    color: toneConfig ? labelColor : colorStyle.theme,
+                  }"
+                >
+                  <div class="labelBg">
+                    <div
+                      class="num"
+                      :style="{
+                        background: toneConfig ? labelColor : colorStyle.theme,
+                      }"
+                    >
+                      2人团
+                    </div>
+                    已拼148份
+                  </div>
+                </div>
+              </div>
               <div
-                class="name line2"
-                v-if="checkboxInfo.indexOf(0) != -1"
+                class="bottom"
+                :class="checkboxInfo.indexOf(2) != -1 && checkboxInfo.indexOf(3) != -1 ? '' : 'acea-row row-bottom'"
+              >
+                <div
+                  class="price"
+                  v-if="checkboxInfo.indexOf(2) != -1"
+                  :style="{
+                    color: toneConfig ? pinkPriceColor : colorStyle.theme,
+                  }"
+                >
+                  拼团价<span class="label">¥</span><span class="num">3200.00</span>
+                </div>
+                <div
+                  class="yprice"
+                  v-if="checkboxInfo.indexOf(3) != -1"
+                  :style="{
+                    color: goodsPriceColor,
+                  }"
+                >
+                  <span class="num line-through">¥4233</span>
+                </div>
+              </div>
+              <div
+                class="bnt"
+                v-if="!pinkConfig"
+                :style="{
+                  color: toneConfig ? goodsBntTxtColor : '#fff',
+                  background: toneConfig
+                    ? `linear-gradient(90deg,${goodsBntColorRight} 0%,${goodsBntColorLeft} 100%)`
+                    : themeColor,
+                }"
+              >
+                去拼团
+              </div>
+            </div>
+          </div>
+        </template>
+        <template v-if="goodStyleConfig == 1">
+          <div class="itemTwo" v-for="(item2, index2) in numberConfig" :key="index2">
+            <div
+              class="empty-box"
+              :style="{
+                borderRadius: imgRadius,
+              }"
+            >
+              <img src="../../assets/images/shan.png" />
+            </div>
+            <div
+              :class="
+                (checkboxInfo.indexOf(0) != -1 && checkboxInfo.length == 1 && !pinkConfig) ||
+                (checkboxInfo.indexOf(0) != -1 &&
+                  checkboxInfo.indexOf(1) != -1 &&
+                  checkboxInfo.length == 2 &&
+                  !pinkConfig)
+                  ? 'item'
+                  : (!checkboxInfo.length || (checkboxInfo.indexOf(1) != -1 && checkboxInfo.length == 1)) && !pinkConfig
+                  ? 'item2'
+                  : ''
+              "
+            >
+              <div
+                class="title acea-row row-middle"
                 :style="{
                   fontWeight: goodsName,
                   color: goodsNameColor,
                 }"
               >
-                橙中爱马仕 黑标新骑士晚季橙中爱马仕 黑标新骑士晚季...
-              </div>
-              <div
-                class="label"
-                v-if="checkboxInfo.indexOf(1) != -1"
-                :style="{
-                  background: toneConfig ? labelColor : colorStyle.theme,
-                  color: toneConfig ? labelColor : colorStyle.theme,
-                }"
-              >
-                <div class="labelBg">
-                  <div
-                    class="num"
-                    :style="{
-                      background: toneConfig ? labelColor : colorStyle.theme,
-                    }"
-                  >
-                    2人团
-                  </div>
-                  已拼148份
+                <div
+                  class="label"
+                  v-if="checkboxInfo.indexOf(1) != -1"
+                  :style="{
+                    background: toneConfig ? labelColor : colorStyle.theme,
+                    color: toneConfig ? labelColor : colorStyle.theme,
+                  }"
+                >
+                  <div class="labelBg">5人团</div>
                 </div>
+                <div class="name line1" v-if="checkboxInfo.indexOf(0) != -1">橙中爱马仕 黑标新骑士...</div>
               </div>
-            </div>
-            <div
-              class="bottom"
-              :class="checkboxInfo.indexOf(2) != -1 && checkboxInfo.indexOf(3) != -1 ? '' : 'acea-row row-bottom'"
-            >
               <div
                 class="price"
+                :class="checkboxInfo.indexOf(3) == -1 && !pinkConfig ? 'on' : ''"
                 v-if="checkboxInfo.indexOf(2) != -1"
                 :style="{
                   color: toneConfig ? pinkPriceColor : colorStyle.theme,
                 }"
               >
-                拼团价<span class="label">¥</span><span class="num">3200.00</span>
+                ¥<span class="num">3200.00</span>
               </div>
               <div
                 class="yprice"
+                :class="checkboxInfo.indexOf(2) == -1 && !pinkConfig ? 'on' : ''"
                 v-if="checkboxInfo.indexOf(3) != -1"
                 :style="{
                   color: goodsPriceColor,
                 }"
               >
-                <span class="num line-through">¥4233</span>
+                ¥3699.00
+              </div>
+              <div
+                class="bnt"
+                :class="checkboxInfo.indexOf(2) == -1 && !pinkConfig ? 'on' : ''"
+                v-if="!pinkConfig"
+                :style="{
+                  color: toneConfig ? goodsBntTxtColor : '#fff',
+                  background: toneConfig
+                    ? `linear-gradient(90deg,${goodsBntColorRight} 0%,${goodsBntColorLeft} 100%)`
+                    : themeColor,
+                }"
+              >
+                去拼团
+              </div>
+            </div>
+          </div>
+        </template>
+        <template v-if="goodStyleConfig == 2">
+          <div class="list-item" v-for="(item, index) in numberConfig" :key="index">
+            <div class="img-box">
+              <div
+                class="empty-box"
+                :style="{
+                  borderRadius: imgRadius,
+                }"
+              >
+                <img src="../../assets/images/shan.png" />
+                <div
+                  class="label"
+                  v-if="checkboxInfo.indexOf(1) != -1"
+                  :style="{
+                    background: toneConfig ? labelColor : colorStyle.theme,
+                    color: toneConfig ? labelColor : colorStyle.theme,
+                  }"
+                >
+                  <div class="labelBg">5人团</div>
+                </div>
               </div>
             </div>
             <div
-              class="bnt"
-              v-if="!pinkConfig"
-              :style="{
-                color: toneConfig ? goodsBntTxtColor : '#fff',
-                background: toneConfig
-                  ? `linear-gradient(90deg,${goodsBntColorRight} 0%,${goodsBntColorLeft} 100%)`
-                  : themeColor,
-              }"
-            >
-              去拼团
-            </div>
-          </div>
-        </div>
-        <div class="itemTwo" v-if="goodStyleConfig == 1" v-for="(item2, index2) in numberConfig" :key="index2">
-          <div
-            class="empty-box"
-            :style="{
-              borderRadius: imgRadius,
-            }"
-          >
-            <img src="../../assets/images/shan.png" />
-          </div>
-          <div
-            :class="
-              (checkboxInfo.indexOf(0) != -1 && checkboxInfo.length == 1 && !pinkConfig) ||
-              (checkboxInfo.indexOf(0) != -1 &&
-                checkboxInfo.indexOf(1) != -1 &&
-                checkboxInfo.length == 2 &&
-                !pinkConfig)
-                ? 'item'
-                : (!checkboxInfo.length || (checkboxInfo.indexOf(1) != -1 && checkboxInfo.length == 1)) && !pinkConfig
-                ? 'item2'
-                : ''
-            "
-          >
-            <div
-              class="title acea-row row-middle"
+              class="title line1"
+              v-if="checkboxInfo.indexOf(0) != -1"
               :style="{
                 fontWeight: goodsName,
                 color: goodsNameColor,
               }"
             >
-              <div
-                class="label"
-                v-if="checkboxInfo.indexOf(1) != -1"
-                :style="{
-                  background: toneConfig ? labelColor : colorStyle.theme,
-                  color: toneConfig ? labelColor : colorStyle.theme,
-                }"
-              >
-                <div class="labelBg">5人团</div>
-              </div>
-              <div class="name line1" v-if="checkboxInfo.indexOf(0) != -1">橙中爱马仕 黑标新骑士...</div>
+              橙中爱马仕黑橙...
             </div>
             <div
               class="price"
-              :class="checkboxInfo.indexOf(3) == -1 && !pinkConfig ? 'on' : ''"
               v-if="checkboxInfo.indexOf(2) != -1"
               :style="{
                 color: toneConfig ? pinkPriceColor : colorStyle.theme,
               }"
             >
-              ¥<span class="num">3200.00</span>
+              <span>¥</span>3500.00
             </div>
             <div
               class="yprice"
-              :class="checkboxInfo.indexOf(2) == -1 && !pinkConfig ? 'on' : ''"
               v-if="checkboxInfo.indexOf(3) != -1"
               :style="{
                 color: goodsPriceColor,
@@ -228,23 +287,10 @@
             >
               ¥3699.00
             </div>
-            <div
-              class="bnt"
-              :class="checkboxInfo.indexOf(2) == -1 && !pinkConfig ? 'on' : ''"
-              v-if="!pinkConfig"
-              :style="{
-                color: toneConfig ? goodsBntTxtColor : '#fff',
-                background: toneConfig
-                  ? `linear-gradient(90deg,${goodsBntColorRight} 0%,${goodsBntColorLeft} 100%)`
-                  : themeColor,
-              }"
-            >
-              去拼团
-            </div>
           </div>
-        </div>
-        <div v-if="goodStyleConfig == 2" class="list-item" v-for="(item, index) in numberConfig" :key="index">
-          <div class="img-box">
+        </template>
+        <template v-if="goodStyleConfig == 3">
+          <div class="itemThree" v-for="(item2, index2) in numberConfig" :key="index2">
             <div
               class="empty-box"
               :style="{
@@ -263,91 +309,43 @@
                 <div class="labelBg">5人团</div>
               </div>
             </div>
-          </div>
-          <div
-            class="title line1"
-            v-if="checkboxInfo.indexOf(0) != -1"
-            :style="{
-              fontWeight: goodsName,
-              color: goodsNameColor,
-            }"
-          >
-            橙中爱马仕黑橙...
-          </div>
-          <div
-            class="price"
-            v-if="checkboxInfo.indexOf(2) != -1"
-            :style="{
-              color: toneConfig ? pinkPriceColor : colorStyle.theme,
-            }"
-          >
-            <span>¥</span>3500.00
-          </div>
-          <div
-            class="yprice"
-            v-if="checkboxInfo.indexOf(3) != -1"
-            :style="{
-              color: goodsPriceColor,
-            }"
-          >
-            ¥3699.00
-          </div>
-        </div>
-        <div class="itemThree" v-if="goodStyleConfig == 3" v-for="(item2, index2) in numberConfig" :key="index2">
-          <div
-            class="empty-box"
-            :style="{
-              borderRadius: imgRadius,
-            }"
-          >
-            <img src="../../assets/images/shan.png" />
-            <div
-              class="label"
-              v-if="checkboxInfo.indexOf(1) != -1"
-              :style="{
-                background: toneConfig ? labelColor : colorStyle.theme,
-                color: toneConfig ? labelColor : colorStyle.theme,
-              }"
-            >
-              <div class="labelBg">5人团</div>
+            <div>
+              <div
+                class="title line1"
+                v-if="checkboxInfo.indexOf(0) != -1"
+                :style="{
+                  fontWeight: goodsName,
+                  color: goodsNameColor,
+                }"
+              >
+                橙中爱马仕 黑标新骑士...
+              </div>
+              <div
+                class="price"
+                :class="checkboxInfo.indexOf(3) == -1 && !pinkConfig ? 'on' : ''"
+                v-if="checkboxInfo.indexOf(2) != -1"
+                :style="{
+                  color: toneConfig ? pinkPriceColor : colorStyle.theme,
+                }"
+              >
+                ¥<span class="num">3200.00</span>
+              </div>
+              <div
+                class="yprice"
+                :class="checkboxInfo.indexOf(2) == -1 && !pinkConfig ? 'on' : ''"
+                v-if="checkboxInfo.indexOf(3) != -1"
+                :style="{
+                  color: goodsPriceColor,
+                }"
+              >
+                ¥3699.00
+              </div>
             </div>
           </div>
-          <div>
-            <div
-              class="title line1"
-              v-if="checkboxInfo.indexOf(0) != -1"
-              :style="{
-                fontWeight: goodsName,
-                color: goodsNameColor,
-              }"
-            >
-              橙中爱马仕 黑标新骑士...
-            </div>
-            <div
-              class="price"
-              :class="checkboxInfo.indexOf(3) == -1 && !pinkConfig ? 'on' : ''"
-              v-if="checkboxInfo.indexOf(2) != -1"
-              :style="{
-                color: toneConfig ? pinkPriceColor : colorStyle.theme,
-              }"
-            >
-              ¥<span class="num">3200.00</span>
-            </div>
-            <div
-              class="yprice"
-              :class="checkboxInfo.indexOf(2) == -1 && !pinkConfig ? 'on' : ''"
-              v-if="checkboxInfo.indexOf(3) != -1"
-              :style="{
-                color: goodsPriceColor,
-              }"
-            >
-              ¥3699.00
-            </div>
-          </div>
-        </div>
+        </template>
       </div>
     </div>
-  </div>
+  </common_wrapper>
 </template>
 
 <script>
@@ -409,10 +407,72 @@ export default {
         setUp: {
           tabVal: 0,
         },
+        zIndexConfig: {
+          title: '组件上浮',
+          val: 0,
+          min: 0,
+        },
+        borderConfig: {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0,
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              { name: '实线', style: 'solid' },
+              { name: '虚线', style: 'dashed' },
+              { name: '点状', style: 'dotted' },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
+        },
+        shadowConfig: {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0,
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: 'rgba(0,0,0,0.1)' }],
+            color: [{ item: 'rgba(0,0,0,0.1)' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+          },
+        },
         titleLeft: '头部设置',
         titleGoodsList: '商品列表',
         titleGoods: '商品设置',
         titleRight: '头部样式',
+        bgTitle: '背景图片',
         titleGoodsStyle: '商品样式',
         titleCurrency: '通用样式',
         styleConfig: {
@@ -433,6 +493,7 @@ export default {
           type: 'code',
           delType: 0,
           name: '背景图片',
+          title: '',
         },
         titleConfig: {
           title: '标题类型',
@@ -452,6 +513,7 @@ export default {
           type: 'code',
           delType: 0,
           name: '标题图片',
+          title: '标题图片',
         },
         imgColorConfig: {
           info: '建议：154px * 32px',
@@ -480,13 +542,13 @@ export default {
               name: '单列展示',
             },
             {
-              name: '两列展示(纵向)',
+              name: '两列纵向',
             },
             {
               name: '三列展示',
             },
             {
-              name: '左右滑动展示',
+              name: '左右滑动',
             },
           ],
         },
@@ -815,6 +877,29 @@ export default {
             },
           ],
         },
+        componentBgConfig: {
+          title: '背景设置',
+          tabVal: 0,
+          tabList: [{ name: '颜色' }, { name: '图片' }],
+          colorConfig: {
+            title: '背景颜色',
+            default: [{ item: '#F5F5F5' }, { item: '#F5F5F5' }],
+            color: [{ item: '#F5F5F5' }, { item: '#F5F5F5' }],
+          },
+          colorDirection: {
+            title: '渐变方向',
+            tabVal: 0,
+            tabList: [{ name: '横向' }, { name: '纵向' }, { name: '左斜' }, { name: '右斜' }],
+          },
+          imageConfig: {
+            header: '背景图片',
+            title: '',
+            name: '上传图片',
+            type: 'code',
+            url: '',
+            info: '建议尺寸：750px * 400px',
+          },
+        },
         bottomBgColor: {
           title: '底部背景',
           default: [
@@ -828,25 +913,19 @@ export default {
             },
           ],
         },
-        topConfig: {
-          title: '上边距',
+        paddingConfig: {
+          title: '内边距',
+          isAll: false,
           val: 0,
           min: 0,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-        bottomConfig: {
-          title: '下边距',
+        marginConfig: {
+          title: '外边距',
+          isAll: false,
           val: 0,
           min: 0,
-        },
-        prConfig: {
-          title: '左右边距',
-          val: 10,
-          min: 0,
-        },
-        mbConfig: {
-          title: '页面上间距',
-          val: 0,
-          min: 0,
+          valList: [{ val: 0 }, { val: 10 }, { val: 0 }, { val: 10 }],
         },
         fillet: {
           title: '背景圆角',
@@ -883,12 +962,8 @@ export default {
       imgColorUrl: '',
       titleConfig: 0,
       titleTxtConfig: '',
+      configObj: null,
       bgColor: '',
-      bottomBgColor: '',
-      mTop: 0,
-      topConfig: 0,
-      bottomConfig: 0,
-      prConfig: 0,
       titleText: '',
       titleTabVal: 0,
       checkboxInfo: [],
@@ -921,66 +996,66 @@ export default {
   methods: {
     setConfig(data) {
       if (!data) return;
-      if (data.mbConfig) {
-        this.imgUrl = data.imgConfig.url;
-        this.imgBgUrl = data.imgBgConfig.url;
-        this.imgColorUrl = data.imgColorConfig.url;
-        this.tipsColor = data.tipsColor.color[0].item;
-        this.tipsColor2 = data.tipsColor2.color[0].item;
-        this.dividerColor = data.dividerColor.color[0].item;
-        this.rightBntTxt = data.rightBntConfig.value;
-        this.headerBntColor = data.headerBntColor.color[0].item;
-        this.headerBntColor2 = data.headerBntColor2.color[0].item;
-        this.bntNumber = data.bntNumber.val;
-        this.styleConfig = data.styleConfig.tabVal;
-        this.headerBgColorLeft = data.headerBgColor.color[0].item;
-        this.headerBgColorRight = data.headerBgColor.color[1].item;
-        this.titleConfig = data.titleConfig.tabVal;
-        this.titleTxtConfig = data.titleTxtConfig.value;
-        let bgColorLeft = data.moduleColor.color[0].item;
-        let bgColorRight = data.moduleColor.color[1].item;
-        this.bgColor = `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`;
-        this.bottomBgColor = data.bottomBgColor.color[0].item;
-        this.mTop = data.mbConfig.val;
-        this.topConfig = data.topConfig.val;
-        this.bottomConfig = data.bottomConfig.val;
-        this.prConfig = data.prConfig.val;
-        let tabVal = data.titleText.tabVal;
-        this.titleTabVal = tabVal;
-        this.titleText = data.titleText.tabList[tabVal].style;
-        this.checkboxInfo = data.checkboxInfo.type;
-        let filletImg = data.filletImg.type;
-        let filletValImg = data.filletImg.val;
-        let valListImg = data.filletImg.valList;
-        this.imgRadius = filletImg
-          ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
-          : filletValImg + 'px';
-        let fillet = data.fillet.type;
-        let filletVal = data.fillet.val;
-        let valList = data.fillet.valList;
-        this.bgRadius = fillet
-          ? valList[0].val + 'px ' + valList[1].val + 'px 0 0'
-          : filletVal + 'px ' + filletVal + 'px 0 0';
-        this.bgRadius2 = fillet
-          ? '0 0 ' + valList[3].val + 'px ' + valList[2].val + 'px'
-          : '0 0 ' + filletVal + 'px ' + filletVal + 'px';
-        let goodsTabVal = data.goodsName.tabVal;
-        this.goodsName = data.goodsName.tabList[goodsTabVal].style;
-        this.goodsNameColor = data.goodsNameColor.color[0].item;
-        this.goodsPriceColor = data.goodsPriceColor.color[0].item;
-        this.toneConfig = data.toneConfig.tabVal;
-        this.goodsBntColorLeft = data.goodsBntColor.color[0].item;
-        this.goodsBntColorRight = data.goodsBntColor.color[1].item;
-        this.goodStyleConfig = data.goodStyleConfig.tabVal;
-        this.goodsBntTxtColor = data.goodsBntTxtColor.color[0].item;
-        this.pinkConfig = data.pinkConfig.tabVal;
-        this.numberConfig = data.numberConfig.val;
-        this.titleColor = data.titleColor.color[0].item;
-        this.titleNumber = data.titleNumber.val;
-        this.labelColor = data.labelColor.color[0].item;
-        this.pinkPriceColor = data.pinkPriceColor.color[0].item;
-        this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
+      this.configObj = data;
+      for (let key in this.defaultConfig) {
+        if (data[key] == undefined) {
+          this.$set(data, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+        }
       }
+      this.imgUrl = data.imgConfig.url;
+      this.imgBgUrl = data.imgBgConfig.url;
+      this.imgColorUrl = data.imgColorConfig.url;
+      this.tipsColor = data.tipsColor.color[0].item;
+      this.tipsColor2 = data.tipsColor2.color[0].item;
+      this.dividerColor = data.dividerColor.color[0].item;
+      this.rightBntTxt = data.rightBntConfig.value;
+      this.headerBntColor = data.headerBntColor.color[0].item;
+      this.headerBntColor2 = data.headerBntColor2.color[0].item;
+      this.bntNumber = data.bntNumber.val;
+      this.styleConfig = data.styleConfig.tabVal;
+      this.headerBgColorLeft = data.headerBgColor.color[0].item;
+      this.headerBgColorRight = data.headerBgColor.color[1].item;
+      this.titleConfig = data.titleConfig.tabVal;
+      this.titleTxtConfig = data.titleTxtConfig.value;
+      let bgColorLeft = data.moduleColor.color[0].item;
+      let bgColorRight = data.moduleColor.color[1].item;
+      this.bgColor = `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`;
+      this.configObj = data;
+      let tabVal = data.titleText.tabVal;
+      this.titleTabVal = tabVal;
+      this.titleText = data.titleText.tabList[tabVal].style;
+      this.checkboxInfo = data.checkboxInfo.type;
+      let filletImg = data.filletImg.type;
+      let filletValImg = data.filletImg.val;
+      let valListImg = data.filletImg.valList;
+      this.imgRadius = filletImg
+        ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
+        : filletValImg + 'px';
+      let fillet = data.fillet.type;
+      let filletVal = data.fillet.val;
+      let valList = data.fillet.valList;
+      this.bgRadius = fillet
+        ? valList[0].val + 'px ' + valList[1].val + 'px 0 0'
+        : filletVal + 'px ' + filletVal + 'px 0 0';
+      this.bgRadius2 = fillet
+        ? '0 0 ' + valList[3].val + 'px ' + valList[2].val + 'px'
+        : '0 0 ' + filletVal + 'px ' + filletVal + 'px';
+      let goodsTabVal = data.goodsName.tabVal;
+      this.goodsName = data.goodsName.tabList[goodsTabVal].style;
+      this.goodsNameColor = data.goodsNameColor.color[0].item;
+      this.goodsPriceColor = data.goodsPriceColor.color[0].item;
+      this.toneConfig = data.toneConfig.tabVal;
+      this.goodsBntColorLeft = data.goodsBntColor.color[0].item;
+      this.goodsBntColorRight = data.goodsBntColor.color[1].item;
+      this.goodStyleConfig = data.goodStyleConfig.tabVal;
+      this.goodsBntTxtColor = data.goodsBntTxtColor.color[0].item;
+      this.pinkConfig = data.pinkConfig.tabVal;
+      this.numberConfig = data.numberConfig.val;
+      this.titleColor = data.titleColor.color[0].item;
+      this.titleNumber = data.titleNumber.val;
+      this.labelColor = data.labelColor.color[0].item;
+      this.pinkPriceColor = data.pinkPriceColor.color[0].item;
+      this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
     },
   },
 };
@@ -988,8 +1063,8 @@ export default {
 
 <style scoped lang="scss">
 .seckill-box {
-  background: #fff;
-
+  display: inline-block;
+  width: -webkit-fill-available;
   .hd {
     display: flex;
     justify-content: space-between;

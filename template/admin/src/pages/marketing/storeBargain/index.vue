@@ -10,7 +10,7 @@
           @submit.native.prevent
           inline
         >
-          <el-form-item label="砍价状态：">
+          <el-form-item label="上架状态：">
             <el-select
               placeholder="请选择"
               v-model="tableFrom.status"
@@ -18,8 +18,8 @@
               @change="userSearchs"
               class="form_content_width"
             >
-              <el-option value="1" label="开启"></el-option>
-              <el-option value="0" label="关闭"></el-option>
+              <el-option value="1" label="上架"></el-option>
+              <el-option value="0" label="下架"></el-option>
             </el-select>
           </el-form-item>
           <el-form-item label="商品搜索：" label-for="store_name">

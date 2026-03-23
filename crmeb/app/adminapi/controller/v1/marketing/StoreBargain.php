@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -95,20 +95,20 @@ class StoreBargain extends AuthController
         if ($data['section_time']) {
             [$start_time, $end_time] = $data['section_time'];
             if (strtotime($end_time) < time()) {
-                return app('json')->fail(400507);
+                return app('json')->fail('活动结束时间不能小于当前时间');
             }
         }
         $bragain = [];
         if ($id) {
             $bragain = $this->services->get((int)$id);
             if (!$bragain) {
-                return app('json')->fail(100026);
+                return app('json')->fail('数据不存在');
             }
         }
         //限制编辑
         if ($data['copy'] == 0 && $bragain) {
             if ($bragain['stop_time'] < time()) {
-                return app('json')->fail(400508);
+                return app('json')->fail('活动已结束,请重新添加或复制');
             }
         }
         if ($data['copy'] == 1) {
@@ -116,7 +116,7 @@ class StoreBargain extends AuthController
             unset($data['copy']);
         }
         $this->services->saveData($id, $data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -141,7 +141,7 @@ class StoreBargain extends AuthController
         /** @var StoreBargainUserServices $bargainUserService */
         $bargainUserService = app()->make(StoreBargainUserServices::class);
         $bargainUserService->userBargainStatusFail($id, true);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -163,7 +163,7 @@ class StoreBargain extends AuthController
             }
         }
         $this->services->update($id, ['status' => $status]);
-        return app('json')->success(100001);
+        return app('json')->success('修改成功');
     }
 
     /**

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -566,7 +566,7 @@ class StoreOrderServices extends BaseServices
             }
             $status_name = ['status_name' => '', 'pics' => []];
             if ($item['paid'] == 0 && $item['status'] == 0) {
-                $status_name['status_name'] = '未支付';
+                $status_name['status_name'] = $item['is_cancel'] == 0 ? '未支付' : '已取消';
             } else if ($item['paid'] == 1 && $item['status'] == 0 && $item['shipping_type'] == 1 && $item['refund_status'] == 0) {
                 $status_name['status_name'] = $item['combination_id'] && isset($item['pinkStatus']) && $item['pinkStatus'] == 1 ? '未发货(拼团中)' : '未发货';
             } else if ($item['paid'] == 1 && $item['status'] == 4 && $item['shipping_type'] == 1 && $item['refund_status'] == 0) {
@@ -799,7 +799,7 @@ HTML;
     {
         $product = $this->dao->get($id);
         if (!$product) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         $f = [];
         $f[] = Form::input('order_id', '订单编号', $product->getData('order_id'))->disabled(true);
@@ -821,7 +821,7 @@ HTML;
     {
         $order = $this->dao->getOne(['id' => $id, 'is_del' => 0]);
         if (!$order) {
-            throw new AdminException(400118);
+            throw new AdminException('订单不存在');
         }
         /** @var StoreOrderCreateServices $createServices */
         $createServices = app()->make(StoreOrderCreateServices::class);
@@ -881,7 +881,7 @@ HTML;
 
                 return $data['order_id'];
             } else {
-                throw new AdminException(100007);
+                throw new AdminException('修改失败');
             }
         });
     }
@@ -1617,17 +1617,17 @@ HTML;
     {
         $order = $this->get($id);
         if (!$order) {
-            throw new AdminException(400118);
+            throw new AdminException('订单不存在');
         }
         /** @var StoreOrderCartInfoServices $cartServices */
         $cartServices = app()->make(StoreOrderCartInfoServices::class);
         $product = $cartServices->getCartInfoPrintProduct($order['id']);
         if (!$product) {
-            throw new AdminException(400463);
+            throw new AdminException('订单商品获取失败,无法打印');
         }
 //        $switch = (bool)sys_config('pay_success_printing_switch');
 //        if (!$switch) {
-//            throw new AdminException(400464);
+//            throw new AdminException('小票打印未开启');
 //        }
 
         app()->make(SystemTicketServices::class)->startPrint(
@@ -1646,7 +1646,7 @@ HTML;
 //                'terminal' => sys_config('terminal_number', '')
 //            ];
 //            if (!$configData['clientId'] || !$configData['apiKey'] || !$configData['partner'] || !$configData['terminal']) {
-//                throw new AdminException(400465);
+//                throw new AdminException('请先配置小票打印开发者');
 //            }
 //        } else {
 //            $name = 'fei_e_yun';
@@ -1656,7 +1656,7 @@ HTML;
 //                'feySn' => sys_config('fey_sn', '')
 //            ];
 //            if (!$configData['feyUser'] || !$configData['feyUkey'] || !$configData['feySn']) {
-//                throw new AdminException(400465);
+//                throw new AdminException('请先配置小票打印开发者');
 //            }
 //        }
 //        $printer = new Printer($name, $configData);
@@ -1934,11 +1934,11 @@ HTML;
     {
         $order = $this->getUserOrderDetail($uni, $uid);
         if (!$order) {
-            throw new ApiException(410173);
+            throw new ApiException('订单不存在');
         }
         $order = $this->tidyOrder($order);
         if ($order['_status']['_type'] != 0 && $order['_status']['_type'] != -2 && $order['_status']['_type'] != 4)
-            throw new ApiException(410256);
+            throw new ApiException('该订单无法删除');
 
         $order->is_del = 1;
         /** @var StoreOrderStatusServices $statusService */
@@ -1952,7 +1952,7 @@ HTML;
         if ($order->save() && $res) {
             return true;
         } else
-            throw new ApiException(100020);
+            throw new ApiException('取消失败');
     }
 
     /**
@@ -1968,14 +1968,14 @@ HTML;
     {
         $order = $this->dao->getOne(['order_id' => $order_id, 'uid' => $uid, 'is_del' => 0]);
         if (!$order) {
-            throw new ApiException(410173);
+            throw new ApiException('订单不存在');
+        }
+        if ($order->is_cancel == 1) {
+            throw new ApiException('订单已取消，请勿重复操作！');
         }
         if ($order->paid) {
-            throw new ApiException(410257);
+            throw new ApiException('订单已经支付无法取消');
         }
-        /** @var StoreOrderCartInfoServices $cartServices */
-        $cartServices = app()->make(StoreOrderCartInfoServices::class);
-        $cartInfo = $cartServices->getOrderCartInfo($order['id']);
         /** @var StoreOrderRefundServices $refundServices */
         $refundServices = app()->make(StoreOrderRefundServices::class);
 
@@ -1983,7 +1983,7 @@ HTML;
             $res = $refundServices->integralAndCouponBack($order, 'cancel') && $refundServices->regressionStock($order);
             $order->is_cancel = 1;
             if (!($res && $order->save())) {
-                throw new ApiException(100020);
+                throw new ApiException('取消失败');
             }
         });
 
@@ -2018,7 +2018,7 @@ HTML;
         $replyServices->count(['unique' => $uniqueList, 'oid' => $oid]);
         if ($replyServices->count(['unique' => $uniqueList, 'oid' => $oid]) >= count($uniqueList)) {
             $res = $this->dao->update(['id' => $oid, 'status' => 2], ['status' => 3]);
-            if (!$res) throw new ApiException(100007);
+            if (!$res) throw new ApiException('修改失败');
             /** @var StoreOrderStatusServices $statusService */
             $statusService = app()->make(StoreOrderStatusServices::class);
             $statusService->save([
@@ -2059,7 +2059,7 @@ HTML;
         $userServices = app()->make(UserServices::class);
         $user = $userServices->getUserInfo($uid, 'uid');
         if (!$user) {
-            throw new AdminException(100026);
+            throw new AdminException('数据不存在');
         }
         [$page, $limit] = $this->getPageValue();
         $where = ['uid' => $uid, 'paid' => 1, 'refund_status' => 0, 'pid' => 0];
@@ -2109,6 +2109,7 @@ HTML;
         //推广订单只显示支付过并且未退款的订单
         $where_data['paid'] = 1;
         $where_data['refund_status'] = 0;
+        $where_data['pid'] = 0;
         [$page, $limit] = $this->getPageValue();
         $list = $this->dao->getStairOrderList($where_data, '*', $page, $limit);
         $count = $this->dao->count($where_data);
@@ -2330,7 +2331,7 @@ HTML;
             'change_time' => time()
         ]);
         if ($res) return true;
-        throw new AdminException(100005);
+        throw new AdminException('操作失败');
     }
 
     /**
@@ -2369,7 +2370,7 @@ HTML;
         if ($orderInfo) {
             $orderInfo = $orderInfo->toArray();
         } else {
-            throw new ApiException(410173);
+            throw new ApiException('订单不存在');
         }
         $orderInfo = $this->tidyOrder($orderInfo, true);
         /** @var UserServices $userServices */
@@ -2407,7 +2408,7 @@ HTML;
     {
         $orderInfo = $this->dao->get($id);
         if (!$orderInfo) {
-            throw new ApiException(410173);
+            throw new ApiException('订单不存在');
         }
         $orderInfo = $this->tidyOrder($orderInfo, true);
         $cartInfo = $orderInfo['cartInfo'] ?? [];
@@ -2415,7 +2416,7 @@ HTML;
         if ($cart_ids) {
             foreach ($cart_ids as $cart) {
                 if (!isset($cart['cart_id']) || !$cart['cart_id'] || !isset($cart['cart_num']) || !$cart['cart_num'] || $cart['cart_num'] <= 0) {
-                    throw new ApiException(410223);
+                    throw new ApiException('请重新选择退款商品或件数');
                 }
             }
             $cart_ids = array_combine(array_column($cart_ids, 'cart_id'), $cart_ids);
@@ -2442,20 +2443,20 @@ HTML;
      */
     public function againOrder(StoreCartServices $services, string $uni, int $uid): array
     {
-        if (!$uni) throw new ApiException(100100);
+        if (!$uni) throw new ApiException('参数错误');
         $order = $this->getUserOrderDetail($uni, $uid);
-        if (!$order) throw new ApiException(410173);
+        if (!$order) throw new ApiException('订单不存在');
         $order = $this->tidyOrder($order, true);
         $cateId = [];
 
         foreach ($order['cartInfo'] as $v) {
-            if ($v['combination_id']) throw new ApiException(410258);
-            elseif ($v['bargain_id']) throw new ApiException(410259);
-            elseif ($v['seckill_id']) throw new ApiException(410260);
-            elseif ($v['advance_id']) throw new ApiException(410261);
+            if ($v['combination_id']) throw new ApiException('拼团商品不能再来一单，请在拼团商品内自行下单');
+            elseif ($v['bargain_id']) throw new ApiException('砍价商品不能再来一单，请在砍价商品内自行下单');
+            elseif ($v['seckill_id']) throw new ApiException('秒杀商品不能再来一单，请在秒杀商品内自行下单');
+            elseif ($v['advance_id']) throw new ApiException('预售商品不能再来一单，请在预售商品内自行下单');
             else $cateId[] = $services->setCart($uid, (int)$v['product_id'], (int)$v['cart_num'], $v['productInfo']['attrInfo']['unique'] ?? '', '0', true);
         }
-        if (!$cateId) throw new ApiException(410262);
+        if (!$cateId) throw new ApiException('再来一单失败，请重新下单');
         return $cateId;
     }
 
@@ -2473,15 +2474,15 @@ HTML;
     public function aliPayOrder(OrderPayServices $payServices, OtherOrderServices $services, string $key, string $quitUrl)
     {
         if (!$key) {
-            throw new ApiException(100100);
+            throw new ApiException('参数错误');
         }
         if (!$quitUrl) {
-            throw new ApiException(100100);
+            throw new ApiException('参数错误');
         }
 
         $orderCache = CacheService::get($key);
         if (!$orderCache || !isset($orderCache['order_id'])) {
-            throw new ApiException(410263);
+            throw new ApiException('该订单无法支付');
         }
 
         $payType = isset($orderCache['other_pay_type']) && $orderCache['other_pay_type'] == true;
@@ -2492,7 +2493,7 @@ HTML;
         }
 
         if (!$orderInfo) {
-            throw new ApiException(410264);
+            throw new ApiException('订单支付状态有误，无法进行支付');
         }
         return $payServices->beforePay($orderInfo->toArray(), PayServices::ALIAPY_PAY, ['quitUrl' => $quitUrl]);
     }
@@ -2510,7 +2511,7 @@ HTML;
     public function getUserOrderByKey(StoreOrderEconomizeServices $services, string $uni, int $uid): array
     {
         $order = $this->getUserOrderDetail($uni, $uid, ['split', 'invoice', 'user']);
-        if (!$order) throw new ApiException(410294);
+        if (!$order) throw new ApiException('商品不存在');
         $order = $order->toArray();
         $splitNum = [];
         //是否开启门店自提
@@ -2730,7 +2731,7 @@ HTML;
             $cartInfo = $cartServices->getCartList(['uid' => $uid, 'status' => 1, 'id' => $cartIds], 0, 0, ['productInfo', 'attrInfo']);
         }
         if (!$cartInfo) {
-            throw new ApiException(100026);
+            throw new ApiException('数据不存在');
         }
         $arr = [];
         foreach ($cartInfo as $item) {
@@ -3080,6 +3081,35 @@ HTML;
             'verify_code' => $verify_code,
         ];
         $this->dao->update($oid, $orderData);
+        return true;
+    }
+
+    /**
+     * 修改订单地址
+     * @param $id
+     * @param $data
+     * @return bool
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @author wuhaotian
+     * @email 442384644@qq.com
+     * @date 2025/9/8
+     */
+    public function editAddress($id, $data)
+    {
+        $orderInfo = $this->dao->getOne(['id' => $id, 'is_del' => 0]);
+        if (!$orderInfo) {
+            throw new ApiException('订单不存在');
+        }
+        if ($orderInfo['status'] > 0) {
+            throw new ApiException('订单已发货，不能修改地址');
+        }
+        $this->dao->update($id, [
+            'real_name' => $data['real_name'],
+            'user_phone' => $data['user_phone'],
+            'user_address' => $data['user_address'],
+        ]);
         return true;
     }
 }

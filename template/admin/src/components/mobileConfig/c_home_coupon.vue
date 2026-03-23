@@ -41,6 +41,10 @@ export default {
       configObj: {},
       rCom: [
         {
+          components: toolCom.c_card_select,
+          configNme: 'styleConfig',
+        },
+        {
           components: toolCom.c_set_up,
           configNme: 'setUp',
         },
@@ -78,10 +82,6 @@ export default {
           components: toolCom.c_slider,
           configNme: 'spacingConfig',
         },
-        {
-          components: toolCom.c_title,
-          configNme: 'titleCurrency',
-        },
       ],
       moduleColorStyle: [
         {
@@ -97,28 +97,8 @@ export default {
       ],
       currencyStyle: [
         {
-          components: toolCom.c_bg_color,
-          configNme: 'bottomBgColor',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'topConfig',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'bottomConfig',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'prConfig',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'mbConfig',
-        },
-        {
-          components: toolCom.c_fillet,
-          configNme: 'fillet',
+          components: toolCom.c_common_style,
+          configNme: 'c_common_style',
         },
       ],
       setUp: 0,
@@ -129,6 +109,7 @@ export default {
   watch: {
     num(nVal) {
       this.configObj = this.$store.state.mobildConfig.defaultArray[nVal];
+      this.configObj = this.patchConfig(this.configObj);
     },
     configObj: {
       handler(nVal, oVal) {
@@ -139,17 +120,18 @@ export default {
     'configObj.setUp.tabVal': {
       handler(nVal, oVal) {
         this.setUp = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (nVal == 0) {
           let tempArr = [
-            {
-              components: toolCom.c_title,
-              configNme: 'titleLeft',
-            },
-            {
-              components: toolCom.c_button_style,
-              configNme: 'styleConfig',
-            },
             {
               components: toolCom.c_title,
               configNme: 'titleData',
@@ -169,7 +151,16 @@ export default {
     'configObj.styleConfig.tabVal': {
       handler(nVal, oVal) {
         this.type = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (this.setUp) {
           this.getRComStyle(arr, nVal, this.type2);
         }
@@ -179,7 +170,16 @@ export default {
     'configObj.toneConfig.tabVal': {
       handler(nVal, oVal) {
         this.type2 = nVal;
-        var arr = [this.rCom[0]];
+        var arr = [
+          {
+            components: toolCom.c_card_select,
+            configNme: 'styleConfig',
+          },
+          {
+            components: toolCom.c_set_up,
+            configNme: 'setUp',
+          },
+        ];
         if (this.setUp) {
           this.getRComStyle(arr, this.type, nVal);
         }
@@ -190,20 +190,53 @@ export default {
   mounted() {
     this.$nextTick(() => {
       let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[this.num]));
-      this.configObj = value;
+      this.configObj = this.patchConfig(value);
     });
   },
   methods: {
+    patchConfig(data) {
+      if (!data) return data;
+      if (!data.paddingConfig) {
+        this.$set(data, 'paddingConfig', {
+          isAll: false,
+          title: '内边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+        if (data.topConfig) data.paddingConfig.valList[0].val = data.topConfig.val;
+        if (data.prConfig) {
+          data.paddingConfig.valList[1].val = data.prConfig.val;
+          data.paddingConfig.valList[3].val = data.prConfig.val;
+        }
+        if (data.bottomConfig) data.paddingConfig.valList[2].val = data.bottomConfig.val;
+      }
+      if (!data.marginConfig) {
+        this.$set(data, 'marginConfig', {
+          isAll: false,
+          title: '外边距',
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+        if (data.mbConfig) data.marginConfig.valList[0].val = data.mbConfig.val;
+      }
+      if (!data.c_common_style) {
+        this.$set(data, 'c_common_style', {
+          color: 'rgba(255,255,255,1)',
+          color2: 'rgba(255,255,255,1)',
+          lr: 0,
+          type: 0,
+        });
+      }
+      return data;
+    },
     getRComStyle(arr, type, type2) {
       if (type == 0 || type == 3) {
         if (type2 == 0) {
-          this.rCom = [
-            ...arr,
-            ...this.oneStyle,
-            ...this.currencyTitleStyle,
-            ...this.moduleColorStyle2,
-            ...this.currencyStyle,
-          ];
+          this.rCom = [...arr, ...this.oneStyle, ...this.currencyStyle];
         } else {
           this.rCom = [
             ...arr,
@@ -211,69 +244,26 @@ export default {
             ...this.twoStyle,
             ...this.bntBgStyle,
             ...this.couponBgStyle,
-            ...this.currencyTitleStyle,
-            ...this.moduleColorStyle2,
             ...this.currencyStyle,
           ];
         }
       } else if (type == 1) {
         if (type2 == 0) {
-          this.rCom = [
-            ...arr,
-            ...this.oneStyle,
-            ...this.currencyTitleStyle,
-            ...this.moduleColorStyle,
-            ...this.currencyStyle,
-          ];
+          this.rCom = [...arr, ...this.oneStyle, ...this.currencyStyle];
         } else {
-          this.rCom = [
-            ...arr,
-            ...this.oneStyle,
-            ...this.twoStyle,
-            ...this.bntBgStyle,
-            ...this.currencyTitleStyle,
-            ...this.moduleColorStyle,
-            ...this.currencyStyle,
-          ];
+          this.rCom = [...arr, ...this.oneStyle, ...this.twoStyle, ...this.bntBgStyle, ...this.currencyStyle];
         }
       } else if (type == 2) {
         if (type2 == 0) {
-          this.rCom = [
-            ...arr,
-            ...this.oneStyle,
-            ...this.currencyTitleStyle,
-            ...this.moduleColorStyle2,
-            ...this.currencyStyle,
-          ];
+          this.rCom = [...arr, ...this.oneStyle, ...this.currencyStyle];
         } else {
-          this.rCom = [
-            ...arr,
-            ...this.oneStyle,
-            ...this.twoStyle,
-            ...this.currencyTitleStyle,
-            ...this.moduleColorStyle2,
-            ...this.currencyStyle,
-          ];
+          this.rCom = [...arr, ...this.oneStyle, ...this.twoStyle, ...this.currencyStyle];
         }
       } else {
         if (type2 == 0) {
-          this.rCom = [
-            ...arr,
-            ...this.oneStyle,
-            ...this.currencyTitleStyle,
-            ...this.moduleColorStyle2,
-            ...this.currencyStyle,
-          ];
+          this.rCom = [...arr, ...this.oneStyle, ...this.currencyStyle];
         } else {
-          this.rCom = [
-            ...arr,
-            ...this.oneStyle,
-            ...this.twoStyle,
-            ...this.bntBgStyle,
-            ...this.currencyTitleStyle,
-            ...this.moduleColorStyle2,
-            ...this.currencyStyle,
-          ];
+          this.rCom = [...arr, ...this.oneStyle, ...this.twoStyle, ...this.bntBgStyle, ...this.currencyStyle];
         }
       }
     },

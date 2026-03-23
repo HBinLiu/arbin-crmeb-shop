@@ -1,15 +1,5 @@
 <template>
-  <div
-    class="mobile-page"
-    :style="{
-      background: bottomBgColor,
-      marginTop: mTop + 'px',
-      paddingTop: topConfig + 'px',
-      paddingBottom: bottomConfig + 'px',
-      paddingLeft: prConfig + 'px',
-      paddingRight: prConfig + 'px',
-    }"
-  >
+  <common_wrapper :config="configObj">
     <div class="home_product">
       <div class="hd_nav" v-if="styleConfig == 0">
         <div class="item" :class="index == tabCur ? 'active' : ''" v-for="(item, index) in navlist" :key="index">
@@ -28,63 +18,48 @@
         </div>
       </div>
       <div class="menus" :class="styleConfig == 2 ? 'on' : ''" v-else>
-        <div
-          class="item"
-          :class="index == tabCur ? 'on' : ''"
-          v-if="styleConfig == 1"
-          v-for="(item, index) in navlist"
-          :key="index"
-          :style="{
-            color: index == tabCur ? (toneConfig ? textColor : '#333') : '#282828',
-          }"
-        >
-          {{ item.chiild[0].val || '标题'
-          }}<span
-            :style="{
-              background: toneConfig ? decorateColor : themeColor,
-            }"
-          ></span>
-        </div>
-        <div
-          class="item"
-          :class="index == tabCur ? 'on3' : ''"
-          v-if="styleConfig == 2"
-          v-for="(item, index) in navlist"
-          :key="index"
-          :style="{
-            color: index == tabCur ? (toneConfig ? textColor2 : colorStyle.theme) : '#282828',
-          }"
-        >
-          {{ item.chiild[0].val || '标题'
-          }}<span
-            :style="{
-              borderColor: toneConfig ? decorateColor2 : colorStyle.theme,
-            }"
-          ></span>
-        </div>
-        <div
-          class="item"
-          :class="index == tabCur ? 'on2' : ''"
-          v-if="styleConfig == 3"
-          v-for="(item, index) in navlist"
-          :key="index"
-          :style="{
-            color: index == tabCur ? (toneConfig ? textColor3 : '#fff') : '#282828',
-            background: index == tabCur ? (toneConfig ? decorateColor : themeColor) : '',
-          }"
-        >
-          {{ item.chiild[0].val || '标题' }}
-        </div>
-        <div class="item pic" v-if="styleConfig == 4" v-for="(item, index) in navlist" :key="index">
+        <template v-if="styleConfig == 1">
           <div
-            class="pictrue acea-row row-center-wrapper"
-            :style="{ borderColor: index == tabCur ? (toneConfig ? decorateColorLeft : colorStyle.theme) : '#EEEEEE' }"
+            class="item"
+            :class="index == tabCur ? 'on' : ''"
+            v-for="(item, index) in navlist"
+            :key="index"
+            :style="{
+              color: index == tabCur ? (toneConfig ? textColor : '#333') : '#282828',
+            }"
           >
-            <img class="img" :src="item.image" v-if="item.image" />
-            <img src="../../assets/images/shan.png" v-else />
+            {{ item.chiild[0].val || '标题'
+            }}<span
+              :style="{
+                background: toneConfig ? decorateColor : themeColor,
+              }"
+            ></span>
           </div>
+        </template>
+        <template v-if="styleConfig == 2">
           <div
-            class="title"
+            class="item"
+            :class="index == tabCur ? 'on3' : ''"
+            v-for="(item, index) in navlist"
+            :key="index"
+            :style="{
+              color: index == tabCur ? (toneConfig ? textColor2 : colorStyle.theme) : '#282828',
+            }"
+          >
+            {{ item.chiild[0].val || '标题'
+            }}<span
+              :style="{
+                borderColor: toneConfig ? decorateColor2 : colorStyle.theme,
+              }"
+            ></span>
+          </div>
+        </template>
+        <template v-if="styleConfig == 3">
+          <div
+            class="item"
+            :class="index == tabCur ? 'on2' : ''"
+            v-for="(item, index) in navlist"
+            :key="index"
             :style="{
               color: index == tabCur ? (toneConfig ? textColor3 : '#fff') : '#282828',
               background: index == tabCur ? (toneConfig ? decorateColor : themeColor) : '',
@@ -92,7 +67,29 @@
           >
             {{ item.chiild[0].val || '标题' }}
           </div>
-        </div>
+        </template>
+        <template v-if="styleConfig == 4">
+          <div class="item pic" v-for="(item, index) in navlist" :key="index">
+            <div
+              class="pictrue acea-row row-center-wrapper"
+              :style="{
+                borderColor: index == tabCur ? (toneConfig ? decorateColorLeft : colorStyle.theme) : '#EEEEEE',
+              }"
+            >
+              <img class="img" :src="item.image" v-if="item.image" />
+              <img src="../../assets/images/shan.png" v-else />
+            </div>
+            <div
+              class="title"
+              :style="{
+                color: index == tabCur ? (toneConfig ? textColor3 : '#fff') : '#282828',
+                background: index == tabCur ? (toneConfig ? decorateColor : themeColor) : '',
+              }"
+            >
+              {{ item.chiild[0].val || '标题' }}
+            </div>
+          </div>
+        </template>
       </div>
       <div class="list-wrapper">
         <div class="item" v-for="(item, index) in list" :key="index">
@@ -124,7 +121,7 @@
               <img src="../../assets/images/goods01.png" />
             </div>
             <div class="price">
-              <div class="num">
+              <div class="num" :style="{ color: goodsPriceColor }">
                 <span>￥</span>{{ item.price ? $HandlePrice(item.price, 0) : 77
                 }}<span>{{ item.price ? $HandlePrice(item.price, 1) : '' }}</span>
               </div>
@@ -147,7 +144,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </common_wrapper>
 </template>
 
 <script>
@@ -157,6 +154,7 @@ export default {
   name: 'home_product',
   cname: '商品选项卡',
   configName: 'c_home_product',
+  desc: '商品选项卡',
   icon: '#iconzujian-shangpinxuanxiangka',
   type: 0, // 0 基础组件 1 营销组件 2工具组件
   defaultName: 'promotionList', // 外面匹配名称
@@ -202,6 +200,7 @@ export default {
       // 默认初始化数据禁止修改
       defaultConfig: {
         cname: '商品选项卡',
+        desc: '商品选项卡',
         name: 'promotionList',
         timestamp: this.num,
         isHide: false,
@@ -334,6 +333,20 @@ export default {
             },
           ],
         },
+        goodsPriceColor: {
+          title: '商品价格',
+          name: 'goodsPriceColor',
+          default: [
+            {
+              item: '#E93323',
+            },
+          ],
+          color: [
+            {
+              item: '#E93323',
+            },
+          ],
+        },
         decorateColor: {
           title: '装饰元素',
           default: [
@@ -450,38 +463,96 @@ export default {
             },
           ],
         },
-        topConfig: {
-          title: '上边距',
+        componentBgConfig: {
+          title: '背景设置',
+          tabVal: 0,
+          tabList: [{ name: '颜色' }, { name: '图片' }],
+          colorConfig: {
+            title: '背景颜色',
+            default: [{ item: '#FFFFFF' }, { item: '#FFFFFF' }],
+            color: [{ item: '#FFFFFF' }, { item: '#FFFFFF' }],
+          },
+          colorDirection: {
+            title: '渐变方向',
+            tabVal: 0,
+            tabList: [{ name: '横向' }, { name: '纵向' }, { name: '左斜' }, { name: '右斜' }],
+          },
+          imageConfig: {
+            header: '背景图片',
+            title: '',
+            name: '上传图片',
+            type: 'code',
+            url: '',
+            info: '建议尺寸：750px * 400px',
+          },
+        },
+        zIndexConfig: {
+          title: '组件上浮',
           val: 0,
           min: 0,
         },
-        bottomConfig: {
-          title: '下边距',
+        borderConfig: {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
           val: 0,
-          min: 0,
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              { name: '实线', style: 'solid' },
+              { name: '虚线', style: 'dashed' },
+              { name: '点状', style: 'dotted' },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
         },
-        prConfig: {
-          title: '左右边距',
-          val: 10,
-          min: 0,
-        },
-        mbConfig: {
-          title: '页面间距',
+        shadowConfig: {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
           val: 0,
-          min: 0,
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: 'rgba(0,0,0,0.1)' }],
+            color: [{ item: 'rgba(0,0,0,0.1)' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+          },
         },
         fillet: {
           title: '背景圆角',
           type: 0,
           list: [
-            {
-              val: '全部',
-              icon: 'iconcaozuo-zhengti',
-            },
-            {
-              val: '单个',
-              icon: 'iconcaozuo-bianjiao',
-            },
+            { val: '全部', icon: 'iconcaozuo-zhengti' },
+            { val: '单个', icon: 'iconcaozuo-bianjiao' },
           ],
           valName: '圆角值',
           val: 0,
@@ -489,6 +560,7 @@ export default {
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
       },
+      configObj: null,
       navlist: [],
       imgStyle: '',
       tabCur: 0,
@@ -504,7 +576,6 @@ export default {
       decorateColorLeft: '',
       // bgColor:'',
       bottomBgColor: '',
-      mTop: 0,
       topConfig: 0,
       bottomConfig: 0,
       prConfig: 0,
@@ -515,6 +586,7 @@ export default {
       toneCartConfig: 0,
       bntBgColor: '',
       bntStyleConfig: 0,
+      goodsPriceColor: '',
     };
   },
   mounted() {
@@ -526,51 +598,80 @@ export default {
   methods: {
     setConfig(data) {
       if (!data) return;
-      if (data.mbConfig) {
-        this.styleConfig = data.styleConfig.tabVal;
-        this.cartConfig = data.cartConfig.tabVal;
-        this.bntStyleConfig = data.bntStyleConfig.tabVal;
-        this.toneCartConfig = data.toneCartConfig.tabVal;
-        let bntBgColorLeft = data.bntBgColor.color[0].item;
-        let bntBgColorRight = data.bntBgColor.color[1].item;
-        this.bntBgColor = `linear-gradient(90deg,${bntBgColorLeft} 0%,${bntBgColorRight} 100%)`;
-        this.toneConfig = data.toneConfig.tabVal;
-        this.textColor = data.textColor.color[0].item;
-        this.textColor2 = data.textColor2.color[0].item;
-        this.textColor3 = data.textColor3.color[0].item;
-        let decorateColorLeft = data.decorateColor.color[0].item;
-        let decorateColorRight = data.decorateColor.color[1].item;
-        this.decorateColorLeft = decorateColorLeft;
-        this.decorateColor = `linear-gradient(90deg,${decorateColorLeft} 0%,${decorateColorRight} 100%)`;
-        this.decorateColor2 = data.decorateColor2.color[0].item;
-        this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
-        // let bgColorLeft =  data.moduleColor.color[0].item;
-        // let bgColorRight =  data.moduleColor.color[1].item;
-        // this.bgColor = `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`;
-        this.bottomBgColor = data.bottomBgColor.color[0].item;
-        this.mTop = data.mbConfig.val;
-        this.topConfig = data.topConfig.val;
-        this.bottomConfig = data.bottomConfig.val;
-        this.prConfig = data.prConfig.val;
-        let fillet = data.fillet.type;
-        let filletVal = data.fillet.val;
-        let valList = data.fillet.valList;
-        this.bgRadius = fillet
-          ? valList[0].val + 'px ' + valList[1].val + 'px 0 0'
-          : filletVal + 'px ' + filletVal + 'px 0 0';
-        this.bgRadius2 = fillet
-          ? '0 0 ' + valList[3].val + 'px ' + valList[2].val + 'px'
-          : '0 0 ' + filletVal + 'px ' + filletVal + 'px';
-        this.navlist = data.tabConfig.list;
-        this.tabCur = data.tabConfig.tabCur || 0;
-        let goods = data.tabConfig.list[this.tabCur];
-        if (goods.tabVal == 1 && goods.goodsList.list) {
-          this.list = goods.goodsList.list.length ? goods.goodsList.list : 2;
-        } else if (goods.goodsList.list) {
-          this.list = goods.productList.list.length ? goods.productList.list : 2;
-        } else {
-          this.list = goods.productList.list.length ? goods.productList.list : 2;
+      for (let key in this.defaultConfig) {
+        if (data[key] == undefined) {
+          this.$set(data, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
         }
+      }
+      this.styleConfig = data.styleConfig.tabVal;
+      this.cartConfig = data.cartConfig.tabVal;
+      this.bntStyleConfig = data.bntStyleConfig.tabVal;
+      this.toneCartConfig = data.toneCartConfig.tabVal;
+      let bntBgColorLeft = data.bntBgColor.color[0].item;
+      let bntBgColorRight = data.bntBgColor.color[1].item;
+      this.bntBgColor = `linear-gradient(90deg,${bntBgColorLeft} 0%,${bntBgColorRight} 100%)`;
+      this.toneConfig = data.toneConfig.tabVal;
+      this.textColor = data.textColor.color[0].item;
+      this.textColor2 = data.textColor2.color[0].item;
+      this.textColor3 = data.textColor3.color[0].item;
+      let decorateColorLeft = data.decorateColor.color[0].item;
+      let decorateColorRight = data.decorateColor.color[1].item;
+      this.decorateColorLeft = decorateColorLeft;
+      this.goodsPriceColor = this.toneCartConfig ? data.goodsPriceColor.color[0].item : '#E93323';
+      this.decorateColor = `linear-gradient(90deg,${decorateColorLeft} 0%,${decorateColorRight} 100%)`;
+      this.decorateColor2 = data.decorateColor2.color[0].item;
+      this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
+      // let bgColorLeft =  data.moduleColor.color[0].item;
+      // let bgColorRight =  data.moduleColor.color[1].item;
+      // this.bgColor = `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`;
+      this.bottomBgColor = data.bottomBgColor.color[0].item;
+      this.configObj = data;
+      // 兼容旧数据
+      if (!data.paddingConfig) {
+        let paddingConfig = {
+          title: '内边距',
+          isAll: false,
+          val: 0,
+          min: 0,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        };
+        if (data.topConfig) paddingConfig.valList[0].val = data.topConfig.val;
+        if (data.prConfig) {
+          paddingConfig.valList[1].val = data.prConfig.val;
+          paddingConfig.valList[3].val = data.prConfig.val;
+        }
+        if (data.bottomConfig) paddingConfig.valList[2].val = data.bottomConfig.val;
+        this.$set(this.configObj, 'paddingConfig', paddingConfig);
+      }
+      if (!data.marginConfig) {
+        let marginConfig = {
+          title: '外边距',
+          isAll: false,
+          val: 0,
+          min: 0,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        };
+        if (data.mbConfig) marginConfig.valList[0].val = data.mbConfig.val;
+        this.$set(this.configObj, 'marginConfig', marginConfig);
+      }
+      let fillet = data.fillet.type;
+      let filletVal = data.fillet.val;
+      let valList = data.fillet.valList;
+      this.bgRadius = fillet
+        ? valList[0].val + 'px ' + valList[1].val + 'px 0 0'
+        : filletVal + 'px ' + filletVal + 'px 0 0';
+      this.bgRadius2 = fillet
+        ? '0 0 ' + valList[3].val + 'px ' + valList[2].val + 'px'
+        : '0 0 ' + filletVal + 'px ' + filletVal + 'px';
+      this.navlist = data.tabConfig.list;
+      this.tabCur = data.tabConfig.tabCur || 0;
+      let goods = data.tabConfig.list[this.tabCur];
+      if (goods.tabVal == 1 && goods.goodsList.list) {
+        this.list = goods.goodsList.list.length ? goods.goodsList.list : 2;
+      } else if (goods.goodsList.list) {
+        this.list = goods.productList.list.length ? goods.productList.list : 2;
+      } else {
+        this.list = goods.productList.list.length ? goods.productList.list : 2;
       }
     },
   },
@@ -578,6 +679,10 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.mobile-page {
+  display: inline-block;
+  width: -webkit-fill-available;
+}
 .menus {
   display: flex;
   align-items: center;
@@ -599,6 +704,7 @@ export default {
     padding: 0 5px;
     line-height: 20px;
     text-align: center;
+    white-space: nowrap;
   }
 
   .item {
@@ -698,6 +804,7 @@ export default {
       margin-right: 37px;
 
       .title {
+        white-space: nowrap;
         font-size: 15px;
         color: #282828;
         text-align: center;
@@ -836,7 +943,7 @@ export default {
             font-size: 20px;
             margin-right: 4px;
             font-family: SemiBold;
-
+            color: #e93323;
             span {
               font-size: 12px;
             }

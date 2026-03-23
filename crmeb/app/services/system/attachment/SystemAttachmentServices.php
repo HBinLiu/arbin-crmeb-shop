@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -83,7 +83,7 @@ class SystemAttachmentServices extends BaseServices
     public function del(string $ids)
     {
         $ids = explode(',', $ids);
-        if (empty($ids)) throw new AdminException(400599);
+        if (empty($ids)) throw new AdminException('请选择要删除的图片');
         foreach ($ids as $v) {
             $attinfo = $this->dao->get((int)$v);
             if ($attinfo) {
@@ -125,7 +125,7 @@ class SystemAttachmentServices extends BaseServices
         try {
             $path = make_path('attach', 2, true);
             if ($path === '') {
-                throw new AdminException(400555);
+                throw new AdminException('无法创建文件夹，请检查您的上传目录权限');
             }
             $upload = UploadService::init($upload_type);
             $res = $upload->to($path)->validate()->move($file, $realName);
@@ -199,7 +199,7 @@ class SystemAttachmentServices extends BaseServices
         $data['type'] = $type;
         $data['real_name'] = $real_name != '' ? $real_name : $name;
         if (!$this->dao->save($data)) {
-            throw new ApiException(100022);
+            throw new ApiException('添加失败');
         }
         return true;
     }
@@ -256,7 +256,7 @@ class SystemAttachmentServices extends BaseServices
     {
         $pathinfo = pathinfo($data['filename']);
         if (isset($pathinfo['extension']) && !in_array($pathinfo['extension'], ['avi', 'mp4', 'wmv', 'rm', 'mpg', 'mpeg', 'mov', 'flv', 'swf'])) {
-            throw new AdminException(400558);
+            throw new AdminException('格式错误');
         }
         $data['chunkNumber'] = (int)$data['chunkNumber'];
         $public_dir = app()->getRootPath() . 'public';
@@ -305,7 +305,7 @@ class SystemAttachmentServices extends BaseServices
     {
         //生成附件目录
         if (make_path('attach', 3, true) === '') {
-            throw new AdminException(400555);
+            throw new AdminException('无法创建文件夹，请检查您的上传目录权限');
         }
 
         //上传图片

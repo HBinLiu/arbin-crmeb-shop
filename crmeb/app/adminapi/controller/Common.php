@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -83,7 +83,7 @@ class Common extends AuthController
                         ]);
                     }
                 } catch (\Throwable $e) {
-                    return app('json')->fail(400330);
+                    return app('json')->fail('授权成功，写入数据库失败，请检查数据库链接配置');
                 }
                 return app('json')->success(['status' => 1, 'copyright' => $res['data']['copyright'], 'authCode' => $authCode, 'day' => 0, 'force_reminder' => $upgradeStatus['force_reminder'] ?? 0]);
             default:
@@ -106,23 +106,23 @@ class Common extends AuthController
             ['captcha', ''],
         ]);
         if (!$data['company_name']) {
-            return app('json')->fail(400331);
+            return app('json')->fail('请填写公司名称');
         }
         if (!$data['domain_name']) {
-            return app('json')->fail(400332);
+            return app('json')->fail('请填写授权域名');
         }
 
         if (!$data['phone']) {
-            return app('json')->fail(400333);
+            return app('json')->fail('请填写手机号码');
         }
         if (!$data['order_id']) {
-            return app('json')->fail(400334);
+            return app('json')->fail('请填写订单id');
         }
         if (!$data['captcha']) {
-            return app('json')->fail(400137);
+            return app('json')->fail('请填写验证码');
         }
         $services->authApply($data);
-        return app('json')->success(400335);
+        return app('json')->success('申请授权成功');
 
     }
 
@@ -388,7 +388,7 @@ class Common extends AuthController
             ]);
         }
         CacheService::clear();
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -405,7 +405,7 @@ class Common extends AuthController
             ['keyword', ''],
         ], true);
         if (empty($keyword)) {
-           return app('json')->fail(400239, '关键字不能为空');
+           return app('json')->fail('请输入关键字', '关键字不能为空');
         }
 
         // 获取系统菜单服务实例

@@ -17,6 +17,7 @@
               class="form_content_width"
               maxlength="18"
               show-word-limit
+              clearable
             />
           </el-form-item>
           <el-form-item label="优惠券类型：" label-for="coupon_type">
@@ -127,7 +128,7 @@
             <span v-if="scope.row.is_permanent">不限量</span>
             <div v-else>
               <span class="fa">发布：{{ scope.row.total_count }}</span>
-              <span class="sheng ml10">剩余：{{ scope.row.remain_count }}</span>
+              <span class="sheng">剩余：{{ scope.row.remain_count }}</span>
             </div>
           </template>
         </el-table-column>

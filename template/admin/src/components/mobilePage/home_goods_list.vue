@@ -1,16 +1,6 @@
 <template>
   <div>
-    <div
-      class="mobile-page paddingBox"
-      :style="{
-        background: bottomBgColor,
-        marginTop: mTop + 'px',
-        paddingTop: topConfig + 'px',
-        paddingBottom: bottomConfig + 'px',
-        paddingLeft: prConfig + 'px',
-        paddingRight: prConfig + 'px',
-      }"
-    >
+    <common_wrapper :config="configObj">
       <div class="home_product">
         <!-- 单列 -->
         <template v-if="styleConfig == 0">
@@ -18,8 +8,10 @@
             <div
               class="item"
               v-for="(item, index) in list"
+              :key="index"
               :index="index"
               :style="{
+                background: bgColor,
                 borderRadius: bgRadius,
               }"
             >
@@ -120,7 +112,16 @@
         <!-- 二列 -->
         <template v-else-if="styleConfig == 1">
           <div class="list-wrapper itemC">
-            <div class="item" v-for="(item, index) in list" :index="index">
+            <div
+              class="item"
+              v-for="(item, index) in list"
+              :key="index"
+              :index="index"
+              :style="{
+                background: bgColor,
+                borderRadius: bgRadius,
+              }"
+            >
               <div class="img-box">
                 <img
                   class="img"
@@ -214,6 +215,7 @@
               v-for="(item, index) in list"
               :key="index"
               :style="{
+                background: bgColor,
                 borderRadius: bgRadius,
               }"
             >
@@ -319,7 +321,7 @@
               borderRadius: bgRadius,
             }"
           >
-            <div class="item acea-row row-middle" v-for="(item, index) in list" :index="index">
+            <div class="item acea-row row-middle" v-for="(item, index) in list" :key="index" :index="index">
               <div
                 class="pictrue acea-row row-center-wrapper"
                 :style="{
@@ -373,7 +375,7 @@
             }"
           >
             <div class="list">
-              <div class="item" v-for="(item, index) in list" :index="index">
+              <div class="item" v-for="(item, index) in list" :key="index" :index="index">
                 <div class="img-box">
                   <img
                     class="img"
@@ -444,7 +446,7 @@
           </div>
         </template>
       </div>
-    </div>
+    </common_wrapper>
   </div>
 </template>
 
@@ -456,7 +458,7 @@ export default {
   cname: '商品列表',
   configName: 'c_home_goods_list',
   icon: '#iconzujian-shangpinliebiao',
-  type: 0, // 0 基础组件 1 营销组件 2工具组件
+  type: 0, // 0 基础组件 1 营销组件 2工具组件 3 商品组件 4 个人中心组件
   defaultName: 'goodList', // 外面匹配名称
   props: {
     index: {
@@ -500,18 +502,79 @@ export default {
       // 默认初始化数据禁止修改
       defaultConfig: {
         cname: '商品列表',
+        desc: '商品列表介绍',
         name: 'goodList',
         timestamp: this.num,
         isHide: false,
         setUp: {
           tabVal: 0,
         },
+        zIndexConfig: {
+          title: '组件上浮',
+          val: 0,
+          min: 0,
+        },
+        borderConfig: {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0,
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              { name: '实线', style: 'solid' },
+              { name: '虚线', style: 'dashed' },
+              { name: '点状', style: 'dotted' },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
+        },
+        shadowConfig: {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0,
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: 'rgba(0,0,0,0.1)' }],
+            color: [{ item: 'rgba(0,0,0,0.1)' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+          },
+        },
         titleLeft: '列表设置',
         titleGoods: '商品设置',
         titleContents: '显示内容',
         titleCart: '购物车按钮',
         titleRight: '商品样式',
-        titleCart: '购物车按钮',
         titleCurrency: '通用样式',
         styleConfig: {
           title: '选择风格',
@@ -521,19 +584,19 @@ export default {
               name: '单列展示',
             },
             {
-              name: '两列展示(纵向)',
+              name: '两列展示',
             },
             {
               name: '三列展示',
             },
             {
-              name: '两列展示(横向)',
+              name: '两列展示',
             },
             {
               name: '大图展示',
             },
             {
-              name: '左右滑动展示',
+              name: '左右滑动',
             },
           ],
         },
@@ -806,25 +869,19 @@ export default {
             },
           ],
         },
-        topConfig: {
-          title: '上边距',
+        paddingConfig: {
+          title: '内边距',
+          isAll: false,
           val: 0,
           min: 0,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-        bottomConfig: {
-          title: '下边距',
+        marginConfig: {
+          title: '外边距',
+          isAll: false,
           val: 0,
           min: 0,
-        },
-        prConfig: {
-          title: '左右边距',
-          val: 10,
-          min: 0,
-        },
-        mbConfig: {
-          title: '页面上间距',
-          val: 0,
-          min: 0,
+          valList: [{ val: 0 }, { val: 10 }, { val: 0 }, { val: 10 }],
         },
         fillet: {
           title: '背景圆角',
@@ -843,6 +900,90 @@ export default {
           val: 8,
           min: 0,
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        },
+        componentBgConfig: {
+          title: '背景设置',
+          tabVal: 0,
+          tabList: [{ name: '颜色' }, { name: '图片' }],
+          colorConfig: {
+            title: '背景颜色',
+            default: [{ item: '#FFFFFF' }, { item: '#FFFFFF' }],
+            color: [{ item: '#FFFFFF' }, { item: '#FFFFFF' }],
+          },
+          colorDirection: {
+            title: '渐变方向',
+            tabVal: 0,
+            tabList: [{ name: '横向' }, { name: '纵向' }, { name: '左斜' }, { name: '右斜' }],
+          },
+          imageConfig: {
+            header: '背景图片',
+            title: '',
+            name: '上传图片',
+            type: 'code',
+            url: '',
+            info: '建议尺寸：750px * 400px',
+          },
+        },
+        zIndexConfig: {
+          title: '组件上浮',
+          val: 0,
+          min: 0,
+        },
+        borderConfig: {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Hide, 1: Show
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              { name: '实线', style: 'solid' },
+              { name: '虚线', style: 'dashed' },
+              { name: '点状', style: 'dotted' },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
+        },
+        shadowConfig: {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0, // 0: Off, 1: On
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: 'rgba(0,0,0,0.1)' }],
+            color: [{ item: 'rgba(0,0,0,0.1)' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+          },
         },
         goodsLabel: {
           title: '商品标签',
@@ -873,10 +1014,7 @@ export default {
       bntBgColorLeft: '',
       bgColor: '',
       bottomBgColor: '',
-      mTop: 0,
-      topConfig: 0,
-      bottomConfig: 0,
-      prConfig: 0,
+      configObj: null,
       bgRadius: 0,
       bgRadius2: 0,
       themeColor: '',
@@ -891,61 +1029,108 @@ export default {
   methods: {
     setConfig(data) {
       if (!data) return;
-      if (data.mbConfig) {
-        this.styleConfig = data.styleConfig.tabVal;
-        this.checkboxInfo = data.checkboxInfo.type;
-        this.cartConfig = data.cartConfig.tabVal;
-        this.bntStyleConfig = data.bntStyleConfig.tabVal;
-        let filletImg = data.filletImg.type;
-        let filletValImg = data.filletImg.val;
-        let valListImg = data.filletImg.valList;
-        this.imgRadius = filletImg
-          ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
-          : filletValImg + 'px';
-        this.imgRadius2 = filletImg
-          ? valListImg[0].val + 'px ' + valListImg[1].val + 'px 0 0'
-          : filletValImg + 'px ' + filletValImg + 'px 0 0';
-        let goodsTabVal = data.goodsName.tabVal;
-        this.goodsName = data.goodsName.tabList[goodsTabVal].style;
-        this.toneConfig = data.toneConfig.tabVal;
-        this.goodsNameColor = data.goodsNameColor.color[0].item;
-        this.goodsPriceColor = data.goodsPriceColor.color[0].item;
-        this.soldNumColor = data.soldNumColor.color[0].item;
-        this.scoreColor = data.scoreColor.color[0].item;
-        this.toneCartConfig = data.toneCartConfig.tabVal;
-        let bntBgColorLeft = data.bntBgColor.color[0].item;
-        let bntBgColorRight = data.bntBgColor.color[1].item;
-        this.bntBgColorLeft = bntBgColorLeft;
-        this.bntBgColor = `linear-gradient(90deg,${bntBgColorLeft} 0%,${bntBgColorRight} 100%)`;
-        let bgColorLeft = data.moduleColor.color[0].item;
-        let bgColorRight = data.moduleColor.color[1].item;
-        this.bgColor = `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`;
-        this.bottomBgColor = data.bottomBgColor.color[0].item;
-        this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
-        this.mTop = data.mbConfig.val;
-        this.topConfig = data.topConfig.val;
-        this.bottomConfig = data.bottomConfig.val;
-        this.prConfig = data.prConfig.val;
-        let fillet = data.fillet.type;
-        let filletVal = data.fillet.val;
-        let valList = data.fillet.valList;
-        this.bgRadius = fillet
-          ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
-          : filletVal + 'px';
-        this.bgRadius2 = fillet
-          ? '0 0 ' + valList[3].val + 'px ' + valList[2].val + 'px'
-          : '0 0 ' + filletVal + 'px ' + filletVal + 'px';
-        if (data.typeConfig.activeValue == 1) {
-          this.list = data.goodsList.list.length ? data.goodsList.list : 4;
-        } else {
-          this.list = data.productList.list.length ? data.productList.list : 4;
+      for (let key in this.defaultConfig) {
+        if (data[key] == undefined) {
+          this.$set(data, key, this.defaultConfig[key]);
         }
+      }
+      this.styleConfig = data.styleConfig.tabVal;
+      this.checkboxInfo = data.checkboxInfo.type;
+      this.cartConfig = data.cartConfig.tabVal;
+      this.bntStyleConfig = data.bntStyleConfig.tabVal;
+      let filletImg = data.filletImg.type;
+      let filletValImg = data.filletImg.val;
+      let valListImg = data.filletImg.valList;
+      this.imgRadius = filletImg
+        ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
+        : filletValImg + 'px';
+      this.imgRadius2 = filletImg
+        ? valListImg[0].val + 'px ' + valListImg[1].val + 'px 0 0'
+        : filletValImg + 'px ' + filletValImg + 'px 0 0';
+      let goodsTabVal = data.goodsName.tabVal;
+      this.goodsName = data.goodsName.tabList[goodsTabVal].style;
+      this.toneConfig = data.toneConfig.tabVal;
+      this.goodsNameColor = data.goodsNameColor.color[0].item;
+      this.goodsPriceColor = data.goodsPriceColor.color[0].item;
+      this.soldNumColor = data.soldNumColor.color[0].item;
+      this.scoreColor = data.scoreColor.color[0].item;
+      this.toneCartConfig = data.toneCartConfig.tabVal;
+      let bntBgColorLeft = data.bntBgColor.color[0].item;
+      let bntBgColorRight = data.bntBgColor.color[1].item;
+      this.bntBgColorLeft = bntBgColorLeft;
+      this.bntBgColor = `linear-gradient(90deg,${bntBgColorLeft} 0%,${bntBgColorRight} 100%)`;
+      let bgColorLeft = data.moduleColor.color[0].item;
+      let bgColorRight = data.moduleColor.color[1].item;
+      this.bgColor = `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`;
+      this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
+      // 兼容旧数据
+      if (!data.paddingConfig) {
+        let paddingConfig = {
+          title: '内边距',
+          isAll: false,
+          val: 0,
+          min: 0,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        };
+        if (data.topConfig) paddingConfig.valList[0].val = data.topConfig.val;
+        if (data.prConfig) {
+          paddingConfig.valList[1].val = data.prConfig.val;
+          paddingConfig.valList[3].val = data.prConfig.val;
+        }
+        if (data.bottomConfig) paddingConfig.valList[2].val = data.bottomConfig.val;
+        this.$set(data, 'paddingConfig', paddingConfig);
+      }
+
+      if (!data.marginConfig) {
+        let marginConfig = {
+          title: '外边距',
+          isAll: false,
+          val: 0,
+          min: 0,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        };
+        if (data.mbConfig) marginConfig.valList[0].val = data.mbConfig.val;
+        this.$set(data, 'marginConfig', marginConfig);
+      }
+
+      if (!data.bottomBgColor) {
+        this.$set(data, 'bottomBgColor', {
+          title: '底部背景',
+          default: [{ item: '#f5f5f5' }],
+          color: [{ item: '#f5f5f5' }],
+        });
+      }
+
+      for (let key in this.defaultConfig) {
+        if (data[key] === undefined) {
+          this.$set(data, key, this.defaultConfig[key]);
+        }
+      }
+
+      this.configObj = data;
+      let fillet = data.fillet.type;
+      let filletVal = data.fillet.val;
+      let valList = data.fillet.valList;
+      this.bgRadius = fillet
+        ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
+        : filletVal + 'px';
+      this.bgRadius2 = fillet
+        ? '0 0 ' + valList[3].val + 'px ' + valList[2].val + 'px'
+        : '0 0 ' + filletVal + 'px ' + filletVal + 'px';
+      if (data.typeConfig.activeValue == 1) {
+        this.list = data.goodsList.list.length ? data.goodsList.list : 4;
+      } else {
+        this.list = data.productList.list.length ? data.productList.list : 4;
       }
     },
   },
 };
 </script>
 <style scoped lang="scss">
+.mobile-page {
+  display: inline-block;
+  width: -webkit-fill-available;
+}
 .itemOn {
   border-radius: 0 !important;
   img,
@@ -1138,9 +1323,6 @@ export default {
       }
     }
   }
-}
-.paddingBox {
-  padding-bottom: 0;
 }
 .home_product {
   overflow: hidden;
@@ -1353,6 +1535,7 @@ export default {
   .list {
     display: flex;
     flex-wrap: wrap;
+    width: 100%;
   }
 
   .item {
@@ -1403,6 +1586,7 @@ export default {
     flex-wrap: nowrap;
     justify-content: center;
     align-items: center;
+    width: auto;
   }
   .item {
     width: 100px;

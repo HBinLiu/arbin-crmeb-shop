@@ -56,6 +56,7 @@ $(function(){
 	    host:'<?php echo $host;?>',
         https:'<?php echo 'http://'.$host;?>',
         version:'<?php echo $version;?>',
+        uid:'<?php echo $uid;?>',
         version_code:'<?php echo $platform;?>',
         ip:<?php echo json_encode($ip);?>
     },

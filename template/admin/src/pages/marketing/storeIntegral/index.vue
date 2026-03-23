@@ -38,7 +38,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="商品搜索：" label-for="store_name">
-            <el-input placeholder="请输入商品名称，ID" v-model="tableFrom.store_name" class="form_content_width" />
+            <el-input placeholder="请输入商品名称，ID" v-model="tableFrom.store_name" clearable class="form_content_width" />
           </el-form-item>
           <el-form-item>
             <el-button type="primary" v-db-click @click="userSearchs">查询</el-button>

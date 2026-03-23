@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -93,6 +93,11 @@ Route::group(function () {
         })->option(['mark' => 'user', 'mark_name' => '用户']);
 
     })->middleware(AuthTokenMiddleware::class);
+
+    // MCP 接口（支持 appid + appsecret 认证，不走 Token 中间件）
+    Route::group(function () {
+        Route::post('mcp', 'Mcp/index')->option(['real_name' => 'MCP接口']);
+    })->option(['mark' => 'mcp', 'mark_name' => 'MCP接口']);
 
 })->middleware(AllowOriginMiddleware::class);
 

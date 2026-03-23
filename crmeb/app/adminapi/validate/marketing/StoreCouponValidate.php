@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -38,12 +38,12 @@ class StoreCouponValidate extends Validate
      * @var array
      */
     protected $message = [
-        'title.require' => '400372',
-        'image.require' => '400337',
-        'category_id.require' => '400373',
-        'coupon_price.require' => '400374',
-        'use_min_price.require' => '400375',
-        'coupon_time.require' => '400376',
+        'title.require' => '请填写优惠券名称',
+        'image.require' => '请选择商品',
+        'category_id.require' => '请选择商品分类',
+        'coupon_price.require' => '请填写优惠券金额',
+        'use_min_price.require' => '请填写优惠券最小使用金额',
+        'coupon_time.require' => '请填写优惠券有效期',
     ];
 
     protected $scene = [

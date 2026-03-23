@@ -102,6 +102,16 @@ export function getProduct(data) {
 }
 
 /**
+ * @description 获取自定义组件字段
+ */
+export function getDiyField() {
+  return request({
+    url: 'diy_pro/text/field',
+    method: 'get',
+  });
+}
+
+/**
  * @description 获取DIY数据
  * @param {Object} param data {Object} 传值参数
  */
@@ -335,8 +345,6 @@ export function diyUpdateName(id, data) {
   });
 }
 
-
-
 /** 5.6+版本使用 */
 
 /**
@@ -375,6 +383,53 @@ export function diyProSave(id, data) {
   });
 }
 /**
+ * @description 保存商城主题
+ * @param type 保存类型
+ * @param value diy格值
+ */
+export function themeSave(id, data) {
+  return request({
+    url: 'theme/save/' + id,
+    method: 'post',
+    data: data,
+  });
+}
+/**
+ * @description 获取商城主题
+ * @param id 主题id
+ * @param type 类型
+ * @return {Object} 主题数据
+ */
+export function themeInfo(id, type) {
+  return request({
+    url: 'theme/info/' + id + '/' + type,
+    method: 'get',
+  });
+}
+
+/**
+ * @description 获取文章列表
+ */
+export function getArticleList(data) {
+  return request({
+    url: 'theme/article',
+    method: 'get',
+    params: data,
+  });
+}
+
+/**
+ * @description 获取优惠券列表
+ */
+export function getCouponList(data) {
+  return request({
+    url: 'theme/coupon',
+    method: 'get',
+    params: data,
+  });
+}
+
+/**
  * @description 获取商品列表
  */
 export function getProProduct(data) {
@@ -384,3 +439,151 @@ export function getProProduct(data) {
     params: data,
   });
 }
+
+/**
+ * @description 获取主题商品列表
+ */
+export function getThemeProduct(data) {
+  return request({
+    url: 'theme/product',
+    method: 'get',
+    params: data,
+  });
+}
+
+/**
+ * @description 导入主题
+ * @param data
+ */
+export function importTheme(data) {
+  return request({
+    url: 'theme/import',
+    method: 'post',
+    data,
+  });
+}
+/**
+ * @description 保存主题名称
+ * @param id 主题id
+ * @param data 主题名称
+ */
+export function saveThemeTitle(id, data) {
+  return request({
+    url: 'theme/save_title/' + id,
+    method: 'post',
+    data: data,
+  });
+}
+
+/**
+ * @description 保存主题封面
+ * @param id 主题id
+ * @param data 封面图地址
+ */
+export function saveThemeImage(id, data) {
+  return request({
+    url: 'theme/save_image/' + id,
+    method: 'post',
+    data: data,
+  });
+}
+
+/**
+ * @description 获取主题列表
+ */
+export function getThemeList(data) {
+  return request({
+    url: 'theme/list',
+    method: 'get',
+    params: data,
+  });
+}
+/**
+ * @description 导出主题
+ * @param id 主题id
+ */
+export function exportTheme(id) {
+  return request({
+    url: 'theme/export/' + id,
+    method: 'get',
+  });
+}
+
+/**
+ * @description 查询主题导出记录（轮询用）
+ * @param recordId 下载记录id
+ */
+export function getExportRecord(recordId) {
+  return request({
+    url: 'theme/export_record/' + recordId,
+    method: 'get',
+  });
+}
+
+/**
+ * @description 使用主题
+ * @param id 主题id
+ */
+export function useTheme(id) {
+  return request({
+    url: 'theme/use/' + id,
+    method: 'get',
+  });
+}
+
+/**
+ * @description 获取当前使用的主题
+ */
+export function getThemeUsing() {
+  return request({
+    url: 'theme/using',
+    method: 'get',
+  });
+}
+/**
+ * @description 恢复主题
+ * @param id 主题id
+ */
+export function restoreTheme(id) {
+  return request({
+    url: 'theme/restore/' + id,
+    method: 'get',
+  });
+}
+
+/**
+ * @description 使用主题数据
+ * @param id 当前主题id
+ * @param data {theme_id, type}
+ */
+export function useThemeData(id, data) {
+  return request({
+    url: 'theme/use_data/' + id,
+    method: 'get',
+    params: data,
+  });
+}
+
+/**
+ * @description 删除主题
+ * @param id 主题id
+ */
+export function deleteTheme(id) {
+  return request({
+    url: 'theme/del/' + id,
+    method: 'delete',
+  });
+}
+
+/**
+ * @description 获取微页面列表
+ * @param data
+ */
+export function getMicroPageList(data) {
+  return request({
+    url: 'theme/micro_page',
+    method: 'get',
+    params: data,
+  });
+}
+

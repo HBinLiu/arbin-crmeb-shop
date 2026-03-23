@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -125,7 +125,7 @@ class WechatReplyServices extends BaseServices
             $res = $this->dao->update($id, ['type' => $type, 'data' => json_encode($res), 'status' => $status], 'id');
             $res1 = $keyServices->saveAll($arr);
             if (!$res || !$res1) {
-                throw new AdminException(100006);
+                throw new AdminException('保存失败');
             }
         } else {
             $reply = $this->dao->save([
@@ -139,7 +139,7 @@ class WechatReplyServices extends BaseServices
                 $arr[$k]['reply_id'] = $reply->id;
             }
             $res = $keyServices->saveAll($arr);
-            if (!$res) throw new AdminException(100006);
+            if (!$res) throw new AdminException('保存失败');
         }
         return true;
     }
@@ -207,7 +207,7 @@ class WechatReplyServices extends BaseServices
     {
         $res = [];
         if (!isset($data['content']) || $data['content'] == '') {
-            throw new AdminException(400706);
+            throw new AdminException('请输入回复信息内容');
         }
         $res['content'] = $data['content'];
         return $res;
@@ -225,7 +225,7 @@ class WechatReplyServices extends BaseServices
     public function tidyImage($data, $id)
     {
         if (!isset($data['src']) || $data['src'] == '') {
-            throw new AdminException(400707);
+            throw new AdminException('请上传回复的图片');
         }
         $reply = $this->dao->get((int)$id);
         if ($reply) $reply['data'] = json_decode($reply['data'], true);
@@ -261,7 +261,7 @@ class WechatReplyServices extends BaseServices
     public function tidyVoice($data, $id)
     {
         if (!isset($data['src']) || $data['src'] == '') {
-            throw new AdminException(400708);
+            throw new AdminException('请上传回复的声音');
         }
         $reply = $this->dao->get((int)$id);
         if ($reply) $reply['data'] = json_decode($reply['data'], true);
@@ -297,7 +297,7 @@ class WechatReplyServices extends BaseServices
 //            $data = $data['list'][0];
 //        }
         if (!count($data)) {
-            throw new AdminException(400709);
+            throw new AdminException('请选择图文消息');
         }
         $siteUrl = sys_config('site_url');
         if (empty($data['url'])) $data['url'] = $siteUrl . '/pages/extension/news_details/index?id=' . $data['id'];
@@ -408,7 +408,7 @@ class WechatReplyServices extends BaseServices
                 'key_type' => 1,
             ]);
         }
-        if (!$res) throw new AdminException(100006);
+        if (!$res) throw new AdminException('保存失败');
         return true;
     }
 

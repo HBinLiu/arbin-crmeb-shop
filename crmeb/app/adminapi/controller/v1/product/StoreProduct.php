@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -110,7 +110,7 @@ class StoreProduct extends AuthController
             ['type', 0]
         ]);
         $services->setDbCache($this->adminId . '_product_data', $data, 68400);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -121,7 +121,7 @@ class StoreProduct extends AuthController
     public function deleteCacheData(CacheServices $services)
     {
         $services->delectDbCache($this->adminId . '_product_data');
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -161,7 +161,7 @@ class StoreProduct extends AuthController
         $del = $this->service->value(['id' => $id], 'is_del');
         if ($del == 1) return app('json')->fail('商品已删除，请先恢复商品');
         $this->service->setShow([$id], $is_show);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -174,7 +174,7 @@ class StoreProduct extends AuthController
             ['ids', []]
         ], true);
         $this->service->setShow($ids, 1);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -187,7 +187,7 @@ class StoreProduct extends AuthController
             ['ids', []]
         ], true);
         $this->service->setShow($ids, 0);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -244,6 +244,7 @@ class StoreProduct extends AuthController
             ['presale_time', 0],//预售时间
             ['presale_day', 0],//预售发货日
             ['vip_product', 0],//是否付费会员商品
+            ['vip_product_type', 0],//0仅付费会员可见,1仅付费会员可购买
             ['is_sub', []],//佣金是单独还是默认
             ['recommend', []],//商品推荐
             ['activity', []],//活动优先级
@@ -270,7 +271,7 @@ class StoreProduct extends AuthController
             ['gift_price', 0],//礼品附加费
         ]);
         $this->service->save((int)$id, $data);
-        return app('json')->success(100000);
+        return app('json')->success('保存成功');
     }
 
     /**
@@ -409,7 +410,7 @@ class StoreProduct extends AuthController
         } else {
             $re = $upload->getTempKeys();
         }
-        return $re ? app('json')->success($re) : app('json')->fail(100016);
+        return $re ? app('json')->success($re) : app('json')->fail('获取失败');
     }
 
     /**
@@ -422,7 +423,7 @@ class StoreProduct extends AuthController
     public function check_activity($id)
     {
         $this->service->checkActivity($id);
-        return app('json')->success(100002);
+        return app('json')->success('删除成功');
     }
 
     /**
@@ -435,7 +436,7 @@ class StoreProduct extends AuthController
         $data = $this->request->getMore([
             ['file', ""]
         ]);
-        if (!$data['file']) return app('json')->fail(400168);
+        if (!$data['file']) return app('json')->fail('请上传文件');
         $file = public_path() . substr($data['file'], 1);
         // 获取文件后缀
         $suffix = strtolower(pathinfo($file, PATHINFO_EXTENSION));
@@ -471,7 +472,7 @@ class StoreProduct extends AuthController
             ['gift_price', 0],
         ]);
         $this->service->batchSetting($data);
-        return app('json')->success(100014);
+        return app('json')->success('设置成功');
     }
 
     /**
@@ -522,7 +523,7 @@ class StoreProduct extends AuthController
         [$file] = $this->request->getMore([
             ['file', ""]
         ], true);
-        if (!$file) return app('json')->fail(400168);
+        if (!$file) return app('json')->fail('请上传文件');
         $res = $this->service->productImport($file);
         return app('json')->success('导入成功', $res);
     }
@@ -553,6 +554,7 @@ class StoreProduct extends AuthController
             ['is_sub', 0],
             ['is_vip', 0],
             ['vip_product', 0],
+            ['vip_product_type', 0],
             ['attr_value', []],
         ]);
         $this->service->otherSave($id, $type, $data);

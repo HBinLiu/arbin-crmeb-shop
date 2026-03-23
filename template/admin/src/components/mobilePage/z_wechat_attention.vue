@@ -1,17 +1,6 @@
 <template>
-  <div class="mobile-page">
-    <div
-      class="flex-box"
-      :style="{
-        background: `linear-gradient(90deg,${bgColor[0].item} 0%,${bgColor[1].item} 100%)`,
-        marginTop: mTOP + 'px',
-        marginLeft: mlConfig + 'px',
-        marginRight: mlConfig + 'px',
-        borderRadius: fillet
-          ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
-          : filletVal + 'px',
-      }"
-    >
+  <common_wrapper :config="wrapperConfig">
+    <div class="flex-box" v-if="configObj">
       <div class="left">
         <div class="img-box">
           <div class="empty-box on">
@@ -26,7 +15,7 @@
         <div class="iconfont iconguanbi5"></div>
       </div>
     </div>
-  </div>
+  </common_wrapper>
 </template>
 
 <script>
@@ -49,10 +38,17 @@ export default {
   },
   computed: {
     ...mapState('mobildConfig', ['defaultArray']),
+    wrapperConfig() {
+      return {
+        ...this.configObj,
+      };
+    },
   },
   watch: {
     pageData: {
-      handler(nVal, oVal) {},
+      handler(nVal, oVal) {
+        this.setConfig(nVal);
+      },
       deep: true,
     },
     num: {
@@ -72,6 +68,7 @@ export default {
   },
   data() {
     return {
+      configObj: null,
       // 默认初始化数据禁止修改
       defaultConfig: {
         cname: '关注公众号',
@@ -148,15 +145,21 @@ export default {
             },
           ],
         },
-        prConfig: {
-          title: '左右边距',
+        paddingConfig: {
+          title: '内边距',
+          isAll: false,
           val: 0,
           min: 0,
+          max: 100,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-        mbConfig: {
-          title: '页面上间距',
+        marginConfig: {
+          title: '外边距',
+          isAll: false,
           val: 0,
           min: 0,
+          max: 100,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
         fillet: {
           title: '背景圆角',
@@ -181,16 +184,13 @@ export default {
       bgColor: '',
       confObj: {},
       pageData: {},
-      edge: '',
-      udEdge: '',
       themeColor: '',
-      mTOP: 0,
       imgUrl: '',
       txt: '',
-      mlConfig: 0,
       fillet: 0,
       filletVal: 0,
       valList: [],
+      bgRadius: 0,
     };
   },
   mounted() {
@@ -202,16 +202,54 @@ export default {
   methods: {
     setConfig(data) {
       if (!data) return;
-      if (data.mbConfig) {
-        this.bgColor = data.bgColor.color;
-        this.themeColor = data.themeColor.color[0].item;
-        this.mTOP = data.mbConfig.val;
-        this.imgUrl = data.imgConfig.url;
-        this.txt = data.titleConfig.value;
-        this.mlConfig = data.prConfig.val;
-        this.fillet = data.fillet.type;
-        this.filletVal = data.fillet.val;
-        this.valList = data.fillet.valList;
+      this.configObj = data;
+      this.bgColor = data.bgColor.color;
+      this.themeColor = data.themeColor.color[0].item;
+      this.imgUrl = data.imgConfig.url;
+      this.txt = data.titleConfig.value;
+      this.fillet = data.fillet.type;
+      this.filletVal = data.fillet.val;
+      this.valList = data.fillet.valList;
+      this.bgRadius = this.fillet
+        ? this.valList[0].val +
+          'px ' +
+          this.valList[1].val +
+          'px ' +
+          this.valList[3].val +
+          'px ' +
+          this.valList[2].val +
+          'px'
+        : this.filletVal + 'px';
+
+      if (!this.configObj.paddingConfig) {
+        this.$set(this.configObj, 'paddingConfig', {
+          title: '内边距',
+          isAll: false,
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [
+            { val: 0 },
+            { val: data.prConfig ? data.prConfig.val : 0 },
+            { val: 0 },
+            { val: data.prConfig ? data.prConfig.val : 0 },
+          ],
+        });
+      }
+      if (!this.configObj.marginConfig) {
+        this.$set(this.configObj, 'marginConfig', {
+          title: '外边距',
+          isAll: false,
+          val: 0,
+          min: 0,
+          max: 100,
+          valList: [{ val: data.mbConfig ? data.mbConfig.val : 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+        });
+      }
+      for (let key in this.defaultConfig) {
+        if (this.configObj[key] === undefined) {
+          this.$set(this.configObj, key, this.defaultConfig[key]);
+        }
       }
     },
   },
@@ -274,7 +312,7 @@ export default {
     line-height: 28px;
   }
 
-  .iconfont-diy {
+  .iconfont {
     font-size: 20px;
   }
 }

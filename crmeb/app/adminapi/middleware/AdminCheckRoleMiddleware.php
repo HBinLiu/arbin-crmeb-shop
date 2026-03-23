@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -33,7 +33,7 @@ class AdminCheckRoleMiddleware implements MiddlewareInterface
     public function handle(Request $request, \Closure $next)
     {
         if (!$request->adminId() || !$request->adminInfo())
-            throw new AuthException(100100);
+            throw new AuthException('参数错误');
 
         if ($request->adminInfo()['level']) {
             /** @var SystemRoleServices $systemRoleService */

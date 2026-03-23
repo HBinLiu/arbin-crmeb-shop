@@ -1,24 +1,12 @@
 <template>
-  <div>
-    <div
-      class="seckill-box"
-      :style="{
-        background: bottomBgColor,
-        marginTop: mTop + 'px',
-        paddingTop: topConfig + 'px',
-        paddingBottom: bottomConfig + 'px',
-        paddingLeft: prConfig + 'px',
-        paddingRight: prConfig + 'px',
-      }"
-    >
+  <common_wrapper v-if="configObj" :config="configObj">
+    <div class="seckill-box">
       <div
         class="hd"
         :style="
-          (styleConfig
+          styleConfig
             ? 'backgroundImage:url(' + imgBgUrl + ')'
-            : `background:linear-gradient(90deg,${headerBgColorLeft} 0%,${headerBgColorRight} 100%)`) +
-          ';borderRadius:' +
-          bgRadius
+            : `background:linear-gradient(90deg,${headerBgColorLeft} 0%,${headerBgColorRight} 100%)`
         "
       >
         <div class="left acea-row row-middle">
@@ -82,22 +70,104 @@
         "
         :style="{
           background: bgColor,
-          borderRadius: bgRadius2,
         }"
       >
-        <div v-if="goodStyleConfig == 0" class="itemOne acea-row" v-for="(item, index) in numberConfig" :key="index">
-          <div
-            class="empty-box"
-            :style="{
-              borderRadius: imgRadius,
-            }"
-          >
-            <img src="../../assets/images/shan.png" />
-          </div>
-          <div class="text">
-            <div class="top">
+        <template v-if="goodStyleConfig == 0">
+          <div class="itemOne acea-row" v-for="(item, index) in numberConfig" :key="index">
+            <div
+              class="empty-box"
+              :style="{
+                borderRadius: imgRadius,
+              }"
+            >
+              <img src="../../assets/images/shan.png" />
+            </div>
+            <div class="text">
+              <div class="top">
+                <div
+                  class="name line2"
+                  v-if="checkboxInfo.indexOf(0) != -1"
+                  :style="{
+                    fontWeight: goodsName,
+                    color: goodsNameColor,
+                  }"
+                >
+                  熙米家藏青色工装锥形裤 les 中性风帅T无性别中性多口...
+                </div>
+                <div
+                  class="num"
+                  v-if="checkboxInfo.indexOf(1) != -1"
+                  :style="{
+                    color: toneConfig ? joinNumColor : colorStyle.theme,
+                  }"
+                >
+                  <span class="iconfont iconic_fire"></span>1223人正在参与
+                </div>
+              </div>
               <div
-                class="name line2"
+                class="bottom"
+                :class="checkboxInfo.indexOf(2) != -1 && checkboxInfo.indexOf(3) != -1 ? '' : 'acea-row row-bottom'"
+              >
+                <div
+                  class="price"
+                  v-if="checkboxInfo.indexOf(2) != -1"
+                  :style="{
+                    color: toneConfig ? bargainPriceColor : colorStyle.theme,
+                  }"
+                >
+                  <span class="label">¥</span><span class="num">2690.00</span>
+                </div>
+                <div
+                  class="yprice"
+                  v-if="checkboxInfo.indexOf(3) != -1"
+                  :style="{
+                    color: goodsPriceColor,
+                  }"
+                >
+                  ¥1233423.00
+                </div>
+              </div>
+              <div
+                class="bnt"
+                v-if="!bargainConfig"
+                :style="{
+                  color: toneConfig ? goodsBntTxtColor : '#fff',
+                  background: toneConfig
+                    ? `linear-gradient(270deg,${goodsBntColorRight} 0%,${goodsBntColorLeft} 100%)`
+                    : themeColor,
+                }"
+              >
+                参与砍价
+              </div>
+            </div>
+          </div>
+        </template>
+        <template v-if="goodStyleConfig == 1">
+          <div class="itemTwo" v-for="(item2, index2) in numberConfig" :key="index2">
+            <div
+              class="empty-box"
+              :style="{
+                borderRadius: imgRadius,
+              }"
+            >
+              <img src="../../assets/images/shan.png" />
+            </div>
+            <div
+              :class="
+                (checkboxInfo.indexOf(0) != -1 && checkboxInfo.length == 1 && !bargainConfig) ||
+                (checkboxInfo.indexOf(0) != -1 &&
+                  checkboxInfo.indexOf(1) != -1 &&
+                  checkboxInfo.length == 2 &&
+                  !bargainConfig)
+                  ? 'item'
+                  : (!checkboxInfo.length || (checkboxInfo.indexOf(1) != -1 && checkboxInfo.length == 1)) &&
+                    !bargainConfig
+                  ? 'item2'
+                  : ''
+              "
+            >
+              <div
+                class="title line1"
                 v-if="checkboxInfo.indexOf(0) != -1"
                 :style="{
                   fontWeight: goodsName,
@@ -107,75 +177,53 @@
                 熙米家藏青色工装锥形裤 les 中性风帅T无性别中性多口...
               </div>
               <div
-                class="num"
-                v-if="checkboxInfo.indexOf(1) != -1"
-                :style="{
-                  color: toneConfig ? joinNumColor : colorStyle.theme,
-                }"
-              >
-                <span class="iconfont iconic_fire"></span>1223人正在参与
-              </div>
-            </div>
-            <div
-              class="bottom"
-              :class="checkboxInfo.indexOf(2) != -1 && checkboxInfo.indexOf(3) != -1 ? '' : 'acea-row row-bottom'"
-            >
-              <div
                 class="price"
+                :class="checkboxInfo.indexOf(3) == -1 && !bargainConfig ? 'on' : ''"
                 v-if="checkboxInfo.indexOf(2) != -1"
                 :style="{
                   color: toneConfig ? bargainPriceColor : colorStyle.theme,
                 }"
               >
-                <span class="label">¥</span><span class="num">2690.00</span>
+                ¥<span class="num">3200.00</span>
               </div>
               <div
                 class="yprice"
+                :class="checkboxInfo.indexOf(2) == -1 && !bargainConfig ? 'on' : ''"
                 v-if="checkboxInfo.indexOf(3) != -1"
                 :style="{
                   color: goodsPriceColor,
                 }"
               >
-                ¥1233423.00
+                ¥3699.00
+              </div>
+              <div
+                class="bnt"
+                :class="checkboxInfo.indexOf(2) == -1 && !bargainConfig ? 'on' : ''"
+                v-if="!bargainConfig"
+                :style="{
+                  color: toneConfig ? goodsBntTxtColor : '#fff',
+                  background: toneConfig
+                    ? `linear-gradient(90deg,${goodsBntColorRight} 0%,${goodsBntColorLeft} 100%)`
+                    : themeColor,
+                }"
+              >
+                去砍价
               </div>
             </div>
-            <div
-              class="bnt"
-              v-if="!bargainConfig"
-              :style="{
-                color: toneConfig ? goodsBntTxtColor : '#fff',
-                background: toneConfig
-                  ? `linear-gradient(270deg,${goodsBntColorRight} 0%,${goodsBntColorLeft} 100%)`
-                  : themeColor,
-              }"
-            >
-              参与砍价
+          </div>
+        </template>
+        <template v-if="goodStyleConfig == 2">
+          <div class="list-item" v-for="(item, index) in numberConfig" :key="index">
+            <div class="img-box">
+              <div
+                class="empty-box"
+                :style="{
+                  borderRadius: imgRadius,
+                }"
+              >
+                <img src="../../assets/images/shan.png" />
+              </div>
             </div>
-          </div>
-        </div>
-        <div class="itemTwo" v-if="goodStyleConfig == 1" v-for="(item2, index2) in numberConfig" :key="index2">
-          <div
-            class="empty-box"
-            :style="{
-              borderRadius: imgRadius,
-            }"
-          >
-            <img src="../../assets/images/shan.png" />
-          </div>
-          <div
-            :class="
-              (checkboxInfo.indexOf(0) != -1 && checkboxInfo.length == 1 && !bargainConfig) ||
-              (checkboxInfo.indexOf(0) != -1 &&
-                checkboxInfo.indexOf(1) != -1 &&
-                checkboxInfo.length == 2 &&
-                !bargainConfig)
-                ? 'item'
-                : (!checkboxInfo.length || (checkboxInfo.indexOf(1) != -1 && checkboxInfo.length == 1)) &&
-                  !bargainConfig
-                ? 'item2'
-                : ''
-            "
-          >
             <div
               class="title line1"
               v-if="checkboxInfo.indexOf(0) != -1"
@@ -188,17 +236,15 @@
             </div>
             <div
               class="price"
-              :class="checkboxInfo.indexOf(3) == -1 && !bargainConfig ? 'on' : ''"
               v-if="checkboxInfo.indexOf(2) != -1"
               :style="{
                 color: toneConfig ? bargainPriceColor : colorStyle.theme,
               }"
             >
-              ¥<span class="num">3200.00</span>
+              低至<span class="lable">¥</span><span class="num">350.00</span>
             </div>
             <div
               class="yprice"
-              :class="checkboxInfo.indexOf(2) == -1 && !bargainConfig ? 'on' : ''"
               v-if="checkboxInfo.indexOf(3) != -1"
               :style="{
                 color: goodsPriceColor,
@@ -206,23 +252,10 @@
             >
               ¥3699.00
             </div>
-            <div
-              class="bnt"
-              :class="checkboxInfo.indexOf(2) == -1 && !bargainConfig ? 'on' : ''"
-              v-if="!bargainConfig"
-              :style="{
-                color: toneConfig ? goodsBntTxtColor : '#fff',
-                background: toneConfig
-                  ? `linear-gradient(90deg,${goodsBntColorRight} 0%,${goodsBntColorLeft} 100%)`
-                  : themeColor,
-              }"
-            >
-              去砍价
-            </div>
           </div>
-        </div>
-        <div v-if="goodStyleConfig == 2" class="list-item" v-for="(item, index) in numberConfig" :key="index">
-          <div class="img-box">
+        </template>
+        <template v-if="goodStyleConfig == 3">
+          <div class="itemThree" v-for="(item2, index2) in numberConfig" :key="index2">
             <div
               class="empty-box"
               :style="{
@@ -231,93 +264,55 @@
             >
               <img src="../../assets/images/shan.png" />
             </div>
-          </div>
-          <div
-            class="title line1"
-            v-if="checkboxInfo.indexOf(0) != -1"
-            :style="{
-              fontWeight: goodsName,
-              color: goodsNameColor,
-            }"
-          >
-            熙米家藏青色工装锥形裤 les 中性风帅T无性别中性多口...
-          </div>
-          <div
-            class="price"
-            v-if="checkboxInfo.indexOf(2) != -1"
-            :style="{
-              color: toneConfig ? bargainPriceColor : colorStyle.theme,
-            }"
-          >
-            低至<span class="lable">¥</span><span class="num">350.00</span>
-          </div>
-          <div
-            class="yprice"
-            v-if="checkboxInfo.indexOf(3) != -1"
-            :style="{
-              color: goodsPriceColor,
-            }"
-          >
-            ¥3699.00
-          </div>
-        </div>
-        <div class="itemThree" v-if="goodStyleConfig == 3" v-for="(item2, index2) in numberConfig" :key="index2">
-          <div
-            class="empty-box"
-            :style="{
-              borderRadius: imgRadius,
-            }"
-          >
-            <img src="../../assets/images/shan.png" />
-          </div>
-          <div>
-            <div
-              class="title line1"
-              v-if="checkboxInfo.indexOf(0) != -1"
-              :style="{
-                fontWeight: goodsName,
-                color: goodsNameColor,
-              }"
-            >
-              熙米家藏青色工装锥形裤 les 中性风帅T无性别中性多口...
-            </div>
-            <div
-              class="joinNum"
-              v-if="checkboxInfo.indexOf(1) != -1"
-              :style="{
-                color: toneConfig ? joinNumColor2 : '#fff',
-                background: toneConfig
-                  ? `linear-gradient(90deg,${joinBgColorLeft} 0%,${joinBgColorRight} 100%)`
-                  : themeColor2,
-              }"
-            >
-              175人参与活动
-            </div>
-            <div
-              class="price"
-              :class="checkboxInfo.indexOf(3) == -1 && !bargainConfig ? 'on' : ''"
-              v-if="checkboxInfo.indexOf(2) != -1"
-              :style="{
-                color: toneConfig ? bargainPriceColor : colorStyle.theme,
-              }"
-            >
-              ¥<span class="num">3200.00</span>
-            </div>
-            <div
-              class="yprice"
-              :class="checkboxInfo.indexOf(2) == -1 && !bargainConfig ? 'on' : ''"
-              v-if="checkboxInfo.indexOf(3) != -1"
-              :style="{
-                color: goodsPriceColor,
-              }"
-            >
-              ¥3699.00
+            <div>
+              <div
+                class="title line1"
+                v-if="checkboxInfo.indexOf(0) != -1"
+                :style="{
+                  fontWeight: goodsName,
+                  color: goodsNameColor,
+                }"
+              >
+                熙米家藏青色工装锥形裤 les 中性风帅T无性别中性多口...
+              </div>
+              <div
+                class="joinNum"
+                v-if="checkboxInfo.indexOf(1) != -1"
+                :style="{
+                  color: toneConfig ? joinNumColor2 : '#fff',
+                  background: toneConfig
+                    ? `linear-gradient(90deg,${joinBgColorLeft} 0%,${joinBgColorRight} 100%)`
+                    : themeColor2,
+                }"
+              >
+                175人参与活动
+              </div>
+              <div
+                class="price"
+                :class="checkboxInfo.indexOf(3) == -1 && !bargainConfig ? 'on' : ''"
+                v-if="checkboxInfo.indexOf(2) != -1"
+                :style="{
+                  color: toneConfig ? bargainPriceColor : colorStyle.theme,
+                }"
+              >
+                ¥<span class="num">3200.00</span>
+              </div>
+              <div
+                class="yprice"
+                :class="checkboxInfo.indexOf(2) == -1 && !bargainConfig ? 'on' : ''"
+                v-if="checkboxInfo.indexOf(3) != -1"
+                :style="{
+                  color: goodsPriceColor,
+                }"
+              >
+                ¥3699.00
+              </div>
             </div>
           </div>
-        </div>
+        </template>
       </div>
     </div>
-  </div>
+  </common_wrapper>
 </template>
 
 <script>
@@ -370,14 +365,77 @@ export default {
   // mixins: [theme],
   data() {
     return {
+      configObj: null,
       // 默认初始化数据禁止修改
       defaultConfig: {
         cname: '砍价',
         name: 'bargain',
+        desc: '砍价的介绍',
         timestamp: this.num,
         isHide: false,
         setUp: {
           tabVal: 0,
+        },
+        zIndexConfig: {
+          title: '组件上浮',
+          val: 0,
+          min: 0,
+        },
+        borderConfig: {
+          title: '边框设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0,
+          styleConfig: {
+            title: '边框样式',
+            tabVal: 0,
+            tabList: [
+              { name: '实线', style: 'solid' },
+              { name: '虚线', style: 'dashed' },
+              { name: '点状', style: 'dotted' },
+            ],
+          },
+          widthConfig: {
+            title: '边框粗细',
+            val: 1,
+            min: 1,
+          },
+          colorConfig: {
+            title: '边框颜色',
+            default: [{ item: '#e5e5e5' }],
+            color: [{ item: '#e5e5e5' }],
+          },
+        },
+        shadowConfig: {
+          title: '阴影设置',
+          tabVal: 0,
+          tabList: [{ name: '隐藏' }, { name: '显示' }],
+          val: 0,
+          colorConfig: {
+            title: '阴影颜色',
+            default: [{ item: 'rgba(0,0,0,0.1)' }],
+            color: [{ item: 'rgba(0,0,0,0.1)' }],
+          },
+          xConfig: {
+            title: 'X轴偏移',
+            val: 0,
+            min: -50,
+          },
+          yConfig: {
+            title: 'Y轴偏移',
+            val: 0,
+            min: -50,
+          },
+          blurConfig: {
+            title: '模糊半径',
+            val: 10,
+            min: 0,
+          },
+          spreadConfig: {
+            title: '扩展半径',
+            val: 0,
+            min: -50,
+          },
         },
         titleLeft: '头部设置',
         titleGoodsList: '商品列表',
@@ -394,6 +452,26 @@ export default {
             },
             {
               name: '背景图片',
+            },
+          ],
+        },
+        headerBgColor: {
+          title: '头部背景',
+          name: 'headerBgColor',
+          default: [
+            {
+              item: '#F62C2C',
+            },
+            {
+              item: '#F96E29',
+            },
+          ],
+          color: [
+            {
+              item: '#F62C2C',
+            },
+            {
+              item: '#F96E29',
             },
           ],
         },
@@ -456,13 +534,13 @@ export default {
               name: '单列展示',
             },
             {
-              name: '两列展示(纵向)',
+              name: '两列展示',
             },
             {
               name: '三列展示',
             },
             {
-              name: '左右滑动展示',
+              name: '左右滑动',
             },
           ],
         },
@@ -621,6 +699,25 @@ export default {
           color: [
             {
               item: '#999',
+            },
+          ],
+        },
+        moduleColor: {
+          title: '组件背景',
+          default: [
+            {
+              item: '#fff',
+            },
+            {
+              item: '#fff',
+            },
+          ],
+          color: [
+            {
+              item: '#fff',
+            },
+            {
+              item: '#fff',
             },
           ],
         },
@@ -806,24 +903,28 @@ export default {
             },
           ],
         },
-        moduleColor: {
-          title: '组件背景',
-          default: [
-            {
-              item: '#fff',
-            },
-            {
-              item: '#fff',
-            },
-          ],
-          color: [
-            {
-              item: '#fff',
-            },
-            {
-              item: '#fff',
-            },
-          ],
+        componentBgConfig: {
+          title: '背景设置',
+          tabVal: 0,
+          tabList: [{ name: '颜色' }, { name: '图片' }],
+          colorConfig: {
+            title: '背景颜色',
+            default: [{ item: '#F5F5F5' }, { item: '#F5F5F5' }],
+            color: [{ item: '#F5F5F5' }, { item: '#F5F5F5' }],
+          },
+          colorDirection: {
+            title: '渐变方向',
+            tabVal: 0,
+            tabList: [{ name: '横向' }, { name: '纵向' }, { name: '左斜' }, { name: '右斜' }],
+          },
+          imageConfig: {
+            header: '背景图片',
+            title: '',
+            name: '上传图片',
+            type: 'code',
+            url: '',
+            info: '建议尺寸：750px * 400px',
+          },
         },
         bottomBgColor: {
           title: '底部背景',
@@ -838,25 +939,19 @@ export default {
             },
           ],
         },
-        topConfig: {
-          title: '上边距',
+        paddingConfig: {
+          title: '内边距',
+          isAll: false,
           val: 0,
           min: 0,
+          valList: [{ val: 0 }, { val: 10 }, { val: 0 }, { val: 10 }],
         },
-        bottomConfig: {
-          title: '下边距',
+        marginConfig: {
+          title: '外边距',
+          isAll: false,
           val: 0,
           min: 0,
-        },
-        prConfig: {
-          title: '左右边距',
-          val: 10,
-          min: 0,
-        },
-        mbConfig: {
-          title: '页面上间距',
-          val: 0,
-          min: 0,
+          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
         fillet: {
           title: '背景圆角',
@@ -894,18 +989,19 @@ export default {
       imgColorUrl: '',
       titleConfig: 0,
       titleTxtConfig: '',
-      bgColor: '',
-      bottomBgColor: '',
-      mTop: 0,
-      topConfig: 0,
-      bottomConfig: 0,
-      prConfig: 0,
+      // bottomBgColor: '',
+      // paddingConfig: {
+      //   val: 0,
+      //   valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+      // },
+      // marginConfig: {
+      //   val: 0,
+      //   valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+      // },
       titleText: '',
       titleTabVal: 0,
       checkboxInfo: [],
       imgRadius: 0,
-      bgRadius: 0,
-      bgRadius2: 0,
       goodsName: '',
       goodsNameColor: '',
       goodsPriceColor: '',
@@ -925,6 +1021,7 @@ export default {
       joinBgColorRight: '',
       themeColor: '',
       themeColor2: '',
+      bgColor: '',
     };
   },
   mounted() {
@@ -936,7 +1033,31 @@ export default {
   methods: {
     setConfig(data) {
       if (!data) return;
-      if (data.mbConfig) {
+      this.configObj = data;
+      let isLegacyPadding = !data.paddingConfig;
+      let isLegacyMargin = !data.marginConfig;
+
+      for (let key in this.defaultConfig) {
+        if (data[key] == undefined) {
+          this.$set(data, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+        }
+      }
+
+      if (isLegacyPadding) {
+        if (data.topConfig) data.paddingConfig.valList[0].val = data.topConfig.val;
+        if (data.bottomConfig) data.paddingConfig.valList[2].val = data.bottomConfig.val;
+        if (data.prConfig) {
+          data.paddingConfig.valList[1].val = data.prConfig.val;
+          data.paddingConfig.valList[3].val = data.prConfig.val;
+        }
+      }
+      if (isLegacyMargin) {
+        if (data.mbConfig) data.marginConfig.valList[0].val = data.mbConfig.val;
+      }
+      let bgColorLeft = data.moduleColor.color[0].item;
+      let bgColorRight = data.moduleColor.color[1].item;
+      this.bgColor = `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`;
+      if (data.mbConfig || data.marginConfig) {
         this.imgUrl = data.imgConfig.url;
         this.imgBgUrl = data.imgBgConfig.url;
         this.imgColorUrl = data.imgColorConfig.url;
@@ -949,18 +1070,13 @@ export default {
         this.headerBntColor2 = data.headerBntColor2.color[0].item;
         this.bntNumber = data.bntNumber.val;
         this.styleConfig = data.styleConfig.tabVal;
-        this.headerBgColorLeft = data.headerBgColor.color[0].item;
-        this.headerBgColorRight = data.headerBgColor.color[1].item;
+        this.headerBgColorLeft =
+          data.headerBgColor && data.headerBgColor.color[0] ? data.headerBgColor.color[0].item : '#F62C2C';
+        this.headerBgColorRight =
+          data.headerBgColor && data.headerBgColor.color[1] ? data.headerBgColor.color[1].item : '#F96E29';
         this.titleConfig = data.titleConfig.tabVal;
         this.titleTxtConfig = data.titleTxtConfig.value;
-        let bgColorLeft = data.moduleColor.color[0].item;
-        let bgColorRight = data.moduleColor.color[1].item;
-        this.bgColor = `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`;
-        this.bottomBgColor = data.bottomBgColor.color[0].item;
-        this.mTop = data.mbConfig.val;
-        this.topConfig = data.topConfig.val;
-        this.bottomConfig = data.bottomConfig.val;
-        this.prConfig = data.prConfig.val;
+
         let tabVal = data.titleText.tabVal;
         this.titleTabVal = tabVal;
         this.titleText = data.titleText.tabList[tabVal].style;
@@ -971,15 +1087,6 @@ export default {
         this.imgRadius = filletImg
           ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
           : filletValImg + 'px';
-        let fillet = data.fillet.type;
-        let filletVal = data.fillet.val;
-        let valList = data.fillet.valList;
-        this.bgRadius = fillet
-          ? valList[0].val + 'px ' + valList[1].val + 'px 0 0'
-          : filletVal + 'px ' + filletVal + 'px 0 0';
-        this.bgRadius2 = fillet
-          ? '0 0 ' + valList[3].val + 'px ' + valList[2].val + 'px'
-          : '0 0 ' + filletVal + 'px ' + filletVal + 'px';
         let goodsTabVal = data.goodsName.tabVal;
         this.goodsName = data.goodsName.tabList[goodsTabVal].style;
         this.goodsNameColor = data.goodsNameColor.color[0].item;
@@ -1010,7 +1117,8 @@ export default {
 
 <style scoped lang="scss">
 .seckill-box {
-  background: #fff;
+  display: inline-block;
+  width: -webkit-fill-available;
   .hd {
     display: flex;
     justify-content: space-between;

@@ -12,7 +12,7 @@
           >返回</el-button
         >
         <el-divider direction="vertical"></el-divider>
-        <span class="ivu-page-header-title">{{ $route.meta.title }}</span>
+        <span class="ivu-page-header-title">{{ $route.query.lottery_id ? '编辑' : '新增' }}抽奖活动</span>
       </div>
     </div>
     <el-card :bordered="false" shadow="never" class="ivu-mt" :body-style="{ padding: '0 20px 20px' }">
@@ -999,7 +999,6 @@ export default {
       this.editIndex = null;
     },
     changeChance(e, index) {
-      console.log(e, index);
       let value = e.target.value;
       this.$set(this.specsData[index], 'percent', value);
     },

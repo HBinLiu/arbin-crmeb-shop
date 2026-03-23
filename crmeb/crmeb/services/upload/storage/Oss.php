@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -107,7 +107,7 @@ class Oss extends BaseUpload
     protected function app()
     {
         if (!$this->accessKey || !$this->secretKey) {
-            throw new UploadException(400721);
+            throw new UploadException('请先配置accessKey和secretKey');
         }
         $this->handle = new OssClient($this->accessKey, $this->secretKey, $this->storageRegion);
         //不再自动创建
@@ -240,13 +240,13 @@ class Oss extends BaseUpload
             switch ($waterConfig['watermark_type']) {
                 case 1://图片
                     if (!$waterConfig['watermark_image']) {
-                        throw new AdminException(400722);
+                        throw new AdminException('请先配置水印图片');
                     }
                     $waterPath = $filePath .= '/watermark,image_' . base64_encode($waterConfig['watermark_image']) . ',t_' . $waterConfig['watermark_opacity'] . ',g_' . ($this->position[$waterConfig['watermark_position']] ?? 'nw') . ',x_' . $waterConfig['watermark_x'] . ',y_' . $waterConfig['watermark_y'];
                     break;
                 case 2://文字
                     if (!$waterConfig['watermark_text']) {
-                        throw new AdminException(400723);
+                        throw new AdminException('请先配置水印文字');
                     }
                     $waterConfig['watermark_text_color'] = str_replace('#', '', $waterConfig['watermark_text_color']);
                     $waterPath = $filePath .= '/watermark,text_' . base64_encode($waterConfig['watermark_text']) . ',color_' . $waterConfig['watermark_text_color'] . ',size_' . $waterConfig['watermark_text_size'] . ',g_' . ($this->position[$waterConfig['watermark_position']] ?? 'nw') . ',x_' . $waterConfig['watermark_x'] . ',y_' . $waterConfig['watermark_y'];

@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -120,7 +120,7 @@ class WechatServices extends BaseServices
         if (!isset($wechatInfo['nickname'])) {
             $wechatInfo = $oauth->getUserInfo($wechatInfo['openid']);
             if (!isset($wechatInfo['nickname']))
-                throw new ApiException(410131);
+                throw new ApiException('授权失败');
             if (isset($wechatInfo['tagid_list']))
                 $wechatInfo['tagid_list'] = implode(',', $wechatInfo['tagid_list']);
         } else {
@@ -150,7 +150,7 @@ class WechatServices extends BaseServices
                 'bindPhone' => false
             ];
         } else {
-            throw new ApiException(410019);
+            throw new ApiException('登录失败');
         }
     }
 
@@ -182,7 +182,7 @@ class WechatServices extends BaseServices
                 'bindName' => false
             ];
         } else {
-            throw new ApiException(410019);
+            throw new ApiException('登录失败');
         }
     }
 
@@ -205,7 +205,7 @@ class WechatServices extends BaseServices
             $wechatQrcode = substr($wechatQrcode, $strlen);
         }
         if (!$wechatQrcode)
-            throw new ApiException(410081);
+            throw new ApiException('请上传二维码');
         $canvas->setImageUrl($wechatQrcode)->setImageHeight(344)->setImageWidth(344)->setImageLeft(76)->setImageTop(76)->pushImageValue();
         $image = $canvas->setFileName($name)->setImageType($imageType)->setPath($path)->setBackgroundWidth(500)->setBackgroundHeight(720)->starDrawChart();
         return ['path' => $image ? $siteUrl . '/' . $image : ''];
@@ -287,6 +287,6 @@ class WechatServices extends BaseServices
                 'isbind' => false
             ];
         } else
-            throw new ApiException(410019);
+            throw new ApiException('登录失败');
     }
 }
