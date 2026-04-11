@@ -12,6 +12,6 @@ module.exports = {
   extends: ['prettier', 'plugin:prettier/recommended'],
 
   rules: {
-    // override/add rules settings here, such as:
+    // override/add rules settings here, such as: 
   },
 };
