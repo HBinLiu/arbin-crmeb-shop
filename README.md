@@ -5,7 +5,7 @@
 
 <div align="center" style="font-size: 15px;">
 
-CRMEB高品质开源商城系统（PHP版）
+CRMEB高品质开源商城系统（PHP版） 
 
 </div>
 
