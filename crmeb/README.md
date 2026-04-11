@@ -25,7 +25,7 @@ docker run -d --name crmeb \
 > 详细说明请到 [帮助文档](https://gitee.com/ZhongBangKeJi/CRMEB/blob/master/help/docker/README.md) 查看。
 
 
-> 运行环境要求PHP7.1-7.4。
+> 运行环境要求PHP7.1-7.4。 
 
 ## 安装
 
