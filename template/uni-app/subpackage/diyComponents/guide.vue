@@ -44,7 +44,6 @@ export default {
       };
     },
     configData() {
-      console.log(this.dataConfig, "this.dataConfig");
       return {
         ...this.dataConfig,
       };

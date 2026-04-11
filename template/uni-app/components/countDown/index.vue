@@ -84,7 +84,6 @@ export default {
       };
     },
     timeTxtStyle() {
-      console.log(this.colors, this.colors);
       if (this.colors === "rgba(255, 255, 255, 0)") {
         return {
           color: "transparent",

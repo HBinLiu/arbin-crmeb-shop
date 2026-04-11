@@ -130,7 +130,7 @@
 </script>
 
 <style lang="scss" scoped>
-	/deep/uni-radio .uni-radio-input {
+	::v-deep uni-radio .uni-radio-input {
 		margin-right: 0;
 	}
 

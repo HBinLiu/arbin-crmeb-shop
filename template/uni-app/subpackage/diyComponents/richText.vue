@@ -147,11 +147,11 @@ export default {
   }
 }
 
-/deep/uni-video {
+::v-deep uni-video {
   width: 100% !important;
 }
 
-/deep/video {
+::v-deep video {
   width: 100% !important;
 }
 </style>

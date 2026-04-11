@@ -371,18 +371,18 @@ export default {
 </script>
 
 <style lang="scss">
-/deep/ uni-radio .uni-radio-input.uni-radio-input-checked,
-/deep/ radio .wx-radio-input.wx-radio-input-checked {
+::v-deep uni-radio .uni-radio-input.uni-radio-input-checked,
+::v-deep radio .wx-radio-input.wx-radio-input-checked {
  border: 1px solid $primary-admin!important;
  background-color: $primary-admin!important;
 }
-/deep/ checkbox .uni-checkbox-input.uni-checkbox-input-checked,
-/deep/ checkbox .wx-checkbox-input.wx-checkbox-input-checked {
+::v-deep checkbox .uni-checkbox-input.uni-checkbox-input-checked,
+::v-deep checkbox .wx-checkbox-input.wx-checkbox-input-checked {
   border: 1px solid $primary-admin!important;
   background-color: $primary-admin!important;
   color: #fff!important;
 }
-/deep/ uni-checkbox .uni-checkbox-input, wx-checkbox .wx-checkbox-input{
+::v-deep uni-checkbox .uni-checkbox-input, wx-checkbox .wx-checkbox-input{
 	border-radius: unset !important;
 }
 .grid-gap-8rpx {

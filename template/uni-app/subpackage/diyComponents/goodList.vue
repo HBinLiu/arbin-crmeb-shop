@@ -118,7 +118,7 @@
                     v-if="checkboxInfo.includes(2)"
                   ></baseMoney>
                   <view
-                    class="inline-block h-26 lh-28rpx rd-14rpx bg--w111-F7E9CD fs-22 ml-8"
+                    class="flex h-26 lh-28rpx rd-14rpx bg--w111-F7E9CD fs-22 ml-8"
                     v-if="
                       Number(item.vip_price) > 0 && checkboxInfo.includes(5)
                     "
@@ -437,7 +437,7 @@
                         v-if="checkboxInfo.includes(2)"
                       ></baseMoney>
                       <view
-                        class="inline-block h-26 lh-28rpx rd-14rpx bg--w111-F7E9CD fs-22 ml-8"
+                        class="flex h-26 lh-28rpx rd-14rpx bg--w111-F7E9CD fs-22 ml-8"
                         v-if="
                           Number(item.vip_price) > 0 && checkboxInfo.includes(5)
                         "
@@ -696,7 +696,7 @@
                     v-if="checkboxInfo.includes(2)"
                   ></baseMoney>
                   <view
-                    class="inline-block h-26 lh-28rpx rd-14rpx bg--w111-F7E9CD fs-22 ml-8"
+                    class="flex h-26 lh-28rpx rd-14rpx bg--w111-F7E9CD fs-22 ml-8"
                     v-if="
                       Number(item.vip_price) > 0 && checkboxInfo.includes(5)
                     "
@@ -1137,10 +1137,6 @@ export default {
     },
     /* 价格颜色 */
     priceColor() {
-      console.log(
-        this.dataConfig.goodsPriceColor.color[0].item,
-        "this.dataConfig.toneCartConfig.tabVal",
-      );
       return this.dataConfig.toneCartConfig.tabVal
         ? this.dataConfig.goodsPriceColor.color[0].item
         : "var(--view-theme)";
@@ -1238,8 +1234,14 @@ export default {
       let limit = this.$config.LIMIT;
       let data = {};
       if (this.typeConfig == 1) {
-        this.tempArr = this.dataConfig.goodsList.list;
-        return;
+        const goodsList = this.dataConfig.goodsList.list || [];
+        const ids = goodsList.map(item => item.id).filter(Boolean).join(',');
+        if (ids) {
+          data = { ids };
+        } else {
+          this.tempArr = [];
+          return;
+        }
       } else if (this.typeConfig == 3) {
         data = {
           priceOrder: this.goodsSort == 2 ? "desc" : "",

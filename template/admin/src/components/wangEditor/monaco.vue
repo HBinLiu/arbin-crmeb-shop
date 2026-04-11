@@ -68,7 +68,7 @@ export default {
 .text ::v-deep .ivu-input-wrapper {
   min-height: 600px;
 }
-.text ::v-deeptextarea.ivu-input {
+.text ::v-deep textarea.ivu-input {
   min-height: 600px;
 }
 .text {

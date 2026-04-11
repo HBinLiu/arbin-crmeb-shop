@@ -28423,7 +28423,7 @@ CREATE TABLE IF NOT EXISTS `eb_store_order` (
   `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '订单ID',
   `pid` int(10) NOT NULL DEFAULT '0' COMMENT '父类订单id',
   `order_id` varchar(32) NOT NULL DEFAULT '0' COMMENT '订单号',
-  `trade_no` varchar(100) NOT NULL DEFAULT '' COMMENT '支付宝订单号',
+  `trade_no` varchar(100) NOT NULL DEFAULT '' COMMENT '支付订单号',
   `uid` int(11) UNSIGNED NOT NULL DEFAULT '0' COMMENT '用户id',
   `real_name` varchar(32) NOT NULL DEFAULT '' COMMENT '用户姓名',
   `user_phone` varchar(18) NOT NULL DEFAULT '' COMMENT '用户电话',

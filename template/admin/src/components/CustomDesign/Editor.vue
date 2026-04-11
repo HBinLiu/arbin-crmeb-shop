@@ -131,12 +131,10 @@ export default {
   },
   watch: {
     activeComponentIds(val) {
-      console.log(val, 'activeComponentIds');
       this.$emit('multi-select', val);
     },
     curComponent: {
       handler(val) {
-        console.log(val, 'val;');
         if (val) {
           if (!this.activeComponentIds.includes(val.id)) {
             this.activeComponentIds = [val.id];
@@ -252,7 +250,6 @@ export default {
       return style;
     },
     getTextStyle(propValue) {
-      console.log(propValue.textAlign, 'propValue.textAlign');
       const style = {
         fontSize: propValue.fontSize + 'px',
         color: propValue.color,
@@ -354,7 +351,6 @@ export default {
       } else {
         style.backgroundColor = propValue.backgroundColor || 'transparent';
       }
-      console.log(propValue.borderRadiusBottomLeft, propValue.borderRadius, 'propValue.borderRadius');
       // Border Radius
       if (propValue.isRadiusAll) {
         style.borderRadius = (propValue.borderRadius || 0) + 'px';

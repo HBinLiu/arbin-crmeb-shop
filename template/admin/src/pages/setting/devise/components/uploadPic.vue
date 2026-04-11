@@ -239,7 +239,7 @@ export default {
           }
           .input-box {
             flex: 1;
-            ::v-deepinput {
+            ::v-deep input {
               cursor: pointer;
             }
           }

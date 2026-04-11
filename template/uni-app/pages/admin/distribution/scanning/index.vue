@@ -358,7 +358,7 @@ export default {
     min-height: 0;
     box-sizing: border-box;
 
-    /deep/.shoppingCart {
+    ::v-deep.shoppingCart {
       position: absolute;
       top: 0;
       right: 0;

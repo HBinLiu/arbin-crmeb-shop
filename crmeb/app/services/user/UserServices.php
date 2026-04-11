@@ -639,6 +639,7 @@ class UserServices extends BaseServices
                 $item['labels'] = $userlabel[$item['uid']] ?? '';
                 $item['isMember'] = $item['is_money_level'] > 0 ? 1 : 0;
                 $item['svip_over_day'] = $item['overdue_time'] ? ceil(($item['overdue_time'] - time()) / 86400) : '';
+                $item['svip_overdue_time'] = date('Y-m-d', $item['overdue_time']);
                 if (strpos($item['avatar'], '/statics/system_images/') !== false) {
                     $item['avatar'] = set_file_url($item['avatar']);
                 }

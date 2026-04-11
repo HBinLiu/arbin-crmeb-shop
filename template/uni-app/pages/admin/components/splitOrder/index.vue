@@ -128,7 +128,7 @@
 </script>
 
 <style lang="scss">
-	/deep/ checkbox .wx-checkbox-input.wx-checkbox-input-checked {
+	::v-deep checkbox .wx-checkbox-input.wx-checkbox-input-checked {
 		border: 1px solid $primary-admin !important;
 		background-color: $primary-admin !important;
 		color: #fff !important;

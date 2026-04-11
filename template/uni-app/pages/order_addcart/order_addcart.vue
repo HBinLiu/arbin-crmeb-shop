@@ -808,7 +808,6 @@ export default {
      */
     iptCartNum: function (index) {
       let item = this.cartList.valid[index];
-      console.log(item.cart_num, "22");
       if (item.cart_num) {
         this.setCartNum(item.id, item.cart_num);
       }
@@ -823,7 +822,6 @@ export default {
         item.cart_num = 1;
         this.$set(this.cartList, "valid", this.cartList.valid);
       }
-      console.log(this.cartList.valid);
     },
     subCart: function (index) {
       let that = this;

@@ -310,7 +310,6 @@ export default {
   watch: {
     num: {
       handler(nVal, oVal) {
-        console.log('22222');
         this.lastArticleParams = null;
         this.lastCouponParams = null;
         this.lastGoodsParams = null;
@@ -322,7 +321,6 @@ export default {
     defaultArray: {
       handler(nVal, oVal) {
         let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        console.log('11111', data);
         this.setConfig(data);
       },
       deep: true,
@@ -686,7 +684,6 @@ export default {
   },
   methods: {
     setConfig(data) {
-      console.log(data, 'datadatadatadata');
       if (!data) return;
       this.configObj = data;
       // for (let key in this.defaultConfig) {
@@ -1020,7 +1017,6 @@ export default {
     getComponentStyle(style) {
       if (!style) return {};
       const scale = this.contentScale;
-      console.log(scale, 'scalescalescalescale');
       return {
         position: 'absolute',
         top: style.top * scale + 'px',
@@ -1034,7 +1030,6 @@ export default {
     },
     getPictureStyle(propValue) {
       const scale = this.contentScale;
-      console.log(scale, 'scale');
       const style = {
         width: '100%',
         height: '100%',
@@ -1082,7 +1077,6 @@ export default {
 
       // Background
       if (propValue.bgColor2) {
-        console.log(propValue.bgDirection, propValue.bgColor2, 'propValue.bgColor2');
         const directionMap = {
           horizontal: '90deg',
           vertical: '180deg',
@@ -1241,7 +1235,6 @@ export default {
       };
     },
     getDisplayText(item, dataItem) {
-      console.log(item, dataItem, 'item, dataItem');
       if (dataItem) {
         const field = item.propValue.fieldType;
         if (this.selectTypeValue === 'article') {

@@ -1,5 +1,4 @@
 <template>
-  <!-- 新闻列表 -->
   <common-wrapper v-show="!isSortType" :config="configData">
     <view
       class="articleList"
@@ -331,18 +330,21 @@ export default {
 
     .item {
       flex-direction: column;
-      width: 342rpx;
+      width: calc(50% - 10rpx);
       padding: 0;
       margin-bottom: 20rpx;
+      box-sizing: border-box;
     }
 
     .text-wrap {
       padding: 20rpx 20rpx 18rpx;
+      box-sizing: border-box;
     }
 
     .image-wrap {
-      width: 342rpx;
-      height: 216rpx;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 342 / 216;
     }
 
     .label-wrap {

@@ -1063,7 +1063,7 @@ class StoreProductServices extends BaseServices
             $field = ['*'];
         }
         [$page, $limit] = $this->getPageValue($is_page);
-        $list = $this->dao->getSearchList($where, $page, $limit, $field);
+        $list = $this->dao->getSearchList($where, $page, $limit, $field, ['description']);
         foreach ($list as &$product) {
             $product['product_price'] = $product['price'];
             $attrValue = $product['attrs'] ?? [];

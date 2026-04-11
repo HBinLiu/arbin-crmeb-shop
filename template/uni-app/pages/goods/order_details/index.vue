@@ -1605,7 +1605,7 @@ export default {
 }
 
 .order-details .header .data .time {
-	margin-left: 20rpx;
+	margin-left: 3rpx;
 }
 
 .order-details .nav {

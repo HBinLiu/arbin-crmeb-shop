@@ -982,12 +982,12 @@
 			height: 900rpx;
 			overflow-y: scroll;
 
-			/deep/ p {
+			::v-deep p {
 				font-size: 13px;
 				line-height: 22px;
 			}
 
-			/deep/ img {
+			::v-deep img {
 				max-width: 100%;
 			}
 		}
@@ -1073,17 +1073,17 @@
 		border-radius: 60px;
 	}
 
-	/deep/ uni-checkbox .uni-checkbox-input {
+	::v-deep uni-checkbox .uni-checkbox-input {
 		width: 15px;
 		height: 15px;
 		position: relative;
 	}
 
-	/deep/ uni-checkbox .uni-checkbox-input.uni-checkbox-input-checked:before {
+	::v-deep uni-checkbox .uni-checkbox-input.uni-checkbox-input-checked:before {
 		font-size: 14px;
 	}
 
-	/deep/ uni-checkbox .uni-checkbox-input-checked {
+	::v-deep uni-checkbox .uni-checkbox-input-checked {
 		background-color: #fd151b !important;
 	}
 
@@ -1106,13 +1106,13 @@
 
 	// #endif
 	.setAgCount {
-		/deep/ table {
+		::v-deep table {
 			border: 1rpx solid #DDD;
 			border-bottom: none;
 			border-right: none;
 		}
 
-		/deep/ td,
+		::v-deep td,
 		th {
 			padding: 5rpx 10rpx;
 			border-bottom: 1rpx solid #DDD;

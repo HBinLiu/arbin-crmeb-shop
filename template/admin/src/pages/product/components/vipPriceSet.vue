@@ -180,7 +180,6 @@ export default {
         });
     },
     closeVipSet(i) {
-      console.log(this.$refs['vipSetPopover'].doClose);
       this.vipSetPopoverPopver = false;
       this.$refs.vipSetPopover.doClose();
       this.vipSetType = 0;

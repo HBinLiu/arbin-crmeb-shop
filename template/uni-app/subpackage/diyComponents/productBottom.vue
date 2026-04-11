@@ -40,15 +40,39 @@
               </view>
               <view class="p_center">{{ $t(`购物车`) }}</view>
             </view>
-            <button
+            <!-- #ifdef APP-PLUS || H5 -->
+            <view
               v-if="item_id === 0"
               class="item"
+              @click="goCustomer"
+            >
+              <view class="iconfont icon-kefu"></view>
+              <view class="p_center">{{ $t(`客服`) }}</view>
+            </view>
+            <!-- #endif -->
+            <!-- #ifdef MP -->
+            <view
+              v-if="item_id === 0 && routineContact == 0"
+              class="item"
+              @click="goCustomer"
+            >
+              <view class="iconfont icon-kefu"></view>
+              <view class="p_center">{{ $t(`客服`) }}</view>
+            </view>
+            <button
+              v-else-if="item_id === 0 && routineContact == 1"
+              class="item"
               open-type="contact"
+              :send-message-title="storeInfo.store_name"
+              :send-message-img="storeInfo.image"
+              :send-message-path="`/pages/goods_details/index?id=${storeInfo.id}`"
+              show-message-card
               hover-class="none"
             >
               <view class="iconfont icon-kefu"></view>
               <view class="p_center">{{ $t(`客服`) }}</view>
             </button>
+            <!-- #endif -->
             <view v-if="item_id === 4" class="item" @click="goShare">
               <view class="iconfont icon-fenxiang4"></view>
               <view class="p_center">{{ $t(`分享`) }}</view>
@@ -204,6 +228,7 @@
 
 <script>
 import commonWrapper from "./commonWrapper.vue";
+import { getCustomer } from "@/utils/index.js";
 export default {
   name: "productBottom",
   components: {
@@ -243,6 +268,10 @@ export default {
     animated: {
       type: Boolean,
       default: false,
+    },
+    routineContact: {
+      type: Number,
+      default: 0,
     },
   },
   computed: {
@@ -301,7 +330,6 @@ export default {
       return !!this.storeInfo.cart_button && this.showCartButton;
     },
     entryConfig() {
-      console.log(this.bottomConfig, "bottomConfig");
       return this.bottomConfig && this.bottomConfig.entryConfig;
     },
     menuConfig() {
@@ -363,6 +391,9 @@ export default {
     },
   },
   methods: {
+    goCustomer() {
+      getCustomer(`/pages/extension/customer_list/chat?productId=${this.storeInfo.id}`);
+    },
     goPage(url) {
       if (!url) return;
       uni.navigateTo({

@@ -1,5 +1,5 @@
 <template>
-  <view :style="colorStyle" @touchmove.stop.prevent="moveHandle">
+  <view :style="colorStyle">
     <view
       class="product-window"
       :class="
@@ -12,8 +12,12 @@
         (type == '2' ? 'joinCart2' : '')
       "
       :style="{ bottom: bottomVal }"
+      @touchmove.stop
     >
-      <view class="textpic acea-row row-between-wrapper">
+      <view
+        class="textpic acea-row row-between-wrapper"
+        @touchmove.stop.prevent="moveHandle"
+      >
         <view class="pictrue" @click="showImg()">
           <image :src="attr.productSelect.image"></image>
         </view>
@@ -55,7 +59,7 @@
         </view>
         <view class="iconfont icon-guanbi" @click="closeAttr"></view>
       </view>
-      <view class="rollTop">
+      <scroll-view class="rollTop" scroll-y @touchmove.stop.prevent="moveHandle">
         <view class="productWinList">
           <view
             class="item"
@@ -151,7 +155,7 @@
             >
           </view>
         </view>
-      </view>
+      </scroll-view>
       <view
         class="joinBnt bg-color"
         v-if="
@@ -257,7 +261,9 @@ export default {
     inputBindBlur() {
       this.bottomVal = "0px";
     },
-    moveHandle() {},
+    moveHandle() {
+      return false;
+    },
     getpreviewImage: function () {
       uni.previewImage({
         urls: this.attr.productSelect.image.split(","),
@@ -292,7 +298,7 @@ export default {
       this.$set(
         this.attr.productAttr[indexw],
         "index",
-        this.attr.productAttr[indexw].attr_values[indexn],
+        this.attr.productAttr[indexw].attr_values[indexn]
       );
       let value = that.getCheckedValue().join(",");
       that.$emit("ChangeAttr", value);
@@ -425,7 +431,6 @@ export default {
 
 .product-window .rollTop {
   max-height: 500rpx;
-  overflow: auto;
   margin-top: 36rpx;
 }
 

@@ -401,7 +401,6 @@ export default {
       return this.dataConfig.number.tabVal;
     },
     configData() {
-      console.log(this.dataConfig, "this.dataConfig", this._uid);
       return {
         ...this.dataConfig,
       };
@@ -510,10 +509,6 @@ export default {
     },
     iconStyleConfig() {
       let iconConfig = this.dataConfig.iconStyleConfig || {};
-      console.log(
-        this.configData.iconStyleConfig.rotate.val,
-        "iconConfig.rotate"
-      );
       return {
         color: iconConfig.color ? iconConfig.color.color[0].item : "#333",
         size: iconConfig.size ? iconConfig.size.val : 24,

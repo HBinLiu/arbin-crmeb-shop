@@ -77,6 +77,17 @@ class OrderShippingListener implements ListenerInterface
                 } else {
                     return;
                 }
+            } else if ($order_type == 'offline_scan') {  // 会员订单
+                if ($order['pay_type'] == 'weixin') {
+                    $delivery_type = 3;
+                    $item_desc = '用户线下扫码支付';
+                    $out_trade_no = $order['order_id'];
+                    $pay_uid = $order['uid'];
+                    $secs = 10;
+                    $path = '/pages/user/index';
+                } else {
+                    return;
+                }
             } else {
                 return;
             }

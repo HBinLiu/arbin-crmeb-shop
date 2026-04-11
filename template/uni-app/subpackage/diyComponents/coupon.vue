@@ -338,8 +338,6 @@ export default {
       let styleObject = {
         "--module-color": this.dataConfig.moduleColor.color[0].item,
       };
-      console.log(this.dataConfig.moduleColor.color[0].item, "11");
-      console.log(this.dataConfig.moduleColor.color[1].item, "11");
       if (this.dataConfig.styleConfig.tabVal == 1) {
         styleObject["--module-color"] =
           `linear-gradient(90deg,${this.dataConfig.moduleColor.color[0].item} 0%,${this.dataConfig.moduleColor.color[1].item} 100%)`;

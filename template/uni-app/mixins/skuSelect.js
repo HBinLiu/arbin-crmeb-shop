@@ -278,7 +278,6 @@ export default {
 			if (duo) {
 				let productSelect = that.productValue[this.attrValue];
 				//如果有属性,没有选择,提示用户选择
-				console.log(productSelect);
 				
 				if (
 					that.attr.productAttr.length &&

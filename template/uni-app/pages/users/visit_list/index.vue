@@ -361,11 +361,11 @@
 		}
 	}
 
-	.record .pictrue /deep/checkbox .uni-checkbox-input {
+	.record .pictrue ::v-deep checkbox .uni-checkbox-input {
 		background-color: rgba(0, 0, 0, 0.16);
 	}
 	
-	.record .pictrue /deep/checkbox .wx-checkbox-input {
+	.record .pictrue ::v-deep checkbox .wx-checkbox-input {
 		background-color: rgba(0, 0, 0, 0.16);
 	}
 

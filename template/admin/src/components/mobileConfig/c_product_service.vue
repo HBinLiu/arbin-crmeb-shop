@@ -62,7 +62,6 @@ export default {
     'configObj.setUp.tabVal': {
       handler(nVal, oVal) {
         this.setUp = nVal;
-        console.log(this.configObj.paddingConfig.valList, '111');
         this.updateRCom();
       },
       deep: true,
@@ -111,7 +110,6 @@ export default {
         });
         if (data.mbConfig) data.marginConfig.valList[0].val = data.mbConfig.val;
       }
-      console.log(data, 'datadata');
       return data;
     },
     updateRCom() {
@@ -134,7 +132,6 @@ export default {
           },
         ]);
       } else {
-        console.log(this.configObj.paddingConfig.valList, 'this.configObj');
         // Style Settings
         let styleArr = [
           {

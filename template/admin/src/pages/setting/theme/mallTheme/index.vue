@@ -138,7 +138,6 @@ export default {
       });
     },
     handleReplace(item, type) {
-      console.log(item, type);
       this.currentType = type;
       this.dialogVisible = true;
     },

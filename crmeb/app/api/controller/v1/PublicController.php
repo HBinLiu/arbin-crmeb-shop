@@ -955,6 +955,12 @@ class PublicController
                                     $menuDataItem['routine_contact_type'] = (int)sys_config('routine_contact_type', 0);
                                 }
                             }
+
+                            if ($menuDataItem['info'][1]['value'] == '/pages/users/user_spread_user/index' && $brokerageOpen && sys_config('store_brokerage_statu') == 1 && !$userIsPromoter) {
+                                $menuDataItem['info'][0]['value'] = '分销申请';
+                                $menuDataItem['info'][1]['value'] = '/pages/annex/settled/index';
+                                $menuDataItem['show'] = true;
+                            }
                         }
                     }
                 }

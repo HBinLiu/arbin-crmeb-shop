@@ -357,7 +357,6 @@ export default {
       }
     },
     getRComStyle(arr) {
-      console.log('222');
       if (this.type == 0) {
         if (this.type2 == 2) {
           this.rCom = [...arr, ...this.oneStyle, ...this.twoStyle, ...this.currencyStyle];

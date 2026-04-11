@@ -134,7 +134,6 @@ export default {
           ];
         })
         .catch((res) => {
-          console.log(res);
           this.$message.error(res);
         });
     },
@@ -233,7 +232,6 @@ export default {
           this.spinShow = false;
         })
         .catch((res) => {
-          console.log(res);
           this.$message.error(res);
           this.spinShow = false;
         });

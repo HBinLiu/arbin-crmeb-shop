@@ -496,7 +496,7 @@
 			}
 		}
 
-		/deep/ uni-switch .uni-switch-input:after {
+		::v-deep uni-switch .uni-switch-input:after {
 			width: 32rpx;
 			height: 32rpx;
 			background-color: #fff;
@@ -504,48 +504,48 @@
 			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 		}
 
-		/deep/uni-switch .uni-switch-input:before {
+		::v-deep uni-switch .uni-switch-input:before {
 			width: 72rpx;
 			height: 40rpx;
 			background-color: #eeeeee;
 		}
 
-		/deep/ uni-switch .uni-switch-input {
+		::v-deep uni-switch .uni-switch-input {
 			width: 76rpx;
 			height: 44rpx;
 			background-color: #eeeeee;
 		}
 
-		/deep/ uni-switch .uni-switch-input.uni-switch-input-checked:after {
+		::v-deep uni-switch .uni-switch-input.uni-switch-input-checked:after {
 			transform: translateX(32rpx);
 		}
 
-		/deep/ .uni-switch-input-checked {
+		::v-deep .uni-switch-input-checked {
 			background-color: var(--view-theme) !important;
 			border-color: var(--view-theme) !important;
 		}
 
-		/deep/ .wx-switch-input {
+		::v-deep .wx-switch-input {
 			width: 80rpx !important;
 			height: 44rpx !important;
 			background-color: #eeeeee;
 		}
 
 		/*白色样式（false的样式）*/
-		/deep/ .wx-switch-input::before {
+		::v-deep .wx-switch-input::before {
 			width: 76rpx !important;
 			height: 40rpx !important;
 			background-color: #eeeeee;
 		}
 
 		/*绿色样式（true的样式）*/
-		/deep/ .wx-switch-input::after {
+		::v-deep .wx-switch-input::after {
 			width: 32rpx !important;
 			height: 32rpx !important;
 			margin: 4rpx 4rpx 4rpx 4rpx;
 		}
 
-		/deep/ .wx-switch-input-checked {
+		::v-deep .wx-switch-input-checked {
 			background-color: var(--view-theme) !important;
 			border-color: var(--view-theme) !important;
 		}

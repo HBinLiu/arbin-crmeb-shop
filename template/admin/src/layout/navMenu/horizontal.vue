@@ -139,7 +139,7 @@ export default {
   ::v-deep .el-scrollbar__wrap {
     overflow-y: hidden !important;
   }
-  ::v-deepa {
+  ::v-deep a {
     width: 100%;
   }
   .el-menu.el-menu--horizontal {

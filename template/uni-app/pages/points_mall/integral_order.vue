@@ -485,7 +485,7 @@
 </script>
 
 <style lang="scss" scoped>
-	/deep/uni-checkbox[disabled] .uni-checkbox-input {
+	::v-deep uni-checkbox[disabled] .uni-checkbox-input {
 		background-color: #eee;
 	}
 

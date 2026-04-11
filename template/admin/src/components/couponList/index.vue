@@ -230,7 +230,6 @@ export default {
     setChecked() {
       //将new Set()转化为数组
       let ids = [...this.selectedIds];
-      console.log(ids, 'ids');
       this.couponList.forEach((row) => {
         if (ids.includes(row.id)) {
           this.$refs.couponTable.toggleRowSelection(row, true);

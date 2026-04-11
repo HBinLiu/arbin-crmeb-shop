@@ -292,7 +292,7 @@
 			}
 		}
 
-		.grids /deep/ .grid_wrap .lottery_wrap .lottery_grid li:nth-of-type(9) {
+		.grids ::v-deep .grid_wrap .lottery_wrap .lottery_grid li:nth-of-type(9) {
 			background: rgba(#fff, 0.2) !important;
 		}
 
@@ -342,7 +342,7 @@
 		}
 	}
 
-	/deep/ .lottery_grid {
+	::v-deep .lottery_grid {
 		background-color: #E93323;
 		border-radius: 12rpx;
 	}

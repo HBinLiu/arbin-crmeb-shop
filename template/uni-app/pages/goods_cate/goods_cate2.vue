@@ -735,7 +735,7 @@ page {
 	background-color: #fff;
 }
 
-/deep/.product-window.joinCart {
+::v-deep.product-window.joinCart {
 	z-index: 999;
 }
 
@@ -751,7 +751,7 @@ page {
 		z-index: 99;
 	}
 
-	/deep/.attrProduct {
+	::v-deep.attrProduct {
 		.mask {
 			z-index: 100;
 		}
@@ -981,7 +981,7 @@ page {
 				margin-top: 228rpx;
 				padding: 0 30rpx 0 20rpx;
 
-				/deep/.item {
+				::v-deep.item {
 					margin-bottom: 33rpx !important;
 
 					.pictrue {

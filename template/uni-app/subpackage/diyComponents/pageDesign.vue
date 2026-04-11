@@ -195,6 +195,7 @@
               v-else-if="item.name == 'home_paid_vip'"
               :dataConfig="item"
               :productData="productData"
+              :isShowPaidVip="isShowPaidVip"
               :priceData="priceData"
             ></homePaidVip>
             <homeProductService
@@ -428,6 +429,11 @@ export default {
     },
     // 微页面
     microPage: {
+      type: Boolean,
+      default: false,
+    },
+    // 商品 vip 模块
+    isShowPaidVip: {
       type: Boolean,
       default: false,
     },

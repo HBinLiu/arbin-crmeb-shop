@@ -127,7 +127,6 @@ export default {
       });
     },
     qrR(res) {
-      console.log(res);
       // #ifdef H5
       if (!this.$wechat.isWeixin() || this.shareQrcode != "1") {
         this.PromotionCode = res;
@@ -162,7 +161,6 @@ export default {
             const posterHeight = 579;
             // const posterWidth = res.width / 2;
             // const posterHeight = res.height / 2;
-            console.log(posterWidth, posterHeight);
             // 绘制背景图
             ctx.drawImage(loadedImages[0], 0, 0, posterWidth, posterHeight);
             ctx.save();
@@ -272,19 +270,16 @@ export default {
 
             // 绘制完成
             ctx.draw(false, () => {
-              console.log(posterWidth, posterHeight);
               // 生成海报图片
               uni.canvasToTempFilePath({
                 canvasId: "posterCanvas",
                 width: posterWidth,
                 height: posterHeight,
                 success: (res) => {
-                  console.log(res.tempFilePath);
                   resolve(res.tempFilePath);
                 },
 
                 fail: (err) => {
-                  console.log(err);
                   reject(err);
                 },
               });
@@ -299,7 +294,6 @@ export default {
         img.crossOrigin = "anonymous"; // 允许跨域
         img.src = src;
         img.onload = () => {
-          console.log(img);
           resolve(img);
         };
         img.onerror = (err) => reject(err);
@@ -316,7 +310,6 @@ export default {
         this.giftData.avatar,
         this.PromotionCode,
       ];
-      console.log(images);
       let postImg = ["", "", "", "", ""];
       // #ifdef MP
       for (let i = 0; i < images.length; i++) {
@@ -326,7 +319,6 @@ export default {
             if (res.statusCode == 200) {
               postImg[i] = res.tempFilePath;
             }
-            console.log(i, images.length - 1, postImg);
             const allNotEmpty = postImg.every((item) => item !== "");
             if (allNotEmpty) this.goPoster(postImg);
           },
@@ -343,7 +335,6 @@ export default {
     goPoster(postImg) {
       this.drawPoster(postImg, this.giftData.nickname, this.giftData.title)
         .then((posterPath) => {
-          console.log("海报生成成功:", posterPath);
           // #ifdef APP-PLUS || MP
           this.savePosterPathMp(posterPath);
           // #endif

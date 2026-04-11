@@ -197,6 +197,7 @@
           </el-table>
           <div class="acea-row row-right page" v-if="
             currenType == 'product' ||
+            currenType == 'special' ||
             currenType == 'seckill' ||
             currenType == 'bargain' ||
             currenType == 'advance' ||

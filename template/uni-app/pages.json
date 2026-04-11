@@ -1318,8 +1318,8 @@
 							// #endif
 						}
 					}
-			},
-			{
+				},
+				{
 					"path": "refund/index",
 					"style": {
 						"navigationBarTitleText": "售后退款",
@@ -1555,6 +1555,11 @@
 						"navigationBarTitleText": "专题页",
 						"app-plus": {
 							"scrollIndicator": "none"
+						},
+						"mp-weixin": {
+							"componentPlaceholder": {
+								"page-design": "view"
+							}
 						}
 					}
 				},

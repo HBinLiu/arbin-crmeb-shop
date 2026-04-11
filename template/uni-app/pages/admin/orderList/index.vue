@@ -1,45 +1,43 @@
 <template>
 	<view class="pos-order-list pb-safe" ref="container">
-		<view class="searchCon acea-row">
-			<view class="search acea-row row-middle">
-				<text class="iconfont icon-ic_search"></text>
-				<input class="inputs" placeholder='请输入用户手机号/用户昵称/订单号/商品名称' placeholder-class='placeholder' confirm-type='search' name="search" v-model="where.keyword" @confirm="searchSubmit"></input>
+		<!-- 固定在顶部的搜索栏和导航栏 -->
+		<view class="fixed-header">
+			<view class="searchCon acea-row">
+				<view class="search acea-row row-middle">
+					<text class="iconfont icon-ic_search"></text>
+					<input class="inputs" placeholder='请输入用户手机号/用户昵称/订单号/商品名称' placeholder-class='placeholder' confirm-type='search' name="search" v-model="where.keyword" @confirm="searchSubmit"></input>
+				</view>
+				<view class="btn" @click="filterShow = true">
+					<text class="iconfont icon-a-icon_filter1x"></text>
+				</view>
 			</view>
-			<view class="btn" @click="filterShow = true">
-				<text class="iconfont icon-a-icon_filter1x"></text>
+			<view class="nav acea-row row-around row-middle" id="nav">
+				<view class="item" :class="state == -1 ? 'on' : ''" @click="changeStatus(-1)">
+					全部
+					<image src="../static/adorn.png" v-if="state == -1"></image>
+				</view>
+				<view class="item" :class="state == 0 ? 'on' : ''" @click="changeStatus(0)">
+					待付款
+					<image src="../static/adorn.png" v-if="state == 0"></image>
+				</view>
+				<view class="item" :class="state == 1 ? 'on' : ''" @click="changeStatus(1)">
+					待发货/核销
+					<image src="../static/adorn.png" v-if="state == 1"></image>
+				</view>
+				<view class="item" :class="state == 2 ? 'on' : ''" @click="changeStatus(2)">
+					待收货
+					<image src="../static/adorn.png" v-if="state == 2"></image>
+				</view>
+				<view class="item" :class="state == 3 ? 'on' : ''" @click="changeStatus(3)">
+					待评价
+					<image src="../static/adorn.png" v-if="state == 3"></image>
+				</view>
 			</view>
 		</view>
-		<view :style="{ height: navHeight + 'px' }" v-if="isFixed"></view>
-		<view class="nav acea-row row-around row-middle" :class="{ fixed: isFixed }" :style="{ top: isFixed?(getHeight.barTop+getHeight.barHeight)+'px':0 }" id="nav">
-			<view class="item" :class="state == -1 ? 'on' : ''" @click="changeStatus(-1)">
-				全部
-				<image src="../static/adorn.png" v-if="state == -1"></image>
-			</view>
-			<view class="item" :class="state == 0 ? 'on' : ''" @click="changeStatus(0)">
-				待付款
-				<image src="../static/adorn.png" v-if="state == 0"></image>
-			</view>
-			<view class="item" :class="state == 1 ? 'on' : ''" @click="changeStatus(1)">
-				待发货/核销
-				<image src="../static/adorn.png" v-if="state == 1"></image>
-			</view>
-			<view class="item" :class="state == 2 ? 'on' : ''" @click="changeStatus(2)">
-				待收货
-				<image src="../static/adorn.png" v-if="state == 2"></image>
-			</view>
-			<view class="item" :class="state == 3 ? 'on' : ''" @click="changeStatus(3)">
-				待评价
-				<image src="../static/adorn.png" v-if="state == 3"></image>
-			</view>
-			<!-- <view class="item" :class="where.status == 4 ? 'on' : ''" @click="changeStatus(4)">
-				已完成
-			</view>
-			<view class="item" :class="where.status == -3 ? 'on' : ''" @click="changeStatus(-3)">
-				退款
-			</view> -->
-		</view>
-		<view class="list" v-if="list.length">
-			<view class="item" v-for="(item, index) in list" :key="index">
+		<!-- 可滚动的列表区域 -->
+		<scroll-view class="list-scroll" scroll-y @scrolltolower="getIndex">
+			<view class="list" v-if="list.length">
+				<view class="item" v-for="(item, index) in list" :key="index">
 				<view class="order-num acea-row row-between-wrapper" @click="toDetail(item)">
 					<view>
 						<!-- <countDown v-if="item.status == 0 && item.paid == 0 && item.pay_type != 'offline'" tipText="剩余：" dayText=" " hourText="小时" minuteText="分钟" secondText=" " dotColor="#FF7E00"
@@ -106,11 +104,12 @@
                 item.refund_status === 0" @click="verify(item)">订单核销</view>
 					</view>
 				</view>
+				</view>
 			</view>
-		</view>
-		<view v-else class="px-20 mt-20">
-			<emptyPage title="暂无订单～" src="/statics/images/noOrder.gif"></emptyPage>
-		</view>
+			<view v-else class="px-20 mt-20 empty-wrapper">
+				<emptyPage title="暂无订单～" src="/statics/images/noOrder.gif"></emptyPage>
+			</view>
+		</scroll-view>
 		<Loading :loaded="loaded" :loading="loading"></Loading>
 		<PriceChange :change="change" :orderInfo="orderInfo" :isRefund="isRefund" v-on:statusChange="statusChange($event)" v-on:closechange="changeclose($event)" v-on:savePrice="savePrice"
 			:status="status"></PriceChange>
@@ -596,11 +595,29 @@
 
 <style lang="scss" scoped>
 	.pos-order-list {
-		/deep/.navbar {
+		::v-deep.navbar {
 			.content {
 				background: #F5F5F5 !important;
 			}
 		}
+	}
+
+	.fixed-header {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		z-index: 99;
+		background: #F5F5F5;
+	}
+
+	.list-scroll {
+		height: calc(100vh - 180rpx);
+		margin-top: 180rpx;
+	}
+
+	.empty-wrapper {
+		padding-top: 200rpx;
 	}
 
 	.searchCon {
@@ -651,17 +668,6 @@
 		font-size: 26rpx;
 		line-height: 42rpx;
 		color: #333333;
-		top: 0;
-		left: 0;
-		z-index: 99;
-
-		&.fixed {
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100%;
-			background: #F5F5F5;
-		}
 
 		.item {
 			position: relative;
@@ -699,7 +705,7 @@
 		border-radius: 24rpx;
 		background-color: #fff;
 
-		/deep/.time {
+		::v-deep.time {
 			.title {
 				color: #FF7E00;
 			}

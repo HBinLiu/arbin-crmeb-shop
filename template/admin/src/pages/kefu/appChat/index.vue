@@ -977,11 +977,11 @@ li {
             display: none;
           }
 
-          ::v-deepimg {
+          ::v-deep img {
             width: 100%;
           }
 
-          ::v-deepvideo {
+          ::v-deep video {
             width: 100%;
           }
         }

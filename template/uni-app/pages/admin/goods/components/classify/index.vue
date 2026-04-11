@@ -181,15 +181,15 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-/deep/ checkbox .wx-checkbox-input.wx-checkbox-input-checked {
+::v-deep checkbox .wx-checkbox-input.wx-checkbox-input-checked {
     border: 1px solid $primary-admin;
     background-color: $primary-admin;
     color: #fff;
 }
-/deep/checkbox {
+::v-deep checkbox {
     margin-right: 13rpx;
 }
-/deep/uni-checkbox .uni-checkbox-input {
+::v-deep uni-checkbox .uni-checkbox-input {
     border-radius: 4rpx;
     width: 28rpx;
     height: 28rpx;

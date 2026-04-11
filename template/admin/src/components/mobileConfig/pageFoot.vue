@@ -122,10 +122,10 @@ export default {
               components: toolCom.c_title,
               configNme: 'titleLeft',
             },
-            {
-              components: toolCom.c_radio,
-              configNme: 'effectConfig',
-            },
+            // {
+            //   components: toolCom.c_radio,
+            //   configNme: 'effectConfig',
+            // },
             {
               components: toolCom.c_radio,
               configNme: 'navConfig',

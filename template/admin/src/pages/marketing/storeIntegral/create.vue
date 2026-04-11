@@ -511,6 +511,7 @@ export default {
           id: 0,
           product_id: row.id,
           temp_id: row.temp_id,
+          description: row.description,
         };
         this.productAttrs(row);
         this.$refs.goodslist.productRow = null;

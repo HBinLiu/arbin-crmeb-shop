@@ -175,7 +175,6 @@ export default {
     },
     onSaveClose() {
       const refName = this.getRefName();
-      console.log(this.$refs[refName].saveAndClose);
       if (refName && this.$refs[refName] && this.$refs[refName].saveAndClose) {
         this.$refs[refName].saveAndClose();
       }

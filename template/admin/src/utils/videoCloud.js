@@ -264,19 +264,16 @@ export default {
     return new Promise((resolve, reject) => {
       observable.subscribe({
         next: (result) => {
-          console.log(videoIng)
           const progress = Math.round(result.total.loaded / result.total.size);
           videoIng(true, progress);
           // 主要用来展示进度
         },
         error: (errResult) => {
           // 失败报错信息
-          console.log(errResult);
           reject({ msg: errResult });
         },
         complete: (result) => {
           // 接收成功后返回的信息
-          console.log(result,'result');
           videoIng(false, 0);
           resolve({ url: res.data.cdn ? res.data.cdn + '/' + filename : fileUrl });
         },

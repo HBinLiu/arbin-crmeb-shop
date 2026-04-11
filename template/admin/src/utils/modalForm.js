@@ -31,7 +31,6 @@ export default function modalForm(formRequestPromise, config = {}) {
           frame: {
             props: {
               onLoad(e) {
-                console.log(e, 'rep');
                 e.fApi = fApi;
               },
             },

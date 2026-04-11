@@ -113,10 +113,10 @@
 
 	.recommend .recommendList .item .pictrue {
 
-		/deep/,
-		/deep/image,
-		/deep/.easy-loadimage,
-		/deep/uni-image {
+		::v-deep,
+		::v-deep image,
+		::v-deep .easy-loadimage,
+		::v-deep uni-image {
 
 			width: 100%;
 			height: 335rpx;

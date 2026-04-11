@@ -301,7 +301,7 @@
 		align-self: flex-start;
 	}
 
-	.list /deep/ .uni-input-input {
+	.list ::v-deep .uni-input-input {
 		text-align: right;
 	}
 </style>

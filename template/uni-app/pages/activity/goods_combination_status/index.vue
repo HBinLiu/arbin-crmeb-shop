@@ -322,7 +322,7 @@
 			},
 			/**
 			 * 分享打开
-			 * 
+			 *
 			 */
 			listenerActionSheet: function() {
 				if (this.isLogin == false) {
@@ -802,7 +802,7 @@
 		color: #fc4141;
 	}
 
-	.group-con .wrapper .title .name /deep/.time .styleAll {
+	.group-con .wrapper .title .name ::v-deep .time .styleAll {
 		background-color: var(--view-minorColorT);
 		text-align: center;
 		border-radius: 3rpx;

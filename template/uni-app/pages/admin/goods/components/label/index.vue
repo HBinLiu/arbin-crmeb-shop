@@ -109,7 +109,6 @@ export default {
   mounted() {},
   methods: {
     define() {
-      console.log(this.ids);
       let data = {
         label_list: this.dataLabel,
       };

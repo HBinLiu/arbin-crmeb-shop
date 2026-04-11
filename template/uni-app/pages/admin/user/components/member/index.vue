@@ -168,7 +168,7 @@ export default {
         font-family: Regular;
         color: #ff7e00;
       }
-      /deep/.uni-input-input {
+      ::v-deep.uni-input-input {
         padding-right: 10rpx;
       }
       .placeholder {

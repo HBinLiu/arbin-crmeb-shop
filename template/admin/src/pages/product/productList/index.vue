@@ -187,7 +187,6 @@
               >批量上架</el-dropdown-item
             >
             <el-dropdown-item v-auth="['product-product-product_show']" :command="9">设置商品标签</el-dropdown-item>
-            <el-dropdown-item v-auth="['product-product-product_show']" :command="10">是否支持送礼</el-dropdown-item>
             <el-dropdown-item v-auth="['product-product-product_show']" v-if="artFrom.type !== '6'" :command="11"
               >移到回收站</el-dropdown-item
             >

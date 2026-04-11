@@ -508,9 +508,13 @@ export default {
         uni.navigateTo({
           url: `/pages/goods/goods_list/index?cid=${data.classPage.id}&title=${data.classPage.name}`,
         });
+      } else if (data.text.val == '首页') {
+        uni.switchTab({
+          url: `/pages/index/index`,
+        });
       } else {
         uni.navigateTo({
-          url: `/pages/annex/special/index?theme_id=${data.id}`,
+          url: `/pages/annex/special/index?theme_id=${data.microPage.id}`,
         });
       }
     },
@@ -651,7 +655,6 @@ export default {
       return m;
     },
     setDiyData(data) {
-      console.log("setDiyData called in index.vue", new Date().getTime());
       if (!data) return;
       this.currentDiyData = data;
       this.errorNetwork = false;
@@ -731,7 +734,6 @@ export default {
           this.setDiyData(res.data);
         })
         .catch((error) => {
-          console.log(error);
           // #ifdef APP-PLUS
           if (error.status) {
             uni.hideLoading();

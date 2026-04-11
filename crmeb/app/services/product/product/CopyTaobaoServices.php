@@ -118,9 +118,7 @@ class CopyTaobaoServices extends BaseServices
             $productInfo['is_postage'] = 0;
             $productInfo['is_seckill'] = 0;
             $productInfo['is_show'] = 0;
-            $productInfo['is_show'] = 0;
             $productInfo['is_sub'] = [];
-            $productInfo['is_vip'] = 0;
             $productInfo['is_vip'] = 0;
             $productInfo['label_id'] = [];
             $productInfo['mer_id'] = 0;
@@ -137,9 +135,9 @@ class CopyTaobaoServices extends BaseServices
             $productInfo['freight'] = 3;
             $productInfo['recommend'] = [];
             $productInfo['logistics'] = ['1', '2'];
-$productInfo['params_list'] = [];
-$productInfo['label_list'] = [];
-$productInfo['protection_list'] = [];
+            $productInfo['params_list'] = [];
+            $productInfo['label_list'] = [];
+            $productInfo['protection_list'] = [];
             foreach ($productInfo['items'] as &$items) {
                 $details = [];
                 foreach ($items['detail'] as $detail) {
@@ -294,11 +292,23 @@ $productInfo['protection_list'] = [];
      * @param int $timeout
      * @param int $w
      * @param int $h
-     * @return string
+     * @return array|string
      */
     public function downloadImage($url = '', $name = '', $type = 0, $timeout = 30, $w = 0, $h = 0)
     {
         if (!strlen(trim($url))) return '';
+
+        // 自动判断当前图片链接是否为需要使用curl下载的平台（淘宝、京东、天猫、1688）
+        if ($type == 0 && strlen(trim($url))) {
+            $antiHotlinkingPlatforms = ['alicdn.com', 'taobao.com', 'tmall.com', 'jd.com', 'jdstatic.com', '1688.com'];
+            foreach ($antiHotlinkingPlatforms as $platform) {
+                if (stripos($url, $platform) !== false) {
+                    $type = 1;
+                    break;
+                }
+            }
+        }
+
         if (!strlen(trim($name))) {
             //TODO 获取要下载的文件名称
             $downloadImageInfo = $this->getImageExtname($url);
@@ -319,7 +329,9 @@ $productInfo['protection_list'] = [];
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); //TODO 跳过证书检查
             if (stripos($url, "https://") !== FALSE) curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);  //TODO 从证书中检查SSL加密算法是否存在
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array('user-agent:' . $_SERVER['HTTP_USER_AGENT']));
+            // 根据URL识别平台并获取对应的防盗链headers
+            $headers = $this->getAntiHotlinkingHeaders($url);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             if (ini_get('open_basedir') == '' && ini_get('safe_mode') == 'Off') curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);//TODO 是否采集301、302之后的页面
             $content = curl_exec($ch);
             curl_close($ch);
@@ -436,5 +448,58 @@ $productInfo['protection_list'] = [];
             return $imagePath;
         }
         return false;
+    }
+
+    /**
+     * 根据URL识别平台并获取对应的防盗链headers
+     * @param string $url 图片URL
+     * @return array 返回对应的HTTP headers
+     */
+    public function getAntiHotlinkingHeaders(string $url): array
+    {
+        // 基础headers
+        $baseHeaders = [
+            'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept: image/webp,image/apng,image/*,*/*;q=0.8',
+            'Accept-Language: zh-CN,zh;q=0.9,en;q=0.8',
+            'Accept-Encoding: gzip, deflate, br',
+            'Connection: keep-alive',
+        ];
+
+        // 根据URL识别平台
+        if (stripos($url, 'alicdn.com') !== false || stripos($url, 'taobao.com') !== false) {
+            // 淘宝/天猫/1688的图片 (通常在alicdn.com域名下)
+            return array_merge($baseHeaders, [
+                'Referer: https://buyer.taobao.com/',  // 淘宝买家中心
+            ]);
+        } elseif (stripos($url, 'tmall.com') !== false) {
+            // 天猫的图片
+            return array_merge($baseHeaders, [
+                'Referer: https://www.tmall.com/',  // 天猫首页
+            ]);
+        } elseif (stripos($url, 'jd.com') !== false || stripos($url, 'jdstatic.com') !== false) {
+            // 京东的图片
+            return array_merge($baseHeaders, [
+                'Referer: https://www.jd.com/',  // 京东首页
+            ]);
+        } elseif (stripos($url, '1688.com') !== false) {
+            // 1688的图片
+            return array_merge($baseHeaders, [
+                'Referer: https://www.1688.com/',  // 1688首页
+            ]);
+        } elseif (stripos($url, 'baidu.com') !== false) {
+            // 百度图片
+            return array_merge($baseHeaders, [
+                'Referer: https://image.baidu.com/',  // 百度图片
+            ]);
+        } elseif (stripos($url, 'sinaimg.cn') !== false) {
+            // 新浪图片
+            return array_merge($baseHeaders, [
+                'Referer: https://weibo.com/',  // 新浪微博
+            ]);
+        } else {
+            // 默认headers，不设置Referer
+            return $baseHeaders;
+        }
     }
 }

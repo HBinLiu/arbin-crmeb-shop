@@ -1216,7 +1216,6 @@ export default {
     },
     // 点击发送优惠券
     onSend() {
-      console.log(this.ids);
       if (this.ids.length === 0) {
         this.$message.warning('请选择要发送优惠券的用户');
       } else {

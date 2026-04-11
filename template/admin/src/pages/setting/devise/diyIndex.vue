@@ -1179,7 +1179,6 @@ export default {
       } else if (this.pageType == 'detail') {
         // 获取最后一个对象的值 判断 val 不是一个空对象
         let lastObj = val && Object.values(val).pop();
-        console.log(lastObj, 'val');
         if (lastObj.name != 'bottomMenu') {
           let timestamp = new Date().getTime() * 1000;
           val[timestamp] = this.$store.state.mobildConfig.bottomMenu;

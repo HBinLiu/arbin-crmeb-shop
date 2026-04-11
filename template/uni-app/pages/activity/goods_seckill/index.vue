@@ -166,7 +166,6 @@ export default {
 			that.getSeckillList();
 		},
 		goDetails(item) {
-			console.log(this.time_id);
 			uni.navigateTo({
 				url: '/pages/activity/goods_seckill_details/index?id=' + item.id + '&time_id=' + this.timeList[this.active].id
 			});

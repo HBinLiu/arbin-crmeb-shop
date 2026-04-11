@@ -168,7 +168,7 @@ export default {
   float: right;
 }
 .goodList {
-  ::v-deeptable {
+  ::v-deep table {
     width: 100% !important;
   }
 }

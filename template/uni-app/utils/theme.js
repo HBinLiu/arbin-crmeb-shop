@@ -67,7 +67,6 @@ export function applyTheme(themeId) {
   let data = {};
   if (themeId) data.theme_id = themeId;
   return getThemeInfo("theme", data).then((res) => {
-    console.log("11122334");
     uni.setStorageSync("is_diy", 1);
     uni.$emit("is_diy", 1);
     setThemeColor(res.data);

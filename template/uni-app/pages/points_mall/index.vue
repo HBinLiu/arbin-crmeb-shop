@@ -211,7 +211,7 @@
 		height: 280rpx;
 	}
 
-	/deep/ .uni-swiper-wrapper {
+	::v-deep .uni-swiper-wrapper {
 		border-radius: 10rpx;
 	}
 

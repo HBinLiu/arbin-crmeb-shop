@@ -331,7 +331,7 @@ class UserMoneyServices extends BaseServices
     public function getType($where)
     {
         $bing_xdata = ['系统减少', '充值退款', '购买商品', '购买会员'];
-        $color = ['#64a1f4', '#3edeb5', '#70869f'];
+        $color = ['#64a1f4', '#3edeb5', '#70869f', '#ffc653'];
         $data = ['system_sub', 'recharge_refund', 'pay_product', 'pay_member'];
         $bing_data = [];
         foreach ($data as $key => $item) {

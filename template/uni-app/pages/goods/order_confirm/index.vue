@@ -551,7 +551,7 @@
 		/**
 		 * 生命周期函数--监听页面显示
 		 */
-		onShow: function() {
+		onShow() {
 			let _this = this
 
 			uni.$on("handClick", res => {
@@ -563,7 +563,7 @@
 			})
 
 			// 如果当前是门店自提模式，重新获取定位以确保门店列表准确
-			if (this.shippingType == 1) {
+			if (this.shippingType == 1 && !this.system_store.name) {
 				this.refreshLocationAndStores();
 			}
 
@@ -1383,7 +1383,7 @@
 </script>
 
 <style lang="scss" scoped>
-	/deep/uni-checkbox[disabled] .uni-checkbox-input {
+	::v-deep uni-checkbox[disabled] .uni-checkbox-input {
 		background-color: #eee;
 	}
 

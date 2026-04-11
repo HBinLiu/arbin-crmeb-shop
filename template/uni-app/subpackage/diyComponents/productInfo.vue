@@ -43,6 +43,14 @@
               <image v-else :src="item" mode="aspectFill" class="slide-image"></image>
             </swiper-item>
           </swiper>
+          <!-- 镜像效果 -->
+          <view class="mirror-wrap">
+            <image
+              :src="currentSlideImage"
+              mode="aspectFill"
+              class="mirror-image"
+            ></image>
+          </view>
 
           <!-- 指示器 -->
           <view
@@ -165,18 +173,19 @@
                   }"
                 ></image>
               </view>
-              <view
-                class="total-count"
-                :style="{ color: specTextColor }"
-                @click="showSpecModal"
-              >
-                <view>
-                  <view>{{ skuList.length }}款</view>
-                  <view>可选</view>
-                </view>
-                <text class="iconfont icon-jiantou"></text>
-              </view>
             </scroll-view>
+            <view
+            v-if="specStyle === 0"
+              class="total-count"
+              :style="{ color: specTextColor }"
+              @click="showSpecModal"
+            >
+              <view>
+                <view>{{ skuList.length }}款</view>
+                <view>可选</view>
+              </view>
+              <text class="iconfont icon-jiantou"></text>
+            </view>
             <!-- 样式 1: 图文列表 -->
             <view class="spec-list-text-wrapper" v-if="specStyle === 1">
               <scroll-view scroll-x="true" class="spec-list-text">
@@ -240,7 +249,7 @@
                       fontSize: priceFontSize + 'px',
                       lineHeight: priceFontSize + 'px',
                     }"
-                    >{{ displayInfo.price }}</view
+                    >{{ displayInfo.real_price }}</view
                   >
                 </view>
                 <view
@@ -416,6 +425,7 @@ export default {
   computed: {
     displayInfo() {
       let price = this.priceData.price || "0.00";
+      let real_price = this.priceData.real_price || "0.00";
       let ot_price = this.priceData.ot_price || "0.00";
       let vip_price = this.priceData.vip_price;
       let stock = this.productData.stock || 0;
@@ -426,12 +436,13 @@ export default {
         let sku = this.skuList[this.selectedIndex];
         if (sku) {
           if (sku.price) price = sku.price;
+          if (sku.real_price) price = sku.real_price;
           if (sku.ot_price) ot_price = sku.ot_price;
           if (sku.vip_price) vip_price = sku.vip_price;
           if (sku.stock || sku.stock === 0) stock = sku.stock;
         }
       }
-      return { price, ot_price, vip_price, stock, fsales, unit_name };
+      return { price, ot_price, vip_price, stock, fsales, unit_name, real_price };
     },
     sliderImage() {
       const images = this.productData.slider_image || [];
@@ -448,6 +459,14 @@ export default {
         ];
       }
       return images;
+    },
+    currentSlideImage() {
+      const currentItem = this.sliderImage[this.currentSwiper];
+      if (currentItem) {
+        // 如果是视频，返回 poster；否则返回图片
+        return currentItem.isVideo ? currentItem.poster : currentItem;
+      }
+      return '';
     },
     configData() {
       return {
@@ -655,7 +674,6 @@ export default {
       this.videoPlaying = false;
     },
     changeSpec(item, index) {
-      console.log(item, index);
       if (index !== undefined) {
         this.selectedIndex = index;
       }
@@ -712,11 +730,11 @@ export default {
   .image-wrap {
     position: relative;
     width: 100%;
-    height: 750rpx;
+    height: 782rpx;
 
     .swiper {
       width: 100%;
-      height: 100%;
+      height: 750rpx;
 
       .slide-image {
         width: 100%;
@@ -762,6 +780,23 @@ export default {
             height: 100%;
           }
         }
+      }
+
+    }
+    .mirror-wrap {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 32rpx;
+      overflow: hidden;
+      z-index: 1;
+
+      .mirror-image {
+        width: 100%;
+        height: 750rpx;
+        transform: scaleY(-1);
+        filter: blur(2rpx);
       }
     }
 
@@ -908,7 +943,7 @@ export default {
 
     .spec-top-section {
       margin-bottom: 30rpx;
-
+      position: relative;
       .spec-list {
         white-space: nowrap;
         width: 100%;
@@ -925,23 +960,26 @@ export default {
           }
         }
 
-        .total-count {
-          display: inline-flex;
-          justify-content: center;
-          align-items: center;
-          font-size: 20rpx;
-          vertical-align: top;
-          height: 80rpx;
-          margin-left: 10rpx;
-          position: absolute;
-          right: 0;
-          background-color: #fff;
-          z-index: 10;
-          padding-left: 10rpx;
+      }
+      .total-count {
+        position: absolute;
+        right: 0;
+        top: 0;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 20rpx;
+        vertical-align: top;
+        height: 80rpx;
+        margin-left: 10rpx;
+        position: absolute;
+        right: 0;
+        background-color: #fff;
+        z-index: 10;
+        padding-left: 10rpx;
 
-          .iconfont {
-            font-size: 20rpx;
-          }
+        .iconfont {
+          font-size: 20rpx;
         }
       }
 
@@ -990,6 +1028,7 @@ export default {
           top: 0;
           bottom: 0;
           min-width: 100rpx;
+          height: 60rpx;
           background-color: #fff;
           z-index: 10;
           padding-left: 10rpx;

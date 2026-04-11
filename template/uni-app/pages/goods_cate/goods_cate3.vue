@@ -273,7 +273,6 @@ export default {
         .select("#head")
         .boundingClientRect((data) => {
           h += data.height;
-          console.log(data.height);
         })
 
         .exec();
@@ -282,7 +281,6 @@ export default {
         .select("#category")
         .boundingClientRect((data) => {
           h += data.height;
-          console.log(data.height);
         })
         .exec();
       const query3 = uni.createSelectorQuery().in(this);
@@ -290,11 +288,9 @@ export default {
         .select("#cart")
         .boundingClientRect((data) => {
           h += data.height;
-          console.log(data.height);
         })
         .exec();
       this.scrollHeight = windowHeight - h - sysHeight;
-      console.log(windowHeight, h, sysHeight, this.scrollHeight);
     }, 1000);
     // #endif
     // #ifdef MP
@@ -951,7 +947,7 @@ page {
   background-color: #fff;
 }
 
-/deep/.product-window.joinCart {
+::v-deep.product-window.joinCart {
   z-index: 999;
 }
 
@@ -965,11 +961,11 @@ page {
   padding-bottom: 106rpx;
 }
 .goodCate {
-  /deep/.mask {
+  ::v-deep.mask {
     z-index: 99;
   }
 
-  /deep/.attrProduct {
+  ::v-deep.attrProduct {
     .mask {
       z-index: 100;
     }
@@ -1203,7 +1199,7 @@ page {
         margin-top: 228rpx;
         padding: 0 20rpx 0 20rpx;
 
-        /deep/.item {
+        ::v-deep.item {
           margin-bottom: 33rpx !important;
 
           // .pictrue {

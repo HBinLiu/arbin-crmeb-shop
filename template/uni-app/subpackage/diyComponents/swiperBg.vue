@@ -245,25 +245,20 @@ export default {
     if (this.imgUrls.length) {
       let that = this;
       this.$nextTick((e) => {
-        console.log(that.setDomain(that.imgUrls[0].img), "this.dataConfig");
         uni.getImageInfo({
           src: that.setDomain(that.imgUrls[0].img),
           success: (res) => {
-            console.log(res);
-            console.log(res, "res");
             if (res && res.height > 0) {
               let p = this.dataConfig.paddingConfig.isAll
                 ? this.dataConfig.paddingConfig.val
                 : this.dataConfig.paddingConfig.valList[1].val;
               let height = res.height * ((750 - p * 4) / res.width);
-              console.log(height, "height");
               that.$set(that, "imageH", height);
             } else {
               that.$set(that, "imageH", 375);
             }
           },
           fail: function (error) {
-            console.log(error);
             that.$set(that, "imageH", 375);
           },
         });
@@ -397,27 +392,27 @@ export default {
 
     // 圆形指示点
     &.circular {
-      /deep/.uni-swiper-dot {
+      ::v-deep.uni-swiper-dot {
         width: 10rpx !important;
         height: 10rpx !important;
         background: rgba(0, 0, 0, 0.4) !important;
       }
 
-      /deep/.uni-swiper-dot-active {
+      ::v-deep.uni-swiper-dot-active {
         background: #fff !important;
       }
     }
 
     // 方形指示点
     &.square {
-      /deep/.uni-swiper-dot {
+      ::v-deep.uni-swiper-dot {
         width: 20rpx !important;
         height: 5rpx !important;
         border-radius: 3rpx;
         background: rgba(0, 0, 0, 0.4) !important;
       }
 
-      /deep/.uni-swiper-dot-active {
+      ::v-deep.uni-swiper-dot-active {
         background: #fff !important;
       }
     }

@@ -193,13 +193,13 @@
 					border-radius: 20rpx;
 				}
 
-				/deep/.uni-swiper-dot {
+				::v-deep.uni-swiper-dot {
 					width: 8rpx !important;
 					height: 8rpx !important;
 					border-radius: 50%;
 				}
 
-				/deep/.uni-swiper-dot-active {
+				::v-deep.uni-swiper-dot-active {
 					width: 18rpx !important;
 					border-radius: 4rpx;
 					background-color: var(--view-theme) !important;

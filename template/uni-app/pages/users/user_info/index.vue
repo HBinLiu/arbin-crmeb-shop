@@ -555,7 +555,7 @@
 		color: #282828;
 	}
 
-	/deep/ .uni-input-input {
+	::v-deep .uni-input-input {
 		font-size: 28rpx;
 	}
 

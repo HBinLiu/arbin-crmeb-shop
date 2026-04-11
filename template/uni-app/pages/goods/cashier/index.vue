@@ -651,7 +651,7 @@
 					margin-top: 0 !important;
 				}
 
-				/deep/.red {
+				::v-deep.red {
 					margin: 0 !important;
 				}
 			}

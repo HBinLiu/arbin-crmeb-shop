@@ -256,7 +256,7 @@ export default {
   display: inline-block;
   width: -webkit-fill-available;
 }
-.mobile-page ::v-deepvideo {
+.mobile-page ::v-deep video {
   width: 100% !important;
 }
 .box {

@@ -783,6 +783,7 @@ export default {
           custom_form: row.custom_form, //自定义表单数据
           virtual_type: row.virtual_type, //虚拟商品类型
           head_commission: 0,
+          description: row.description,
         };
         this.productAttrs(row);
       }, 500);

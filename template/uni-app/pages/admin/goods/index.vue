@@ -163,6 +163,7 @@
       <view class="edit-list rd-t-40rpx">
         <view
           class="item"
+          :class="{ disabled: index === 0 && goodsInfo.virtual_type != 0 }"
           v-for="(item, index) in editList"
           :key="index"
           @tap="editInfo(index)"
@@ -363,7 +364,6 @@ export default {
             title: res.msg,
           });
           let i = this.goodsList.findIndex(val=> val.id == item.id);
-		  console.log(i);
 		  this.goodsList.splice(i ,1);
 		// item.is_show = item.is_show ? 0 : 1
         })
@@ -417,6 +417,10 @@ export default {
     editInfo(index) {
       switch (index) {
         case 0:
+          if (this.goodsInfo.virtual_type != 0) {
+            this.$util.Tips({ title: '仅普通商品可在此处修改价格/库存' });
+            return;
+          }
           this.visible = false;
           if (this.goodsInfo.spec_type) {
             uni.navigateTo({
@@ -510,14 +514,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-/deep/checkbox .wx-checkbox-input.wx-checkbox-input-checked {
+::v-deep checkbox .wx-checkbox-input.wx-checkbox-input-checked {
   border: 1px solid $primary-admin !important;
   background-color: $primary-admin !important;
 }
-/deep/uni-checkbox .uni-checkbox-input {
+::v-deep uni-checkbox .uni-checkbox-input {
   margin-top: -4rpx;
 }
-/deep/checkbox:not([disabled]) .uni-checkbox-input:hover {
+::v-deep checkbox:not([disabled]) .uni-checkbox-input:hover {
   border-color: #d1d1d1 !important;
 }
 .empty-box {
@@ -619,11 +623,11 @@ export default {
   .list {
     padding-bottom: 20rpx;
     padding: 0 20rpx 20rpx 20rpx;
-    /deep/uni-checkbox .uni-checkbox-input {
+    ::v-deep uni-checkbox .uni-checkbox-input {
       background-color: #f5f5f5;
       margin: 0 20rpx 20rpx 0;
     }
-    /deep/wx-checkbox .wx-checkbox-input {
+    ::v-deep wx-checkbox .wx-checkbox-input {
       background-color: #f5f5f5;
       margin: 0 20rpx 20rpx 0;
     }
@@ -742,6 +746,9 @@ export default {
       text-align: center;
       height: 106rpx;
       line-height: 106rpx;
+      &.disabled {
+        color: #cccccc;
+      }
     }
   }
 }

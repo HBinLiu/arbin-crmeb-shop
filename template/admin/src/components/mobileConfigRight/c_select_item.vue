@@ -104,7 +104,7 @@ export default {
 .poptipOn {
   display: none;
 }
-::v-deeptextarea.ivu-input {
+::v-deep textarea.ivu-input {
   resize: none;
 }
 .batchItem {

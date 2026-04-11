@@ -126,7 +126,7 @@
 	}
 </script>
 <style lang="scss">
-	/deep/ .empty-box {
+	::v-deep .empty-box {
 		background-color: #f5f5f5;
 	}
 

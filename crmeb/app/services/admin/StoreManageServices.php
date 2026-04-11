@@ -96,6 +96,7 @@ class StoreManageServices extends BaseServices
     public function product($where)
     {
         $storeProductServices = app()->make(StoreProductServices::class);
+        $where['is_del'] = 0;
         return $storeProductServices->getList($where);
     }
 
@@ -493,7 +494,7 @@ class StoreManageServices extends BaseServices
             case 0: // 余额
                 /** @var UserMoneyServices $userMoneyServices */
                 $userMoneyServices = app()->make(UserMoneyServices::class);
-                if ($data['status'] == 1) {//增加
+                if ($data['status'] == 1) { //增加
                     $edit['now_money'] = bcadd($userInfo['now_money'], $data['number'], 2);
                     $userMoneyServices->income('system_add', $uid, $data['number'], $edit['now_money'], 0, '移动端商家管理增加余额');
                     //增加充值记录
@@ -509,7 +510,7 @@ class StoreManageServices extends BaseServices
                         'pay_time' => time(),
                     ];
                     app()->make(UserRechargeServices::class)->save($recharge_data);
-                } else {//减少
+                } else { //减少
                     if ($userInfo['now_money'] > $data['number']) {
                         $edit['now_money'] = bcsub($userInfo['now_money'], $data['number'], 2);
                     } else {
@@ -524,13 +525,13 @@ class StoreManageServices extends BaseServices
                 /** @var UserBillServices $userBill */
                 $userBill = app()->make(UserBillServices::class);
                 $integral_data = ['link_id' => 0, 'number' => $data['number']];
-                if ($data['status'] == 1) {//增加
+                if ($data['status'] == 1) { //增加
                     $edit['integral'] = bcadd($userInfo['integral'], $data['number'], 2);
                     $integral_data['balance'] = $edit['integral'];
                     $integral_data['title'] = '系统增加积分';
                     $integral_data['mark'] = '系统增加了' . floatval($data['number']) . '积分';
                     $userBill->incomeIntegral($uid, 'system_add', $integral_data);
-                } else {//减少
+                } else { //减少
                     $edit['integral'] = bcsub($userInfo['integral'], $data['number'], 2);
                     $integral_data['balance'] = $edit['integral'];
                     $integral_data['title'] = '系统减少积分';

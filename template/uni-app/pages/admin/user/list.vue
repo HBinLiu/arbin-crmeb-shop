@@ -507,7 +507,6 @@ export default {
       this.visibleLable = false;
     },
     openDrawer(item) {
-      console.log("11");
       this.visible = true;
       this.uid = item.uid;
       this.userInfo = item;
@@ -569,14 +568,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-/deep/checkbox .wx-checkbox-input.wx-checkbox-input-checked {
+::v-deep checkbox .wx-checkbox-input.wx-checkbox-input-checked {
   border: 1px solid $primary-admin !important;
   background-color: $primary-admin !important;
 }
-/deep/checkbox:not([disabled]) .uni-checkbox-input:hover {
+::v-deep checkbox:not([disabled]) .uni-checkbox-input:hover {
   border-color: #d1d1d1 !important;
 }
-/deep/.empty-page {
+::v-deep.empty-page {
   margin-top: 20rpx;
 }
 .accountTitle {
@@ -645,10 +644,10 @@ export default {
   .list {
     padding-bottom: 20rpx;
     margin-top: 32rpx;
-    /deep/uni-checkbox .uni-checkbox-input {
+    ::v-deep uni-checkbox .uni-checkbox-input {
       margin: 0 20rpx 20rpx 0;
     }
-    /deep/wx-checkbox .wx-checkbox-input {
+    ::v-deep wx-checkbox .wx-checkbox-input {
       margin: 0 20rpx 20rpx 0;
     }
     .item {
@@ -781,7 +780,7 @@ export default {
     width: 100%;
     left: 0;
 
-    /deep/uni-checkbox .uni-checkbox-input {
+    ::v-deep uni-checkbox .uni-checkbox-input {
       margin-bottom: 6rpx;
     }
 

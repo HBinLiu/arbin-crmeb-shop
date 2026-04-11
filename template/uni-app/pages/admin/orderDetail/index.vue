@@ -1,13 +1,13 @@
 <template>
   <view>
     <!-- #ifdef MP || APP-PLUS -->
-    <NavBar
+<!--    <NavBar
       titleText="订单详情"
       :iconColor="iconColor"
       :textColor="iconColor"
       :isScrolling="isScrolling"
       showBack
-    ></NavBar>
+    ></NavBar> -->
     <!-- #endif -->
     <view class="headerBg">
       <view :style="{ height: `${getHeight.barTop}px` }"></view>
@@ -628,6 +628,7 @@ import {
   setOrderRefund,
   orderRefundAgree,
   getUserInfo,
+  orderVerific,
 } from "@/api/admin";
 // import {
 // 	erpConfig
@@ -711,19 +712,26 @@ export default {
   },
   methods: {
     verify() {
-      if (this.orderInfo.product_type == 4) {
-        uni.navigateTo({
-          url: "/pages/admin/writeOffCard/index?id=" + this.orderInfo.id,
-        });
-      } else {
-        uni.navigateTo({
-          url:
-            "/pages/admin/distribution/scanning/detail/index?auth=1&id=" +
-            this.orderInfo.id +
-            "&let=1&code=" +
-            this.orderInfo.verify_code,
-        });
-      }
+      uni.showModal({
+        title: '操作提示',
+        content: '是否确认核销该订单？',
+        success: (res) => {
+          if (res.confirm) {
+            orderVerific(this.orderInfo.verify_code, 1, 1)
+              .then((res) => {
+                this.$util.Tips({
+                  title: res.msg
+                });
+                this.getIndex();
+              })
+              .catch((res) => {
+                return this.$util.Tips({
+                  title: res
+                });
+              });
+          }
+        }
+      });
     },
     statusChange(e) {
       this.status = e;
@@ -983,7 +991,7 @@ export default {
 }
 
 .height-add {
-  height: calc(120rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+  height: calc(120rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
   height: calc(120rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
 }
 

@@ -39,15 +39,16 @@
       >
         <!-- #endif -->
         <!-- #ifdef H5 -->
-        <view class="iconfont icon-gengduo2" @click="moreNav"></view>
+        <view class="iconfont icon-gengduo2" @click="moreNav"> </view>
+        <homeList
+          :navH="navH"
+          :returnShow="returnShow"
+          :currentPage="currentPage"
+          :sysHeight="sysHeight"
+        ></homeList>
       </view>
       <!-- #endif -->
-      <homeList
-        :navH="navH"
-        :returnShow="returnShow"
-        :currentPage="currentPage"
-        :sysHeight="sysHeight"
-      ></homeList>
+
       <view>
         <view id="past0">
           <!-- #ifdef APP-PLUS || MP -->
@@ -67,6 +68,7 @@
             :attr="attr"
             :attrTxt="attrTxt"
             :attrValue="attrValue"
+            :isShowPaidVip="isShowPaidVip"
             @bindSortId="bindSortId"
             @changeSpec="onChangeSpecFromPageDesign"
             @showSpecModal="onShowSpecModalFromPageDesign"
@@ -409,6 +411,13 @@ export default {
   },
   computed: {
     ...mapGetters(["isLogin", "cartNum"]),
+    isShowPaidVip() {
+      let s =
+        !this.is_money_level &&
+        this.storeInfo.vip_price &&
+        this.storeInfo.is_vip;
+      return !!s;
+    },
   },
   watch: {
     isLogin: {
@@ -437,7 +446,7 @@ export default {
     that.navH = app.globalData.navHeight;
     // #endif
     // #ifdef H5
-    that.navH = 96;
+    that.navH = 76;
     // #endif
     // #ifdef APP-PLUS
     that.navH = 30;
@@ -469,7 +478,7 @@ export default {
         {
           tab: 3,
           url: 1,
-        },
+        }
       );
     } else {
       that.id = options.id;
@@ -549,7 +558,6 @@ export default {
       this.currentPage = !this.currentPage;
     },
     onChangeSpecFromPageDesign(item) {
-      console.log(item, "111");
       if (item && item.suk) {
         let values = item.suk.split(",");
         if (
@@ -560,7 +568,6 @@ export default {
             this.$set(this.attr.productAttr[i], "index", values[i]);
           }
         }
-        console.log(item.suk);
         this.ChangeAttr(item.suk);
       }
     },
@@ -653,7 +660,7 @@ export default {
           this.$set(
             this.attr.productSelect,
             "cart_num",
-            e < 0 ? this.storeInfo.min_qty : number,
+            e < 0 ? this.storeInfo.min_qty : number
           );
         });
       }
@@ -746,7 +753,7 @@ export default {
           this.$set(
             this.attr.productSelect,
             "cart_num",
-            stock ? stock : this.storeInfo.min_qty,
+            stock ? stock : this.storeInfo.min_qty
           );
           this.$set(this, "cart_num", stock ? stock : 1);
         }
@@ -756,7 +763,7 @@ export default {
           this.$set(
             this.attr.productSelect,
             "cart_num",
-            this.storeInfo.min_qty,
+            this.storeInfo.min_qty
           );
           this.$set(this, "cart_num", 1);
         }
@@ -766,7 +773,7 @@ export default {
       this.$set(
         this.attr.productAttr[val.indexw],
         "index",
-        this.attr.productAttr[val.indexw].attr_values[val.indexn],
+        this.attr.productAttr[val.indexw].attr_values[val.indexn]
       );
     },
     /**
@@ -808,7 +815,7 @@ export default {
         this.$set(
           this.attr.productSelect,
           "vip_price",
-          this.storeInfo.vip_price,
+          this.storeInfo.vip_price
         );
         this.$set(this, "attrValue", "");
         this.$set(this, "attrTxt", this.$t(`请选择`));
@@ -852,7 +859,7 @@ export default {
           that.$set(
             that,
             "presale_pay_status",
-            res.data.storeInfo.presale_pay_status,
+            res.data.storeInfo.presale_pay_status
           ); // 1未开始; 2进行中; 3已结束
           that.$set(that, "reply", res.data.reply ? [res.data.reply] : []);
           that.$set(that, "replyCount", res.data.replyCount);
@@ -864,7 +871,7 @@ export default {
           that.$set(
             that.sharePacket,
             "isState",
-            res.data.priceName != 0 ? true : false,
+            res.data.priceName != 0 ? true : false
           );
           that.$set(that, "storeSelfMention", res.data.store_self_mention);
           that.$set(that, "good_list", good_list);
@@ -892,13 +899,13 @@ export default {
           that.$set(
             that,
             "activity",
-            res.data.activity ? res.data.activity : [],
+            res.data.activity ? res.data.activity : []
           );
           that.$set(that, "couponList", res.data.coupons);
           that.$set(
             that,
             "routineContact",
-            Number(res.data.routine_contact_type),
+            Number(res.data.routine_contact_type)
           );
           uni.setNavigationBarTitle({
             title: storeInfo.store_name.substring(0, 7) + "...",
@@ -911,7 +918,7 @@ export default {
           that.$set(
             that,
             "diff",
-            that.$util.$h.Sub(storeInfo.price, storeInfo.vip_price),
+            that.$util.$h.Sub(storeInfo.price, storeInfo.vip_price)
           );
           that.$set(that, "storeImage", that.storeInfo.image);
           that.$set(that, "svip_price_open", res.data.svip_price_open);
@@ -961,7 +968,7 @@ export default {
             {
               tab: 3,
               url: 1,
-            },
+            }
           );
         });
     },
@@ -994,7 +1001,7 @@ export default {
         this.$set(
           this.attr.productSelect,
           "store_name",
-          this.storeInfo.store_name,
+          this.storeInfo.store_name
         );
         this.$set(this.attr.productSelect, "image", productSelect.image);
         // this.$set(this.attr.productSelect, 'price', productSelect.price);
@@ -1009,7 +1016,7 @@ export default {
         this.$set(
           this.attr.productSelect,
           "store_name",
-          this.storeInfo.store_name,
+          this.storeInfo.store_name
         );
         this.$set(this.attr.productSelect, "image", this.storeInfo.image);
         this.$set(this.attr.productSelect, "price", this.storeInfo.price);
@@ -1019,7 +1026,7 @@ export default {
         this.$set(
           this.attr.productSelect,
           "vip_price",
-          this.storeInfo.vip_price,
+          this.storeInfo.vip_price
         );
         this.$set(this, "attrValue", "");
         this.$set(this, "attrTxt", this.$t(`请选择`));
@@ -1027,7 +1034,7 @@ export default {
         this.$set(
           this.attr.productSelect,
           "store_name",
-          this.storeInfo.store_name,
+          this.storeInfo.store_name
         );
         this.$set(this.attr.productSelect, "image", this.storeInfo.image);
         this.$set(this.attr.productSelect, "price", this.storeInfo.price);
@@ -1035,13 +1042,13 @@ export default {
         this.$set(
           this.attr.productSelect,
           "unique",
-          this.storeInfo.unique || "",
+          this.storeInfo.unique || ""
         );
         this.$set(this.attr.productSelect, "cart_num", this.storeInfo.min_qty);
         this.$set(
           this.attr.productSelect,
           "vip_price",
-          this.storeInfo.vip_price,
+          this.storeInfo.vip_price
         );
         this.$set(this, "attrValue", "");
         this.$set(this, "attrTxt", this.$t(`请选择`));
@@ -1116,7 +1123,7 @@ export default {
             that.$set(
               that.storeInfo,
               "userCollect",
-              !that.storeInfo.userCollect,
+              !that.storeInfo.userCollect
             );
             return that.$util.Tips({
               title: res.msg,
@@ -1127,7 +1134,7 @@ export default {
             that.$set(
               that.storeInfo,
               "userCollect",
-              !that.storeInfo.userCollect,
+              !that.storeInfo.userCollect
             );
             return that.$util.Tips({
               title: res.msg,
@@ -1300,7 +1307,7 @@ export default {
           that.CartCount = res.data.count;
           this.$store.commit(
             "indexData/setCartNum",
-            that.CartCount > 99 ? "..." : that.CartCount + "",
+            that.CartCount > 99 ? "..." : that.CartCount + ""
           );
           // uni.setTabBarBadge({
           // 	index: Number(uni.getStorageSync('FOOTER_ADDCART')) || 2,
@@ -1460,7 +1467,7 @@ export default {
                 "onMenuShareAppMessage",
                 "onMenuShareTimeline",
               ],
-              configAppMessage,
+              configAppMessage
             )
             .then((res) => {})
             .catch((err) => {});
@@ -1509,9 +1516,13 @@ export default {
         uni.navigateTo({
           url: `/pages/goods/goods_list/index?cid=${data.classPage.id}&title=${data.classPage.name}`,
         });
+      } else if (data.text.val == '首页') {
+        uni.switchTab({
+          url: `/pages/index/index`,
+        });
       } else {
         uni.navigateTo({
-          url: `/pages/annex/special/index?theme_id=${data.id}`,
+          url: `/pages/annex/special/index?theme_id=${data.microPage.id}`,
         });
       }
     },
@@ -1867,7 +1878,6 @@ action-sheet-item {
     /* #endif */
   }
 }
-
 .home .iconfont {
   width: 58rpx;
   text-align: center;

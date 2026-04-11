@@ -45,7 +45,7 @@ CRMEB高品质开源商城系统（PHP版）
 [帮助文档](https://doc.crmeb.com/single_open) |
 [应用市场](https://www.crmeb.com/market?from=giteephp) |
 [技术社区](https://www.crmeb.com/ask/thread/list/147) |
-[主题市场](https://www.crmeb.com/theme) |
+[主题广场](https://www.crmeb.com/theme) |
 [宽屏预览](https://gitee.com/ZhongBangKeJi/CRMEB/blob/master/README.md)
 
 
@@ -79,9 +79,15 @@ CRMEB开源商城系统代码100%开源，基于 **Apache-2.0协议** 免费商�
 
 我们致力于打造开发者友好生态，开放源码、持续更新功能模块，并新增主题市场，支持商家一键套用精美商城主题快速装修，开发者与设计师可上架原创主题供用户下载使用，实现创意共享与价值变现。同时欢迎开发者提交优化建议或贡献代码，通过共享技术成果，降低行业重复造轮子成本，推动开源电商系统的可持续发展。
 
+**主题市场**
+
+主题市场拥有丰富精美的商城模板，全面深度适配 CRMEB 开源商城系统，支持一键下载导入快速启用；多样化主题风格与配色方案可精准匹配不同行业、不同领域的应用需求，同时主题市场完全向CRMEB用户开放，鼓励开发者自主设计、导出并上架分享，与平台共建丰富多元、持续繁荣的 CRMEB 主题生态。立即前往：<a href="https://www.crmeb.com/theme" target="_blank">主题广场</a>
+
+![输入图片说明](help/resource/pic/主题广场.png)
 
 
-🔗 <a href="https://doc.crmeb.com/single_open/open_v54/19855" target="_blank">功能列表</a> | 📩 <a href="https://gitee.com/ZhongBangKeJi/CRMEB/issues" target="_blank">提交反馈</a> | 📩 <a href="https://gitee.com/ZhongBangKeJi/CRMEB/pulls" target="_blank">提交代码</a> | 🔗 <a href="https://www.crmeb.com/theme" target="_blank">主题市场</a>
+
+🔗 <a href="https://doc.crmeb.com/single_open/open_v54/19855" target="_blank">功能列表</a> | 📩 <a href="https://gitee.com/ZhongBangKeJi/CRMEB/issues" target="_blank">提交反馈</a> | 📩 <a href="https://gitee.com/ZhongBangKeJi/CRMEB/pulls" target="_blank">提交代码</a> | 🔗 <a href="https://www.crmeb.com/theme" target="_blank">主题广场</a>
 
 
 

@@ -149,7 +149,7 @@ export default {
     padding-bottom: 20px;
     background: #f0f2f5;
     width: 335px;
-    .content ::v-deepvideo {
+    .content ::v-deep video {
       width: 100% !important;
     }
   }

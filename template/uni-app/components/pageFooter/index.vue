@@ -138,7 +138,6 @@ export default {
   watch: {
     configData: {
       handler(newVal) {
-        console.log(newVal, "newVal");
         if (newVal) {
           let configData = newVal;
           this.newData = configData;
@@ -282,7 +281,7 @@ export default {
     }
   }
 }
-.page-footer /deep/.uni-badge--x {
+.page-footer ::v-deep.uni-badge--x {
   position: absolute !important;
   top: 0rpx;
 }
@@ -293,12 +292,12 @@ export default {
   top: -10rpx;
   /* #endif */
 }
-.page-footer /deep/ .uni-badge-left-margin .uni-badge--error {
+.page-footer ::v-deep .uni-badge-left-margin .uni-badge--error {
   color: #fff !important;
   background-color: var(--view-theme) !important;
   z-index: 8;
 }
-.page-footer /deep/ .uni-badge {
+.page-footer ::v-deep .uni-badge {
   right: unset !important;
   top: unset !important;
 }

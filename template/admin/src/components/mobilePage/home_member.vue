@@ -549,7 +549,6 @@ export default {
       return {};
     },
     ms4BgColorStyle() {
-      console.log(this.ms4BgColor, 'this.ms4BgColor');
       return this.ms4BgColor && this.ms4BgColor.color ? this.ms4BgColor.color : [];
     },
     ms3ContainerStyle() {
@@ -1046,7 +1045,6 @@ export default {
       this.assetIconSize = dataClone.assetIconSize ? dataClone.assetIconSize.val : 20;
       this.assetTextColor = dataClone.assetTextColor ? dataClone.assetTextColor.color[0].item : '#333';
       this.assetTextSize = dataClone.assetTextSize ? dataClone.assetTextSize.val : 12;
-      console.log(data);
     },
   },
 };

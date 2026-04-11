@@ -550,7 +550,6 @@ export default {
         return;
       }
       if (this.selectTypeValue === "article") {
-        console.log("articleClass");
         this.fetchArticleData();
       } else if (this.selectTypeValue === "coupon") {
         this.fetchCouponData();
@@ -559,10 +558,6 @@ export default {
       }
     },
     fetchArticleData() {
-      console.log(
-        this.configObj.articleDataSource,
-        "this.configObj.articleDataSource",
-      );
       if (!this.configObj.articleDataSource) return;
       let params = {
         limit: this.configObj.articleNum.val,
@@ -814,11 +809,6 @@ export default {
 
       // Background
       if (propValue.bgColor2) {
-        console.log(
-          propValue.bgDirection,
-          propValue.bgColor2,
-          "propValue.bgColor2",
-        );
         const directionMap = {
           horizontal: "90deg",
           vertical: "180deg",
@@ -936,7 +926,6 @@ export default {
     },
     getDisplayText(item, dataItem) {
       const field = item.propValue.fieldType;
-      console.log(dataItem, "dataItem");
       if (this.selectTypeValue === "article") {
         // Article mapping
         if (field === "title") return dataItem.title;
@@ -1000,7 +989,6 @@ export default {
       return item.propValue.text;
     },
     goDetail(dataItem, item) {
-      console.log(dataItem, item, "item");
       if (item.propValue.linkType === "detail") {
         if (this.selectTypeValue === "goods") {
           uni.navigateTo({

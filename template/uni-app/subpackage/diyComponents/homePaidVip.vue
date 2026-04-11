@@ -1,5 +1,5 @@
 <template>
-  <view class="home-paid-vip" v-if="showVip">
+  <view class="home-paid-vip" v-if="isShowPaidVip">
     <commonWrapper :config="dataConfig">
       <view class="vip-container" :style="[containerStyle]">
         <view class="left-content">
@@ -53,12 +53,13 @@ export default {
       type: Object,
       default: () => ({}),
     },
+     isShowPaidVip: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
     ...mapGetters(["isLogin", "userInfo"]),
-    showVip() {
-      return true;
-    },
     diff() {
       let price =
         Number(this.priceData.price) || Number(this.productData.price) || 0;

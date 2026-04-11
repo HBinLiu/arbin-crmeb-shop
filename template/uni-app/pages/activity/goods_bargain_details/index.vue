@@ -1404,7 +1404,7 @@ page {
 }
 .main-warper {
 	position: relative;
-	/deep/ .posterCon {
+	::v-deep .posterCon {
 		position: static;
 	}
 }

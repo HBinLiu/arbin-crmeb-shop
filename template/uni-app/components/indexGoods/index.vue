@@ -130,9 +130,9 @@
 			flex-direction: column;
 			justify-content: space-between;
 
-			/deep/image,
-			/deep/.easy-loadimage,
-			/deep/uni-image {
+			::v-deep image,
+			::v-deep .easy-loadimage,
+			::v-deep uni-image {
 				width: 100%;
 				height: 330rpx;
 				border-radius: 10rpx 10rpx 0 0;

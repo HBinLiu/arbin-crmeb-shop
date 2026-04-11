@@ -279,9 +279,13 @@ export default {
         uni.navigateTo({
           url: `/pages/goods/goods_list/index?cid=${data.classPage.id}&title=${data.classPage.name}`,
         });
+      } else if (data.text.val == '首页') {
+        uni.switchTab({
+          url: `/pages/index/index`,
+        });
       } else {
         uni.navigateTo({
-          url: `/pages/annex/special/index?theme_id=${data.id}`,
+          url: `/pages/annex/special/index?theme_id=${data.microPage.id}`,
         });
       }
     },
@@ -352,7 +356,6 @@ export default {
       let data = {};
       if (previewThemeId) data.theme_id = previewThemeId;
       getThemeInfo("user", data).then((res) => {
-        console.log(res, "res");
         this.currentDiyData = res.data;
       });
     },

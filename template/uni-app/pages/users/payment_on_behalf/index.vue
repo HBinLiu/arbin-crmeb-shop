@@ -434,7 +434,7 @@ export default {
 		.orderGoods {
 			margin-top: 0;
 		}
-		/deep/ .text .name {
+		::v-deep .text .name {
 			overflow: hidden;
 			text-overflow: ellipsis;
 			white-space: nowrap;

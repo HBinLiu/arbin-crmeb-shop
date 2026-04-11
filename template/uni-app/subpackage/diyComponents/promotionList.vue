@@ -196,7 +196,6 @@ export default {
         let background = "";
         if ([0, 1, 2].includes(this.dataConfig.styleConfig.tabVal)) {
           color = this.dataConfig.textColor.color[0].item;
-          console.log(this.dataConfig, color);
         } else if ([3, 4].includes(this.dataConfig.styleConfig.tabVal)) {
           color = "#ffffff";
           background = `linear-gradient(90deg, ${bgColor[0].item} 0%, ${bgColor[1].item} 100%)`;

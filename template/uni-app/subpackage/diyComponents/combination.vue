@@ -541,7 +541,6 @@ export default {
       });
     },
     goDetail(item) {
-      console.log(item);
       // #ifndef MP
       uni.navigateTo({
         url: `/pages/activity/goods_combination_details/index?id=${item.id}&type=3`,

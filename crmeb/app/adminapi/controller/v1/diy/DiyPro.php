@@ -110,14 +110,15 @@ class DiyPro extends AuthController
     public function getProduct()
     {
         $where = $this->request->getMore([
-            ['cate_id', []],//搜索分类
-            ['salesOrder', ''],//销量排序
-            ['priceOrder', ''],//价格排序
-            ['store_label_id', []],//标签ID
-            ['ids', []],//商品ID
+            ['cate_id', []], //搜索分类
+            ['salesOrder', ''], //销量排序
+            ['priceOrder', ''], //价格排序
+            ['store_label_id', []], //标签ID
+            ['ids', ''], //商品ID
         ]);
         $where['is_show'] = 1;
         $where['is_del'] = 0;
+        if (is_string($where['ids']) && $where['ids'] != '') $where['ids'] = explode(',', $where['ids']);
         [$page, $limit] = $this->services->getPageValue();
         $list = app()->make(StoreProductServices::class)->getSearchList($where, $page, $limit, ['id,store_name,cate_id,image,IFNULL(sales, 0) + IFNULL(ficti, 0) as sales,price,stock,activity,ot_price,spec_type,recommend_image,unit_name,is_vip,vip_price']);
         return app('json')->success($list);

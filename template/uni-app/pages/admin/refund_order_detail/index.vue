@@ -1,7 +1,7 @@
 <template>
 	<view>
 		<!-- #ifdef MP || APP-PLUS -->
-		<NavBar titleText="订单详情" :iconColor="iconColor" :textColor="iconColor" :isScrolling="isScrolling" showBack></NavBar>
+<!-- 		<NavBar titleText="订单详情" :iconColor="iconColor" :textColor="iconColor" :isScrolling="isScrolling" showBack></NavBar> -->
 		<!-- #endif -->
 		<view class="headerBg">
 			<view :style="{ height: `${getHeight.barTop}px` }"></view>

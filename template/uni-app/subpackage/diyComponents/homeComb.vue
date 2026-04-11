@@ -274,10 +274,6 @@ export default {
   },
   computed: {
     configData() {
-      console.log(
-        this.dataConfig.gradientColor.color[0].item,
-        "this.dataConfig.gradientColor.color[0].item",
-      );
       this.gradientColor = this.dataConfig.gradientColor.color[0].item;
 
       return {
@@ -490,17 +486,23 @@ export default {
     },
     /*跳转为页面*/
     changeTab(item, index) {
+      this.isCategory = false;
+      if (item.text && item.text.val === "首页") {
+        this.tabClick = index; //设置导航点击了哪一个
+        uni.switchTab({
+          url: "/pages/index/index",
+        });
+        return;
+      }
       this.$emit("bindSortId", item, index);
       if (this.tabClick == index) return;
       this.tabClick = index; //设置导航点击了哪一个
       this.isLeft = index * this.isWidth + 16; //设置下划线位置
-      this.isCategory = false;
       let data = {
         type: item.dataType.tabVal, // 0 微页面 1 商品分类
         microPage: item.microPage.id,
         classPage: item.classPage.id,
       };
-      console.log(data, "bindSortId");
     },
   },
 };
@@ -562,7 +564,7 @@ export default {
 }
 
 .my-main {
-  z-index: 2;
+  z-index: 1200;
   position: relative;
   transition: background-color 0.5s ease;
 }
@@ -800,7 +802,7 @@ export default {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 100;
+  z-index: 120;
   border-radius: 0 0 24rpx 24rpx;
 
   .cate_count {
@@ -827,7 +829,7 @@ export default {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.7);
-  z-index: 22;
+  z-index: 1111;
 }
 
 .scrolled {
@@ -1000,15 +1002,15 @@ export default {
   }
 }
 
-/deep/.dot0 .uni-swiper-dots-horizontal {
+::v-deep.dot0 .uni-swiper-dots-horizontal {
   left: 10%;
 }
 
-/deep/.dot1 .uni-swiper-dots-horizontal {
+::v-deep.dot1 .uni-swiper-dots-horizontal {
   left: 50%;
 }
 
-/deep/.dot2 .uni-swiper-dots-horizontal {
+::v-deep.dot2 .uni-swiper-dots-horizontal {
   left: 90%;
 }
 </style>

@@ -149,7 +149,7 @@
         </div>
       </div>
     </div>
-    <div class="wrapper2 acea-row row-between-wrapper" v-else>
+    <div class="wrapper2" v-else>
       <div
         class="item"
         :class="list.length % 2 == 0 ? 'on2' : 'on1'"
@@ -752,9 +752,16 @@ export default {
   }
 }
 .wrapper2 {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  width: 100%;
+  
   .item {
-    width: 173px;
+    width: calc(50% - 5px);
     margin-bottom: 10px;
+    box-sizing: border-box;
+    
     &.on1 {
       &:nth-last-child(1) {
         margin-bottom: 0;
@@ -779,6 +786,7 @@ export default {
     }
     .text {
       padding: 8px 10px 4px 10px;
+      box-sizing: border-box;
       .name {
         color: #333333;
         font-size: 14px;

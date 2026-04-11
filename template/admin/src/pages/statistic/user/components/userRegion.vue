@@ -201,7 +201,6 @@ export default {
           this.chinaConfigure();
         })
         .catch((res) => {
-          console.log(res);
           this.$message.error(res);
         });
     },
@@ -272,7 +271,6 @@ export default {
           };
         })
         .catch((res) => {
-          console.log(res);
           this.$message.error(res);
         });
     },

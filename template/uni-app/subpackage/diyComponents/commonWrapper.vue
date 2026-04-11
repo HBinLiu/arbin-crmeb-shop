@@ -168,12 +168,10 @@ export default {
             valList[1].val * 2
           }rpx ${valList[3].val * 2}rpx ${valList[2].val * 2}rpx`;
         } else {
-          console.log(fillet.val, "fillet");
 
           style["border-radius"] = `${fillet.val * 2}rpx`;
         }
       }
-      console.log(config, "config.borderRadius");
 
       // Z-Index
       if (zIndexConfig) {
