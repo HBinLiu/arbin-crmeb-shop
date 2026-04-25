@@ -41,7 +41,7 @@ CRMEB高品质开源商城系统（PHP版）
 <div align="center">
 
 [官网](https://www.crmeb.com/?from=giteephp) |
-[在线体验](http://v5.crmeb.net/admin/) |
+[在线体验](http://v6.crmeb.net/admin/) |
 [帮助文档](https://doc.crmeb.com/single_open) |
 [应用市场](https://www.crmeb.com/market?from=giteephp) |
 [技术社区](https://www.crmeb.com/ask/thread/list/147) |
@@ -160,19 +160,19 @@ docker run -d --name crmeb -p 8080:80 ccr.ccs.tencentyun.com/crmebky_php/crmebky
 
 ![输入图片说明](help/resource/pic/contact2.jpg)
 
-管理后台： http://v5.crmeb.net/admin
+管理后台： http://v6.crmeb.net/admin
 
 账号：demo 密码：crmeb.com
 
-H5端：http://v5.crmeb.net/ （移动端打开）
+H5端：http://v6.crmeb.net/ （移动端打开）
 
-PC端：http://v5.crmeb.net/ （电脑端打开）
+PC端：http://v6.crmeb.net/ （电脑端打开）
 
 APP下载：http://app.crmeb.cn/bzv （苹果手机直接在APP Store里搜索CRMEB下载）
 
 主题：https://www.crmeb.com/theme （电脑端打开）
 
-> 听说，大神你想看看CRMEB开源项目的完整框架？<a href="https://doc.crmeb.com/single/v5/7712" target="_blank">戳这儿，轻松获取！</a>
+> 听说，大神你想看看CRMEB开源项目的完整框架？<a href="https://doc.crmeb.com/single/v6/35630" target="_blank">戳这儿，轻松获取！</a>
 
 
 
