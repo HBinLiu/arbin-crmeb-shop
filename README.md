@@ -87,7 +87,7 @@ CRMEB开源商城系统代码100%开源，基于 **Apache-2.0协议** 免费商�
 
 
 
-🔗 <a href="https://doc.crmeb.com/single_open/open_v54/19855" target="_blank">功能列表</a> | 📩 <a href="https://gitee.com/ZhongBangKeJi/CRMEB/issues" target="_blank">提交反馈</a> | 📩 <a href="https://gitee.com/ZhongBangKeJi/CRMEB/pulls" target="_blank">提交代码</a> | 🔗 <a href="https://www.crmeb.com/theme" target="_blank">主题广场</a>
+🔗 <a href="https://doc.crmeb.com/single_open/open_v60/39233" target="_blank">功能列表</a> | 📩 <a href="https://gitee.com/ZhongBangKeJi/CRMEB/issues" target="_blank">提交反馈</a> | 📩 <a href="https://gitee.com/ZhongBangKeJi/CRMEB/pulls" target="_blank">提交代码</a> | 🔗 <a href="https://www.crmeb.com/theme" target="_blank">主题广场</a>
 
 
 
@@ -172,7 +172,7 @@ APP下载：http://app.crmeb.cn/bzv （苹果手机直接在APP Store里搜索CR
 
 主题：https://www.crmeb.com/theme （电脑端打开）
 
-> 听说，大神你想看看CRMEB开源项目的完整框架？<a href="https://doc.crmeb.com/single/v6/35630" target="_blank">戳这儿，轻松获取！</a>
+> 听说，大神你想看看CRMEB开源项目的完整框架？<a href="https://doc.crmeb.com/single_open/open_v60/39235" target="_blank">戳这儿，轻松获取！</a>
 
 
 
