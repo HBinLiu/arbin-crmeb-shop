@@ -2412,6 +2412,9 @@ class StoreProductServices extends BaseServices
                             return $val;
                         }
                     });
+                    if (count($cateName) == 1 && is_null($cateName[0]['one'])) {
+                        $cateName = [['one' => $cateName[0]['two'], 'two' => '', 'id' => $cateName[0]['id']]];
+                    }
                     $skuArr = array_combine(array_column($attrResult['attr'], 'value'), $value['detail']);
                     $attrArr = [];
                     foreach ($attrResult['attr'] as $attrArray) {
