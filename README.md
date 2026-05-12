@@ -306,17 +306,21 @@ docker-compose一键部署：https://doc.crmeb.com/single_open/open_v54/20145
 
 ---
 
-###  📕 CRMEB PRO版
+❤️ 以商业之名，护航开源之心
+
+
+###  📕 专业私域会员电商系统
 
 [![输入图片说明](help/resource/pic/PRO版2.jpg)](https://www.crmeb.com/index/pro?from=giteephp)
 
 
 
-###  📕 CRMEB 多商户版
+###  📕 做平台推荐高性价比多商户系统
 
 [![输入图片说明](help/resource/pic/duoshanghu2.jpg)](https://www.crmeb.com/index/merchant?from=giteephp)
 
 ---
+
 
 [返回顶部 :fa-arrow-circle-up: ](https://gitee.com/ZhongBangKeJi/CRMEB#%E9%A1%B9%E7%9B%AE%E4%BB%8B%E7%BB%8D)
 
