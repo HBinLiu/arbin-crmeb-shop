@@ -132,6 +132,10 @@ class PublicController
             $thinkPath = root_path(); // think 文件的绝对路径
             $checkService = function($service) {
                 if($service === 'queue'){
+                    // 检查队列设置是否开启，如果关闭则直接返回true，否则检查队列是否启动成功
+                    if (sys_config('queue_open', 0) == 0) {
+                        return false;
+                    }
                     $command = 'queue:listen'; 
                     // 执行 ps 命令查找队列进程
                     exec("ps aux | grep '{$command}' | grep -v grep", $output);
