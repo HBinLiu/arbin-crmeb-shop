@@ -12,35 +12,78 @@
 namespace app\listener\admin;
 
 /**
- * Class AdminLogin
+ * 管理员登录事件监听器
  * @package app\listener\admin
  */
 class AdminLoginListener
 {
-
+    /**
+     * 处理管理员登录事件
+     * @param array $event 事件数据 [key: 队列检测key, timer: 定时器状态]
+     * @return array [queue: 队列状态, timer: 定时器状态]
+     */
     public function handle($event)
     {
-        $res = false;
-        $res1 = false;
-        try {
-            [$key] = $event;
-            //检测消息队列是否执行
-            $path = root_path('runtime') . '.queue';
-            $content = file_get_contents($path);
-            $res = $key === $content;
-            if (sys_config('queue_open', 0) == 0) $res = true;
-        } catch (\Throwable $e) {
-        }
+        $queueStatus = $this->checkQueueStatus($event);
+        $timerStatus = $this->checkTimerStatus();
 
+        return [$queueStatus, $timerStatus];
+    }
+
+    /**
+     * 检查消息队列状态
+     * @param array $event
+     * @return bool
+     */
+    private function checkQueueStatus(array $event): bool
+    {
         try {
-            $timerPath = root_path('runtime') . '.timer';
-            $timer = file_get_contents($timerPath);
-            if ($timer && $timer <= time() && $timer > (time() - 70)) {
-                $res1 = true;
+            if (sys_config('queue_open', 0) == 0) {
+                return true;
             }
-        } catch (\Throwable $e) {
-        }
 
-        return [$res, $res1];
+            if (empty($event)) {
+                return false;
+            }
+
+            [$key] = $event;
+
+            $queueFilePath = root_path('runtime') . '.queue';
+            if (!file_exists($queueFilePath)) {
+                return false;
+            }
+
+            $content = file_get_contents($queueFilePath);
+            return $key === $content;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * 检查定时任务状态
+     * @return bool
+     */
+    private function checkTimerStatus(): bool
+    {
+        try {
+            $timerFilePath = root_path('runtime') . '.timer';
+
+            if (!file_exists($timerFilePath)) {
+                return false;
+            }
+
+            $timer = file_get_contents($timerFilePath);
+            if (empty($timer)) {
+                return false;
+            }
+
+            $currentTime = time();
+            $isValid = $timer <= $currentTime && $timer > ($currentTime - 70);
+
+            return $isValid;
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 }
