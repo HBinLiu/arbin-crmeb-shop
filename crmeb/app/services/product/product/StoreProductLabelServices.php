@@ -74,7 +74,7 @@ class StoreProductLabelServices extends BaseServices
 
     public function labelUseList()
     {
-        $labelUserList = $this->dao->labelUseList();
+        $labelUserList = $this->dao->labelUseList(false);
         $labelCateList = app()->make(StoreProductLabelCateServices::class)->getLabelCateList(['is_del' => 0, 'status' => 1]);
         $data = [];
         foreach ($labelUserList as $key => $item) {

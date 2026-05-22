@@ -12,6 +12,7 @@ namespace app\api\controller\v1\user;
 
 use app\Request;
 use app\services\user\UserExtractServices;
+use crmeb\services\CacheService;
 use think\facade\Config;
 
 /**
@@ -61,6 +62,13 @@ class UserExtractController
             ['weixin', ''],
             ['qrcode_url', ''],
         ]);
+        // 每10秒只能提现一次
+        $uid = (int)$request->uid();
+        $cacheKey = 'extract_limit_' . $uid;
+        if (CacheService::has($cacheKey)) {
+            return app('json')->fail('操作过于频繁，请10秒后再试');
+        }
+        CacheService::set($cacheKey, 1, 10);
         $extractInfo['channel_type'] = $request->getFromType();
         $extractType = Config::get('pay.extractType', []);
         if (!in_array($extractInfo['extract_type'], $extractType))
@@ -78,7 +86,6 @@ class UserExtractController
             if (!$extractInfo['cardnum']) return app('json')->fail('请输入银行卡账号');
             if (!$extractInfo['bankname']) return app('json')->fail('请输入开户行信息');
         }
-        $uid = (int)$request->uid();
         if ($this->services->cash($uid, $extractInfo))
             return app('json')->success('申请提现成功');
         else

@@ -504,7 +504,8 @@ class StoreProduct extends AuthController
             ['store_name', ''],
             ['cate_id', ''],
             ['type', 1],
-            ['sales', 'normal']
+            ['sales', 'normal'],
+            ['ids', []]
         ]);
         $where['virtual_type'] = 0;
         return app('json')->success($this->service->productExportList($where));

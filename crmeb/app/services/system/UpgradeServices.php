@@ -832,8 +832,21 @@ class UpgradeServices extends BaseServices
             throw new AdminException('升级文件异常,请重新下载');
         }
 
-        if (is_file($serverPackageName) && !$fileService->extractFile($serverPackageName, app()->getRootPath())) {
-            throw new AdminException('服务端解压失败');
+        // 服务端解压前，清空前端相关目录，避免旧文件残留
+        if (is_file($serverPackageName)) {
+            $clearDirs = [
+                app()->getRootPath() . 'public' . DS . 'admin',
+                app()->getRootPath() . 'public' . DS . 'statics' . DS . 'mp_view',
+                app()->getRootPath() . 'public' . DS . 'statics' . DS . 'download',
+            ];
+            foreach ($clearDirs as $clearDir) {
+                if (is_dir($clearDir)) {
+                    $this->clearDirectory($clearDir);
+                }
+            }
+            if (!$fileService->extractFile($serverPackageName, app()->getRootPath())) {
+                throw new AdminException('服务端解压失败');
+            }
         }
 
         if (is_file($clientPackageName) && !$fileService->extractFile($clientPackageName, app()->getRootPath())) {
@@ -846,6 +859,26 @@ class UpgradeServices extends BaseServices
 
         CacheService::set($token . '_coverage_project', 2, 86400);
         return true;
+    }
+
+    /**
+     * 清空目录下所有文件和子目录（保留目录本身）
+     * @param string $dir 目录路径
+     * @return void
+     */
+    public function clearDirectory(string $dir): void
+    {
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($iterator as $file) {
+            if ($file->isDir()) {
+                @rmdir($file->getRealPath());
+            } else {
+                @unlink($file->getRealPath());
+            }
+        }
     }
 
     /**
@@ -1900,7 +1933,7 @@ class UpgradeServices extends BaseServices
                 if ($current >= $total) {
                     $step = 3;
                     $progress = 90;
-                    $failedCount = count(array_filter($sqlLogs, fn($log) => $log['status'] === 'failed'));
+                    $failedCount = count(array_filter($sqlLogs, function ($log) { return $log['status'] === 'failed'; }));
                     $stepDetails['sql'] = $failedCount > 0
                         ? "SQL执行完成({$failedCount}项失败)"
                         : 'SQL执行完成 ✓';

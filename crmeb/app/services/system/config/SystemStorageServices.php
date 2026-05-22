@@ -296,6 +296,9 @@ class SystemStorageServices extends BaseServices
         } else {
             $data['cname'] = $data['domain'];
         }
+        if (4 === $type) {
+            $data['name'] = $data['name'] . '-' . sys_config('tengxun_appid');
+        }
         $data['add_time'] = time();
         $data['update_time'] = time();
         $config = $this->getStorageConfig($type);

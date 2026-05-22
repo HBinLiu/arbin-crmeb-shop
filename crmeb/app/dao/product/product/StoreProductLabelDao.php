@@ -49,9 +49,13 @@ class StoreProductLabelDao extends BaseDao
         return $this->conditionSearch($where)->count();
     }
 
-    public function labelUseList()
+    public function labelUseList(bool $is_show = true)
     {
-        $list = $this->getModel()->where('is_show', 1)->where('status', 1)->where('is_del', 0)->select()->toArray();
+        if ($is_show) {
+            $list = $this->getModel()->where('is_show', 1)->where('status', 1)->where('is_del', 0)->select()->toArray();
+        } else {
+            $list = $this->getModel()->where('status', 1)->where('is_del', 0)->select()->toArray();
+        }
         $arr = [];
         foreach ($list as $item) {
             $arr[$item['cate_id']][] = $item;
