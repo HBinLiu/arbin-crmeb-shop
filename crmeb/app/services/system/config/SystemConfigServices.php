@@ -35,6 +35,12 @@ use think\facade\Log;
 class SystemConfigServices extends BaseServices
 {
     /**
+     * 系统配置数据访问层
+     * @var SystemConfigDao
+     */
+    protected $dao;
+
+    /**
      * form表单句柄
      * @var FormBuilder
      */
@@ -51,22 +57,27 @@ class SystemConfigServices extends BaseServices
      * @var string[]
      */
     protected $postUrl = [
+        // 基础配置
         'setting' => [
             'url' => '/setting/config/save_basics',
             'auth' => [],
         ],
+        // 服务配置
         'serve' => [
             'url' => '/serve/sms_config/save_basics',
             'auth' => ['short_letter_switch'],
         ],
+        // 运费配置
         'freight' => [
             'url' => '/freight/config/save_basics',
             'auth' => ['express'],
         ],
+        // 分销配置
         'agent' => [
             'url' => '/agent/config/save_basics',
             'auth' => ['fenxiao'],
         ],
+        // 积分配置
         'marketing' => [
             'url' => '/marketing/integral_config/save_basics',
             'auth' => ['point'],
@@ -74,7 +85,7 @@ class SystemConfigServices extends BaseServices
     ];
 
     /**
-     * 子集控制规则
+     * 子集控制规则联动控制，新版单个配置可以配置联动，此配置为兼容旧版数据配置，不建议使用
      * @var array[]
      */
     protected $relatedRule = [
@@ -232,28 +243,7 @@ class SystemConfigServices extends BaseServices
         $this->builder = $builder;
     }
 
-    /**
-     * @return array|int[]|string[]
-     * @author 吴汐
-     * @email 442384644@qq.com
-     * @date 2023/04/12
-     */
-    public function getSonConfig()
-    {
-        $sonConfig = [];
-        $rolateRule = $this->relatedRule;
-        if ($rolateRule) {
-            foreach ($rolateRule as $key => $value) {
-                $sonConfig = array_merge($sonConfig, array_keys($value['son_type']));
-                foreach ($value['son_type'] as $k => $v) {
-                    if (isset($v['son_type'])) {
-                        $sonConfig = array_merge($sonConfig, array_keys($v['son_type']));
-                    }
-                }
-            }
-        }
-        return $sonConfig;
-    }
+ 
 
     /**
      * 获取单个系统配置
@@ -282,7 +272,7 @@ class SystemConfigServices extends BaseServices
     }
 
     /**
-     * 获取配置并分页
+     * 获取配置列表搜索并分页
      * @param array $where
      * @return array
      * @throws \think\db\exception\DataNotFoundException
@@ -305,13 +295,18 @@ class SystemConfigServices extends BaseServices
                 if ($item['upload_type'] == 1 || $item['upload_type'] == 3) {
                     $item['value'] = [set_file_url($item['value'])];
                 } elseif ($item['upload_type'] == 2) {
-                    $item['value'] = set_file_url($item['value']);
+                    $tempValue = set_file_url($item['value']);
+                    $item['value'] = is_array($tempValue) ? $tempValue : [];
                 }
-                foreach ($item['value'] as $key => $value) {
-                    $tidy_srr[$key]['filepath'] = $value;
-                    $tidy_srr[$key]['filename'] = basename($value);
+                if (is_array($item['value']) && !empty($item['value'])) {
+                    foreach ($item['value'] as $key => $value) {
+                        $tidy_srr[$key]['filepath'] = $value;
+                        $tidy_srr[$key]['filename'] = basename($value);
+                    }
+                    $item['value'] = $tidy_srr;
+                } else {
+                    $item['value'] = [];
                 }
-                $item['value'] = $tidy_srr;
             }
             if ($item['level'] == 1) {
                 $item['link_data'] = $this->getLinkData($item['link_id'], $item['link_value']);
@@ -322,7 +317,7 @@ class SystemConfigServices extends BaseServices
     }
 
     /**
-     * 获取关联的值
+     * 配置列表页获取关联的值，展示：关联配置名称/关联值
      * @param $id
      * @param $value
      * @return string
@@ -333,7 +328,7 @@ class SystemConfigServices extends BaseServices
      * @email 442384644@qq.com
      * @date 2024/5/31
      */
-    public function getLinkData($id, $value)
+    private function getLinkData($id, $value)
     {
         $info = $this->dao->get($id);
         if (!$info) return '';
@@ -343,11 +338,11 @@ class SystemConfigServices extends BaseServices
             $parts = explode('=>', $item);
             $result[$parts[0]] = $parts[1];
         }
-        return $info['info'] . '/' . $result[$value];
+        return $info['info'] . ':' . $result[$value].'（显示）';
     }
 
     /**
-     * 获取单选按钮或者多选按钮的显示值
+     * 配置列表页获取单选按钮或者多选按钮的显示值
      * @param $menu_name
      * @param $value
      * @return string
@@ -355,7 +350,7 @@ class SystemConfigServices extends BaseServices
      * @throws \think\db\exception\ModelNotFoundException
      * @throws \think\exception\DbException
      */
-    public function getRadioOrCheckboxValueInfo(string $menu_name, $value): string
+    private function getRadioOrCheckboxValueInfo(string $menu_name, $value): string
     {
         $option = [];
         $config_one = $this->dao->getOne(['menu_name' => $menu_name]);
@@ -381,7 +376,7 @@ class SystemConfigServices extends BaseServices
     }
 
     /**
-     * 获取系统配置信息
+     * 根据配置tab id获取系统配置信息
      * @param int $tabId
      * @return array
      * @throws \think\db\exception\DataNotFoundException
@@ -402,6 +397,189 @@ class SystemConfigServices extends BaseServices
     }
 
     /**
+     * 修改字段获取form表单
+     * @param int $id
+     * @return array
+     * @throws \FormBuilder\Exception\FormBuilderException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     */
+    public function editFieldForm(int $id)
+    {
+        $menu = $this->dao->get($id)->getData();
+        if (!$menu) {
+            throw new AdminException('数据不存在');
+        }
+        /** @var SystemConfigTabServices $service */
+        $service = app()->make(SystemConfigTabServices::class);
+        $formbuider = [];
+        $linkData = $this->linkData($menu['config_tab_id']);
+        $formbuider[] = $this->builder->radio('level', '联动显示', $menu['level'])->options([['value' => 0, 'label' => '否'], ['value' => 1, 'label' => '是']])->appendRule('suffix', [
+            'type' => 'div',
+            'class' => 'tips-info',
+            'domProps' => ['innerHTML' => '否：默认正常展示此配置；是：此配置默认隐藏，当选中下方对应配置的值时，此配置才会显示']
+        ])->appendControl(1, [
+            $this->builder->cascader('link_data', '关联配置/值', [$menu['link_id'], $menu['link_value']])->options($linkData)->props(['props' => ['multiple' => false, 'checkStrictly' => false, 'emitPath' => true]])->style(['width' => '100%']),
+        ])->requiredNum();
+        $formbuider[] = $this->builder->input('menu_name', '字段变量', $menu['menu_name'])->disabled(1);
+        $formbuider[] = $this->builder->hidden('type', $menu['type']);
+        [$configTabList, $data] = $service->getConfigTabListForm((int)($menu['config_tab_id'] ?? 0));
+        $formbuider[] = $this->builder->cascader('config_tab_id', '分类', $data)->options($configTabList)->filterable(true)->props(['props' => ['multiple' => false, 'checkStrictly' => true, 'emitPath' => true]])->style(['width' => '100%']);
+        $formbuider[] = $this->builder->input('info', '配置名称', $menu['info'])->required('配置名称不能为空')->autofocus(1);
+        $formbuider[] = $this->builder->input('desc', '配置简介', $menu['desc']);
+        switch ($menu['type']) {
+            case 'text':
+                $menu['value'] = json_decode($menu['value'], true);
+                $formbuider[] = $this->createTextInputTypeForm($menu, true);
+                break;
+            case 'textarea':
+                $menu['value'] = json_decode($menu['value'], true);
+                $formbuider[] = $this->builder->textarea('value', '默认值', $menu['value'])->rows(3);
+                $formbuider[] = $this->builder->number('width', '文本框宽', (int)$menu['width'])->min(1)->max(24);
+                $formbuider[] = $this->builder->number('high', '多行文本框高', (int)$menu['high'])->min(1);
+                break;
+            case 'radio':
+                $formbuider = array_merge($formbuider, $this->createRadioForm($menu));
+                $formbuider[] = $this->builder->textarea('parameter', '配置参数', $menu['parameter'] ?? '')->rows(3)->placeholder("参数方式例如:\n1=>白色\n2=>红色\n3=>黑色");
+                break;
+            
+            case 'upload':
+                $formbuider = array_merge($formbuider, $this->createUploadForm((int)$menu['upload_type'], $menu, true));
+                break;
+            case 'checkbox':
+                $menu['label'] = '默认值';
+                $formbuider = array_merge($formbuider, $this->createCheckboxForm($menu));
+                $formbuider[] = $this->builder->textarea('parameter', '配置参数', $menu['parameter'] ?? '')->rows(3)->placeholder("参数方式例如:\n1=>白色\n2=>红色\n3=>黑色");
+                break;
+            case 'select':
+                $formbuider = array_merge($formbuider, $this->createSelectForm($menu));
+                $formbuider[] = $this->builder->textarea('parameter', '配置参数', $menu['parameter'] ?? '')->rows(3)->placeholder("参数方式例如:\n1=>白色\n2=>红色\n3=>黑色");
+                break;
+            case 'switch':
+                $formbuider = array_merge($formbuider, $this->createSwitchForm($menu));
+                break;
+        }
+        // 是否必填（支持JSON格式）
+        $requiredData = json_decode($menu['required'], true);
+        if ($requiredData && isset($requiredData['required'])) {
+            $menu['required'] = $requiredData['required'] ? 1 : 0;
+        } else {
+            $menu['required'] = $menu['required'] ? 1 : 0;
+        }
+        // 非switch类型，添加是否必填字段
+        if ($menu['type'] != 'switch') {
+            $formbuider[] = $this->builder->radio('required', '是否必填', $menu['required'] ?? 0)->options([
+                ['value' => 0, 'label' => '否'],
+                ['value' => 1, 'label' => '是'],
+            ])->requiredNum();
+        }
+        $formbuider[] = $this->builder->number('sort', '排序', (int)$menu['sort']);
+        $formbuider[] = $this->builder->radio('status', '状态', $menu['status'] ?? 0)->options([
+            ['value' => 1, 'label' => '显示'],
+            ['value' => 0, 'label' => '隐藏'],
+        ])->requiredNum();
+        return create_form('编辑字段', $formbuider, $this->url('/setting/config/' . $id), 'PUT');
+    }
+
+    /**
+     * 创建和编辑文本类型的输入类型表单
+     * @param array $data 配置数据
+     * @param bool $isEdit 是否为编辑模式
+     * @return BaseForm|BaseForm[]
+     */
+    private function createTextInputTypeForm(array $data, bool $isEdit = false)
+    {
+        
+        
+        // 拆分必填、格式规则和数字范围（支持JSON格式）
+        $requiredRules = $data['required'] ?? '';
+        $requiredData = [];
+        
+        // 尝试解析JSON格式的验证规则
+        if ($requiredRules && $requiredData = json_decode($requiredRules, true)) {
+            $data['required'] = isset($requiredData['required']) && $requiredData['required'] ? 'required:true' : '';
+            $data['regex'] = $requiredData['regex'] ?? '';
+            $data['min'] = $requiredData['min'] ?? '';
+            $data['max'] = $requiredData['max'] ?? '';
+        } else {
+            // 兼容旧格式：逗号分隔的字符串格式
+            $data['required'] = strpos($requiredRules, 'required:true') !== false ? 'required:true' : '';
+            $data['regex'] = '';
+            $data['min'] = '';
+            $data['max'] = '';
+            
+            // 提取 min 和 max
+            if (preg_match('/\bmin:(-?\d+)/', $requiredRules, $minMatch)) {
+                $data['min'] = (int)$minMatch[1];
+            }
+            if (preg_match('/\bmax:(-?\d+)/', $requiredRules, $maxMatch)) {
+                $data['max'] = (int)$maxMatch[1];
+            }
+            
+            // 提取正则表达式
+            if (preg_match('/regex:(\/.+\/[gimsuy]*)/', $requiredRules, $patternMatch)) {
+                $data['regex'] = $patternMatch[1];
+            }
+        }
+        
+        // 创建输入类型选择器
+        $inputTypeSelect = $this->builder->select('input_type', '类型', $data['input_type'] ?? 'input')->setOptions([
+            ['value' => 'input', 'label' => '文本框'],
+            ['value' => 'number', 'label' => '数字'],
+            ['value' => 'dateTime', 'label' => '日期时间'],
+            ['value' => 'date', 'label' => '日期'],
+            ['value' => 'time', 'label' => '时间'],
+            ['value' => 'color', 'label' => '颜色']
+        ])->required();
+        
+        // 正则表达式（输入框）
+        $regexField = $this->builder->input('regex', '表单验证', $data['regex'] ?? '')
+            ->placeholder('输入正则表达式，如：/^\d+$/')
+            ->appendRule('suffix', [
+                'type' => 'div',
+                'class' => 'tips-info',
+                'domProps' => ['innerHTML' => '邮箱：/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/<br>手机号：/^1[3-9]\d{9}$/<br>URL：/^https?:\/\/.+/i<br>电话：/^1[3-9]\d{9}$|^0\d{2,3}-\d{7,8}$|^400-\d{3}-\d{3}$/<br>长度：/^.{6,20}$/']
+            ]);
+        // 宽度字段
+        $col = isset($data['width']) && $data['width'] != 0 && $data['width'] >= 4 && $data['width'] <= 24 ? (int)$data['width'] : 13;
+        $widthField = $this->builder->number('width', '表单框宽', $col)->min(4)->max(24);
+        
+        // 不同类型的默认值
+        $inputValue = $data['input_type'] == 'input' ? ($data['value'] ?? '') : '';
+        $inputValueField = $this->builder->input('value', '默认值', $inputValue);
+        
+        $numberValue = $data['input_type'] == 'number' ? ($data['value'] ?? '0') : '';
+        $numberValueField = $this->builder->input('value', '默认值', $numberValue);
+        
+        $dateTimeValue = $data['input_type'] == 'dateTime' ? ($data['value'] ?? date('Y-m-d H:i:s')) : '';
+        $dateTimeValueField = $this->builder->dateTime('value', '默认值', $dateTimeValue);
+        
+        $dateValue = $data['input_type'] == 'date' ? ($data['value'] ?? date('Y-m-d')) : '';
+        $dateValueField = $this->builder->date('value', '默认值', $dateValue);
+        
+        $timeValue = $data['input_type'] == 'time' ? ($data['value'] ?? date('H:i:s')) : '';
+        $timeValueField = $this->builder->time('value', '默认值', $timeValue);
+        
+        $colorValue = $data['input_type'] == 'color' ? ($data['value'] ?? '#000000') : '#000000';
+        $colorValueField = $this->builder->color('value', '默认值', $colorValue);
+        
+        // 数字类型的最小值和最大值
+        $numberMinField = $this->builder->input('min', '最小值', $data['min'] ?? '')->type('number');
+        $numberMaxField = $this->builder->input('max', '最大值', $data['max'] ?? '')->type('number');
+        
+        // 根据类型联动显示不同的控件
+        $inputTypeSelect->appendControl('input', [$regexField, $inputValueField, $widthField]);
+        $inputTypeSelect->appendControl('number', [$numberMinField, $numberMaxField, $numberValueField, $widthField]);
+        $inputTypeSelect->appendControl('dateTime', [$dateTimeValueField]);
+        $inputTypeSelect->appendControl('date', [$dateValueField]);
+        $inputTypeSelect->appendControl('time', [$timeValueField]);
+        $inputTypeSelect->appendControl('color', [$colorValueField]);
+        
+        return $inputTypeSelect;
+    }
+
+    /**
      * 创建单行表单
      * @param string $type
      * @param array $data
@@ -410,17 +588,46 @@ class SystemConfigServices extends BaseServices
     public function createTextForm(string $type, array $data)
     {
         $formbuider = [];
+        $inputRule = '';
         switch ($type) {
             case 'number':
+                // 解析验证规则（支持 JSON 格式）
+                $requiredRules = $data['required'] ?? '';
+                $requiredData = json_decode($requiredRules, true);
+                
+                if ($requiredData) {
+                    // JSON 格式
+                    $data['min'] = $requiredData['min'] ?? null;
+                    $data['max'] = $requiredData['max'] ?? null;
+                } else {
+                    // 兼容旧格式：提取 min 和 max
+                    $data['min'] = null;
+                    $data['max'] = null;
+                    if (preg_match('/\bmin:(-?\d+)/', $requiredRules, $minMatch)) {
+                        $data['min'] = (int)$minMatch[1];
+                    }
+                    if (preg_match('/\bmax:(-?\d+)/', $requiredRules, $maxMatch)) {
+                        $data['max'] = (int)$maxMatch[1];
+                    }
+                }
+                
                 $data['value'] = isset($data['value']) ? json_decode($data['value'], true) : 0;
-                $formbuider[] = $this->builder->number($data['menu_name'], $data['info'], (float)$data['value'])->controls(false)->appendRule('suffix', [
+                // 最小值和最大值提示（有值才显示）
+                $minMaxTip = '';
+                if (isset($data['min']) && $data['min'] !== null) {
+                    $minMaxTip = '<br>最小值：' . $data['min'];
+                }
+                if (isset($data['max']) && $data['max'] !== null) {
+                    $minMaxTip .= ($minMaxTip ? '，' : '<br>') . '最大值：' . $data['max'];
+                }
+                $inputRule = $this->builder->number($data['menu_name'], $data['info'], (float)$data['value'])->controls(false)->appendRule('suffix', [
                     'type' => 'div',
                     'class' => 'tips-info',
-                    'domProps' => ['innerHTML' => $data['desc']]
-                ]);
+                    'domProps' => ['innerHTML' => $data['desc'] . $minMaxTip]
+                ])->col($data['width'] ?? 13);
                 break;
             case 'dateTime':
-                $formbuider[] = $this->builder->dateTime($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
+                $inputRule = $this->builder->dateTime($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
                     'type' => 'div',
                     'class' => 'tips-info',
                     'domProps' => ['innerHTML' => $data['desc']]
@@ -428,7 +635,7 @@ class SystemConfigServices extends BaseServices
                 break;
             case 'date':
                 $data['value'] = json_decode($data['value'], true) ?: '';
-                $formbuider[] = $this->builder->date($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
+                $inputRule = $this->builder->date($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
                     'type' => 'div',
                     'class' => 'tips-info',
                     'domProps' => ['innerHTML' => $data['desc']]
@@ -436,7 +643,7 @@ class SystemConfigServices extends BaseServices
                 break;
             case 'time':
                 $data['value'] = json_decode($data['value'], true) ?: '';
-                $formbuider[] = $this->builder->time($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
+                $inputRule = $this->builder->time($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
                     'type' => 'div',
                     'class' => 'tips-info',
                     'domProps' => ['innerHTML' => $data['desc']]
@@ -444,7 +651,7 @@ class SystemConfigServices extends BaseServices
                 break;
             case 'color':
                 $data['value'] = isset($data['value']) ? json_decode($data['value'], true) : '';
-                $formbuider[] = $this->builder->color($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
+                $inputRule = $this->builder->color($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
                     'type' => 'div',
                     'class' => 'tips-info',
                     'domProps' => ['innerHTML' => $data['desc']]
@@ -452,49 +659,63 @@ class SystemConfigServices extends BaseServices
                 break;
             default:
                 $data['value'] = isset($data['value']) ? json_decode($data['value'], true) : '';
+                // 如果配置项是api或routine_api，需要添加site_url，并且是只读的
                 if ($data['menu_name'] == 'api' || $data['menu_name'] == 'routine_api') {
-                    $formbuider[] = $this->builder->input($data['menu_name'], $data['info'], strpos($data['value'], 'http') === false ? sys_config('site_url') . $data['value'] : $data['value'])->appendRule('suffix', [
+                    $inputRule = $this->builder->input($data['menu_name'], $data['info'], strpos($data['value'], 'http') === false ? sys_config('site_url') . $data['value'] : $data['value'])->appendRule('suffix', [
                         'type' => 'div',
                         'class' => 'tips-info',
                         'domProps' => ['innerHTML' => $data['desc']]
-                    ])->col(13)->readonly(true);
+                    ])->col($data['width'] ?? 13)->readonly(true);
                 } else {
-                    $formbuider[] = $this->builder->input($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
+                    // 宽宽度设置
+                    $col = isset($data['width']) && $data['width'] != 0 && $data['width'] >= 4 && $data['width'] <= 24 ? (int)$data['width'] : 13;
+        
+                    $inputRule = $this->builder->input($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
                         'type' => 'div',
                         'class' => 'tips-info',
                         'domProps' => ['innerHTML' => $data['desc']]
-                    ])->col(13);
+                    ])->col($col)->placeholder('请输入'.$data['info']);
                 }
                 break;
         }
+        // 是否必填项
+        $this->isRequired($data['required']) && $inputRule = $inputRule->required($data['info'].'不能为空');  
+        $formbuider[] = $inputRule;
         return $formbuider;
     }
-
+    
     /**
      * 创建多行文本框
      * @param array $data
      * @return mixed
      */
-    public function createTextareaForm(array $data)
+    private function createTextareaForm(array $data)
     {
+        $formbuider = [];
+        $textareaRule = '';
         $data['value'] = json_decode($data['value'], true) ?: '';
         if ($data['menu_name'] == 'param_filter_data') $data['value'] = base64_decode($data['value']);
-        $formbuider[] = $this->builder->textarea($data['menu_name'], $data['info'], $data['value'])->placeholder($data['desc'])->appendRule('suffix', [
+        // 宽度设置
+        $col = isset($data['width']) && $data['width'] < 24 && $data['width'] > 4  ? $data['width'] : 13;
+        $textareaRule = $this->builder->textarea($data['menu_name'], $data['info'], $data['value'])->placeholder($data['desc'])->appendRule('suffix', [
             'type' => 'div',
             'class' => 'tips-info',
             'domProps' => ['innerHTML' => $data['desc']]
-        ])->rows(6)->col(13);
+        ])->rows($data['high'] ?? 6)->col($col);
+        // 是否必填项
+        $this->isRequired($data['required']) && $textareaRule = $textareaRule->required($data['info'].'不能为空')->placeholder($data['desc']);
+        $formbuider[] = $textareaRule;
         return $formbuider;
     }
 
     /**
-     * 创建当选表单
+     * 创建单选表单
      * @param array $data
      * @param array $control
      * @param array $control_two
      * @return array
      */
-    public function createRadioForm(array $data, $control = [], $control_two = [], $control_three = [])
+    private function createRadioForm(array $data, $control = [], $control_two = [], $control_three = [])
     {
         $formbuider = [];
         $data['value'] = json_decode($data['value'], true) ?: '0';
@@ -513,7 +734,7 @@ class SystemConfigServices extends BaseServices
                 'type' => 'div',
                 'class' => 'tips-info',
                 'domProps' => ['innerHTML' => $data['desc']]
-            ])->col(13);
+            ])->requiredNum()->col(13);
             if ($control) {
                 $radio->appendControl($data['show_value'] ?? 1, is_array($control) ? $control : [$control]);
             }
@@ -531,47 +752,95 @@ class SystemConfigServices extends BaseServices
      * 创建上传组件表单
      * @param int $type
      * @param array $data
+     * @param bool $showTypeSelect 是否显示上传类型选择器
      * @return array
      */
-    public function createUploadForm(int $type, array $data)
+    private function createUploadForm(int $type, array $data, bool $showTypeSelect = false)
     {
         $formbuider = [];
-        switch ($type) {
-            case 1:
-                $data['value'] = json_decode($data['value'], true) ?: '';
-                if ($data['value'] != '') $data['value'] = set_file_url($data['value']);
-                $formbuider[] = $this->builder->frameImage($data['menu_name'], $data['info'], $this->url(config('app.admin_prefix', 'admin') . '/widget.images/index', ['fodder' => $data['menu_name']], true), $data['value'])
-                    ->icon('el-icon-picture-outline')->width('950px')->height('560px')->Props(['footer' => false, 'modalTitle' => '预览'])->appendRule('suffix', [
-                        'type' => 'div',
-                        'class' => 'tips-info',
-                        'domProps' => ['innerHTML' => $data['desc']]
-                    ])->col(13);
-                break;
-            case 2:
-                $data['value'] = json_decode($data['value'], true) ?: [];
-                if ($data['value'])
-                    $data['value'] = set_file_url($data['value']);
-                $formbuider[] = $this->builder->frameImages($data['menu_name'], $data['info'], $this->url(config('app.admin_prefix', 'admin') . '/widget.images/index', ['fodder' => $data['menu_name'], 'type' => 'many', 'maxLength' => 5], true), $data['value'])
-                    ->maxLength(5)->icon('el-icon-picture-outline')->width('950px')->height('560px')->Props(['footer' => false, 'modalTitle' => '预览'])
-                    ->appendRule('suffix', [
-                        'type' => 'div',
-                        'class' => 'tips-info',
-                        'domProps' => ['innerHTML' => $data['desc']]
-                    ])->col(13);
-                break;
-            case 3:
-                $data['value'] = json_decode($data['value'], true) ?: '';
-                if ($data['value'] != '') $data['value'] = set_file_url($data['value']);
-                $formbuider[] = $this->builder->uploadFile($data['menu_name'], $data['info'], $this->url('/adminapi/file/upload/1', ['type' => 1], false, true), $data['value'])
-                    ->name('file')->appendRule('suffix', [
-                        'type' => 'div',
-                        'class' => 'tips-info',
-                        'domProps' => ['innerHTML' => $data['desc']]
-                    ])->col(13)->data(['menu_name' => $data['menu_name']])->headers([
-                        'Authori-zation' => app()->request->header('Authori-zation'),
-                    ]);
-                break;
+        // 单图控件
+        if($type == 1){
+            $singleDataValue = json_decode($data['value'], true) ?: '';
+            if ($singleDataValue != '') $singleDataValue = set_file_url($singleDataValue);
+        } else{
+            $singleDataValue = '';
         }
+        $singleImageField = $this->builder->frameImage($data['menu_name'], $data['info'], $this->url(config('app.admin_prefix', 'admin') . '/widget.images/index', ['fodder' => $data['menu_name']], true), $singleDataValue)
+            ->icon('el-icon-picture-outline')->width('950px')->height('560px')->Props(['footer' => false, 'modalTitle' => '预览'])->appendRule('suffix', [
+                'type' => 'div',
+                'class' => 'tips-info',
+                'domProps' => ['innerHTML' => $data['desc'] ?? '']
+            ])->col(13);
+        
+        
+        // 多图控件
+        if($type == 2){
+            $multiDataValue = json_decode($data['value'], true) ?: [];
+            if (!empty($multiDataValue)) {
+                $multiDataValue = set_file_url($multiDataValue);
+            }
+        } else{
+            $multiDataValue = [];
+        }
+        
+        $multiImageField = $this->builder->frameImages($data['menu_name'], $data['info'], $this->url(config('app.admin_prefix', 'admin') . '/widget.images/index', ['fodder' => $data['menu_name'], 'type' => 'many', 'maxLength' => 5], true), $multiDataValue)
+            ->maxLength(5)->icon('el-icon-picture-outline')->width('950px')->height('560px')->Props(['footer' => false, 'modalTitle' => '预览'])
+            ->appendRule('suffix', [
+                'type' => 'div',
+                'class' => 'tips-info',
+                'domProps' => ['innerHTML' => $data['desc'] ?? '']
+            ])->col(13);
+        
+        // 文件控件
+        if($type == 3){
+            $fileDataValue = json_decode($data['value'], true) ?: '';
+            if ($fileDataValue != '') $fileDataValue = set_file_url($fileDataValue);
+        } else{
+            $fileDataValue = '';
+        }   
+        
+        $fileField = $this->builder->uploadFile($data['menu_name'], $data['info'], $this->url('/adminapi/file/upload/1', ['type' => 1], false, true), $fileDataValue)
+            ->name('file')->appendRule('suffix', [
+                'type' => 'div',
+                'class' => 'tips-info',
+                'domProps' => ['innerHTML' => $data['desc'] ?? '']
+            ])->col(13)->data(['menu_name' => $data['menu_name']])->headers([
+                'Authori-zation' => app()->request->header('Authori-zation'),
+            ]);
+        
+        // 如果需要显示类型选择器（编辑模式）
+        if ($showTypeSelect) {
+            // 创建上传类型的radio选择器
+            $uploadTypeSelect = $this->builder->radio('upload_type', '上传类型', $type)->options($this->uploadType());
+            // 联动：切换类型时显示对应的上传控件
+            $uploadTypeSelect->appendControl(1, [$singleImageField]);
+            $uploadTypeSelect->appendControl(2, [$multiImageField]);
+            $uploadTypeSelect->appendControl(3, [$fileField]);
+            
+            $uploadRule = $uploadTypeSelect;
+        } else {
+            // 新建模式：根据类型只显示对应的上传控件
+            switch ($type) {
+                case 1:
+                    // 是否必填项   
+                    $this->isRequired($data['required']) && $singleImageField = $singleImageField->appendValidate((new \FormBuilder\UI\Elm\Validate(\FormBuilder\UI\Elm\Validate::TYPE_STRING))->required()->message($data['info'].'请选择图片'));
+                    $uploadRule = $singleImageField;
+                    break;
+                case 2:
+                    // 是否必填项
+                    $this->isRequired($data['required']) && $multiImageField = $multiImageField->appendValidate((new \FormBuilder\UI\Elm\Validate(\FormBuilder\UI\Elm\Validate::TYPE_ARRAY))->required()->message($data['info'].'请选择图片'));
+                    $uploadRule = $multiImageField;
+                    break;
+                case 3:
+                    // 是否必填项
+                    $this->isRequired($data['required']) && $fileField = $fileField->appendValidate((new \FormBuilder\UI\Elm\Validate(\FormBuilder\UI\Elm\Validate::TYPE_STRING))->required()->message($data['info'].'请选择文件'));
+                    $uploadRule = $fileField;
+                    break;
+            }
+        }
+        
+        $formbuider[] = $uploadRule;
+        
         return $formbuider;
     }
 
@@ -581,9 +850,10 @@ class SystemConfigServices extends BaseServices
      * @return array
      * @throws \FormBuilder\Exception\FormBuilderException
      */
-    public function createCheckboxForm(array $data)
+    private function createCheckboxForm(array $data)
     {
         $formbuider = [];
+        $checkboxRule = null;
         $data['value'] = json_decode($data['value'], true) ?: [];
         $parameter = explode("\n", $data['parameter']);
         $options = [];
@@ -594,12 +864,18 @@ class SystemConfigServices extends BaseServices
                     $options[] = ['label' => $pdata[1], 'value' => $pdata[0]];
                 }
             }
-            $formbuider[] = $this->builder->checkbox($data['menu_name'], $data['info'], $data['value'])->options($options)->appendRule('suffix', [
+            $checkboxRule = $this->builder->checkbox($data['menu_name'], $data['info'], $data['value'])->options($options)->appendRule('suffix', [
                 'type' => 'div',
                 'class' => 'tips-info',
                 'domProps' => ['innerHTML' => $data['desc']]
             ])->col(13);
         }
+        // 是否必填项
+        $isRequired = $this->isRequired($data['required']);
+        if ($isRequired) {
+            $checkboxRule = $checkboxRule->required($data['info'].'至少选择一个');
+        }
+        $formbuider[] = $checkboxRule;
         return $formbuider;
     }
 
@@ -609,9 +885,10 @@ class SystemConfigServices extends BaseServices
      * @return array
      * @throws \FormBuilder\Exception\FormBuilderException
      */
-    public function createSelectForm(array $data)
+    private function createSelectForm(array $data)
     {
         $formbuider = [];
+        $selectRule = null;
         $data['value'] = json_decode($data['value'], true) ?: [];
         $parameter = explode("\n", $data['parameter']);
         $options = [];
@@ -622,12 +899,15 @@ class SystemConfigServices extends BaseServices
                     $options[] = ['label' => $pdata[1], 'value' => $pdata[0]];
                 }
             }
-            $formbuider[] = $this->builder->select($data['menu_name'], $data['info'], $data['value'])->options($options)->appendRule('suffix', [
+            $selectRule = $this->builder->select($data['menu_name'], $data['info'], $data['value'])->options($options)->appendRule('suffix', [
                 'type' => 'div',
                 'class' => 'tips-info',
                 'domProps' => ['innerHTML' => $data['desc']]
             ])->col(13);
         }
+        // 是否必填项
+        $this->isRequired($data['required']) && $selectRule = $selectRule->required($data['info'].'请选择');
+        $formbuider[] = $selectRule;
         return $formbuider;
     }
 
@@ -639,14 +919,17 @@ class SystemConfigServices extends BaseServices
      * @email: 442384644@qq.com
      * @date: 2023/9/6
      */
-    public function createSwitchForm($data)
+    private function createSwitchForm($data)
     {
+        $formbuider = [];
+        $switchRule = null;
         $data['value'] = json_decode($data['value'], true) ?: '';
-        $formbuider[] = $this->builder->switches($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
+        $switchRule = $this->builder->switches($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [   
             'type' => 'div',
             'class' => 'tips-info',
             'domProps' => ['innerHTML' => $data['desc']]
-        ])->col(13);
+        ])->required($data['info'].'必选项')->col(13);
+        $formbuider[] = $switchRule;
         return $formbuider;
     }
 
@@ -655,7 +938,7 @@ class SystemConfigServices extends BaseServices
      * @param array $data
      * @return mixed
      */
-    public function createColorForm(array $data)
+    private function createColorForm(array $data)
     {
         $data['value'] = json_decode($data['value'], true) ?: '';
         $formbuider[] = $this->builder->color($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
@@ -665,30 +948,34 @@ class SystemConfigServices extends BaseServices
         ])->col(13);
         return $formbuider;
     }
-
-    public function bindBuilderData($data, $relatedRule)
+    /**
+     * 上传类型
+     * @return array
+     */
+    private function uploadType(): array
     {
-        if (!$data) return false;
-        $p_list = array();
-        foreach ($relatedRule as $rk => $rv) {
-            $p_list[$rk] = $data[$rk];
-            if (isset($rv['son_type']) && is_array($rv['son_type'])) {
-                foreach ($rv['son_type'] as $sk => $sv) {
-                    if (is_array($sv) && isset($sv['son_type'])) {
-                        foreach ($sv['son_type'] as $ssk => $ssv) {
-                            $tmp = $data[$sk];
-                            $tmp['console'] = $data[$ssk];
-                            $p_list[$rk]['console'][] = $tmp;
-                        }
-                    } else {
-                        $p_list[$rk]['console'][] = $data[$sk];
-                    }
-                }
-            }
-
-        }
-        return array_values($p_list);
+        return [
+            ['value' => 1, 'label' => '单图']
+            , ['value' => 2, 'label' => '多图']
+            , ['value' => 3, 'label' => '文件']
+        ];
     }
+    /**
+     * 根据验证规则判断是否必填项
+     * @param string $required
+     * @return bool
+     */
+    private function isRequired(string $required)
+    {
+        // 支持 JSON 格式
+        $requiredData = json_decode($required, true);
+        if ($requiredData) {
+            return isset($requiredData['required']) && $requiredData['required'] ? true : false;
+        }
+        // 兼容旧格式：逗号分隔
+        return strpos($required, 'required:true') !== false;
+    }
+
 
     /**
      * 获取系统配置表单
@@ -709,40 +996,22 @@ class SystemConfigServices extends BaseServices
             case 'textarea'://多行文本框
                 return $this->createTextareaForm($data);
             case 'upload'://文件上传
-                return $this->createUploadForm((int)$data['upload_type'], $data);
+                return $this->createUploadForm((int)$data['upload_type'], $data,false);
             case 'checkbox'://多选框
                 return $this->createCheckboxForm($data);
             case 'select'://多选框
                 return $this->createSelectForm($data);
-            case 'color':
-                return $this->createColorForm($data);
+            // case 'color':
+            //     return $this->createColorForm($data);
             case 'switch'://开关
                 return $this->createSwitchForm($data);
         }
     }
 
-    /**
-     * @param int $tabId
-     * @param array $formData
-     * @param array $relatedRule
-     * @return array|bool
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
-     */
-    public function createConfigForm(int $tabId, array $relatedRule)
-    {
-        $list = $this->dao->getConfigTabAllList($tabId);
-        if (!$relatedRule) {
-            $formbuider = $this->createNoCrontrolForm($list);
-        } else {
-            $formbuider = $this->createBindCrontrolForm($list, $relatedRule);
-        }
-        return $formbuider;
-    }
+    
 
     /**
-     * 创建
+     * 根据系统多个配置自动生成form表单页面
      * @param array $list
      * @return array
      * @throws \FormBuilder\Exception\FormBuilderException
@@ -750,7 +1019,7 @@ class SystemConfigServices extends BaseServices
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
      */
-    public function createForm(array $list)
+    private function createForm(array $list)
     {
         if (!$list) return [];
         $list = array_combine(array_column($list, 'menu_name'), $list);
@@ -879,7 +1148,7 @@ class SystemConfigServices extends BaseServices
                     $formbuider = array_merge($formbuider, $this->createTextareaForm($data));
                     break;
                 case 'upload'://文件上传
-                    $formbuider = array_merge($formbuider, $this->createUploadForm((int)$data['upload_type'], $data));
+                    $formbuider = array_merge($formbuider, $this->createUploadForm((int)$data['upload_type'], $data,false));
                     break;
                 case 'checkbox'://多选框
                     $formbuider = array_merge($formbuider, $this->createCheckboxForm($data));
@@ -894,7 +1163,29 @@ class SystemConfigServices extends BaseServices
         }
         return $formbuider;
     }
-
+    /**
+     * 根据关联规则获取获取所有子配置
+     * @return array|int[]|string[]
+     * @author 吴汐
+     * @email 442384644@qq.com
+     * @date 2023/04/12
+     */
+    public function getSonConfig()
+    {
+        $sonConfig = [];
+        $rolateRule = $this->relatedRule;
+        if ($rolateRule) {
+            foreach ($rolateRule as $key => $value) {
+                $sonConfig = array_merge($sonConfig, array_keys($value['son_type']));
+                foreach ($value['son_type'] as $k => $v) {
+                    if (isset($v['son_type'])) {
+                        $sonConfig = array_merge($sonConfig, array_keys($v['son_type']));
+                    }
+                }
+            }
+        }
+        return $sonConfig;
+    }
     /**无组件绑定规则
      * @param array $list
      * @return array|bool
@@ -920,7 +1211,7 @@ class SystemConfigServices extends BaseServices
                     $formbuider = array_merge($formbuider, $this->createTextareaForm($data));
                     break;
                 case 'upload'://文件上传
-                    $formbuider = array_merge($formbuider, $this->createUploadForm((int)$data['upload_type'], $data));
+                    $formbuider = array_merge($formbuider, $this->createUploadForm((int)$data['upload_type'], $data, true));
                     break;
                 case 'checkbox'://多选框
                     $formbuider = array_merge($formbuider, $this->createCheckboxForm($data));
@@ -983,7 +1274,7 @@ class SystemConfigServices extends BaseServices
                         $formbuider = array_merge($formbuider, $this->createTextareaForm($data));
                         break;
                     case 'upload'://文件上传
-                        $formbuider = array_merge($formbuider, $this->createUploadForm((int)$data['upload_type'], $data));
+                        $formbuider = array_merge($formbuider, $this->createUploadForm((int)$data['upload_type'], $data, false));
                         break;
                     case 'checkbox'://多选框
                         $formbuider = array_merge($formbuider, $this->createCheckboxForm($data));
@@ -1001,7 +1292,7 @@ class SystemConfigServices extends BaseServices
     }
 
     /**
-     * 系统配置form表单创建
+     * 根据tabid获取系统配置form表单创建
      * @param $url
      * @param int $tabId
      * @return array
@@ -1054,146 +1345,17 @@ class SystemConfigServices extends BaseServices
         return true;
     }
 
+    
     /**
-     * 修改配置获取form表单
-     * @param int $id
-     * @return array
-     * @throws \FormBuilder\Exception\FormBuilderException
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
-     */
-    public function editConfigForm(int $id)
-    {
-        $menu = $this->dao->get($id)->getData();
-        if (!$menu) {
-            throw new AdminException('数据不存在');
-        }
-        /** @var SystemConfigTabServices $service */
-        $service = app()->make(SystemConfigTabServices::class);
-        $formbuider = [];
-        $linkData = $this->linkData($menu['config_tab_id']);
-        $formbuider[] = $this->builder->radio('level', '联动显示', $menu['level'])->options([['value' => 0, 'label' => '否'], ['value' => 1, 'label' => '是']])->appendRule('suffix', [
-            'type' => 'div',
-            'class' => 'tips-info',
-            'domProps' => ['innerHTML' => '否：默认正常展示此配置；是：此配置默认隐藏，当选中下方对应配置的值时，此配置才会显示']
-        ])->appendControl(1, [
-            $this->builder->cascader('link_data', '关联配置/值', [$menu['link_id'], $menu['link_value']])->options($linkData)->props(['props' => ['multiple' => false, 'checkStrictly' => false, 'emitPath' => true]])->style(['width' => '100%']),
-        ]);
-        $formbuider[] = $this->builder->input('menu_name', '字段变量', $menu['menu_name'])->disabled(1);
-        $formbuider[] = $this->builder->hidden('type', $menu['type']);
-        [$configTabList, $data] = $service->getConfigTabListForm((int)($menu['config_tab_id'] ?? 0));
-        $formbuider[] = $this->builder->cascader('config_tab_id', '分类', $data)->options($configTabList)->filterable(true)->props(['props' => ['multiple' => false, 'checkStrictly' => true, 'emitPath' => true]])->style(['width' => '100%']);
-        $formbuider[] = $this->builder->input('info', '配置名称', $menu['info'])->autofocus(1);
-        $formbuider[] = $this->builder->input('desc', '配置简介', $menu['desc']);
-        switch ($menu['type']) {
-            case 'text':
-                $menu['value'] = json_decode($menu['value'], true);
-                $formbuider[] = $this->builder->select('input_type', '类型', $menu['input_type'])->setOptions([
-                    ['value' => 'input', 'label' => '文本框']
-                    , ['value' => 'dateTime', 'label' => '日期时间']
-                    , ['value' => 'date', 'label' => '日期']
-                    , ['value' => 'time', 'label' => '时间']
-                    , ['value' => 'color', 'label' => '颜色']
-                    , ['value' => 'number', 'label' => '数字']
-                ]);
-                //输入框验证规则
-                $formbuider[] = $this->builder->input('value', '默认值', $menu['value']);
-                if (!empty($menu['required'])) {
-                    $formbuider[] = $this->builder->number('width', '文本框宽', (int)$menu['width']);
-                    $formbuider[] = $this->builder->input('required', '验证规则', $menu['required'])->placeholder('多个请用,隔开例如：required:true,url:true');
-                }
-                break;
-            case 'textarea':
-                $menu['value'] = json_decode($menu['value'], true);
-                //多行文本
-                if (!empty($menu['high'])) {
-                    $formbuider[] = $this->builder->textarea('value', '默认值', $menu['value'])->rows(5);
-                    $formbuider[] = $this->builder->number('width', '文本框宽', (int)$menu['width']);
-                    $formbuider[] = $this->builder->number('high', '多行文本框高', (int)$menu['high']);
-                } else {
-                    $formbuider[] = $this->builder->input('value', '默认值', $menu['value']);
-                }
-                break;
-            case 'radio':
-                $formbuider = array_merge($formbuider, $this->createRadioForm($menu));
-                //单选和多选参数配置
-                if (!empty($menu['parameter'])) {
-                    $formbuider[] = $this->builder->textarea('parameter', '配置参数', $menu['parameter'])->placeholder("参数方式例如:\n1=>白色\n2=>红色\n3=>黑色");
-                }
-                break;
-            case 'checkbox':
-                $formbuider = array_merge($formbuider, $this->createCheckboxForm($menu));
-                //单选和多选参数配置
-                if (!empty($menu['parameter'])) {
-                    $formbuider[] = $this->builder->textarea('parameter', '配置参数', $menu['parameter'])->placeholder("参数方式例如:\n1=>白色\n2=>红色\n3=>黑色");
-                }
-                break;
-            case 'upload':
-                $formbuider = array_merge($formbuider, $this->createUploadForm(($menu['upload_type']), $menu));
-                //上传类型选择
-                if (!empty($menu['upload_type'])) {
-                    $formbuider[] = $this->builder->radio('upload_type', '上传类型', $menu['upload_type'])->options([['value' => 1, 'label' => '单图'], ['value' => 2, 'label' => '多图'], ['value' => 3, 'label' => '文件']]);
-                }
-                break;
-            case 'switch':
-                $formbuider = array_merge($formbuider, $this->createSwitchForm($menu));
-                break;
-        }
-        $formbuider[] = $this->builder->number('sort', '排序', (int)$menu['sort']);
-        $formbuider[] = $this->builder->radio('status', '状态', $menu['status'])->options([['value' => 1, 'label' => '显示'], ['value' => 0, 'label' => '隐藏']]);
-        return create_form('编辑字段', $formbuider, $this->url('/setting/config/' . $id), 'PUT');
-    }
-
-    /**
-     * 字段状态
-     * @return array
-     */
-    public function formStatus(): array
-    {
-        return [['value' => 1, 'label' => '显示'], ['value' => 0, 'label' => '隐藏']];
-    }
-
-    /**
-     * 选择文文件类型
-     * @return array
-     */
-    public function uploadType(): array
-    {
-        return [
-            ['value' => 1, 'label' => '单图']
-            , ['value' => 2, 'label' => '多图']
-            , ['value' => 3, 'label' => '文件']
-        ];
-    }
-
-    /**
-     * 选择文本框类型
-     * @return array
-     */
-    public function textType(): array
-    {
-        return [
-            ['value' => 'input', 'label' => '文本框']
-            , ['value' => 'dateTime', 'label' => '日期时间']
-            , ['value' => 'date', 'label' => '日期']
-            , ['value' => 'time', 'label' => '时间']
-            , ['value' => 'color', 'label' => '颜色']
-            , ['value' => 'number', 'label' => '数字']
-        ];
-    }
-
-    /**
-     * 获取创建配置规格表单
+     * 添加配置字段
      * @param int $type
      * @param int $tab_id
-     * @return array
-     * @throws \FormBuilder\Exception\FormBuilderException
+    * @retuarr@throws \FormBuilder\Exception\FormBuilderException
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
      */
-    public function createFormRule(int $type, int $tab_id): array
+    public function addFieldForm(int $type, int $tab_id): array
     {
         /** @var SystemConfigTabServices $service */
         $service = app()->make(SystemConfigTabServices::class);
@@ -1204,10 +1366,7 @@ class SystemConfigServices extends BaseServices
         switch ($type) {
             case 0://文本框
                 $form_type = 'text';
-                $info_type = $this->builder->select('input_type', '类型')->setOptions($this->textType());
-                $parameter[] = $this->builder->input('value', '默认值');
-                $parameter[] = $this->builder->number('width', '文本框宽', 100);
-                $parameter[] = $this->builder->input('required', '验证规则')->placeholder('多个请用,隔开例如：required:true,url:true');
+                $parameter[] = $this->createTextInputTypeForm(['input_type' => 'input']);
                 break;
             case 1://多行文本框
                 $form_type = 'textarea';
@@ -1217,20 +1376,32 @@ class SystemConfigServices extends BaseServices
                 break;
             case 2://单选框
                 $form_type = 'radio';
-                $parameter[] = $this->builder->textarea('parameter', '配置参数')->placeholder("参数方式例如:\n1=>男\n2=>女\n3=>保密");
+                $parameter[] = $this->builder->textarea('parameter', '配置参数', "1=>男\n2=>女\n3=>保密")->rows(3)->placeholder("参数方式例如:\n1=>男\n2=>女\n3=>保密")->required('配置参数不能为空')->appendRule('suffix', [
+                    'type' => 'div',
+                    'class' => 'tips-info',
+                    'domProps' => ['innerHTML' => '参数说明：=>前面是参数值，后面是参数名称，每行一个参数，=>分割符不能换，例如：<br>1=>男<br>2=>女<br>3=>保密']
+                ]); 
                 $parameter[] = $this->builder->input('value', '默认值');
                 break;
             case 3://文件上传
                 $form_type = 'upload';
-                $parameter[] = $this->builder->radio('upload_type', '上传类型', 1)->options($this->uploadType());
+                $parameter = array_merge($parameter, $this->createUploadForm(1, ['menu_name' => 'value', 'info' => '默认值', 'value' => ''], true));
                 break;
             case 4://多选框
                 $form_type = 'checkbox';
-                $parameter[] = $this->builder->textarea('parameter', '配置参数')->placeholder("参数方式例如:\n1=>白色\n2=>红色\n3=>黑色");
+                $parameter[] = $this->builder->textarea('parameter', '配置参数', "1=>白色\n2=>红色\n3=>黑色")->rows(3)->placeholder("参数方式例如:\n1=>白色\n2=>红色\n3=>黑色")->required('配置参数不能为空')->appendRule('suffix', [
+                    'type' => 'div',
+                    'class' => 'tips-info',
+                    'domProps' => ['innerHTML' => '参数说明：=>前面是参数值，后面是参数名称，每行一个参数，=>分割符不能换，例如：<br>1=>白色<br>2=>红色<br>3=>黑色']
+                ]); 
                 break;
             case 5://下拉框
                 $form_type = 'select';
-                $parameter[] = $this->builder->textarea('parameter', '配置参数')->placeholder("参数方式例如:\n1=>白色\n2=>红色\n3=>黑色");
+                $parameter[] = $this->builder->textarea('parameter', '配置参数', "1=>分类一\n2=>分类二\n3=>分类三")->rows(3)->placeholder("参数方式例如:\n1=>分类一\n2=>分类二\n3=>分类三")->required('配置参数不能为空')->appendRule('suffix', [
+                    'type' => 'div',
+                    'class' => 'tips-info',
+                    'domProps' => ['innerHTML' => '参数说明：=>前面是参数值，后面是参数名称，每行一个参数，=>分割符不能换，例如：<br>1=>分类一<br>2=>分类二<br>3=>分类三']
+                ]); 
                 break;
             case 6://开关
                 $form_type = 'switch';
@@ -1241,7 +1412,7 @@ class SystemConfigServices extends BaseServices
             $formbuider[] = $this->builder->hidden('type', $form_type);
             [$configTabList, $data] = $service->getConfigTabListForm((int)($tab_id ?? 0));
             $linkData = $this->linkData($tab_id);
-            $formbuider[] = $this->builder->radio('level', '联动显示', 0)->options([['value' => 0, 'label' => '否'], ['value' => 1, 'label' => '是']])->appendRule('suffix', [
+            $formbuider[] = $this->builder->radio('level', '联动显示', 0)->options([['value' => 0, 'label' => '否'], ['value' => 1, 'label' => '是']])->requiredNum()->appendRule('suffix', [
                 'type' => 'div',
                 'class' => 'tips-info',
                 'domProps' => ['innerHTML' => '否：默认正常展示此配置；是：此配置默认隐藏，当选中下方对应配置的值时，此配置才会显示']
@@ -1252,18 +1423,26 @@ class SystemConfigServices extends BaseServices
             if ($info_type) {
                 $formbuider[] = $info_type;
             }
-            $formbuider[] = $this->builder->input('info', '配置名称')->autofocus(1);
-            $formbuider[] = $this->builder->input('menu_name', '字段变量')->placeholder('例如：site_url');
-            $formbuider[] = $this->builder->input('desc', '表单说明');
+            $formbuider[] = $this->builder->input('info', '配置名称')->required('配置名称不能为空')->autofocus(1);
+            $formbuider[] = $this->builder->input('menu_name', '字段变量')->required('字段变量不能为空')->placeholder('例如：site_url');
+            $formbuider[] = $this->builder->input('desc', '配置简介');
             $formbuider = array_merge($formbuider, $parameter);
+            // 是否必填
+            if ($form_type != 'switch') {
+                $formbuider[] = $this->builder->radio('required', '是否必填', 0)->options([
+                        ['value' => 0, 'label' => '否'],
+                        ['value' => 1, 'label' => '是'],
+                    ])->requiredNum();
+            }
             $formbuider[] = $this->builder->number('sort', '排序', 0);
 
-            $formbuider[] = $this->builder->radio('status', '状态', 1)->options($this->formStatus());
+            $formbuider[] = $this->builder->radio('status', '状态', 1)->options([['value' => 1, 'label' => '显示'], ['value' => 0, 'label' => '隐藏']])->requiredNum(); 
         }
         return create_form('添加字段', $formbuider, $this->url('/setting/config'), 'POST');
     }
 
     /**
+     * 联动选择关联配置/值
      * 根据指定的标签ID，链接数据并以特定格式返回。
      * @param $tab_id
      * @return array
@@ -1273,7 +1452,7 @@ class SystemConfigServices extends BaseServices
      */
     public function linkData($tab_id)
     {
-        $linkData = $this->selectList(['config_tab_id' => $tab_id, 'type' => 'radio', 'level' => 0], 'info as label,id as value,parameter')->toArray();
+        $linkData = $this->selectList(['config_tab_id' => $tab_id, 'type' => 'radio', 'level' => 0], 'info as label,id as value,parameter,sort', 0, 0, 'sort DESC')->toArray();
         foreach ($linkData as &$item) {
             $parameter = [];
             $parameter = explode("\n", $item['parameter']);
@@ -1339,29 +1518,70 @@ class SystemConfigServices extends BaseServices
      */
     public function valiDateValue($data)
     {
+        
+        // 检查数据和验证规则是否存在
         if (!$data || !isset($data['required']) || !$data['required']) {
             return true;
         }
-        $valids = explode(',', $data['required']);
-        foreach ($valids as $valid) {
-            $valid = explode(':', $valid);
-            if (isset($valid[0]) && isset($valid[1])) {
-                $k = strtolower(trim($valid[0]));
-                $v = strtolower(trim($valid[1]));
-                switch ($k) {
-                    case 'required':
-                        if ($v == 'true' && $data['value'] === '') {
-                            throw new AdminException('{:name}请输入默认值', ['name' => $data['info'] ?? '']);
-                        }
-                        break;
-                    case 'url':
-                        if ($v == 'true' && !check_link($data['value'])) {
-                            throw new AdminException('{:name}请输入正确url', ['name' => $data['info'] ?? '']);
-                        }
-                        break;
+        
+        $name = $data['info'] ?? '';
+        $value = $data['value'] ?? '';
+        
+        // 支持JSON格式的验证规则
+        $requiredData = json_decode($data['required'], true);
+        if ($requiredData) {
+            // JSON格式
+            if (isset($requiredData['required']) && $requiredData['required']) {
+                if ($value === '' || $value === null) {
+                    throw new AdminException($name . '不能为空');
+                }
+            }
+            if (isset($requiredData['regex']) && $requiredData['regex']) {
+                if ($value && !preg_match($requiredData['regex'], $value)) {
+                    throw new AdminException($name . '请输入正确的格式');
+                }
+            }
+            if (isset($requiredData['min']) && $value !== '' && $value !== null) {
+                if ((float)$value < $requiredData['min']) {
+                    throw new AdminException($name . '不能小于' . $requiredData['min']);
+                }
+            }
+            if (isset($requiredData['max']) && $value !== '' && $value !== null) {
+                if ((float)$value > $requiredData['max']) {
+                    throw new AdminException($name . '不能大于' . $requiredData['max']);
+                }
+            }
+        } else {
+            // 兼容旧格式：逗号分隔的字符串
+            $valids = explode(',', $data['required']);
+            foreach ($valids as $valid) {
+                $valid = explode(':', $valid);
+                if (isset($valid[0]) && isset($valid[1])) {
+                    $k = strtolower(trim($valid[0]));
+                    $v = strtolower(trim($valid[1]));
+                    
+                    if ($v != 'true') {
+                        continue;
+                    }
+                    
+                    switch ($k) {
+                        case 'required':
+                            if ($value === '' || $value === null) {
+                                throw new AdminException($name . '不能为空');
+                            }
+                            break;
+                            
+                        case 'regex':
+                            if ($value && !preg_match($data['regex'], $value)) {
+                                throw new AdminException($name . '请输入正确的格式');
+                            }
+                            break;
+                    }
                 }
             }
         }
+        
+        return true;
     }
 
     /**
@@ -1496,5 +1716,54 @@ WSS;
             return false;
         }
         return true;
+    }
+    /** 停用
+     * 根据系统配置分类自动生成form表单页面
+     * @param int $tabId
+     * @param array $formData
+     * @param array $relatedRule
+     * @return array|bool
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     */
+    public function createConfigForm(int $tabId, array $relatedRule)
+    {
+        $list = $this->dao->getConfigTabAllList($tabId);
+        if (!$relatedRule) {
+            $formbuider = $this->createNoCrontrolForm($list);
+        } else {
+            $formbuider = $this->createBindCrontrolForm($list, $relatedRule);
+        }
+        return $formbuider;
+    }
+    /** 停用
+     * 绑定表单数据
+     * @param $data
+     * @param $relatedRule
+     * @return array
+     */
+    private function bindBuilderData($data, $relatedRule)
+    {
+        if (!$data) return false;
+        $p_list = array();
+        foreach ($relatedRule as $rk => $rv) {
+            $p_list[$rk] = $data[$rk];
+            if (isset($rv['son_type']) && is_array($rv['son_type'])) {
+                foreach ($rv['son_type'] as $sk => $sv) {
+                    if (is_array($sv) && isset($sv['son_type'])) {
+                        foreach ($sv['son_type'] as $ssk => $ssv) {
+                            $tmp = $data[$sk];
+                            $tmp['console'] = $data[$ssk];
+                            $p_list[$rk]['console'][] = $tmp;
+                        }
+                    } else {
+                        $p_list[$rk]['console'][] = $data[$sk];
+                    }
+                }
+            }
+
+        }
+        return array_values($p_list);
     }
 }

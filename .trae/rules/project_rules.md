@@ -1,3 +1,7 @@
+---
+alwaysApply: false
+description: 
+---
 # CRMEB 项目专属 Chat 规则
 
 ## 1. 项目概述
