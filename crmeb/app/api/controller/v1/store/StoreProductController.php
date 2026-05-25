@@ -58,7 +58,7 @@ class StoreProductController
             [['type', 'd'], 0],
             ['ids', ''],
             [['selectId', 'd'], 0],
-            [['productId', 'd'], 0],
+            ['productId', ''],
             [['coupon_category_id', 'd'], 0],
             ['cate_id', ''],
             ['store_label_id', ''],
@@ -69,6 +69,10 @@ class StoreProductController
             } else {
                 $where['cid'] = $where['selectId'];
             }
+        }
+        if ($where['productId'] != '') {
+            $where['ids'] = $where['productId'];
+            unset($where['productId']);
         }
         if ($where['ids'] && is_string($where['ids'])) {
             $where['ids'] = explode(',', $where['ids']);

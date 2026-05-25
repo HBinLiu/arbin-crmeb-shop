@@ -114,6 +114,14 @@ class StoreOrderController
             $orderInfo['user_address'] = $order['user_address'];
             $orderInfo['user_mark'] = $order['mark'];
             $orderInfo['cartInfo'] = $info;
+            $orderInfo['user_name'] = $order['real_name'];
+            $orderInfo['user_phone'] = $order['user_phone'];
+            $orderInfo['send_address'] = $order['user_address'];
+            $orderInfo['send_city'] = $services->addressHandle($order['user_address'])['city'] ?? '';
+            $orderInfo['delivery_type'] = $order['delivery_type'] ?? 1;
+            $address = explode(' ', $order['user_address']);
+            $orderInfo['user_city'] = isset($address[0]) && in_array($address[0], ['北京', '上海', '天津', '重庆', '香港', '澳门', '台湾']) ? $address[0] : ($address[1] ?? '');
+            $orderInfo['user_mark'] = $order['mark'] ?? '';
         }
         return app('json')->success([
             'order' => $orderInfo,
@@ -245,10 +253,6 @@ class StoreOrderController
             ['fictitious_content', ''],//虚拟发货内容
             ['pickup_time', []]
         ]);
-        if ($data['delivery_type']) {
-            $data['delivery_name'] = $data['delivery_type'];
-            unset($data['delivery_type']);
-        }
         $services->delivery((int)$id, $data);
         return app('json')->success('发货成功');
     }

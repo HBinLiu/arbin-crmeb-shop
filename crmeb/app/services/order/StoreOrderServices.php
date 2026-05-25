@@ -2662,15 +2662,16 @@ HTML;
         // 判断是否开启小程序订单管理
         $orderData['order_shipping_open'] = false;
         if (sys_config('order_shipping_open', 0) && $order['pay_price'] > 0 && $order['is_channel'] == 1 && $order['pay_type'] == 'weixin' && MiniOrderService::isManaged()) {
-            // 判断是否存在子未收货子订单
-            if ($order['pid'] > 0) {
-                if ($this->checkSubOrderNotTake((int)$order['pid'], (int)$order['id'])) {
-                    $orderData['order_shipping_open'] = true;
-                }
-            } else {
-                $orderData['order_shipping_open'] = true;
-            }
+            // // 判断是否存在子未收货子订单
+            // if ($order['pid'] > 0) {
+            //     if ($this->checkSubOrderNotTake((int)$order['pid'], (int)$order['id'])) {
+            //         $orderData['order_shipping_open'] = true;
+            //     }
+            // } else {
+            //     $orderData['order_shipping_open'] = true;
+            // }
 
+            $orderData['order_shipping_open'] = true;
         }
         $orderData['is_refund_available'] = $this->isRefundAvailable((int)$order['id']);
 

@@ -813,6 +813,7 @@ class StoreSeckillServices extends BaseServices
             $productList = $productServices->searchList(['id' => $productIds, 'is_del' => 0]);
             $productList = $productList['list'] ?? [];
             $productInfos = array_combine($productIds, $productInfos);
+            $descriptionArr = app()->make(StoreDescriptionServices::class)->getColumn([['product_id', 'in', $productIds], ['type', '=', 0]], 'description', 'product_id');
 
             /** @var StoreActivityServices $StoreActivityServices */
             $StoreActivityServices = app()->make(StoreActivityServices::class);
@@ -835,7 +836,7 @@ class StoreSeckillServices extends BaseServices
                 $seckillData['unit_name'] = $product['unit_name'] ?? '';
                 $seckillData['section_time'] = $data['section_time'];
                 $seckillData['images'] = $product['slider_image'] ?? '';
-                $seckillData['description'] = $product['description'] ?? '';
+                $seckillData['description'] = htmlspecialchars_decode($descriptionArr[$product['id']] ?? '');
                 $seckillData['status'] = $productInfos[$product['id']]['status'] ?? 1;
                 $seckillData['time_id'] = $timeIds;
                 $seckillData['num'] = $data['num'] ?? 0;
@@ -861,9 +862,6 @@ class StoreSeckillServices extends BaseServices
                         if (!isset($sattr['price']) || !$sattr['price']) {
                             throw new AdminException('请填写商品（' . $product['store_name'] . ' | ' . $sattr['suk'] . '）活动价');
                         }
-//                        if ($sattr['price'] > $sattr['ot_price']) {
-//                            throw new AdminException('商品（' . $product['store_name'] . ' | ' . $sattr['suk'] . '）活动价不能大于原价');
-//                        }
                         if (!isset($sattr['quota']) || !$sattr['quota']) {
                             throw new AdminException('请填写商品（' . $product['store_name'] . ' | ' . $sattr['suk'] . '）限量');
                         }
@@ -888,7 +886,6 @@ class StoreSeckillServices extends BaseServices
                     }
                 }
                 $seckillId = $this->dao->value(['activity_id' => $id, 'product_id' => $seckillData['product_id']], 'id') ?? 0;
-                $seckillData['description'] = app()->make(StoreDescriptionServices::class)->getDescription(['product_id' => $seckillData['product_id'], 'type' => 1]);
                 $this->saveData($seckillId, $seckillData);
             }
             return true;

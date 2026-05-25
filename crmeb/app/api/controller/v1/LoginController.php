@@ -19,6 +19,7 @@ use crmeb\services\CacheService;
 use app\services\user\LoginServices;
 use think\exception\ValidateException;
 use app\api\validate\user\RegisterValidates;
+use think\facade\Env;
 
 /**
  * 微信小程序授权类
@@ -544,6 +545,9 @@ class LoginController
      */
     public function remoteRegister(Request $request)
     {
+        if (!Env::get('app_debug', false)) {
+            return app('json')->fail('生产环境无法使用此功能，如需使用请修改.env文件中app_debug项为true');
+        }
         [$remote_token] = $request->getMore([
             ['remote_token', ''],
         ], true);
