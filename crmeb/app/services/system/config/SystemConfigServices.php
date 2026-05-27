@@ -620,11 +620,12 @@ class SystemConfigServices extends BaseServices
                 if (isset($data['max']) && $data['max'] !== null) {
                     $minMaxTip .= ($minMaxTip ? '，' : '<br>') . '最大值：' . $data['max'];
                 }
+                $col = isset($data['width']) && $data['width'] != 0 && $data['width'] >= 4 && $data['width'] <= 24 ? (int)$data['width'] : 13;
                 $inputRule = $this->builder->number($data['menu_name'], $data['info'], (float)$data['value'])->controls(false)->appendRule('suffix', [
                     'type' => 'div',
                     'class' => 'tips-info',
                     'domProps' => ['innerHTML' => $data['desc'] . $minMaxTip]
-                ])->col($data['width'] ?? 13);
+                ])->col($col);
                 break;
             case 'dateTime':
                 $inputRule = $this->builder->dateTime($data['menu_name'], $data['info'], $data['value'])->appendRule('suffix', [
