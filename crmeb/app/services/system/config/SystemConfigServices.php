@@ -620,6 +620,7 @@ class SystemConfigServices extends BaseServices
                 if (isset($data['max']) && $data['max'] !== null) {
                     $minMaxTip .= ($minMaxTip ? '，' : '<br>') . '最大值：' . $data['max'];
                 }
+                // 宽度字段
                 $col = isset($data['width']) && $data['width'] != 0 && $data['width'] >= 4 && $data['width'] <= 24 ? (int)$data['width'] : 13;
                 $inputRule = $this->builder->number($data['menu_name'], $data['info'], (float)$data['value'])->controls(false)->appendRule('suffix', [
                     'type' => 'div',
@@ -719,23 +720,26 @@ class SystemConfigServices extends BaseServices
     private function createRadioForm(array $data, $control = [], $control_two = [], $control_three = [])
     {
         $formbuider = [];
-        $data['value'] = json_decode($data['value'], true) ?: '0';
+        $value = json_decode($data['value'], true);
+        $data['value'] = $this->normalizeOptionValue(($value === null || $value === '' || $value === false) ? '0' : $value);
         $parameter = explode("\n", $data['parameter']);
         $options = [];
         if ($parameter) {
             foreach ($parameter as $v) {
                 if (strstr($v, $this->cuttingStr) !== false) {
-                    $pdata = explode($this->cuttingStr, $v);
-                    $res = preg_match('/^[0-9]$/', $pdata[0]);
-                    $options[] = ['label' => $pdata[1], 'value' => $res ? (int)$pdata[0] : $pdata[0]];
+                    $pdata = explode($this->cuttingStr, $v, 2);
+                    $options[] = ['label' => trim($pdata[1]), 'value' => $this->normalizeOptionValue($pdata[0])];
                 }
             }
-            $res = preg_match('/^[0-9]$/', $data['value']);
-            $formbuider[] = $radio = $this->builder->radio($data['menu_name'], $data['info'], $res ? (int)$data['value'] : $data['value'])->options($options)->appendRule('suffix', [
+            $formbuider[] = $radio = $this->builder->radio($data['menu_name'], $data['info'], $data['value'])->options($options)->appendRule('suffix', [
                 'type' => 'div',
                 'class' => 'tips-info',
                 'domProps' => ['innerHTML' => $data['desc']]
-            ])->requiredNum()->col(13);
+            ])->appendValidate([
+                'required' => true,
+                'message' => $data['info'] . '必选项',
+                'trigger' => 'change',
+            ])->col(13);
             if ($control) {
                 $radio->appendControl($data['show_value'] ?? 1, is_array($control) ? $control : [$control]);
             }
@@ -949,6 +953,27 @@ class SystemConfigServices extends BaseServices
         ])->col(13);
         return $formbuider;
     }
+
+    /**
+     * 统一配置项选项值类型：普通数字保持数字，字符串编码保持字符串。
+     *
+     * @param mixed $value
+     * @return int|string
+     */
+    private function normalizeOptionValue($value)
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_string($value)) {
+            $value = trim($value);
+            if (preg_match('/^-?(0|[1-9]\d*)$/', $value)) {
+                return (int)$value;
+            }
+        }
+        return $value;
+    }
+
     /**
      * 上传类型
      * @return array
@@ -1050,7 +1075,7 @@ class SystemConfigServices extends BaseServices
                             $label = $data['menu_name'];
                             if ($i == 1) $label = $data['menu_name'] . '@';
                             if ($i == 2) $label = $data['menu_name'] . '#';
-                            $relateRule[$label]['show_value'] = (int)$pk;
+                            $relateRule[$label]['show_value'] = $this->normalizeOptionValue($pk);
                             foreach ($pv as $pvv) {
                                 $relateRule[$label]['son_type'][$pvv] = '';
                             }
@@ -1069,7 +1094,7 @@ class SystemConfigServices extends BaseServices
                                 if ($i == 1) $label = $data['menu_name'] . '@';
                                 if ($i == 2) $label = $data['menu_name'] . '#';
                                 if (!isset($relateRule[$label])) {
-                                    $relateRule[$label]['show_value'] = (int)$pk;
+                                    $relateRule[$label]['show_value'] = $this->normalizeOptionValue($pk);
                                 }
                                 foreach ($pv as $pvv) {
                                     $relateRule[$label]['son_type'][$pvv] = '';
@@ -1458,10 +1483,13 @@ class SystemConfigServices extends BaseServices
             $parameter = [];
             $parameter = explode("\n", $item['parameter']);
             foreach ($parameter as $pv) {
-                $pvArr = explode('=>', $pv);
+                $pvArr = explode('=>', $pv, 2);
+                if (count($pvArr) < 2) {
+                    continue;
+                }
                 $item['children'][] = [
-                    'label' => $pvArr[1],
-                    'value' => (int)$pvArr[0]
+                    'label' => trim($pvArr[1]),
+                    'value' => $this->normalizeOptionValue($pvArr[0])
                 ];
             }
         }
