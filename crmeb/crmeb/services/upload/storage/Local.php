@@ -125,6 +125,14 @@ class Local extends BaseUpload
             if (!in_array($fileHandle->getOriginalMime(), $this->validate['fileMime'])) {
                 return $this->setError('不合法的文件类型');
             }
+            // 危险后缀黑名单检查
+            if (in_array(strtolower(pathinfo($fileHandle->getOriginalName(), PATHINFO_EXTENSION)), $this->dangerousExtensions)) {
+                return $this->setError('不支持的文件格式');
+            }
+            // 对所有上传文件进行内容安全检测
+            if ($this->checkFileContent($fileHandle) === false) {
+                return false;
+            }
             if (in_array($fileHandle->getOriginalMime(), ['image/x-icon', 'image/png', 'image/gif', 'image/jpeg', 'image/jpg', 'image/webp'])) {
                 $stream = fopen($fileHandle->getPathname(), 'r');
                 $content = (fread($stream, filesize($fileHandle->getPathname())));
@@ -182,6 +190,20 @@ class Local extends BaseUpload
         if (!$key) {
             $key = $this->saveFileName();
         }
+        // 扩展名安全验证
+        $ext = strtolower(pathinfo($key, PATHINFO_EXTENSION));
+        if (in_array($ext, $this->dangerousExtensions)) {
+            return $this->setError('不支持的文件格式');
+        }
+        // 文件大小验证 (默认最大50MB)
+        $maxSize = $this->validate['filesize'] ?? 52428800;
+        if (strlen($fileContent) > $maxSize) {
+            return $this->setError('文件过大');
+        }
+        // 文件内容安全检测
+        if (!$this->checkContentSafety($fileContent)) {
+            return $this->setError('文件内容包含非法代码');
+        }
         $dir = $this->uploadDir($this->path);
         if (!$this->validDir($dir)) {
             return $this->setError('Failed to generate upload directory, please check the permission!');
@@ -213,6 +235,20 @@ class Local extends BaseUpload
     {
         if (!$key) {
             $key = $this->saveFileName();
+        }
+        // 扩展名安全验证
+        $ext = strtolower(pathinfo($key, PATHINFO_EXTENSION));
+        if (in_array($ext, $this->dangerousExtensions)) {
+            return $this->setError('不支持的文件格式');
+        }
+        // 文件大小验证
+        $maxSize = $this->validate['filesize'] ?? 52428800;
+        if (strlen($fileContent) > $maxSize) {
+            return $this->setError('文件过大');
+        }
+        // 文件内容安全检测
+        if (!$this->checkContentSafety($fileContent)) {
+            return $this->setError('文件内容包含非法代码');
         }
         $dir = $this->uploadDir($this->path);
         if (!$this->validDir($dir)) {

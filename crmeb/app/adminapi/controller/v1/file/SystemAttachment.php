@@ -28,6 +28,16 @@ class SystemAttachment extends AuthController
     protected $service;
 
     /**
+     * 每分钟最大上传次数
+     */
+    const UPLOAD_PER_MINUTE = 60;
+
+    /**
+     * 每小时最大上传次数
+     */
+    const UPLOAD_PER_HOUR = 500;
+
+    /**
      * @param App $app
      * @param SystemAttachmentServices $service
      */
@@ -35,6 +45,41 @@ class SystemAttachment extends AuthController
     {
         parent::__construct($app);
         $this->service = $service;
+    }
+
+    /**
+     * 检查上传速率限制
+     * @return bool
+     */
+    protected function checkUploadRateLimit()
+    {
+        $adminId = $this->adminId;
+        $minuteKey = 'admin_upload_minute_' . $adminId;
+        $hourKey = 'admin_upload_hour_' . $adminId;
+
+        if (CacheService::has($minuteKey) && CacheService::get($minuteKey) >= self::UPLOAD_PER_MINUTE) {
+            return false;
+        }
+        if (CacheService::has($hourKey) && CacheService::get($hourKey) >= self::UPLOAD_PER_HOUR) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 更新上传速率计数
+     */
+    protected function incUploadRateLimit()
+    {
+        $adminId = $this->adminId;
+        $minuteKey = 'admin_upload_minute_' . $adminId;
+        $hourKey = 'admin_upload_hour_' . $adminId;
+
+        $minuteCount = CacheService::has($minuteKey) ? (int)CacheService::get($minuteKey) : 0;
+        $hourCount = CacheService::has($hourKey) ? (int)CacheService::get($hourKey) : 0;
+
+        CacheService::set($minuteKey, $minuteCount + 1, 60);
+        CacheService::set($hourKey, $hourCount + 1, 3600);
     }
 
     /**
@@ -72,12 +117,16 @@ class SystemAttachment extends AuthController
      */
     public function upload($upload_type = 0, $type = 0)
     {
+        if (!$this->checkUploadRateLimit()) {
+            return app('json')->fail('上传过于频繁，请稍后再试');
+        }
         [$pid, $file, $menuName] = $this->request->postMore([
             ['pid', 0],
             ['file', 'file'],
             ['menu_name', '']
         ], true);
         $res = $this->service->upload((int)$pid, $file, $upload_type, $type, $menuName);
+        $this->incUploadRateLimit();
         return app('json')->success('上传成功', ['src' => $res]);
     }
 
@@ -126,6 +175,9 @@ class SystemAttachment extends AuthController
      */
     public function videoUpload()
     {
+        if (!$this->checkUploadRateLimit()) {
+            return app('json')->fail('上传过于频繁，请稍后再试');
+        }
         $data = $this->request->postMore([
             ['chunkNumber', 0],//第几分片
             ['currentChunkSize', 0],//分片大小
@@ -136,6 +188,7 @@ class SystemAttachment extends AuthController
             ['filename', ''],//文件名称
         ]);
         $res = $this->service->videoUpload($data, $_FILES['file']);
+        $this->incUploadRateLimit();
         return app('json')->success($res);
     }
 

@@ -88,6 +88,18 @@ class DownloadImage
             $url = 'http:' . $url;
         }
         $url = str_replace('https://', 'http://', $url);
+
+        // SSRF 防护：验证 URL 安全性
+        $urlParts = parse_url($url);
+        if (!$urlParts || !isset($urlParts['host'])) {
+            throw new AdminException('无效的图片地址');
+        }
+        // 阻止访问内网地址和私有 IP
+        $ip = gethostbyname($urlParts['host']);
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+            throw new AdminException('不允许访问内网地址');
+        }
+
         if ($this->path == 'attach') {
             $date_dir = date('Y') . DIRECTORY_SEPARATOR . date('m') . DIRECTORY_SEPARATOR . date('d');
             $to_path = $this->path . '/' . $date_dir;

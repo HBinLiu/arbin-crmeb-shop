@@ -254,16 +254,27 @@ class SystemAttachmentServices extends BaseServices
      */
     public function videoUpload($data, $file)
     {
-        $pathinfo = pathinfo($data['filename']);
-        if (isset($pathinfo['extension']) && !in_array($pathinfo['extension'], ['avi', 'mp4', 'wmv', 'rm', 'mpg', 'mpeg', 'mov', 'flv', 'swf'])) {
+        // 安全修复：使用 basename 防止路径穿越攻击
+        $safeFilename = basename($data['filename']);
+        if ($safeFilename !== $data['filename']) {
+            throw new AdminException('文件名包含非法路径字符');
+        }
+
+        $pathinfo = pathinfo($safeFilename);
+        if (!isset($pathinfo['extension']) || !in_array($pathinfo['extension'], ['avi', 'mp4', 'wmv', 'rm', 'mpg', 'mpeg', 'mov', 'flv', 'swf'])) {
             throw new AdminException('格式错误');
+        }
+        // 危险后缀黑名单，防止上传可执行脚本
+        $dangerousExt = ['php', 'phtml', 'pht', 'php3', 'php4', 'php5', 'php7', 'shtml', 'shtm', 'htaccess', 'cgi', 'pl', 'py', 'jsp', 'asp', 'aspx'];
+        if (in_array($pathinfo['extension'], $dangerousExt)) {
+            throw new AdminException('不支持的文件格式');
         }
         $data['chunkNumber'] = (int)$data['chunkNumber'];
         $public_dir = app()->getRootPath() . 'public';
         $dir = '/uploads/attach/' . date('Y') . DIRECTORY_SEPARATOR . date('m') . DIRECTORY_SEPARATOR . date('d');
         $all_dir = $public_dir . $dir;
         if (!is_dir($all_dir)) mkdir($all_dir, 0777, true);
-        $filename = $all_dir . '/' . $data['filename'] . '__' . $data['chunkNumber'];
+        $filename = $all_dir . '/' . $safeFilename . '__' . $data['chunkNumber'];
         move_uploaded_file($file['tmp_name'], $filename);
         $res['code'] = 0;
         $res['msg'] = 'error';
@@ -271,19 +282,19 @@ class SystemAttachmentServices extends BaseServices
         if ($data['chunkNumber'] == $data['totalChunks']) {
             $blob = '';
             for ($i = 1; $i <= $data['totalChunks']; $i++) {
-                $blob .= file_get_contents($all_dir . '/' . $data['filename'] . '__' . $i);
+                $blob .= file_get_contents($all_dir . '/' . $safeFilename . '__' . $i);
             }
-            file_put_contents($all_dir . '/' . $data['filename'], $blob);
+            file_put_contents($all_dir . '/' . $safeFilename, $blob);
             for ($i = 1; $i <= $data['totalChunks']; $i++) {
-                @unlink($all_dir . '/' . $data['filename'] . '__' . $i);
+                @unlink($all_dir . '/' . $safeFilename . '__' . $i);
             }
-            if (file_exists($all_dir . '/' . $data['filename'])) {
+            if (file_exists($all_dir . '/' . $safeFilename)) {
                 $res['code'] = 2;
                 $res['msg'] = 'success';
-                $res['file_path'] = sys_config('site_url') . $dir . '/' . $data['filename'];
+                $res['file_path'] = sys_config('site_url') . $dir . '/' . $safeFilename;
             }
         } else {
-            if (file_exists($all_dir . '/' . $data['filename'] . '__' . $data['chunkNumber'])) {
+            if (file_exists($all_dir . '/' . $safeFilename . '__' . $data['chunkNumber'])) {
                 $res['code'] = 1;
                 $res['msg'] = 'waiting';
                 $res['file_path'] = '';

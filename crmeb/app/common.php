@@ -614,10 +614,31 @@ if (!function_exists('put_image')) {
                 $filename = time() . "." . $ext;
             }
 
+            // SSRF 防护：验证 URL 安全性
+            $urlParts = parse_url($url);
+            if (!$urlParts || !isset($urlParts['scheme']) || !in_array($urlParts['scheme'], ['http', 'https'])) {
+                return false;
+            }
+            $host = $urlParts['host'] ?? '';
+            if (!$host) {
+                return false;
+            }
+            // 阻止访问内网地址和私有 IP
+            $ip = gethostbyname($host);
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+                return false;
+            }
+
             // 保存文件到指定目录
             $imgData = file_get_contents($url);
+            if ($imgData === false) {
+                return false;
+            }
             $pattern = '/<\?php(.*?)\?>/s';
             $imgData = preg_replace($pattern, '', $imgData);
+            // 额外过滤短标签
+            $imgData = preg_replace('/<\?=(.*?)\?>/s', '', $imgData);
+            $imgData = preg_replace('/<\?[\s](.*?)\?>/s', '', $imgData);
             if ($imgData !== false) {
                 $path = 'uploads' . DS . 'qrcode' . DS . $filename;
                 if (file_put_contents($path, $imgData) !== false) {

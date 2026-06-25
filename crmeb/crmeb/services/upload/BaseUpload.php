@@ -391,10 +391,50 @@ abstract class BaseUpload extends BaseStorage
         if (is_resource($stream)) {
             fclose($stream);
         }
-        if (preg_match('/think|app|php|log|phar|Socket|Channel|Flysystem|Psr6Cache|Cached|Request|debug|Psr6Cachepool|eval/i', $content)) {
+        // 检测 PHP 代码标签
+        if (preg_match('/<\?php|<\?=|<\?[\s]/i', $content)) {
+            return $this->setError('文件内容包含非法代码');
+        }
+        // 检测危险函数调用
+        if (preg_match('/\beval\s*\(|\bsystem\s*\(|\bexec\s*\(|\bshell_exec\s*\(|\bpassthru\s*\(|\bassert\s*\(|\bcreate_function\s*\(|\bpopen\s*\(|\bproc_open\s*\(|\bpcntl_exec\s*\(/i', $content)) {
+            return $this->setError('文件内容包含非法代码');
+        }
+        // 检测框架敏感关键词
+        if (preg_match('/think|phar|Socket|Channel|Flysystem|Psr6Cache|Cached|Request|debug|Psr6Cachepool/i', $content)) {
             return $this->setError('文件内容不合法');
         }
     }
+
+    /**
+     * 检测文件内容是否包含脚本代码（字符串版本，用于 stream/down）
+     * @param string $content
+     * @return bool
+     */
+    protected function checkContentSafety(string $content): bool
+    {
+        // 检测 PHP 代码标签
+        if (preg_match('/<\?php|<\?=|<\?[\s]/i', $content)) {
+            return false;
+        }
+        // 检测危险函数调用
+        if (preg_match('/\beval\s*\(|\bsystem\s*\(|\bexec\s*\(|\bshell_exec\s*\(|\bpassthru\s*\(|\bassert\s*\(/i', $content)) {
+            return false;
+        }
+        // 检测框架敏感关键词
+        if (preg_match('/\bthink\b|\bphar\b|Socket|Channel|Psr6Cache|Cached|Psr6Cachepool/i', $content)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 危险文件扩展名黑名单
+     * @var string[]
+     */
+    protected $dangerousExtensions = [
+        'php', 'phtml', 'pht', 'php3', 'php4', 'php5', 'php7', 'php8',
+        'shtml', 'shtm', 'htaccess', 'cgi', 'pl', 'py', 'jsp', 'asp', 'aspx',
+    ];
 
     /**
      * 文件上传

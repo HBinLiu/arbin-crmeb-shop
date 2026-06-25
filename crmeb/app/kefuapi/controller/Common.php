@@ -213,19 +213,32 @@ class Common extends BaseController
         $data = $request->postMore([
             ['filename', 'file'],
         ]);
+        if (!$data['filename']) return app('json')->fail('参数错误');
+
+        // 尝试解析 token 获取用户身份
+        $uid = 0;
         try {
             /** @var UserAuthServices $service */
             $service = app()->make(UserAuthServices::class);
             $authInfo = $service->parseToken($this->request->post('token'));
-            if (!isset($authInfo['user']['uid'])) {
-                return app('json')->fail('非法操作');
+            if (isset($authInfo['user']['uid']) && $authInfo['user']['uid'] > 0) {
+                $uid = (int)$authInfo['user']['uid'];
             }
-        } catch (AuthException $e) {
-            return app('json')->fail('无效的token不能查找到用户聊天记录');
+        } catch (\Throwable $e) {
+            // token 无效时使用 IP 限流
         }
-        $uid = $authInfo['user']['uid'];
-        if (!$data['filename']) return app('json')->fail('参数错误');
-        if (CacheService::has('start_uploads_' . $uid) && CacheService::get('start_uploads_' . $uid) >= 100) return app('json')->fail('非法操作');
+
+        // 速率限制：认证用户 100次/天，未认证 IP 50次/天
+        if ($uid > 0) {
+            $limitKey = 'start_uploads_' . $uid;
+            $maxUploads = 100;
+        } else {
+            $limitKey = 'start_uploads_ip_' . md5($request->ip());
+            $maxUploads = 50;
+        }
+
+        if (CacheService::has($limitKey) && CacheService::get($limitKey) >= $maxUploads) return app('json')->fail('上传次数已达上限');
+
         $upload = UploadService::init();
         $info = $upload->to('store/comment')->validate()->move($data['filename']);
         if ($info === false) {
@@ -233,12 +246,15 @@ class Common extends BaseController
         }
         $res = $upload->getUploadInfo();
         $services->attachmentAdd($res['name'], $res['size'], $res['type'], $res['dir'], $res['thumb_path'], 1, (int)sys_config('upload_type', 1), $res['time'], 2);
-        if (CacheService::has('start_uploads_' . $uid))
-            $start_uploads = (int)CacheService::get('start_uploads_' . $uid);
+
+        // 更新速率计数
+        if (CacheService::has($limitKey))
+            $start_uploads = (int)CacheService::get($limitKey);
         else
             $start_uploads = 0;
         $start_uploads++;
-        CacheService::set('start_uploads_' . $uid, $start_uploads, 86400);
+        CacheService::set($limitKey, $start_uploads, 86400);
+
         $res['dir'] = path_to_url($res['dir']);
         if (strpos($res['dir'], 'http') === false) $res['dir'] = $request->domain() . $res['dir'];
         return app('json')->success('图片上传成功', ['name' => $res['name'], 'url' => $res['dir']]);
