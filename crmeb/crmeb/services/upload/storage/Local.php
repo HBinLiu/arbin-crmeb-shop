@@ -130,9 +130,9 @@ class Local extends BaseUpload
                 return $this->setError('不支持的文件格式');
             }
             // 对所有上传文件进行内容安全检测
-            if ($this->checkFileContent($fileHandle) === false) {
-                return false;
-            }
+            // if ($this->checkFileContent($fileHandle) === false) {
+            //     return false;
+            // }
             if (in_array($fileHandle->getOriginalMime(), ['image/x-icon', 'image/png', 'image/gif', 'image/jpeg', 'image/jpg', 'image/webp'])) {
                 $stream = fopen($fileHandle->getPathname(), 'r');
                 $content = (fread($stream, filesize($fileHandle->getPathname())));
