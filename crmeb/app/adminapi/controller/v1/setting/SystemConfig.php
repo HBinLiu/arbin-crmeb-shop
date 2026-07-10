@@ -110,7 +110,7 @@ class SystemConfig extends AuthController
         if (is_array($data['config_tab_id'])) $data['config_tab_id'] = end($data['config_tab_id']);
         if (!$data['info']) return app('json')->fail('请输入配置名称');
         if (!$data['menu_name']) return app('json')->fail('请输入字段名称');
-        if (!$data['desc']) return app('json')->fail('请输入配置简介');
+        // if (!$data['desc']) return app('json')->fail('请输入配置简介');
         if ($data['sort'] < 0) {
             $data['sort'] = 0;
         }
@@ -294,7 +294,7 @@ class SystemConfig extends AuthController
      * @param $status
      * @return mixed
      */
-    public function set_status($id, $status)
+    public function setStatus($id, $status)
     {
         if ($status == '' || $id == 0) {
             return app('json')->fail('参数错误');
@@ -307,7 +307,7 @@ class SystemConfig extends AuthController
     /**
      * 基础配置
      * */
-    public function edit_basics(Request $request)
+    public function editBasics(Request $request)
     {
         $tabId = $this->request->param('tab_id', 1);
         if (!$tabId) {
@@ -320,7 +320,7 @@ class SystemConfig extends AuthController
     /**
      * 保存数据    true
      * */
-    public function save_basics(Request $request)
+    public function saveBasics(Request $request)
     {
         $post = $this->request->post();
         foreach ($post as $k => $v) {
@@ -461,6 +461,13 @@ class SystemConfig extends AuthController
             return app('json')->success('修改成功');
         }
         if (isset($post['param_filter_data'])) {
+            $rules = preg_split('/\r\n|\r|\n/', $post['param_filter_data'], -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($rules as $rule) {
+                $rule = trim($rule);
+                if ($rule !== '' && @preg_match($rule, '') === false) {
+                    return app('json')->fail('WAF配置规则格式错误：' . $rule);
+                }
+            }
             $post['param_filter_data'] = base64_encode($post['param_filter_data']);
         }
         if (isset($post['product_type_config'])) {
@@ -555,7 +562,7 @@ class SystemConfig extends AuthController
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
      */
-    public function header_basics(SystemConfigTabServices $services)
+    public function headerBasics(SystemConfigTabServices $services)
     {
         [$type, $pid] = $this->request->getMore([
             [['type', 'd'], 0],
@@ -575,7 +582,7 @@ class SystemConfig extends AuthController
      * @param $name
      * @return mixed
      */
-    public function get_system($name)
+    public function getSystem($name)
     {
         $value = sys_config($name);
         return app('json')->success(compact('value'));
@@ -586,7 +593,7 @@ class SystemConfig extends AuthController
      * @param $tabId
      * @return mixed
      */
-    public function get_config_list($tabId)
+    public function getConfigList($tabId)
     {
         $list = $this->services->getReadList($tabId);
         $data = [];
