@@ -1,4 +1,4 @@
-![输入图片说明](help/resource/pic/sheji.jpg)
+[![输入图片说明](help/resource/pic/sheji.jpg)](https://www.crmeb.com/theme/activity?from=giteephp)
 <div align="center" >
     <img src="https://www.crmeb.com/static/images/dark_logo.png" />
 </div>
