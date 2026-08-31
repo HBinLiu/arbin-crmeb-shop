@@ -63,6 +63,13 @@ class UserBrokerageServices extends BaseServices
             'status' => 1,
             'pm' => 1
         ],
+        'get_peer_brokerage' => [
+            'title' => '获得平级/越级资产奖',
+            'type' => 'peer_brokerage',
+            'mark' => '{%nickname%}成功消费{%pay_price%}元,奖励平级/越级资产{%number%}',
+            'status' => 1,
+            'pm' => 1
+        ],
         'get_two_brokerage' => [
             'title' => '获得二级推广订单佣金',
             'type' => 'two_brokerage',
@@ -189,7 +196,7 @@ class UserBrokerageServices extends BaseServices
      * @return float
      * @throws \ReflectionException
      */
-    public function getUserBrokerageSum(int $uid, array $type = ['one_brokerage', 'two_brokerage', 'brokerage_user'], $time = '')
+    public function getUserBrokerageSum(int $uid, array $type = ['one_brokerage', 'two_brokerage', 'peer_brokerage', 'brokerage_user'], $time = '')
     {
         $where = ['uid' => $uid];
         if ($type) $where['type'] = $type;
@@ -210,7 +217,7 @@ class UserBrokerageServices extends BaseServices
         $id = (int)$order['id'];
         $where = [
             'uid' => [$order['spread_uid'], $order['spread_two_uid'], $order['staff_id'], $order['agent_id'], $order['division_id']],
-            'type' => ['self_brokerage', 'one_brokerage', 'two_brokerage', 'staff_brokerage', 'agent_brokerage', 'division_brokerage', 'pink_master_brokerage'],
+            'type' => ['self_brokerage', 'one_brokerage', 'two_brokerage', 'peer_brokerage', 'staff_brokerage', 'agent_brokerage', 'division_brokerage', 'pink_master_brokerage'],
             'link_id' => $id,
             'pm' => 1
         ];

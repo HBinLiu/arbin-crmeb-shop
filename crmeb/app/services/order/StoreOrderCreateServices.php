@@ -15,6 +15,7 @@ namespace app\services\order;
 use app\services\activity\advance\StoreAdvanceServices;
 use app\services\activity\combination\StorePinkServices;
 use app\services\agent\AgentLevelServices;
+use app\services\agent\BrokeragePeerServices;
 use app\services\activity\coupon\StoreCouponUserServices;
 use app\services\agent\DivisionServices;
 use app\services\product\product\StoreCategoryServices;
@@ -811,7 +812,7 @@ class StoreOrderCreateServices extends BaseServices
     public function computeOrderProductBrokerage(int $uid, array $cartInfo)
     {
 
-        [$storeBrokerageRatio, $storeBrokerageTwo, $spread_one_uid, $spread_two_uid] = $this->getSpreadDate($uid);
+        [$storeBrokerageRatio, $storeBrokerageTwo, $spread_one_uid, $spread_two_uid, $isPeerBrokerage] = $this->getSpreadDate($uid);
 
         /** @var DivisionServices $divisionService */
         $divisionService = app()->make(DivisionServices::class);
@@ -841,7 +842,7 @@ class StoreOrderCreateServices extends BaseServices
                 }
 
                 //指定返佣金额
-                if (isset($productInfo['is_sub']) && $productInfo['is_sub'] == 1) {
+                if (isset($productInfo['is_sub']) && $productInfo['is_sub'] == 1 && !$isPeerBrokerage) {
                     $oneBrokerage = bcmul((string)($productInfo['attrInfo']['brokerage'] ?? '0'), $cartNum, 2);
                     $twoBrokerage = bcmul((string)($productInfo['attrInfo']['brokerage_two'] ?? '0'), $cartNum, 2);
                 } else {
@@ -891,7 +892,7 @@ class StoreOrderCreateServices extends BaseServices
     {
         //商城分销是否开启，用户uid是否存在，全部返回0
         if (!sys_config('brokerage_func_status') || !$uid) {
-            return [0, 0, 0, 0];
+            return [0, 0, 0, 0, false];
         }
 
         //获取用户信息，获取不到全部返回0
@@ -899,7 +900,7 @@ class StoreOrderCreateServices extends BaseServices
         $userServices = app()->make(UserServices::class);
         $userInfo = $userServices->getUserInfo($uid);
         if (!$userInfo) {
-            return [0, 0, 0, 0];
+            return [0, 0, 0, 0, false];
         }
 
         //获取系统一二级分佣比例
@@ -916,10 +917,20 @@ class StoreOrderCreateServices extends BaseServices
         //计算分销等级之后的佣金比例
         [$storeBrokerageRatio, $storeBrokerageTwo] = app()->make(AgentLevelServices::class)->getAgentLevelBrokerage($storeBrokerageRatio, $storeBrokerageTwo, $spread_one_uid, $spread_two_uid);
 
+        $isPeerBrokerage = false;
+        /** @var BrokeragePeerServices $peerBrokerageServices */
+        $peerBrokerageServices = app()->make(BrokeragePeerServices::class);
+        if ($spread_one_uid > 0 && $peerBrokerageServices->isPeerBrokerage($uid, (int)$spread_one_uid)) {
+            $isPeerBrokerage = true;
+            $storeBrokerageRatio = $peerBrokerageServices->getRatio();
+            $storeBrokerageTwo = 0;
+            $spread_two_uid = 0;
+        }
+
         //判断返佣层级为一级时，将二级用户uid和二级分佣比例改为0
         if (sys_config('brokerage_level') == 1) {
             $storeBrokerageTwo = $spread_two_uid = 0;
         }
-        return [$storeBrokerageRatio, $storeBrokerageTwo, $spread_one_uid, $spread_two_uid];
+        return [$storeBrokerageRatio, $storeBrokerageTwo, $spread_one_uid, $spread_two_uid, $isPeerBrokerage];
     }
 }

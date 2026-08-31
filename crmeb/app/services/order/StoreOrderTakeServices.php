@@ -17,6 +17,7 @@ use app\services\activity\bargain\StoreBargainServices;
 use app\services\activity\combination\StoreCombinationServices;
 use app\services\activity\combination\StorePinkServices;
 use app\services\activity\seckill\StoreSeckillServices;
+use app\services\agent\BrokeragePeerServices;
 use app\services\BaseServices;
 use app\services\user\member\MemberCardServices;
 use app\services\user\UserBillServices;
@@ -448,8 +449,15 @@ class StoreOrderTakeServices extends BaseServices
             // 添加佣金记录
             /** @var UserBrokerageServices $userBrokerageServices */
             $userBrokerageServices = app()->make(UserBrokerageServices::class);
-            //自购返佣 ｜｜ 上级
-            $type = $one_spread_uid == $orderInfo['uid'] ? 'get_self_brokerage' : 'get_brokerage';
+            /** @var BrokeragePeerServices $peerBrokerageServices */
+            $peerBrokerageServices = app()->make(BrokeragePeerServices::class);
+            $isPeerBrokerage = $peerBrokerageServices->isPeerBrokerage((int)$orderInfo['uid'], (int)$one_spread_uid);
+            if ($isPeerBrokerage) {
+                $type = 'get_peer_brokerage';
+            } else {
+                //自购返佣 ｜｜ 上级
+                $type = $one_spread_uid == $orderInfo['uid'] ? 'get_self_brokerage' : 'get_brokerage';
+            }
             $userBrokerageServices->income($type, $one_spread_uid, [
                 'nickname' => $userInfo['nickname'],
                 'pay_price' => floatval($orderInfo['pay_price']),

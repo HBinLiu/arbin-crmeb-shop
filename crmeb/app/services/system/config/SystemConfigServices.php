@@ -120,6 +120,10 @@ class SystemConfigServices extends BaseServices
                 'division_status' => '',
                 'agent_apply_open' => '',
                 'brokerage_window_switch' => '',
+                'peer_brokerage_status' => [
+                    'son_type' => ['peer_brokerage_ratio' => ''],
+                    'show_value' => 1
+                ],
             ],
             'show_value' => 1
         ],
