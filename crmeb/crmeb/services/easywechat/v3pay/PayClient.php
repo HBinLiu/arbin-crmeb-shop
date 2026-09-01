@@ -39,6 +39,14 @@ class PayClient extends BaseClient
     const API_JSAPI_URL = 'v3/pay/transactions/jsapi';
     //jsapi支付接口-服务商模式
     const API_JSAPI_PARTNER_URL = 'v3/pay/partner/transactions/jsapi';
+    //添加分账接收方
+    const API_PROFITSHARING_RECEIVERS_ADD = 'v3/profitsharing/receivers/add';
+    //请求分账
+    const API_PROFITSHARING_ORDERS = 'v3/profitsharing/orders';
+    //解冻剩余资金
+    const API_PROFITSHARING_UNFREEZE = 'v3/profitsharing/orders/unfreeze';
+    //分账回退
+    const API_PROFITSHARING_RETURN = 'v3/profitsharing/return-orders';
     //发起商家转账API
     const API_BATCHES_URL = 'v3/transfer/batches';
     //退款
@@ -182,6 +190,10 @@ class PayClient extends BaseClient
             if (!empty($payer['openid'])) {
                 $data['payer']['sub_openid'] = $payer['openid'];
                 $data['sub_appid'] = $appid;
+            }
+            //开启分账时标记订单可分账
+            if (!empty($this->app['config']['v3_payment']['profit_sharing'])) {
+                $data['settle_info'] = ['profit_sharing' => true];
             }
 
             $url = '';
@@ -556,5 +568,61 @@ class PayClient extends BaseClient
         }
 
         return response($response, 200, [], 'json');
+    }
+
+    /**
+     * 添加分账接收方（服务商）
+     * @param array $data
+     * @return mixed
+     */
+    public function profitSharingAddReceiver(array $data)
+    {
+        $res = $this->request(self::API_PROFITSHARING_RECEIVERS_ADD, 'POST', ['json' => $data]);
+        if (isset($res['code']) && isset($res['message'])) {
+            throw new PayException('添加分账接收方失败:' . $res['message']);
+        }
+        return $res;
+    }
+
+    /**
+     * 请求分账
+     * @param array $data
+     * @return mixed
+     */
+    public function profitSharingOrder(array $data)
+    {
+        $res = $this->request(self::API_PROFITSHARING_ORDERS, 'POST', ['json' => $data]);
+        if (isset($res['code']) && isset($res['message'])) {
+            throw new PayException('请求分账失败:' . $res['message']);
+        }
+        return $res;
+    }
+
+    /**
+     * 解冻剩余资金
+     * @param array $data
+     * @return mixed
+     */
+    public function profitSharingUnfreeze(array $data)
+    {
+        $res = $this->request(self::API_PROFITSHARING_UNFREEZE, 'POST', ['json' => $data]);
+        if (isset($res['code']) && isset($res['message'])) {
+            throw new PayException('解冻剩余资金失败:' . $res['message']);
+        }
+        return $res;
+    }
+
+    /**
+     * 分账回退
+     * @param array $data
+     * @return mixed
+     */
+    public function profitSharingReturn(array $data)
+    {
+        $res = $this->request(self::API_PROFITSHARING_RETURN, 'POST', ['json' => $data]);
+        if (isset($res['code']) && isset($res['message'])) {
+            throw new PayException('分账回退失败:' . $res['message']);
+        }
+        return $res;
     }
 }

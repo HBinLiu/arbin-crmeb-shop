@@ -75,6 +75,7 @@ class V3WechatPay extends BasePay implements PayInterface
         if ($merType) {
             $config['v3_payment']['sub_mch_id'] = trim(sys_config('pay_sub_merchant_id'));
             $config['v3_payment']['sp_appid'] = trim(sys_config('sp_appid'));
+            $config['v3_payment']['profit_sharing'] = (int)sys_config('profit_sharing_open', 0) === 1;
         }
 
         $this->instance = new Application($config);
@@ -258,5 +259,45 @@ class V3WechatPay extends BasePay implements PayInterface
 
             return false;
         });
+    }
+
+    /**
+     * 添加分账接收方
+     * @param array $data
+     * @return mixed
+     */
+    public function profitSharingAddReceiver(array $data)
+    {
+        return $this->instance->v3pay->profitSharingAddReceiver($data);
+    }
+
+    /**
+     * 请求分账
+     * @param array $data
+     * @return mixed
+     */
+    public function profitSharingOrder(array $data)
+    {
+        return $this->instance->v3pay->profitSharingOrder($data);
+    }
+
+    /**
+     * 解冻剩余资金
+     * @param array $data
+     * @return mixed
+     */
+    public function profitSharingUnfreeze(array $data)
+    {
+        return $this->instance->v3pay->profitSharingUnfreeze($data);
+    }
+
+    /**
+     * 分账回退
+     * @param array $data
+     * @return mixed
+     */
+    public function profitSharingReturn(array $data)
+    {
+        return $this->instance->v3pay->profitSharingReturn($data);
     }
 }

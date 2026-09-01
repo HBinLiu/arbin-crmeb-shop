@@ -21,6 +21,7 @@ use app\services\BaseServices;
 use app\services\activity\coupon\StoreCouponIssueUserServices;
 use app\services\activity\coupon\StoreCouponUserServices;
 use app\services\pay\PayServices;
+use app\services\pay\ProfitSharingServices;
 use app\services\product\product\StoreProductServices;
 use app\services\shipping\ExpressServices;
 use app\services\statistic\CapitalFlowServices;
@@ -186,6 +187,13 @@ class StoreOrderRefundServices extends BaseServices
                 }
                 switch ($refundOrder['pay_type']) {
                     case PayServices::WEIXIN_PAY:
+                        // 服务商分账回退须先于微信退款
+                        /** @var ProfitSharingServices $profitSharingServices */
+                        $profitSharingServices = app()->make(ProfitSharingServices::class);
+                        $profitSharingServices->returnBeforeRefund(
+                            is_array($refundOrder) ? $refundOrder : $refundOrder->toArray(),
+                            (string)$refundData['refund_price']
+                        );
                         $no = $refundOrder['order_id'];
                         if ($refundOrder['trade_no']) {
                             $no = $refundOrder['trade_no'];
@@ -391,6 +399,13 @@ class StoreOrderRefundServices extends BaseServices
                 }
                 switch ($refundOrder['pay_type']) {
                     case PayServices::WEIXIN_PAY:
+                        // 服务商分账回退须先于微信退款
+                        /** @var ProfitSharingServices $profitSharingServices */
+                        $profitSharingServices = app()->make(ProfitSharingServices::class);
+                        $profitSharingServices->returnBeforeRefund(
+                            is_array($refundOrder) ? $refundOrder : $refundOrder->toArray(),
+                            (string)$refundData['refund_price']
+                        );
                         $no = $refundOrder['order_id'];
                         if ($refundOrder['trade_no']) {
                             $no = $refundOrder['trade_no'];

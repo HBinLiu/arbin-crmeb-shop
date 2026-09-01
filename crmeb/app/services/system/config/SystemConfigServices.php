@@ -224,7 +224,15 @@ class SystemConfigServices extends BaseServices
         'mer_type' => [
             'son_type' => [
                 'pay_sub_merchant_id' => '',
-                'sp_appid' => ''
+                'sp_appid' => '',
+            ],
+            'show_value' => 1
+        ],
+        'profit_sharing_open' => [
+            'son_type' => [
+                'profit_sharing_ratio' => '',
+                'profit_sharing_receiver_mchid' => '',
+                'profit_sharing_receiver_name' => '',
             ],
             'show_value' => 1
         ],
@@ -1649,7 +1657,7 @@ class SystemConfigServices extends BaseServices
         if (!$banner) {
             //组合数据
             $banner = sys_data('routine_spread_banner');
-            if ($banner) {
+            if (is_array($banner) && $banner) {
                 $banner = array_column($banner, 'pic');
                 $this->dao->update(['menu_name' => 'spread_banner'], ['value' => json_encode($banner)]);
                 CacheService::clear();
