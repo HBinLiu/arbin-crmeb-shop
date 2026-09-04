@@ -76,3 +76,9 @@ crmeb/runtime/temp/readme.md
 Dockerfile
 .codebuddy/models.json
 .codebuddy/rules/project-intro.mdc
+
+# 微信第三方平台微管家 (wxcomponent)
+/wxcomponent/.env
+/wxcomponent/client/node_modules/
+/wxcomponent/client/dist/
+/wxcomponent/wx_mch_app
