@@ -211,11 +211,8 @@ class AccessToken extends HttpService
 
     /**
      * 获取授权信息
-     * @param $authorization_code 授权码
-     * @return authorizer_appid    string    授权方 appid
-     * @return authorizer_access_token string    接口调用令牌（在授权的公众号/小程序具备 API 权限时，才有此返回值）
-     * @return authorizer_refresh_token    string    刷新令牌（在授权的公众号具备API权限时，才有此返回值），刷新令牌主要用于第三方平台获取和刷新已授权用户的 authorizer_access_token。一旦丢失，只能让用户重新授权，才能再次拿到新的刷新令牌。用户重新授权后，之前的刷新令牌会失效
-     * @return array|bool|mixed
+     * @param string $authorization_code 授权码
+     * @return array|bool|mixed 含 authorizer_appid、authorizer_access_token、authorizer_refresh_token 等
      */
     public function getAuthorizationInfo($authorization_code)
     {
@@ -233,12 +230,10 @@ class AccessToken extends HttpService
     }
 
     /**
-     *  获取/刷新接口调用令牌
-     * @param $authorizer_appid 授权方appid
-     * @param $authorizer_refresh_token 刷新令牌，获取授权信息时得到
-     * @return authorizer_access_token    string    授权方令牌
-     * @return authorizer_refresh_token    string    刷新令牌
-     * @return array|bool|mixed
+     * 获取/刷新接口调用令牌
+     * @param string $authorizer_appid 授权方 appid
+     * @param string $authorizer_refresh_token 刷新令牌，获取授权信息时得到
+     * @return array|bool|mixed 含 authorizer_access_token、authorizer_refresh_token 等
      */
     public function freshAuthorizationToken($authorizer_appid, $authorizer_refresh_token)
     {
@@ -299,12 +294,11 @@ class AccessToken extends HttpService
 
     /**
      * 对解密后的明文进行补位删除
-     * @param decrypted 解密后的明文
-     * @return 删除填充补位后的明文
+     * @param string $text 解密后的明文
+     * @return string 删除填充补位后的明文
      */
     public function decode($text)
     {
-
         $pad = ord(substr($text, -1));
         if ($pad < 1 || $pad > 32) {
             $pad = 0;
@@ -314,7 +308,7 @@ class AccessToken extends HttpService
 
     /**
      * 对密文进行解密
-     * @param string $encodingAesKey 解密
+     * @param string $encodingAesKey 解密密钥
      * @param string $encrypted 需要解密的密文
      * @return string 解密得到的明文
      */
@@ -323,17 +317,19 @@ class AccessToken extends HttpService
         try {
             //使用BASE64对需要解密的字符串进行解码
             $ciphertext_dec = base64_decode($encrypted);
-            $iv = substr(base64_decode($encodingAesKey . "="), 0, 16);
-            $decrypted = openssl_decrypt($ciphertext_dec, 'AES-256-CBC', $this->key, OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING, $iv);
+            $aesKey = base64_decode($encodingAesKey . "=");
+            $iv = substr($aesKey, 0, 16);
+            $decrypted = openssl_decrypt($ciphertext_dec, 'AES-256-CBC', $aesKey, OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING, $iv);
         } catch (\Throwable $e) {
             throw new ApiException($e->getMessage());
         }
         try {
             //去除补位字符
-            $result = $this->decode($decrypted);
+            $result = $this->decode((string)$decrypted);
             //去除16位随机字符串,网络字节序和AppId
-            if (strlen($result) < 16)
+            if (strlen($result) < 16) {
                 return "";
+            }
             $content = substr($result, 16, strlen($result));
             $len_list = unpack("N", substr($content, 0, 4));
             $xml_len = $len_list[1];
