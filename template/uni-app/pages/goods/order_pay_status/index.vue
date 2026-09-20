@@ -71,8 +71,13 @@
 						<view class="moneyCon acea-row row-between-wrapper">
 							<view class="price acea-row row-center-wrapper">
 								<view>
-									{{ $t(`￥`) }}
-									<text>{{ item.coupon_price }}</text>
+									<template v-if="item.coupon_type == 2">
+										<text>{{ item.coupon_price / 10 }}</text>{{ $t(`折`) }}
+									</template>
+									<template v-else>
+										{{ $t(`￥`) }}
+										<text>{{ item.coupon_price }}</text>
+									</template>
 								</view>
 							</view>
 						</view>

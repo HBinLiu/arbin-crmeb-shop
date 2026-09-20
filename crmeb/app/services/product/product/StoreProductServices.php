@@ -129,7 +129,7 @@ class StoreProductServices extends BaseServices
             $where['cate_id'] = $cateIds;
         }
         $order_string = '';
-        $order_arr = ['asc', 'desc'];
+        $order_arr = ['asc', 'desc'];   
         if (isset($where['sales']) && in_array($where['sales'], $order_arr)) {
             $order_string = 'sales ' . $where['sales'];
         }
@@ -2726,6 +2726,7 @@ class StoreProductServices extends BaseServices
             return $b['coupon_price'] - $a['coupon_price'];
         });
         $time = time();
+        $bestOff = '0.00';
         foreach ($list as $item) {
             // 优惠券不在使用时间范围内
             if ($item['start_use_time'] != 0 && ($item['start_use_time'] > $time || $item['end_use_time'] < $time)) {
@@ -2744,10 +2745,15 @@ class StoreProductServices extends BaseServices
             }
             // 满足优惠券使用门槛
             if ($realPrice >= $item['use_min_price']) {
-                $realPrice = bcsub($realPrice, $item['coupon_price'], 2);
-                if ($realPrice < 0) $realPrice = 0;
-                break;
+                $off = app()->make(StoreCouponIssueServices::class)->calcCouponOff($item, $realPrice);
+                if (bccomp($off, $bestOff, 2) === 1) {
+                    $bestOff = $off;
+                }
             }
+        }
+        if (bccomp($bestOff, '0', 2) === 1) {
+            $realPrice = bcsub((string)$realPrice, $bestOff, 2);
+            if ($realPrice < 0) $realPrice = 0;
         }
         // vip_price 与列表/详情 DIY 组件字段对齐；member_price 保留兼容旧前端
         return [

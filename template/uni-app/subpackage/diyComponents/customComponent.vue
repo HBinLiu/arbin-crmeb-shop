@@ -937,7 +937,10 @@ export default {
         const field = item.propValue.fieldType;
         if (field === "coupon_title")
           return dataItem.coupon_title || dataItem.title;
-        if (field === "coupon_price") return dataItem.coupon_price;
+        if (field === "coupon_price")
+          return dataItem.coupon_type == 2
+            ? parseFloat(dataItem.coupon_price) / 10 + "折"
+            : dataItem.coupon_price;
         if (field === "use_min_price") return dataItem.use_min_price;
         if (field === "coupon_time") return dataItem.coupon_time;
         if (field === "type")

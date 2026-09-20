@@ -722,6 +722,10 @@ class StoreOrderCreateServices extends BaseServices
             if ($couponInfo) {
                 $type = $couponInfo['applicable_type'] ?? 0;
                 $counpon_id = $couponInfo['id'];
+                $facePrice = (string)$couponInfo['coupon_price'];
+                if ((int)($couponInfo['coupon_type'] ?? 1) === 2) {
+                    $facePrice = (string)$priceData['coupon_price'];
+                }
                 switch ($type) {
                     case 0:
                     case 3:
@@ -731,10 +735,10 @@ class StoreOrderCreateServices extends BaseServices
                         }
                         foreach ($cartInfo as &$cart) {
                             if ($count > 1) {
-                                $coupon_price = bcmul((string)bcdiv((string)bcmul((string)$cart['cart_num'], (string)$cart['truePrice'], 4), (string)$total_price, 4), (string)$couponInfo['coupon_price'], 2);
+                                $coupon_price = bcmul((string)bcdiv((string)bcmul((string)$cart['cart_num'], (string)$cart['truePrice'], 4), (string)$total_price, 4), (string)$facePrice, 2);
                                 $compute_price = bcadd((string)$compute_price, (string)$coupon_price, 2);
                             } else {
-                                $coupon_price = bcsub((string)$couponInfo['coupon_price'], $compute_price, 2);
+                                $coupon_price = bcsub((string)$facePrice, $compute_price, 2);
                             }
                             $cart['coupon_price'] = $coupon_price;
                             $cart['coupon_id'] = $counpon_id;
@@ -759,10 +763,10 @@ class StoreOrderCreateServices extends BaseServices
                                 $cart['coupon_price'] = 0;
                                 if (isset($cart['productInfo']['cate_id']) && array_intersect(explode(',', $cart['productInfo']['cate_id']), $cateIds)) {
                                     if ($count > 1) {
-                                        $coupon_price = bcmul((string)bcdiv((string)bcmul((string)$cart['cart_num'], (string)$cart['truePrice'], 4), (string)$total_price, 4), (string)$couponInfo['coupon_price'], 2);
+                                        $coupon_price = bcmul((string)bcdiv((string)bcmul((string)$cart['cart_num'], (string)$cart['truePrice'], 4), (string)$total_price, 4), (string)$facePrice, 2);
                                         $compute_price = bcadd((string)$compute_price, (string)$coupon_price, 2);
                                     } else {
-                                        $coupon_price = bcsub((string)$couponInfo['coupon_price'], $compute_price, 2);
+                                        $coupon_price = bcsub((string)$facePrice, $compute_price, 2);
                                     }
                                     $cart['coupon_id'] = $counpon_id;
                                     $cart['coupon_price'] = $coupon_price;
@@ -783,10 +787,10 @@ class StoreOrderCreateServices extends BaseServices
                             $cart['coupon_price'] = 0;
                             if (isset($cart['product_id']) && in_array($cart['product_id'], explode(',', $couponInfo['product_id']))) {
                                 if ($count > 1) {
-                                    $coupon_price = bcmul((string)bcdiv((string)bcmul((string)$cart['cart_num'], (string)$cart['truePrice'], 4), (string)$total_price, 4), (string)$couponInfo['coupon_price'], 2);
+                                    $coupon_price = bcmul((string)bcdiv((string)bcmul((string)$cart['cart_num'], (string)$cart['truePrice'], 4), (string)$total_price, 4), (string)$facePrice, 2);
                                     $compute_price = bcadd((string)$compute_price, (string)$coupon_price, 2);
                                 } else {
-                                    $coupon_price = bcsub((string)$couponInfo['coupon_price'], $compute_price, 2);
+                                    $coupon_price = bcsub((string)$facePrice, $compute_price, 2);
                                 }
                                 $cart['coupon_id'] = $counpon_id;
                                 $cart['coupon_price'] = $coupon_price;

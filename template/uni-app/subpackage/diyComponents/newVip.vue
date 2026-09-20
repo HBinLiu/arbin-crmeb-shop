@@ -178,15 +178,8 @@
                     class="item-bottom acea-row row-column row-center row-middle"
                   >
                     <view class="name" :style="[couponTypeStyle]">
-                      <text v-if="item.coupon_type == 1">{{
-                        $t(`品类券`)
-                      }}</text>
-                      <text v-else-if="item.coupon_type == 2">{{
-                        $t(`商品券`)
-                      }}</text>
-                      <text v-else-if="item.coupon_type == 3">{{
-                        $t(`品牌券`)
-                      }}</text>
+                      <text v-if="item.type == 1">{{ $t(`品类券`) }}</text>
+                      <text v-else-if="item.type == 2">{{ $t(`商品券`) }}</text>
                       <text v-else>{{ $t(`通用券`) }}</text>
                     </view>
                     <view v-if="item.use_min_price" class="info"
@@ -200,7 +193,10 @@
             </scroll-view>
             <view class="station" :style="[stationStyle]">
               <view class="money"
-                >{{ $t(`¥`) }}<text class="number">{{ totalPrice }}</text></view
+                ><template v-if="hasDiscountCoupon">{{ $t(`领券优惠`) }}</template
+                ><template v-else
+                  >{{ $t(`¥`) }}<text class="number">{{ totalPrice }}</text></template
+                ></view
               >
               <view class="info">{{ $t(`新人专享优惠券`) }}</view>
               <view class="button" :style="[buttonStyle]" @click="goUser">{{
@@ -275,8 +271,12 @@ export default {
     this.getList();
   },
   computed: {
+    hasDiscountCoupon() {
+      return this.couponList.some((item) => item.coupon_type == 2);
+    },
     totalPrice() {
       return this.couponList.reduce((total, item) => {
+        if (item.coupon_type == 2) return total;
         return this.$util.$h.Add(total, item.coupon_price);
       }, 0);
     },

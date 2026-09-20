@@ -15,7 +15,8 @@
 				<scroll-view scroll-y="true" style="max-height: 800rpx;min-height: 500rpx;">
 					<view class="item acea-row row-middle" v-for="(item,index) in couponList" :key="index">
 						<view class="bg">
-							<view class="price">¥<text class="num">{{item.coupon_price}}</text></view>
+							<view class="price" v-if="item.coupon_type == 2"><text class="num">{{ item.coupon_price / 10 }}</text>折</view>
+							<view class="price" v-else>¥<text class="num">{{item.coupon_price}}</text></view>
 							<view class="reduction">满{{item.use_min_price}}可用</view>
 						</view>
 						<view class="text">

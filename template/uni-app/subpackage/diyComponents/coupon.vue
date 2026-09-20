@@ -15,7 +15,11 @@
                 >
                   <view class="text">
                     <view class="money" :style="[couponMoneyColor]">
-                      <template>
+                      <template v-if="item.coupon_type == 2">
+                        <text class="number">{{ item.coupon_price / 10 }}</text
+                        >{{ $t(`折`) }}
+                      </template>
+                      <template v-else>
                         {{ $t(`¥`)
                         }}<text class="number">{{ item.coupon_price }}</text>
                       </template>
@@ -55,7 +59,11 @@
                   <view class="name">{{ item.type | typeFilter }}</view>
                   <view class="text">
                     <view class="money" :style="[couponMoneyColor]">
-                      <template>
+                      <template v-if="item.coupon_type == 2">
+                        <text class="number">{{ item.coupon_price / 10 }}</text
+                        >{{ $t(`折`) }}
+                      </template>
+                      <template v-else>
                         {{ $t(`¥`)
                         }}<text class="number">{{ item.coupon_price }}</text>
                       </template>
@@ -98,7 +106,11 @@
                       class="text acea-row row-column row-middle row-center"
                     >
                       <view class="money">
-                        <template>
+                        <template v-if="item.coupon_type == 2">
+                          <text class="number">{{ item.coupon_price / 10 }}</text
+                          >{{ $t(`折`) }}
+                        </template>
+                        <template v-else>
                           {{ $t(`¥`)
                           }}<text class="number">{{ item.coupon_price }}</text>
                         </template>
@@ -146,7 +158,11 @@
                     </view>
                     <view class="text">
                       <view class="money" :style="[couponMoneyColor]">
-                        <template>
+                        <template v-if="item.coupon_type == 2">
+                          <text class="number">{{ item.coupon_price / 10 }}</text
+                          >{{ $t(`折`) }}
+                        </template>
+                        <template v-else>
                           {{ $t(`¥`)
                           }}<text class="number">{{ item.coupon_price }}</text>
                         </template>
@@ -190,7 +206,11 @@
                 >
                   <view class="text acea-row row-column row-middle row-center">
                     <view class="money" :style="[couponMoneyColor]">
-                      <template>
+                      <template v-if="item.coupon_type == 2">
+                        <text class="number">{{ item.coupon_price / 10 }}</text
+                        >{{ $t(`折`) }}
+                      </template>
+                      <template v-else>
                         {{ $t(`¥`)
                         }}<text class="number">{{ item.coupon_price }}</text>
                       </template>

@@ -16,7 +16,14 @@
             class="content_width"
           ></el-input>
         </el-form-item>
-        <el-form-item label="优惠券面值：">
+        <el-form-item label="优惠方式：">
+          <el-radio-group v-model="formData.coupon_type" :disabled="isEdit">
+            <el-radio :label="1">满减券</el-radio>
+            <el-radio :label="2">折扣券</el-radio>
+          </el-radio-group>
+          <div class="tip">满减券按固定金额减免；折扣券按折扣计算，例如 8.5 表示 8.5 折。</div>
+        </el-form-item>
+        <el-form-item v-if="formData.coupon_type != 2" label="优惠券面值：">
           <el-input-number
             :controls="false"
             :min="1"
@@ -24,6 +31,19 @@
             v-model="formData.coupon_price"
             class="content_width input-number-unit-class"
             class-unit="元"
+            :disabled="isEdit"
+          ></el-input-number>
+        </el-form-item>
+        <el-form-item v-else label="折扣：">
+          <el-input-number
+            :controls="false"
+            :min="0.1"
+            :max="9.9"
+            :precision="1"
+            :step="0.1"
+            v-model="formData.coupon_price"
+            class="content_width input-number-unit-class"
+            class-unit="折"
             :disabled="isEdit"
           ></el-input-number>
         </el-form-item>
@@ -248,6 +268,7 @@ export default {
         category_id: 0,
         receive_limit: 1,
         spread_limit: 0,
+        coupon_type: 1,
       },
       categoryList: [],
       productList: [],
@@ -292,7 +313,9 @@ export default {
           this.formData.coupon_title = data.coupon_title;
           this.formData.type = data.type;
           this.formData.category_id = data.category_id;
-          this.formData.coupon_price = parseFloat(data.coupon_price);
+          this.formData.coupon_type = data.coupon_type == 2 ? 2 : 1;
+          this.formData.coupon_price =
+            this.formData.coupon_type == 2 ? parseFloat(data.coupon_price) / 10 : parseFloat(data.coupon_price);
           this.formData.use_min_price = parseFloat(data.use_min_price);
           if (this.formData.use_min_price) {
             this.isMinPrice = 1;
@@ -354,7 +377,11 @@ export default {
           return this.$message.error('请选择品类');
         }
       }
-      if (this.formData.coupon_price <= 0) {
+      if (this.formData.coupon_type == 2) {
+        if (this.formData.coupon_price <= 0 || this.formData.coupon_price >= 10) {
+          return this.$message.error('折扣需大于0且小于10，例如8.5表示8.5折');
+        }
+      } else if (this.formData.coupon_price <= 0) {
         return this.$message.error('优惠券面值不能小于0');
       }
       if (!this.isMinPrice) {

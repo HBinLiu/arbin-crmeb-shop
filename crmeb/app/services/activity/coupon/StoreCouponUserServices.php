@@ -243,6 +243,7 @@ class StoreCouponUserServices extends BaseServices
         $data['uid'] = $uid;
         $data['coupon_title'] = $issueCouponInfo['title'];
         $data['coupon_price'] = $issueCouponInfo['coupon_price'];
+        $data['coupon_type'] = (int)($issueCouponInfo['coupon_type'] ?? 1) === 2 ? 2 : 1;
         $data['use_min_price'] = $issueCouponInfo['use_min_price'];
         $data['add_time'] = time();
         if ($issueCouponInfo['coupon_time']) {
@@ -269,6 +270,7 @@ class StoreCouponUserServices extends BaseServices
         $data['uid'] = $uid;
         $data['coupon_title'] = $issueCouponInfo['title'];
         $data['coupon_price'] = $issueCouponInfo['coupon_price'];
+        $data['coupon_type'] = (int)($issueCouponInfo['coupon_type'] ?? 1) === 2 ? 2 : 1;
         $data['use_min_price'] = $issueCouponInfo['use_min_price'];
         $data['add_time'] = time();
         $data['start_time'] = strtotime(date('Y-m-d 00:00:00', time()));
@@ -382,7 +384,8 @@ class StoreCouponUserServices extends BaseServices
             $couponList = $this->dao->getCouponListByOrder(['uid' => $uid, 'coupon_ids' => $couponIds], 'add_time desc');
             if ($couponList) {
                 foreach ($couponList as $k => $v) {
-                    $couponList[$k]['coupon_type'] = $couponIssueService->_couponType[$couponType[$v['cid']]];
+                    $couponList[$k]['discount_type'] = (int)($v['coupon_type'] ?? 1) === 2 ? 2 : 1;
+                    $couponList[$k]['coupon_type'] = $couponIssueService->_couponType[$couponType[$v['cid']]] ?? '';
                 }
             }
         }

@@ -62,8 +62,13 @@
 							<view class="hide line1 acea-row">
 								{{$t(`优惠券`)}}：
 								<template v-for="(item, index) in couponList">
-									<view v-if="index < 2" class="activity" :key="index">
-										{{$t(`满`)}}{{ item.use_min_price }}{{$t(`减`)}}{{ item.coupon_price }}</view>
+										<view v-if="index < 2" class="activity" :key="index">
+										<template v-if="item.coupon_type == 2">
+											<template v-if="item.use_min_price > 0">{{$t(`满`)}}{{ item.use_min_price }}{{$t(`打`)}}{{ item.coupon_price / 10 }}{{$t(`折`)}}</template>
+											<template v-else>{{ item.coupon_price / 10 }}{{$t(`折`)}}</template>
+										</template>
+										<template v-else>{{$t(`满`)}}{{ item.use_min_price }}{{$t(`减`)}}{{ item.coupon_price }}</template>
+										</view>
 								</template>
 							</view>
 							<view class="iconfont icon-jiantou"></view>

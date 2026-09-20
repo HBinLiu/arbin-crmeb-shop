@@ -39,7 +39,10 @@
                     <template slot-scope="scope">
                       <template v-if="item.key">
                         <div>
-                          <span>{{ scope.row[item.key] }}</span>
+                          <span v-if="activeName === 'coupon' && item.key === 'coupon_price' && scope.row.coupon_type == 2">
+                            {{ parseFloat(scope.row.coupon_price) / 10 }}折
+                          </span>
+                          <span v-else>{{ scope.row[item.key] }}</span>
                         </div>
                       </template>
                       <template v-else-if="item.slot === 'number'">

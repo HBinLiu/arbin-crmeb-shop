@@ -21,6 +21,7 @@ use app\services\user\UserServices;
 use crmeb\exceptions\ApiException;
 use app\services\user\UserAddressServices;
 use app\services\activity\coupon\StoreCouponUserServices;
+use app\services\activity\coupon\StoreCouponIssueServices;
 use app\services\shipping\ShippingTemplatesFreeServices;
 use app\services\shipping\ShippingTemplatesRegionServices;
 use app\services\shipping\ShippingTemplatesServices;
@@ -204,7 +205,11 @@ class StoreOrderComputedServices extends BaseServices
             if ($isCreate) {
                 $res1 = $couponServices->useCoupon($couponId);
             }
-            $couponPrice = $couponInfo['coupon_price'] > $price ? $price : $couponInfo['coupon_price'];
+            $couponArr = is_object($couponInfo) ? $couponInfo->toArray() : (array)$couponInfo;
+            $couponPrice = app()->make(StoreCouponIssueServices::class)->calcCouponOff($couponArr, $price);
+            if (bccomp((string)$couponPrice, (string)$payPrice, 2) > 0) {
+                $couponPrice = $payPrice;
+            }
             $payPrice = (float)bcsub((string)$payPrice, (string)$couponPrice, 2);
         } else {
             $couponPrice = 0;

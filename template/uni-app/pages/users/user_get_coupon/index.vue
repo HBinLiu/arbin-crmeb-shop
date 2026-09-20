@@ -12,7 +12,11 @@
 			<view class="item acea-row row-center-wrapper" v-for="(item, index) in couponsList" :key="index" :class="{ svip: item.receive_type === 4 }">
 				<view class="moneyCon acea-row row-center-wrapper">
 					<view class="money" :class="item.is_use >= item.receive_limit ? 'moneyGray' : ''">
-						<view>
+						<view v-if="item.coupon_type == 2">
+							<text class="num">{{ item.coupon_price / 10 }}</text>
+							{{ $t(`折`) }}
+						</view>
+						<view v-else>
 							{{ $t(`￥`) }}
 							<text class="num">{{ item.coupon_price }}</text>
 						</view>

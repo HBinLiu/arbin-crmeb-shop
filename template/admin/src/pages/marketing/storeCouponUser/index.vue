@@ -59,7 +59,8 @@
         </el-table-column>
         <el-table-column label="面值" min-width="150">
           <template slot-scope="scope">
-            <span>{{ scope.row.coupon_price }}</span>
+            <span v-if="scope.row.coupon_type == 2">{{ parseFloat(scope.row.coupon_price) / 10 }}折</span>
+            <span v-else>{{ scope.row.coupon_price }}</span>
           </template>
         </el-table-column>
         <el-table-column label="最低消费额" min-width="150">

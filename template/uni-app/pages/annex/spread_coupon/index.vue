@@ -7,8 +7,14 @@
       <scroll-view scroll-y class="list">
         <view class="item" v-for="item in list" :key="item.id">
           <view class="money">
-            <text class="symbol">¥</text>
-            <text class="num">{{ item.coupon_price }}</text>
+            <template v-if="item.coupon_type == 2">
+              <text class="num">{{ item.coupon_price / 10 }}</text>
+              <text class="symbol">折</text>
+            </template>
+            <template v-else>
+              <text class="symbol">¥</text>
+              <text class="num">{{ item.coupon_price }}</text>
+            </template>
             <view class="limit">{{ item.use_min_price > 0 ? "满" + item.use_min_price + "元可用" : "无门槛" }}</view>
           </view>
           <view class="info">

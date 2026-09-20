@@ -70,9 +70,13 @@ export default {
       const seen = {};
       return arr.filter((item) => {
         item.title =
-          item.use_min_price !== '0.00'
-            ? `${item.title} | 满${item.use_min_price}元 减 ${item.coupon_price}元`
-            : `${item.title} | ${item.coupon_price}元 无门槛券`;
+          item.coupon_type == 2
+            ? item.use_min_price !== '0.00'
+              ? `${item.title} | 满${item.use_min_price}元 ${parseFloat(item.coupon_price) / 10}折`
+              : `${item.title} | ${parseFloat(item.coupon_price) / 10}折 无门槛券`
+            : item.use_min_price !== '0.00'
+              ? `${item.title} | 满${item.use_min_price}元 减 ${item.coupon_price}元`
+              : `${item.title} | ${item.coupon_price}元 无门槛券`;
         delete item.use_min_price;
         delete item.coupon_price;
         const key = JSON.stringify(item); // 使用 JSON.stringify 生成唯一键

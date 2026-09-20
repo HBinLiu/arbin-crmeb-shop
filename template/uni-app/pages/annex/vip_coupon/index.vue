@@ -4,7 +4,8 @@
 			<view class='item acea-row row-center-wrapper' :class="{gray: item.is_fail || item.status === $t(`已使用`)}" v-for='(item,index) in couponsList'
 			 :key="index">
 				<view class='money' :class='item.is_fail ? "moneyGray" : ""'>
-					<view>{{$t(`￥`)}}<text class='num'>{{item.coupon_price | money}}</text></view>
+					<view v-if="item.discount_type == 2 || item.coupon_type == 2"><text class='num'>{{ item.coupon_price / 10 }}</text>{{ $t(`折`) }}</view>
+					<view v-else>{{$t(`￥`)}}<text class='num'>{{item.coupon_price | money}}</text></view>
 					<view class="pic-num" v-if="item.use_min_price > 0">{{$t(`满`)}}{{ item.use_min_price | money }}{{$t(`元可用`)}}</view>
 					<view class="pic-num" v-else>{{$t(`无门槛券`)}}</view>
 				</view>

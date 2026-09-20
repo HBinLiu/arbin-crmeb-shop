@@ -151,6 +151,14 @@ class StoreCouponIssueServices extends BaseServices
         $data['title'] = $data['coupon_title'];
         $data['remain_count'] = $data['total_count'];
         $data['spread_limit'] = ((int)($data['receive_type'] ?? 0) === 1 && !empty($data['spread_limit'])) ? 1 : 0;
+        $data['coupon_type'] = (int)($data['coupon_type'] ?? 1) === 2 ? 2 : 1;
+        if ($data['coupon_type'] === 2) {
+            $zhe = (float)$data['coupon_price'];
+            if ($zhe <= 0 || $zhe >= 10) {
+                throw new AdminException('折扣需大于0且小于10，例如8.5表示8.5折');
+            }
+            $data['coupon_price'] = bcmul((string)$zhe, '10', 2);
+        }
         $data['category_id'] = implode(',', $data['category_id']);
 //        if ($data['receive_type'] == 2 || $data['receive_type'] == 3) {
 //            $data['is_permanent'] = 1;
@@ -268,8 +276,9 @@ class StoreCouponIssueServices extends BaseServices
                 'title' => $item['title'] ?: ($item['coupon_title'] ?? ''),
                 'coupon_price' => floatval($item['coupon_price']),
                 'use_min_price' => floatval($item['use_min_price']),
-                'coupon_time' => $item['coupon_time'],
-                'type' => $item['type'],
+            'coupon_time' => $item['coupon_time'],
+            'coupon_type' => (int)($item['coupon_type'] ?? 1),
+            'type' => $item['type'],
             ];
         }
         return ['list' => $coupons, 'spread_time' => (int)$user['spread_time']];
@@ -292,6 +301,37 @@ class StoreCouponIssueServices extends BaseServices
             return false;
         }
         return (bool)$userServices->checkUserPromoter($spreadUid);
+    }
+
+    /**
+     * 计算优惠券实际抵扣金额
+     * 满减券 coupon_price 为面额；折扣券 coupon_price 为支付比例，80 表示 8 折
+     * @param array $coupon
+     * @param string|float $eligiblePrice
+     * @return string
+     */
+    public function calcCouponOff(array $coupon, $eligiblePrice): string
+    {
+        $eligiblePrice = (string)$eligiblePrice;
+        if (bccomp($eligiblePrice, '0', 2) <= 0) {
+            return '0.00';
+        }
+        if ((int)($coupon['coupon_type'] ?? 1) === 2) {
+            $rate = bcdiv((string)$coupon['coupon_price'], '100', 4);
+            if (bccomp($rate, '0', 4) < 0) {
+                $rate = '0';
+            }
+            if (bccomp($rate, '1', 4) > 0) {
+                $rate = '1';
+            }
+            $off = bcmul($eligiblePrice, bcsub('1', $rate, 4), 2);
+        } else {
+            $off = (string)$coupon['coupon_price'];
+            if (bccomp($off, $eligiblePrice, 2) > 0) {
+                $off = $eligiblePrice;
+            }
+        }
+        return bccomp($off, '0', 2) > 0 ? $off : '0.00';
     }
 
     /**
@@ -346,6 +386,7 @@ class StoreCouponIssueServices extends BaseServices
                 $data['uid'] = $uid;
                 $data['coupon_title'] = $item['title'];
                 $data['coupon_price'] = $item['coupon_price'];
+                $data['coupon_type'] = (int)($item['coupon_type'] ?? 1) === 2 ? 2 : 1;
                 $data['use_min_price'] = $item['use_min_price'];
                 $data['add_time'] = $time;
                 if ($item['coupon_time']) {
@@ -552,6 +593,7 @@ class StoreCouponIssueServices extends BaseServices
             $data[$k]['uid'] = $v;
             $data[$k]['coupon_title'] = $coupon['title'];
             $data[$k]['coupon_price'] = $coupon['coupon_price'];
+            $data[$k]['coupon_type'] = (int)($coupon['coupon_type'] ?? 1) === 2 ? 2 : 1;
             $data[$k]['use_min_price'] = $coupon['use_min_price'];
             $data[$k]['add_time'] = time();
             if ($coupon['coupon_time']) {
@@ -749,7 +791,7 @@ class StoreCouponIssueServices extends BaseServices
     {
         [$page, $limit] = $this->getPageValue();
         $where['is_del'] = 0;
-        $field = 'id, coupon_title, type, coupon_price, use_min_price, receive_type, is_permanent, add_time, start_time, end_time, start_use_time, end_use_time, coupon_time, status, total_count, remain_count';
+        $field = 'id, coupon_title, type, coupon_type, coupon_price, use_min_price, receive_type, is_permanent, add_time, start_time, end_time, start_use_time, end_use_time, coupon_time, status, total_count, remain_count';
         $list = $this->dao->getList($where, $page, $limit, $field);
         $count = $this->dao->count($where);
         return compact('list', 'count');

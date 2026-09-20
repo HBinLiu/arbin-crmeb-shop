@@ -86,8 +86,13 @@
 			<scroll-view class="section-bd" scroll-x="true">
 				<view v-for="item in memberCoupons" :key="item.id" class="item acea-row row-center-wrapper" :class="{ gray: item.is_fail || item.status === $t(`已使用`) }">
 					<view class="money">
-						{{ $t(`￥`) }}
-						<text class="num">{{ item.coupon_price | moneyFormat }}</text>
+						<template v-if="item.discount_type == 2 || item.coupon_type == 2">
+							<text class="num">{{ item.coupon_price / 10 }}</text>{{ $t(`折`) }}
+						</template>
+						<template v-else>
+							{{ $t(`￥`) }}
+							<text class="num">{{ item.coupon_price | moneyFormat }}</text>
+						</template>
 					</view>
 					<view class="text">
 						<view class="name">{{ item.coupon_title }}</view>

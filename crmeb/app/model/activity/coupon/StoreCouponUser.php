@@ -74,8 +74,9 @@ class StoreCouponUser extends BaseModel
      */
     public function issue()
     {
-        return $this->hasOne(StoreCouponIssue::class, 'id', 'cid')->field(['id', 'end_use_time', 'start_use_time', 'type', 'coupon_time', 'product_id', 'category_id', 'receive_type'])->bind([
+        return $this->hasOne(StoreCouponIssue::class, 'id', 'cid')->field(['id', 'end_use_time', 'start_use_time', 'type', 'coupon_type', 'coupon_time', 'product_id', 'category_id', 'receive_type'])->bind([
             'applicable_type' => 'type',
+            'coupon_type' => 'coupon_type',
             'coupon_time' => 'coupon_time',
             'product_id',
             'category_id',
