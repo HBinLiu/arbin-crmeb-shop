@@ -1470,6 +1470,11 @@
 						}
 					}
 				}, {
+					"path": "spread_code/index",
+					"style": {
+						"navigationBarTitleText": "分销码"
+					}
+				}, {
 					"path": "spread_coupon/index",
 					"style": {
 						"navigationStyle": "custom",

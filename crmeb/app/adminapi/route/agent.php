@@ -104,6 +104,16 @@ Route::group('agent', function () {
         Route::get('division/statistics', 'v1.agent.Division/divisionStatistics')->name('divisionStatistics')->option(['real_name' => '事业部统计']);//事业部统计
     })->option(['parent' => 'agent', 'cate_name' => '事业部']);
 
+    /** 分销码 */
+    Route::group(function () {
+        Route::get('spread_code/list', 'v1.agent.SpreadCode/index')->option(['real_name' => '分销码列表']);
+        Route::post('spread_code/save', 'v1.agent.SpreadCode/save')->option(['real_name' => '添加分销码']);
+        Route::delete('spread_code/del/:id', 'v1.agent.SpreadCode/delete')->option(['real_name' => '删除分销码']);
+        Route::put('spread_code/status/:id/:status', 'v1.agent.SpreadCode/setStatus')->option(['real_name' => '分销码启停']);
+        Route::get('spread_code/record/:id', 'v1.agent.SpreadCode/record')->option(['real_name' => '分销码扫码记录']);
+        Route::get('spread_code/qrcode/:id', 'v1.agent.SpreadCode/qrcode')->option(['real_name' => '分销码二维码']);
+    })->option(['parent' => 'agent', 'cate_name' => '分销码']);
+
     /** 分销员申请 */
     Route::group(function () {
         Route::get('spread/apply/list', 'v1.agent.SpreadApply/applyList')->name('applyList')->option(['real_name' => '分销员申请列表']);

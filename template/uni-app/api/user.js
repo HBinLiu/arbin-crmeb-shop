@@ -734,3 +734,7 @@ export function spreadAgent(data) {
 export function transferInfoApi(data) {
 	return request.get(`transfer/info`, data);
 }
+
+export function spreadCodeClaim(data) {
+	return request.post('user/spread_code/claim', data);
+}

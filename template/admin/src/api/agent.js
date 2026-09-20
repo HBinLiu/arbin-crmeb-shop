@@ -230,3 +230,41 @@ export function spreadFrom(id, uid, type, data) {
     data,
   });
 }
+
+export function spreadCodeList(params) {
+  return request({
+    url: 'agent/spread_code/list',
+    method: 'get',
+    params,
+  });
+}
+
+export function spreadCodeSave(data) {
+  return request({
+    url: 'agent/spread_code/save',
+    method: 'post',
+    data,
+  });
+}
+
+export function spreadCodeRecord(id, params) {
+  return request({
+    url: `agent/spread_code/record/${id}`,
+    method: 'get',
+    params,
+  });
+}
+
+export function spreadCodeQrcode(id) {
+  return request({
+    url: `agent/spread_code/qrcode/${id}`,
+    method: 'get',
+  });
+}
+
+export function spreadCodeStatus(id, status) {
+  return request({
+    url: `agent/spread_code/status/${id}/${status}`,
+    method: 'put',
+  });
+}

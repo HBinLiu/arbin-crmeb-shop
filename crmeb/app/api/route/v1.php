@@ -372,6 +372,7 @@ Route::group(function () {
         /** 分销员申请 */
         Route::get('user/spread/apply/info', 'v1.user.SpreadApplyController/applyInfo')->name('申请信息');//申请信息
         Route::post('user/spread/apply/:id', 'v1.user.SpreadApplyController/applyPromoter')->name('申请分销员');//申请分销员
+        Route::post('user/spread_code/claim', 'v1.user.SpreadCodeController/claim')->option(['real_name' => '扫分销码成为分销员']);
     })->option(['mark' => 'spread', 'mark_name' => '分销员申请']);
 
 })->middleware(\app\http\middleware\AllowOriginMiddleware::class)->middleware(\app\api\middleware\StationOpenMiddleware::class)->middleware(\app\api\middleware\AuthTokenMiddleware::class, true);

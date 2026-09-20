@@ -44,5 +44,14 @@ export default {
       },
       component: () => import('@/pages/agent/spread/apply'),
     },
+    {
+      path: 'spread_code/index',
+      name: `${pre}spreadCode`,
+      meta: {
+        auth: ['admin-agent-spread-code'],
+        title: '分销码',
+      },
+      component: () => import('@/pages/agent/spreadCode/index'),
+    },
   ],
 };
