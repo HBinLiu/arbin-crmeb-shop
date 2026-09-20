@@ -416,8 +416,8 @@ export default {
               show: true,
               checkList: [0, 1, 2],
               checkBoxList: [
-                { name: '售价', value: 0 },
-                { name: '划线价', value: 1 },
+                { name: '到手价', value: 0 },
+                { name: '售价', value: 1 },
                 { name: '会员价', value: 2 },
               ],
             },

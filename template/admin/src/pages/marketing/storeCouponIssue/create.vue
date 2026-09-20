@@ -47,6 +47,10 @@
             系统赠送：1.后台发放指定用户。2.添加到商品里面用户购买该商品获得。3.设置新人礼页面新用户注册赠送优惠券；
           </div>
         </el-form-item>
+        <el-form-item label="领取限制：" v-if="formData.user_type == 1 && formData.receive_type == 1">
+          <el-switch v-model="formData.spread_limit" :active-value="1" :inactive-value="0"></el-switch>
+          <div class="tip">开启后，只有上级是有分销权限的推广员时才能领取。绑定成功后会弹出领取窗口，需用户手动领取。</div>
+        </el-form-item>
         <el-form-item label="优惠劵类型：">
           <el-radio-group v-model="formData.type" :disabled="isEdit">
             <el-radio :label="0">通用券</el-radio>
@@ -243,6 +247,7 @@ export default {
         product_id: '',
         category_id: 0,
         receive_limit: 1,
+        spread_limit: 0,
       },
       categoryList: [],
       productList: [],
@@ -303,6 +308,7 @@ export default {
           this.formData.total_count = data.total_count;
           this.formData.sort = data.sort;
           this.formData.receive_limit = data.receive_limit;
+          this.formData.spread_limit = data.spread_limit ? 1 : 0;
           if ('productInfo' in data) {
             this.productList = data.productInfo;
           }

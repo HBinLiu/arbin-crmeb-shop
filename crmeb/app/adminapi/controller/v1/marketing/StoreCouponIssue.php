@@ -75,6 +75,7 @@ class StoreCouponIssue extends AuthController
             ['status', 0],
             ['receive_limit', 1],
             ['user_type', 1],
+            ['spread_limit', 0],
         ]);
         $res = $this->services->saveCoupon($data);
         if ($res) return app('json')->success('保存成功');

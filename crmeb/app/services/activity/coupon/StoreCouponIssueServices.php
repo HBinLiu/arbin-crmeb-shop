@@ -97,6 +97,7 @@ class StoreCouponIssueServices extends BaseServices
                 'remain_count' => $data['total_count'],
                 'receive_limit' => $data['receive_limit'],
                 'status' => $data['status'],
+                'spread_limit' => !empty($data['spread_limit']) ? 1 : 0,
             ]);
             if (!$res) throw new AdminException('修改失败');
             return (int)$data['id'];
@@ -149,6 +150,7 @@ class StoreCouponIssueServices extends BaseServices
 
         $data['title'] = $data['coupon_title'];
         $data['remain_count'] = $data['total_count'];
+        $data['spread_limit'] = ((int)($data['receive_type'] ?? 0) === 1 && !empty($data['spread_limit'])) ? 1 : 0;
         $data['category_id'] = implode(',', $data['category_id']);
 //        if ($data['receive_type'] == 2 || $data['receive_type'] == 3) {
 //            $data['is_permanent'] = 1;
@@ -237,6 +239,59 @@ class StoreCouponIssueServices extends BaseServices
             return true;
         }
         return false;
+    }
+
+    /**
+     * 已绑定上级后可手动领取的优惠券
+     * @param int $uid
+     * @return array
+     */
+    public function getSpreadClaimCoupons(int $uid): array
+    {
+        if (!$uid) {
+            return ['list' => [], 'spread_time' => 0];
+        }
+        $user = app()->make(\app\services\user\UserServices::class)->getUserInfo($uid, 'uid,spread_uid,spread_time');
+        if (!$user || !$this->spreadParentIsPromoter($uid)) {
+            return ['list' => [], 'spread_time' => 0];
+        }
+        $list = $this->dao->getSpreadClaimList($uid);
+        $coupons = [];
+        foreach ($list as $item) {
+            $used = isset($item['used']) ? count($item['used']) : 0;
+            $limit = (int)($item['receive_limit'] ?: 1);
+            if ($used >= $limit) {
+                continue;
+            }
+            $coupons[] = [
+                'id' => $item['id'],
+                'title' => $item['title'] ?: ($item['coupon_title'] ?? ''),
+                'coupon_price' => floatval($item['coupon_price']),
+                'use_min_price' => floatval($item['use_min_price']),
+                'coupon_time' => $item['coupon_time'],
+                'type' => $item['type'],
+            ];
+        }
+        return ['list' => $coupons, 'spread_time' => (int)$user['spread_time']];
+    }
+
+    /**
+     * 上级是否为有分销权限的推广员
+     * @param int $uid
+     * @return bool
+     */
+    public function spreadParentIsPromoter(int $uid): bool
+    {
+        if (!$uid) {
+            return false;
+        }
+        /** @var \app\services\user\UserServices $userServices */
+        $userServices = app()->make(\app\services\user\UserServices::class);
+        $spreadUid = (int)$userServices->value(['uid' => $uid], 'spread_uid');
+        if (!$spreadUid) {
+            return false;
+        }
+        return (bool)$userServices->checkUserPromoter($spreadUid);
     }
 
     /**
@@ -401,6 +456,9 @@ class StoreCouponIssueServices extends BaseServices
         if (!$issueCouponInfo) throw new ApiException('领取的优惠劵已领完或已过期');
         if ($user->is_money_level <= 0 && $issueCouponInfo['receive_type'] == 4) {
             throw new ApiException('请先开通付费会员才能领取会员券');
+        }
+        if (!empty($issueCouponInfo['spread_limit']) && !$this->spreadParentIsPromoter((int)$user['uid'])) {
+            throw new ApiException('上级需为有分销权限的推广员才能领取');
         }
         $uid = $user->uid;
         /** @var StoreCouponIssueUserServices $issueUserService */

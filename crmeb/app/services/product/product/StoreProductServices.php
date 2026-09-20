@@ -2749,7 +2749,18 @@ class StoreProductServices extends BaseServices
                 break;
             }
         }
-        return ['real_price' => $realPrice, 'price' => $price, 'is_vip' => $isVip, 'product_is_vip' => $productIsVip, 'member_price' => $memberPrice, 'level_price' => $levelPrice, 'user_is_member' => $isMember, 'ot_price' => $otPrice];
+        // vip_price 与列表/详情 DIY 组件字段对齐；member_price 保留兼容旧前端
+        return [
+            'real_price' => $realPrice,
+            'price' => $price,
+            'is_vip' => $isVip,
+            'product_is_vip' => $productIsVip,
+            'member_price' => $memberPrice,
+            'vip_price' => $memberPrice,
+            'level_price' => $levelPrice,
+            'user_is_member' => $isMember,
+            'ot_price' => $otPrice
+        ];
     }
 
     /**

@@ -192,10 +192,6 @@ class PublicController
                 unset($menusInfo[$key]);
                 continue;
             }
-            if ($value['url'] == '/pages/users/user_spread_user/index' && $auth['/pages/annex/settled/index']) {
-                $value['name'] = '分销申请';
-                $value['url'] = '/pages/annex/settled/index';
-            }
             if (isset($auth[$value['url']]) && !$auth[$value['url']]) {
                 unset($menusInfo[$key]);
                 continue;
@@ -956,11 +952,6 @@ class PublicController
                                 }
                             }
 
-                            if ($menuDataItem['info'][1]['value'] == '/pages/users/user_spread_user/index' && $brokerageOpen && sys_config('store_brokerage_statu') == 1 && !$userIsPromoter) {
-                                $menuDataItem['info'][0]['value'] = '分销申请';
-                                $menuDataItem['info'][1]['value'] = '/pages/annex/settled/index';
-                                $menuDataItem['show'] = true;
-                            }
                         }
                     }
                 }

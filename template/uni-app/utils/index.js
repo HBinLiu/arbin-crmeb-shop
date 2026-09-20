@@ -13,6 +13,7 @@ import Cache from "@/utils/cache";
 import { getCustomerType } from "@/api/api.js";
 import { getWorkermanUrl } from "@/api/kefu.js";
 import store from "@/store";
+import { openSpreadCouponPopup } from "@/utils/spreadCoupon";
 /**
  * 绑定用户授权
  * @param {Object} puid
@@ -41,6 +42,10 @@ export function silenceBindingSpread(app) {
       agent_id,
     })
       .then((res) => {
+        const data = res.data || {};
+        if (data.bind && data.coupons && data.coupons.length) {
+          openSpreadCouponPopup(data.coupons);
+        }
         //#ifdef H5
         Cache.clear("spread");
         //#endif

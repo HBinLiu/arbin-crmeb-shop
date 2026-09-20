@@ -68,6 +68,17 @@ class StoreCouponsController
     }
 
     /**
+     * 绑定上级后可领取的优惠券
+     * @param Request $request
+     * @return mixed
+     */
+    public function spreadClaim(Request $request)
+    {
+        $uid = (int)$request->uid();
+        return app('json')->success($this->services->getSpreadClaimCoupons($uid));
+    }
+
+    /**
      * 用户已领取优惠券
      * @param Request $request
      * @param $types

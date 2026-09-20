@@ -195,6 +195,7 @@ Route::group(function () {
     Route::group(function () {
         //优惠券类
         Route::post('coupon/receive', 'v1.store.StoreCouponsController/receive')->name('couponReceive')->option(['real_name' => '领取优惠券']); //领取优惠券
+        Route::get('coupons/spread_claim', 'v1.store.StoreCouponsController/spreadClaim')->name('couponSpreadClaim')->option(['real_name' => '绑定后可领优惠券']);
         Route::post('coupon/receive/batch', 'v1.store.StoreCouponsController/receive_batch')->name('couponReceiveBatch')->option(['real_name' => '批量领取优惠券']); //批量领取优惠券
         Route::get('coupons/user/:types', 'v1.store.StoreCouponsController/user')->name('couponsUser')->option(['real_name' => '用户已领取优惠券']);//用户已领取优惠券
         Route::get('coupons/order/:price', 'v1.store.StoreCouponsController/order')->name('couponsOrder')->option(['real_name' => '优惠券 订单列表']);//优惠券 订单列表

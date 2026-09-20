@@ -17,6 +17,7 @@ import {
 	USER_INFO
 } from '../../config/cache';
 import Cache from '../../utils/cache';
+import { promptSpreadCoupon } from '@/utils/spreadCoupon';
 
 const state = {
 	token: Cache.get(LOGIN_STATUS) || false,
@@ -36,6 +37,9 @@ const mutations = {
 	LOGIN(state, opt) {
 		state.token = opt.token;
 		Cache.set(LOGIN_STATUS, opt.token, opt.time);
+		setTimeout(() => {
+			promptSpreadCoupon();
+		}, 800);
 	},
 	SETUID(state, val) {
 		state.uid = val;

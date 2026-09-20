@@ -1470,6 +1470,13 @@
 						}
 					}
 				}, {
+					"path": "spread_coupon/index",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTitleText": "",
+						"backgroundColor": "#00000000"
+					}
+				}, {
 					"path": "vip_paid/index",
 					"style": {
 						"navigationBarTitleText": "SVIP会员",

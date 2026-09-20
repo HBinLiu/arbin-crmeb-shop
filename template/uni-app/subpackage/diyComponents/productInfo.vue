@@ -258,7 +258,7 @@
                   :style="{ color: sellingPriceColor }"
                 >
                   <text class="label">售价</text>
-                  <text class="price">¥{{ displayInfo.ot_price }}</text>
+                  <text class="price">¥{{ displayInfo.price }}</text>
                 </view>
                 <view
                   v-if="item.checkList.includes(2) && displayInfo.vip_price"
@@ -436,7 +436,7 @@ export default {
         let sku = this.skuList[this.selectedIndex];
         if (sku) {
           if (sku.price) price = sku.price;
-          if (sku.real_price) price = sku.real_price;
+          if (sku.real_price) real_price = sku.real_price;
           if (sku.ot_price) ot_price = sku.ot_price;
           if (sku.vip_price) vip_price = sku.vip_price;
           if (sku.stock || sku.stock === 0) stock = sku.stock;

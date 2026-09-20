@@ -86,6 +86,13 @@ export function setCouponReceive(couponId) {
     couponId: couponId,
   });
 }
+
+/**
+ * 绑定上级后可领取的优惠券
+ */
+export function getSpreadClaimCoupons() {
+  return request.get("coupons/spread_claim");
+}
 /**
  * 优惠券列表
  * @param object data

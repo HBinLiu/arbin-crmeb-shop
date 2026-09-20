@@ -110,6 +110,8 @@ class StoreCouponIssueDao extends BaseDao
             ->where('remain_count > 0 OR is_permanent = 1')
             ->where(function ($query) {
                 $query->where('receive_type', 1)->whereOr('receive_type', 4);
+            })->where(function ($query) use ($uid) {
+                $this->spreadLimitWhere($query, $uid);
             })->where(function ($query) {
                 $query->where(function ($query) {
                     $query->where('start_time', '<', time())->where('end_time', '>', time());
@@ -155,6 +157,8 @@ class StoreCouponIssueDao extends BaseDao
             ->where('remain_count > 0 OR is_permanent = 1')
             ->where(function ($query) {
                 $query->where('receive_type', 1)->whereOr('receive_type', 4);
+            })->where(function ($query) use ($uid) {
+                $this->spreadLimitWhere($query, $uid);
             })->where(function ($query) {
                 $query->where(function ($query) {
                     $query->where('start_time', '<', time())->where('end_time', '>', time());
@@ -445,5 +449,48 @@ class StoreCouponIssueDao extends BaseDao
             })->limit($limit)->order($order)->select()->toArray();
         }
         return $list;
+    }
+
+    /**
+     * 未绑定上级时不展示「仅绑定可领」的券
+     * @param \think\db\Query $query
+     * @param int $uid
+     */
+    protected function spreadLimitWhere($query, int $uid)
+    {
+        $spreadUid = $uid ? (int)\think\facade\Db::name('user')->where('uid', $uid)->value('spread_uid') : 0;
+        $hasPromoter = $spreadUid && app()->make(\app\services\user\UserServices::class)->checkUserPromoter($spreadUid);
+        $query->where(function ($q) use ($hasPromoter) {
+            $q->where('spread_limit', 0);
+            if ($hasPromoter) {
+                $q->whereOr('spread_limit', 1);
+            }
+        });
+    }
+
+    /**
+     * 已绑定上级、尚未领完的限制券
+     * @param int $uid
+     * @return array
+     */
+    public function getSpreadClaimList(int $uid)
+    {
+        return $this->getModel()->where('status', 1)
+            ->where('is_del', 0)
+            ->where('spread_limit', 1)
+            ->where('receive_type', 1)
+            ->where('remain_count > 0 OR is_permanent = 1')
+            ->where(function ($query) {
+                $query->where(function ($query) {
+                    $query->where('start_time', '<', time())->where('end_time', '>', time());
+                })->whereOr(function ($query) {
+                    $query->where('start_time', 0)->where('end_time', 0);
+                });
+            })
+            ->with(['used' => function ($query) use ($uid) {
+                $query->where('uid', $uid);
+            }])
+            ->order('sort desc,id desc')
+            ->select()->toArray();
     }
 }

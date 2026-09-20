@@ -153,7 +153,14 @@ class UserController
         ], true);
         $uid = (int)$request->uid();
         $res = $this->services->spread($uid, (int)$spreadUid, $code, $agent_id);
-        return app('json')->success($res);
+        $bind = is_string($res) && strpos($res, '绑定上级成功') === 0;
+        $claim = $bind ? app()->make(\app\services\activity\coupon\StoreCouponIssueServices::class)->getSpreadClaimCoupons($uid) : ['list' => [], 'spread_time' => 0];
+        return app('json')->success([
+            'msg' => $res,
+            'bind' => $bind ? 1 : 0,
+            'coupons' => $claim['list'],
+            'spread_time' => $claim['spread_time'],
+        ]);
     }
 
     /**
