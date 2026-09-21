@@ -159,6 +159,8 @@
       "root": "pages/annex",
       "pages": [
         "web_view/index",
+        "spread_code/index",
+        "spread_coupon/index",
         "vip_paid/index",
         "vip_coupon/index",
         "vip_clause/index",
@@ -250,6 +252,5 @@
     "base-money": "/components/BaseMoney",
     "base-tag": "/components/BaseTag",
     "base-drawer": "/components/tuiDrawer/tui-drawer"
-  },
-  "sitemapLocation": "sitemap.json"
+  }
 }
