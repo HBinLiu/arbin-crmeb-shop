@@ -21,6 +21,17 @@ class SpreadCodeDao extends BaseDao
         return $this->searchModel($where)->count();
     }
 
+    public function lockAliveByCode(string $code): array
+    {
+        $info = $this->getModel()->where('code', $code)->where('is_del', 0)->lock(true)->find();
+        return $info ? $info->toArray() : [];
+    }
+
+    public function incUsed(int $id, int $limit): int
+    {
+        return (int)$this->getModel()->where('id', $id)->where('used_num', '<', $limit)->inc('used_num')->update();
+    }
+
     protected function searchModel(array $where)
     {
         return $this->getModel()->where('is_del', 0)

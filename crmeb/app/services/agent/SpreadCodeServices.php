@@ -111,14 +111,13 @@ class SpreadCodeServices extends BaseServices
         $code = strtoupper(trim($code));
         if ($code === '') throw new ApiException('分销码无效');
         return $this->transaction(function () use ($uid, $code) {
-            $info = $this->dao->getModel()->where('code', $code)->where('is_del', 0)->lock(true)->find();
+            $info = $this->dao->lockAliveByCode($code);
             if (!$info) throw new ApiException('分销码无效');
-            $info = $info->toArray();
             if (!(int)$info['status']) throw new ApiException('分销码已停用');
             if ((int)$info['expire_time'] > 0 && (int)$info['expire_time'] < time()) throw new ApiException('分销码已过期');
             /** @var \app\dao\agent\SpreadCodeLogDao $logDao */
             $logDao = app()->make(\app\dao\agent\SpreadCodeLogDao::class);
-            if ($logDao->getModel()->where('code_id', $info['id'])->where('uid', $uid)->find()) {
+            if ($logDao->be(['code_id' => $info['id'], 'uid' => $uid])) {
                 return '您已通过该分销码成为分销员';
             }
             if ((int)$info['used_num'] >= (int)$info['limit_num']) throw new ApiException('分销码名额已用完');
@@ -129,7 +128,7 @@ class SpreadCodeServices extends BaseServices
             if ((int)$user['is_promoter'] === 1 && (int)$user['spread_open'] === 1) {
                 throw new ApiException('您已是分销员');
             }
-            $affected = $this->dao->getModel()->where('id', $info['id'])->where('used_num', '<', (int)$info['limit_num'])->inc('used_num')->update();
+            $affected = $this->dao->incUsed((int)$info['id'], (int)$info['limit_num']);
             if (!$affected) throw new ApiException('分销码名额已用完');
             $userServices->update($uid, ['is_promoter' => 1, 'spread_open' => 1]);
             $logDao->save([
@@ -165,7 +164,7 @@ class SpreadCodeServices extends BaseServices
             for ($i = 0; $i < 8; $i++) {
                 $code .= $chars[random_int(0, $max)];
             }
-            if (!$this->dao->getModel()->where('code', $code)->find()) return $code;
+            if (!$this->dao->be(['code' => $code])) return $code;
         }
         throw new AdminException('分销码生成失败，请重试');
     }
