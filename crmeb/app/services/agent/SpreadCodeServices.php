@@ -25,7 +25,7 @@ class SpreadCodeServices extends BaseServices
         $time = time();
         foreach ($list as &$item) {
             $item['state'] = $this->stateText($item, $time);
-            $item['expire_time'] = date('Y-m-d H:i:s', $item['expire_time']);
+            $item['expire_time'] = (int)$item['expire_time'] > 0 ? date('Y-m-d H:i:s', $item['expire_time']) : '永不过期';
             $item['add_time'] = date('Y-m-d H:i:s', $item['add_time']);
         }
         $count = $this->dao->getCount($where);
@@ -36,11 +36,12 @@ class SpreadCodeServices extends BaseServices
     {
         $title = trim((string)($data['title'] ?? ''));
         $limit = (int)($data['limit_num'] ?? 0);
-        $expire = strtotime((string)($data['expire_time'] ?? ''));
+        $expireText = trim((string)($data['expire_time'] ?? ''));
+        $expire = $expireText === '' ? 0 : strtotime($expireText);
         if ($title === '') throw new AdminException('请输入名称');
         if (mb_strlen($title) > 30) throw new AdminException('名称不能超过30个字');
         if ($limit < 1 || $limit > 100000) throw new AdminException('扫码数量需在1到100000之间');
-        if (!$expire || $expire <= time()) throw new AdminException('过期时间需晚于当前时间');
+        if ($expireText !== '' && (!$expire || $expire <= time())) throw new AdminException('过期时间需晚于当前时间');
         $this->dao->save([
             'title' => $title,
             'code' => $this->makeCode(),
@@ -114,7 +115,7 @@ class SpreadCodeServices extends BaseServices
             if (!$info) throw new ApiException('分销码无效');
             $info = $info->toArray();
             if (!(int)$info['status']) throw new ApiException('分销码已停用');
-            if ((int)$info['expire_time'] < time()) throw new ApiException('分销码已过期');
+            if ((int)$info['expire_time'] > 0 && (int)$info['expire_time'] < time()) throw new ApiException('分销码已过期');
             /** @var \app\dao\agent\SpreadCodeLogDao $logDao */
             $logDao = app()->make(\app\dao\agent\SpreadCodeLogDao::class);
             if ($logDao->getModel()->where('code_id', $info['id'])->where('uid', $uid)->find()) {
@@ -150,7 +151,7 @@ class SpreadCodeServices extends BaseServices
     protected function stateText(array $item, int $time): string
     {
         if (!(int)$item['status']) return '已停用';
-        if ((int)$item['expire_time'] < $time) return '已过期';
+        if ((int)$item['expire_time'] > 0 && (int)$item['expire_time'] < $time) return '已过期';
         if ((int)$item['used_num'] >= (int)$item['limit_num']) return '已用完';
         return '使用中';
     }

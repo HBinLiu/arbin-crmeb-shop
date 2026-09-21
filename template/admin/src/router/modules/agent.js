@@ -49,7 +49,7 @@ export default {
       name: `${pre}spreadCode`,
       meta: {
         auth: ['admin-agent-spread-code'],
-        title: '分销码',
+        title: '分销码管理',
       },
       component: () => import('@/pages/agent/spreadCode/index'),
     },

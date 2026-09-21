@@ -53,7 +53,8 @@
             v-model="addForm.expire_time"
             type="datetime"
             value-format="yyyy-MM-dd HH:mm:ss"
-            placeholder="选择过期时间"
+            placeholder="不填则永不过期"
+            clearable
           />
         </el-form-item>
       </el-form>
@@ -117,13 +118,12 @@ export default {
       addVisible: false,
       addForm: {
         title: '',
-        limit_num: 10,
+        limit_num: 1,
         expire_time: '',
       },
       rules: {
         title: [{ required: true, message: '请输入名称', trigger: 'blur' }],
         limit_num: [{ required: true, message: '请输入数量', trigger: 'change' }],
-        expire_time: [{ required: true, message: '请选择过期时间', trigger: 'change' }],
       },
       qrVisible: false,
       qrLoading: false,
@@ -162,7 +162,7 @@ export default {
         });
     },
     openAdd() {
-      this.addForm = { title: '', limit_num: 10, expire_time: '' };
+      this.addForm = { title: '', limit_num: 1, expire_time: '' };
       this.addVisible = true;
       this.$nextTick(() => this.$refs.addForm && this.$refs.addForm.clearValidate());
     },
