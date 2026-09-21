@@ -97,7 +97,8 @@ class StoreCouponIssueServices extends BaseServices
                 'remain_count' => $data['total_count'],
                 'receive_limit' => $data['receive_limit'],
                 'status' => $data['status'],
-                'spread_limit' => !empty($data['spread_limit']) ? 1 : 0,
+                'user_type' => (int)($data['user_type'] ?? 1) === 3 ? 3 : ((int)($data['user_type'] ?? 1) === 2 ? 2 : 1),
+                'spread_limit' => (int)($data['user_type'] ?? 1) === 3 ? 1 : 0,
             ]);
             if (!$res) throw new AdminException('修改失败');
             return (int)$data['id'];
@@ -111,8 +112,17 @@ class StoreCouponIssueServices extends BaseServices
             throw new AdminException('请核对领取方式');
         }
 
-        if ($data['user_type'] == 2) {
+        if ((int)$data['user_type'] === 2) {
             $data['receive_type'] = 4;
+            $data['spread_limit'] = 0;
+        } elseif ((int)$data['user_type'] === 3) {
+            if (!in_array((int)$data['receive_type'], [1, 3], true)) {
+                $data['receive_type'] = 1;
+            }
+            $data['spread_limit'] = 1;
+        } else {
+            $data['user_type'] = 1;
+            $data['spread_limit'] = 0;
         }
 
         if ($data['receive_type'] == 3) {
@@ -150,7 +160,6 @@ class StoreCouponIssueServices extends BaseServices
 
         $data['title'] = $data['coupon_title'];
         $data['remain_count'] = $data['total_count'];
-        $data['spread_limit'] = ((int)($data['receive_type'] ?? 0) === 1 && !empty($data['spread_limit'])) ? 1 : 0;
         $data['coupon_type'] = (int)($data['coupon_type'] ?? 1) === 2 ? 2 : 1;
         if ($data['coupon_type'] === 2) {
             $zhe = (float)$data['coupon_price'];
@@ -304,6 +313,16 @@ class StoreCouponIssueServices extends BaseServices
     }
 
     /**
+     * 是否仅上级为推广员时可获取
+     * @param array $coupon
+     * @return bool
+     */
+    public function couponNeedSpreadParent(array $coupon): bool
+    {
+        return !empty($coupon['spread_limit']) || (int)($coupon['user_type'] ?? 0) === 3;
+    }
+
+    /**
      * 计算优惠券实际抵扣金额
      * 满减券 coupon_price 为面额；折扣券 coupon_price 为支付比例，80 表示 8 折
      * @param array $coupon
@@ -382,6 +401,9 @@ class StoreCouponIssueServices extends BaseServices
             /** @var StoreCouponIssueUserServices $issueUser */
             $issueUser = app()->make(StoreCouponIssueUserServices::class);
             foreach ($couponList as $item) {
+                if ($this->couponNeedSpreadParent($item) && !$this->spreadParentIsPromoter($uid)) {
+                    continue;
+                }
                 $data['cid'] = $item['id'];
                 $data['uid'] = $uid;
                 $data['coupon_title'] = $item['title'];
@@ -498,8 +520,10 @@ class StoreCouponIssueServices extends BaseServices
         if ($user->is_money_level <= 0 && $issueCouponInfo['receive_type'] == 4) {
             throw new ApiException('请先开通付费会员才能领取会员券');
         }
-        if (!empty($issueCouponInfo['spread_limit']) && !$this->spreadParentIsPromoter((int)$user['uid'])) {
-            throw new ApiException('上级需为有分销权限的推广员才能领取');
+        if (!empty($issueCouponInfo['spread_limit']) || (int)($issueCouponInfo['user_type'] ?? 0) === 3) {
+            if (!$this->spreadParentIsPromoter((int)$user['uid'])) {
+                throw new ApiException('上级需为有分销权限的推广员才能领取');
+            }
         }
         $uid = $user->uid;
         /** @var StoreCouponIssueUserServices $issueUserService */
@@ -588,6 +612,14 @@ class StoreCouponIssueServices extends BaseServices
         $storeCouponUser = app()->make(StoreCouponUserServices::class);
         /** @var StoreCouponIssueUserServices $storeCouponIssueUser */
         $storeCouponIssueUser = app()->make(StoreCouponIssueUserServices::class);
+        if ($this->couponNeedSpreadParent($coupon)) {
+            $user = array_values(array_filter($user, function ($uid) {
+                return $this->spreadParentIsPromoter((int)$uid);
+            }));
+            if (!$user) {
+                throw new AdminException('上级需为有分销权限的推广员才能领取');
+            }
+        }
         foreach ($user as $k => $v) {
             $data[$k]['cid'] = $coupon['id'];
             $data[$k]['uid'] = $v;

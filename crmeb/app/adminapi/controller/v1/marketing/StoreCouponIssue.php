@@ -104,12 +104,13 @@ class StoreCouponIssue extends AuthController
         if (!$id) return app('json')->fail('参数错误');
         $info = $this->services->get($id);
         if ($info) $info = $info->toArray();
-        if ($info['receive_type'] == 1 || $info['receive_type'] == 3) {
-            $info['user_type'] = 1;
-        }
-        if ($info['receive_type'] == 4) {
+        if (!empty($info['spread_limit']) || (int)($info['user_type'] ?? 0) === 3) {
+            $info['user_type'] = 3;
+        } elseif ($info['receive_type'] == 4) {
             $info['user_type'] = 2;
             $info['receive_type'] = 1;
+        } else {
+            $info['user_type'] = 1;
         }
         if ($info['product_id'] != '') {
             $productIds = explode(',', $info['product_id']);

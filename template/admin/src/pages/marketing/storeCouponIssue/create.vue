@@ -51,13 +51,15 @@
           <el-radio-group v-model="formData.user_type" :disabled="isEdit" @input="changeUserType">
             <el-radio :label="1">普通用户</el-radio>
             <el-radio :label="2">付费会员用户</el-radio>
+            <el-radio :label="3">上级为推广员</el-radio>
           </el-radio-group>
           <div class="tip">
-            普通用户：所有用户都能获取到的优惠券；<br />
-            付费会员用户：仅付费会员才能领取的优惠券；
+            普通用户：所有用户都能获取，可选择用户领取或系统赠送；<br />
+            付费会员用户：仅付费会员才能领取；<br />
+            上级为推广员：仅上级是有分销权限的推广员时可获取，发送方式与普通用户相同。
           </div>
         </el-form-item>
-        <el-form-item label="发送方式：" v-show="formData.user_type == 1">
+        <el-form-item label="发送方式：" v-show="formData.user_type == 1 || formData.user_type == 3">
           <el-radio-group v-model="formData.receive_type" :disabled="isEdit">
             <el-radio :label="1">用户领取</el-radio>
             <el-radio :label="3">系统赠送</el-radio>
@@ -66,10 +68,6 @@
             用户领取：用户需要手动领取优惠券；<br />
             系统赠送：1.后台发放指定用户。2.添加到商品里面用户购买该商品获得。3.设置新人礼页面新用户注册赠送优惠券；
           </div>
-        </el-form-item>
-        <el-form-item label="领取限制：" v-if="formData.user_type == 1 && formData.receive_type == 1">
-          <el-switch v-model="formData.spread_limit" :active-value="1" :inactive-value="0"></el-switch>
-          <div class="tip">开启后，只有上级是有分销权限的推广员时才能领取。绑定成功后会弹出领取窗口，需用户手动领取。</div>
         </el-form-item>
         <el-form-item label="优惠劵类型：">
           <el-radio-group v-model="formData.type" :disabled="isEdit">
@@ -322,7 +320,7 @@ export default {
           }
           this.formData.coupon_time = data.coupon_time;
           this.formData.receive_type = data.receive_type;
-          this.formData.user_type = data.user_type;
+          this.formData.user_type = data.spread_limit == 1 || data.user_type == 3 ? 3 : data.user_type;
           this.formData.is_permanent = data.is_permanent;
           this.formData.status = data.status;
           this.formData.product_id = data.product_id;
