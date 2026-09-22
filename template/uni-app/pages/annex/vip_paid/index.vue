@@ -305,29 +305,32 @@ export default {
 					uni.hideLoading();
 					const { is_get_free, member_coupons, member_explain, member_rights, member_type } = res.data;
 					this.isGetFree = is_get_free;
-					this.userInfo = is_get_free.user_info;
-					this.memberRights = member_rights;
-					this.memberType = member_type;
-					this.memberCoupons = member_coupons;
+					this.userInfo = is_get_free.user_info || {};
+					this.memberRights = member_rights || [];
+					this.memberType = member_type || [];
+					this.memberCoupons = member_coupons || [];
 					this.memberExplain = member_explain;
 					if (is_get_free.is_record) {
 						this.memberType = this.memberType.filter((item) => item.type !== 'free');
 					}
-					this.totalPrice = this.memberType[0].pre_price;
-					this.type = this.memberType[0].type;
-					this.svip = this.memberType[0];
-					this.mc_id = this.memberType[0].mc_id;
-					this.payMode[2].number = is_get_free.user_info.now_money;
-					memberOverdueTime({
-						member_type: this.svip.type,
-						vip_day: this.svip.vip_day
-					}).then((res) => {
-						this.memberEndTime = res.data.data;
-					});
+					if (this.memberType.length) {
+						this.totalPrice = this.memberType[0].pre_price;
+						this.type = this.memberType[0].type;
+						this.svip = this.memberType[0];
+						this.mc_id = this.memberType[0].mc_id;
+						memberOverdueTime({
+							member_type: this.svip.type,
+							vip_day: this.svip.vip_day
+						}).then((res) => {
+							this.memberEndTime = res.data.data;
+						});
+					}
+					this.payMode[2].number = this.userInfo.now_money || 0;
 				})
 				.catch((err) => {
+					uni.hideLoading();
 					uni.showToast({
-						title: err,
+						title: err.msg || err.message || err || this.$t(`加载失败`),
 						icon: 'none'
 					});
 				});

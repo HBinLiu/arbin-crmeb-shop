@@ -118,6 +118,8 @@ export default {
 }
 .btn {
   margin-top: 40rpx;
+  padding: 28rpx 0;
+  line-height: 1.4;
   background: #e93323;
   color: #fff;
   border-radius: 40rpx;

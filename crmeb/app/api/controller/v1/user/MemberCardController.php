@@ -60,7 +60,11 @@ class MemberCardController
         $is_get_free = $OtherOrderServices->isCanGetFree((int)$request->uid());
         /** @var StoreCouponUserServices $couponUserService */
         $couponUserService = app()->make(StoreCouponUserServices::class);
-        $coupons = $couponUserService->getMemberCoupon($request->uid());
+        try {
+            $coupons = $couponUserService->getMemberCoupon($request->uid());
+        } catch (\Throwable $e) {
+            $coupons = [];
+        }
         return app('json')->success([
             'member_rights' => $member_rights['member_right'],
             'is_get_free' => $is_get_free,

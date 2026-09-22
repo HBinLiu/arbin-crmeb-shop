@@ -74,9 +74,9 @@ class StoreCouponUser extends BaseModel
      */
     public function issue()
     {
-        return $this->hasOne(StoreCouponIssue::class, 'id', 'cid')->field(['id', 'end_use_time', 'start_use_time', 'type', 'coupon_type', 'coupon_time', 'product_id', 'category_id', 'receive_type'])->bind([
+        // coupon_type 已落在 store_coupon_user 表，不能再从 issue 绑定同名属性
+        return $this->hasOne(StoreCouponIssue::class, 'id', 'cid')->field(['id', 'end_use_time', 'start_use_time', 'type', 'coupon_time', 'product_id', 'category_id', 'receive_type'])->bind([
             'applicable_type' => 'type',
-            'coupon_type' => 'coupon_type',
             'coupon_time' => 'coupon_time',
             'product_id',
             'category_id',

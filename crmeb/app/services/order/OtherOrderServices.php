@@ -104,6 +104,9 @@ class OtherOrderServices extends BaseServices
         $freeConfig['type'] = "free";
         $freeConfig['vip_day'] = $freeDay ?: 0;
         $userInfo = $userService->get($uid);
+        if ($userInfo && !is_array($userInfo)) {
+            $userInfo = $userInfo->toArray();
+        }
         if ($freeConfig) {
             $freeConfig['is_record'] = 0;
             $record = $this->dao->getOneByWhere(['uid' => $uid, 'is_free' => 1]);
@@ -115,6 +118,13 @@ class OtherOrderServices extends BaseServices
         $userInfo['register_days'] = $registerTime['days'];
         $userInfo['economize_money'] = $economizeService->sumEconomizeMoney($uid);
         $userInfo['shop_name'] = sys_config('site_name');
+        // 已过期但库里未清零时，页面按非会员展示
+        if ((int)($userInfo['is_ever_level'] ?? 0) === 0
+            && (int)($userInfo['is_money_level'] ?? 0) > 0
+            && (int)($userInfo['overdue_time'] ?? 0) > 0
+            && (int)$userInfo['overdue_time'] < time()) {
+            $userInfo['is_money_level'] = 0;
+        }
         $freeConfig['user_info'] = $userInfo;
         return $freeConfig;
     }
