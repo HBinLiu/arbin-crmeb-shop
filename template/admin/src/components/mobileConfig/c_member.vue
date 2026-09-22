@@ -258,6 +258,9 @@ export default {
             },
             { components: toolCom.c_input_item, configNme: 'ms3TitleText' },
             { components: toolCom.c_input_item, configNme: 'ms3ButtonText' },
+            { components: toolCom.c_title, configNme: 'openedMemberText' },
+            { components: toolCom.c_input_item, configNme: 'ms3OpenedTitleText' },
+            { components: toolCom.c_input_item, configNme: 'ms3OpenedButtonText' },
           );
         }
         // Info Style 4 (Index 3)
@@ -1193,6 +1196,9 @@ export default {
           max: 6,
         });
       }
+      if (!data.openedMemberText) {
+        this.$set(data, 'openedMemberText', '已开通会员');
+      }
       if (!data.ms2ButtonLink) {
         this.$set(data, 'ms2ButtonLink', {
           title: '按钮链接',
@@ -1296,6 +1302,20 @@ export default {
         this.$set(data, 'ms3ButtonText', {
           title: '按钮文字',
           value: '立即开通',
+          max: 10,
+        });
+      }
+      if (!data.ms3OpenedTitleText) {
+        this.$set(data, 'ms3OpenedTitleText', {
+          title: '说明文字',
+          value: '您已是SVIP会员，尊享专属权益',
+          max: 20,
+        });
+      }
+      if (!data.ms3OpenedButtonText) {
+        this.$set(data, 'ms3OpenedButtonText', {
+          title: '按钮文字',
+          value: '会员中心',
           max: 10,
         });
       }

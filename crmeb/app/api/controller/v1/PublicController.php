@@ -882,6 +882,7 @@ class PublicController
 
             // 初始化用户角色标识
             $userIsService = $userIsOrder = $userIsVerify = $userIsDelivery = $userIsPromoter = false;
+            $isOpenedMember = false;
 
             if ($uid && $userInfo) {
                 /** @var StoreServiceServices $storeService */
@@ -902,6 +903,9 @@ class PublicController
                 $userIsDelivery = (bool)app()->make(DeliveryServiceServices::class)->checkoutIsService($uid);
                 //是否分销员
                 $userIsPromoter = (bool)app()->make(UserServices::class)->checkUserPromoter($uid, $userInfo);
+                //是否已开通付费会员（永久或未过期）
+                $isOpenedMember = (int)($userInfo['is_ever_level'] ?? 0) === 1
+                    || ((int)($userInfo['is_money_level'] ?? 0) > 0 && (int)($userInfo['overdue_time'] ?? 0) > time());
 
                 // 统计各状态订单数量，用于菜单角标显示
                 $orderAuth = [];
@@ -952,6 +956,17 @@ class PublicController
                                 }
                             }
 
+                        }
+                    }
+                    // 会员组件样式3：已开通会员时，用装修里配置的已开通文案覆盖说明/按钮文字
+                    if (($userDataItem['name'] ?? '') === 'member' && $isOpenedMember) {
+                        $openedTitle = trim((string)($userDataItem['ms3OpenedTitleText']['value'] ?? ''));
+                        $openedButton = trim((string)($userDataItem['ms3OpenedButtonText']['value'] ?? ''));
+                        if ($openedTitle !== '' && isset($userDataItem['ms3TitleText']['value'])) {
+                            $userDataItem['ms3TitleText']['value'] = $openedTitle;
+                        }
+                        if ($openedButton !== '' && isset($userDataItem['ms3ButtonText']['value'])) {
+                            $userDataItem['ms3ButtonText']['value'] = $openedButton;
                         }
                     }
                 }
