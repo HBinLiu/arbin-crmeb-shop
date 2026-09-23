@@ -42,19 +42,19 @@ SELECT 'profit_sharing_receiver_type', 'radio', 'input', 4, '1=>商户号\n2=>�
 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `eb_system_config` WHERE `menu_name` = 'profit_sharing_receiver_type');
 
 INSERT INTO `eb_system_config` (`menu_name`, `type`, `input_type`, `config_tab_id`, `parameter`, `upload_type`, `required`, `width`, `high`, `value`, `info`, `desc`, `sort`, `status`, `level`, `link_id`, `link_value`)
-SELECT 'profit_sharing_receiver_mchid', 'text', 'input', 4, '', 0, '', 100, 0, '\"\"', '分账接收方商户号', '接收方类型为商户号时填写，一般为服务商商户号', 77, 1, 1, 0, 1
+SELECT 'profit_sharing_receiver_mchid', 'text', 'input', 4, '', 0, '', 100, 0, '\"\"', '分账接收方商户号', '接收方类型为商户号时必填，一般为服务商商户号', 77, 1, 1, 0, 1
 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `eb_system_config` WHERE `menu_name` = 'profit_sharing_receiver_mchid');
 
 INSERT INTO `eb_system_config` (`menu_name`, `type`, `input_type`, `config_tab_id`, `parameter`, `upload_type`, `required`, `width`, `high`, `value`, `info`, `desc`, `sort`, `status`, `level`, `link_id`, `link_value`)
-SELECT 'profit_sharing_receiver_name', 'text', 'input', 4, '', 0, '', 100, 0, '\"\"', '分账接收方商户全称', '接收方类型为商户号时选填，与微信商户全称一致', 76, 1, 1, 0, 1
+SELECT 'profit_sharing_receiver_name', 'text', 'input', 4, '', 0, '', 100, 0, '\"\"', '分账接收方商户全称', '接收方类型为商户号时必填（微信要求），与微信商户全称一致；小微/个体户填开户人姓名', 76, 1, 1, 0, 1
 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `eb_system_config` WHERE `menu_name` = 'profit_sharing_receiver_name');
 
 INSERT INTO `eb_system_config` (`menu_name`, `type`, `input_type`, `config_tab_id`, `parameter`, `upload_type`, `required`, `width`, `high`, `value`, `info`, `desc`, `sort`, `status`, `level`, `link_id`, `link_value`)
-SELECT 'profit_sharing_receiver_openid', 'text', 'input', 4, '', 0, '', 100, 0, '\"\"', '分账接收方OpenID', '接收方微信用户在小程序下的 openid', 75, 1, 1, 0, 2
+SELECT 'profit_sharing_receiver_openid', 'text', 'input', 4, '', 0, '', 100, 0, '\"\"', '分账接收方OpenID', '接收方类型为微信用户时必填；须为店铺小程序下的 openid', 75, 1, 1, 0, 2
 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `eb_system_config` WHERE `menu_name` = 'profit_sharing_receiver_openid');
 
 INSERT INTO `eb_system_config` (`menu_name`, `type`, `input_type`, `config_tab_id`, `parameter`, `upload_type`, `required`, `width`, `high`, `value`, `info`, `desc`, `sort`, `status`, `level`, `link_id`, `link_value`)
-SELECT 'profit_sharing_receiver_user_name', 'text', 'input', 4, '', 0, '', 100, 0, '\"\"', '接收方微信实名', '与微信实名一致；个人接收方添加时常用，可留空视微信是否要求', 74, 1, 1, 0, 2
+SELECT 'profit_sharing_receiver_user_name', 'text', 'input', 4, '', 0, '', 100, 0, '\"\"', '接收方微信实名', '选填；若填写会与微信实名校验，不匹配会拒绝；须配置支付公钥加密', 74, 1, 1, 0, 2
 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `eb_system_config` WHERE `menu_name` = 'profit_sharing_receiver_user_name');
 
 -- 挂到「微信分账抽成」开启时显示

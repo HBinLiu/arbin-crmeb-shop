@@ -98,6 +98,22 @@ class ProfitSharingServices extends BaseServices
     }
 
     /**
+     * 校验后台接收方配置（对照微信添加接收方必填规则）
+     */
+    protected function assertReceiverConfig(string $receiverType, string $receiverAccount): void
+    {
+        if ($receiverAccount === '') {
+            throw new PayException($this->isPersonalReceiver($receiverType)
+                ? '请配置分账接收方OpenID'
+                : '请配置分账接收方商户号');
+        }
+        // 微信：MERCHANT_ID 时 name 为商户全称（必传）
+        if ($receiverType === self::RECEIVER_MERCHANT && $this->getReceiverDisplayName($receiverType) === '') {
+            throw new PayException('请配置分账接收方商户全称');
+        }
+    }
+
+    /**
      * 是否启用服务商分账
      */
     public function isEnabled(): bool
@@ -170,6 +186,15 @@ class ProfitSharingServices extends BaseServices
 
         $receiverType = $this->getReceiverType();
         $receiverAccount = $this->getReceiverAccount();
+        try {
+            $this->assertReceiverConfig($receiverType, $receiverAccount);
+        } catch (\Throwable $e) {
+            Log::error('微信分账失败:' . $e->getMessage() . ' order_id=' . ($order['order_id'] ?? ''));
+            if ($finalAttempt) {
+                return $this->unfreezeAfterShareFail($orderId, $e->getMessage());
+            }
+            return false;
+        }
         $spAppid = $this->getSpAppid();
         if ($spAppid === '') {
             Log::error('微信分账失败:缺少sp_appid order_id=' . ($order['order_id'] ?? ''));

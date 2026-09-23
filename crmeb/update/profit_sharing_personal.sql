@@ -20,22 +20,36 @@ SELECT 'profit_sharing_receiver_type', 'radio', 'input', 4, '1=>商户号\n2=>�
 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `eb_system_config` WHERE `menu_name` = 'profit_sharing_receiver_type');
 
 INSERT INTO `eb_system_config` (`menu_name`, `type`, `input_type`, `config_tab_id`, `parameter`, `upload_type`, `required`, `width`, `high`, `value`, `info`, `desc`, `sort`, `status`, `level`, `link_id`, `link_value`)
-SELECT 'profit_sharing_receiver_openid', 'text', 'input', 4, '', 0, '', 100, 0, '\"\"', '分账接收方OpenID', '接收方微信用户在小程序下的 openid；须先关注/登录过该小程序', 76, 1, 1, 0, 2
+SELECT 'profit_sharing_receiver_openid', 'text', 'input', 4, '', 0, '', 100, 0, '\"\"', '分账接收方OpenID', '接收方类型为微信用户时必填；须为店铺小程序下的 openid；须先登录过该小程序', 76, 1, 1, 0, 2
 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `eb_system_config` WHERE `menu_name` = 'profit_sharing_receiver_openid');
 
 INSERT INTO `eb_system_config` (`menu_name`, `type`, `input_type`, `config_tab_id`, `parameter`, `upload_type`, `required`, `width`, `high`, `value`, `info`, `desc`, `sort`, `status`, `level`, `link_id`, `link_value`)
-SELECT 'profit_sharing_receiver_user_name', 'text', 'input', 4, '', 0, '', 100, 0, '\"\"', '接收方微信实名', '与微信实名一致；个人接收方添加时常用，可留空视微信是否要求', 75, 1, 1, 0, 2
+SELECT 'profit_sharing_receiver_user_name', 'text', 'input', 4, '', 0, '', 100, 0, '\"\"', '接收方微信实名', '选填；若填写会与微信实名校验，不匹配会拒绝；须配置支付公钥加密', 75, 1, 1, 0, 2
 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `eb_system_config` WHERE `menu_name` = 'profit_sharing_receiver_user_name');
 
 UPDATE `eb_system_config`
 SET `info` = '分账接收方商户号',
-    `desc` = '接收方类型为商户号时填写，一般为服务商商户号'
+    `desc` = '接收方类型为商户号时必填，一般为服务商商户号',
+    `required` = ''
 WHERE `menu_name` = 'profit_sharing_receiver_mchid';
 
 UPDATE `eb_system_config`
 SET `info` = '分账接收方商户全称',
-    `desc` = '接收方类型为商户号时选填，与微信商户全称一致'
+    `desc` = '接收方类型为商户号时必填（微信要求），与微信商户全称一致；小微/个体户填开户人姓名',
+    `required` = ''
 WHERE `menu_name` = 'profit_sharing_receiver_name';
+
+UPDATE `eb_system_config`
+SET `info` = '分账接收方OpenID',
+    `desc` = '接收方类型为微信用户时必填；须为店铺小程序下的 openid',
+    `required` = ''
+WHERE `menu_name` = 'profit_sharing_receiver_openid';
+
+UPDATE `eb_system_config`
+SET `info` = '接收方微信实名',
+    `desc` = '选填；若填写会与微信实名校验，不匹配会拒绝；须配置支付公钥加密',
+    `required` = ''
+WHERE `menu_name` = 'profit_sharing_receiver_user_name';
 
 UPDATE `eb_system_config`
 SET `desc` = '服务商模式下，支付成功后按比例分账给配置的接收方（商户号或微信用户）'

@@ -346,6 +346,8 @@ class SystemConfig extends AuthController
         if (isset($post['store_brokerage_binding_status'])) {
             $this->services->checkBrokerageBinding($post);
         }
+        // 微信分账配置：按接收方类型校验必填项
+        $this->services->checkProfitSharingConfig($post);
         // 检查一级返佣比例和二级返佣比例是否大于100%
         if (isset($post['store_brokerage_ratio']) && isset($post['store_brokerage_two'])) {
             $num = $post['store_brokerage_ratio'] + $post['store_brokerage_two'];

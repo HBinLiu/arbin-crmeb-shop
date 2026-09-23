@@ -1716,6 +1716,79 @@ WSS;
     }
 
     /**
+     * 保存时校验微信分账配置（按接收方类型校验必填，对照微信添加接收方规则）
+     * @param array $post
+     * @return bool
+     */
+    public function checkProfitSharingConfig(array $post): bool
+    {
+        $keys = [
+            'profit_sharing_open',
+            'profit_sharing_ratio',
+            'profit_sharing_receiver_type',
+            'profit_sharing_receiver_mchid',
+            'profit_sharing_receiver_name',
+            'profit_sharing_receiver_openid',
+            'profit_sharing_receiver_user_name',
+        ];
+        $touched = false;
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $post)) {
+                $touched = true;
+                break;
+            }
+        }
+        if (!$touched) {
+            return true;
+        }
+
+        $open = (int)($post['profit_sharing_open'] ?? sys_config('profit_sharing_open', 0));
+        if ($open !== 1) {
+            return true;
+        }
+
+        if ((int)($post['mer_type'] ?? sys_config('mer_type', 0)) !== 1) {
+            throw new AdminException('开启分账前请先启用服务商模式');
+        }
+        if ((int)($post['pay_wechat_type'] ?? sys_config('pay_wechat_type', 0)) !== 1) {
+            throw new AdminException('开启分账前请先启用微信V3支付');
+        }
+        if (trim((string)($post['pay_sub_merchant_id'] ?? sys_config('pay_sub_merchant_id', ''))) === '') {
+            throw new AdminException('开启分账前请配置特约商户号');
+        }
+        if (trim((string)($post['sp_appid'] ?? sys_config('sp_appid', ''))) === '') {
+            throw new AdminException('开启分账前请配置主商户APPID（服务商AppID）');
+        }
+
+        $ratio = $post['profit_sharing_ratio'] ?? sys_config('profit_sharing_ratio', '');
+        if ($ratio === '' || $ratio === null) {
+            throw new AdminException('分账抽成比例不能为空');
+        }
+        if (!is_numeric($ratio) || (float)$ratio < 0 || (float)$ratio > 30) {
+            throw new AdminException('分账抽成比例须为0-30之间的数字');
+        }
+
+        $type = (int)($post['profit_sharing_receiver_type'] ?? sys_config('profit_sharing_receiver_type', 1));
+        if ($type === 2) {
+            if (trim((string)($post['profit_sharing_receiver_openid'] ?? '')) === '') {
+                throw new AdminException('分账接收方OpenID不能为空');
+            }
+            if (trim((string)($post['routine_appId'] ?? sys_config('routine_appId', ''))) === '') {
+                throw new AdminException('微信用户分账须先配置小程序AppID（作为sub_appid）');
+            }
+        } else {
+            if (trim((string)($post['profit_sharing_receiver_mchid'] ?? '')) === '') {
+                throw new AdminException('分账接收方商户号不能为空');
+            }
+            // 微信：MERCHANT_ID 时 name 必传
+            if (trim((string)($post['profit_sharing_receiver_name'] ?? '')) === '') {
+                throw new AdminException('分账接收方商户全称不能为空');
+            }
+        }
+        return true;
+    }
+
+    /**
      * 检测缩略图水印配置是否更改
      * @param array $post
      * @return bool
