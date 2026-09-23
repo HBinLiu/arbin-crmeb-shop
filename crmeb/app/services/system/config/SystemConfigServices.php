@@ -1101,6 +1101,10 @@ class SystemConfigServices extends BaseServices
                             if ($i == 2) $label = $data['menu_name'] . '#';
                             $relateRule[$label]['show_value'] = $this->normalizeOptionValue($pk);
                             foreach ($pv as $pvv) {
+                                // 已有嵌套 son_type 时勿覆盖为空串，否则子控件无法挂到 radio control
+                                if (isset($relateRule[$label]['son_type'][$pvv]) && is_array($relateRule[$label]['son_type'][$pvv])) {
+                                    continue;
+                                }
                                 $relateRule[$label]['son_type'][$pvv] = '';
                             }
                             $i++;
@@ -1121,6 +1125,10 @@ class SystemConfigServices extends BaseServices
                                     $relateRule[$label]['show_value'] = $this->normalizeOptionValue($pk);
                                 }
                                 foreach ($pv as $pvv) {
+                                    // 已有嵌套 son_type 时勿覆盖为空串，否则子控件无法挂到 radio control
+                                    if (isset($relateRule[$label]['son_type'][$pvv]) && is_array($relateRule[$label]['son_type'][$pvv])) {
+                                        continue;
+                                    }
                                     $relateRule[$label]['son_type'][$pvv] = '';
                                 }
                                 $i++;
