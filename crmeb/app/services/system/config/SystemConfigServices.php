@@ -231,8 +231,20 @@ class SystemConfigServices extends BaseServices
         'profit_sharing_open' => [
             'son_type' => [
                 'profit_sharing_ratio' => '',
-                'profit_sharing_receiver_mchid' => '',
-                'profit_sharing_receiver_name' => '',
+                'profit_sharing_receiver_type' => [
+                    'son_type' => [
+                        'profit_sharing_receiver_mchid' => '',
+                        'profit_sharing_receiver_name' => '',
+                    ],
+                    'show_value' => 1
+                ],
+                'profit_sharing_receiver_type@' => [
+                    'son_type' => [
+                        'profit_sharing_receiver_openid' => '',
+                        'profit_sharing_receiver_user_name' => '',
+                    ],
+                    'show_value' => 2
+                ],
             ],
             'show_value' => 1
         ],

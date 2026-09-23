@@ -126,7 +126,13 @@ class StoreOrderSuccessServices extends BaseServices
 
         // 服务商分账：支付成功后延迟入队（微信资金到账后再请求分账）
         if ($res1 && $paytype === PayServices::WEIXIN_PAY) {
-            ProfitSharingJob::dispatchSecs(30, 'doJob', [(int)$orderInfo['id']]);
+            $orderId = (int)$orderInfo['id'];
+            // 未开启队列时 dispatchSecs 不会执行，改为同步分账，避免可分账订单长期冻款
+            if ((int)sys_config('queue_open', 0) === 1) {
+                ProfitSharingJob::dispatchSecs(30, 'doJob', [$orderId]);
+            } else {
+                ProfitSharingJob::dispatch('doJob', [$orderId]);
+            }
         }
 
         $res = $res1 && $resPink;

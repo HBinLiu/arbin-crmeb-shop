@@ -43,6 +43,8 @@ class PayClient extends BaseClient
     const API_PROFITSHARING_RECEIVERS_ADD = 'v3/profitsharing/receivers/add';
     //请求分账
     const API_PROFITSHARING_ORDERS = 'v3/profitsharing/orders';
+    //查询分账结果
+    const API_PROFITSHARING_ORDERS_QUERY = 'v3/profitsharing/orders/{out_order_no}';
     //解冻剩余资金
     const API_PROFITSHARING_UNFREEZE = 'v3/profitsharing/orders/unfreeze';
     //分账回退
@@ -191,8 +193,8 @@ class PayClient extends BaseClient
                 $data['payer']['sub_openid'] = $payer['openid'];
                 $data['sub_appid'] = $appid;
             }
-            //开启分账时标记订单可分账
-            if (!empty($this->app['config']['v3_payment']['profit_sharing'])) {
+            //仅商品订单开启分账标记；会员/充值等不打标记，避免冻款却无分账任务
+            if (!empty($this->app['config']['v3_payment']['profit_sharing']) && $attach === 'product') {
                 $data['settle_info'] = ['profit_sharing' => true];
             }
 
@@ -577,6 +579,10 @@ class PayClient extends BaseClient
      */
     public function profitSharingAddReceiver(array $data)
     {
+        // 官方：name 为敏感字段，须加密并带 Wechatpay-Serial
+        if (!empty($data['name'])) {
+            $data['name'] = $this->encryptor((string)$data['name']);
+        }
         $res = $this->request(self::API_PROFITSHARING_RECEIVERS_ADD, 'POST', ['json' => $data]);
         if (isset($res['code']) && isset($res['message'])) {
             throw new PayException('添加分账接收方失败:' . $res['message']);
@@ -591,9 +597,38 @@ class PayClient extends BaseClient
      */
     public function profitSharingOrder(array $data)
     {
+        if (!empty($data['receivers']) && is_array($data['receivers'])) {
+            foreach ($data['receivers'] as &$receiver) {
+                if (!empty($receiver['name'])) {
+                    $receiver['name'] = $this->encryptor((string)$receiver['name']);
+                }
+            }
+            unset($receiver);
+        }
         $res = $this->request(self::API_PROFITSHARING_ORDERS, 'POST', ['json' => $data]);
         if (isset($res['code']) && isset($res['message'])) {
             throw new PayException('请求分账失败:' . $res['message']);
+        }
+        return $res;
+    }
+
+    /**
+     * 查询分账结果
+     * @param string $outOrderNo
+     * @param string $subMchid
+     * @param string $transactionId
+     * @return mixed
+     */
+    public function profitSharingQueryOrder(string $outOrderNo, string $subMchid, string $transactionId)
+    {
+        $url = $this->getApiUrl(self::API_PROFITSHARING_ORDERS_QUERY, ['out_order_no'], [$outOrderNo]);
+        $url .= '?' . http_build_query([
+            'sub_mchid' => $subMchid,
+            'transaction_id' => $transactionId,
+        ]);
+        $res = $this->request($url, 'GET');
+        if (isset($res['code']) && isset($res['message'])) {
+            throw new PayException('查询分账结果失败:' . $res['message']);
         }
         return $res;
     }

@@ -38,9 +38,63 @@ class ProfitSharingServices extends BaseServices
     /** 无需分账（金额过小等），已解冻 */
     const STATUS_SKIP = 4;
 
+    /** 接收方：商户号 */
+    const RECEIVER_MERCHANT = 'MERCHANT_ID';
+    /** 接收方：个人（openid 属服务商 sp_appid） */
+    const RECEIVER_PERSONAL = 'PERSONAL_OPENID';
+    /** 接收方：个人（openid 属特约商户 sub_appid，如店铺小程序） */
+    const RECEIVER_PERSONAL_SUB = 'PERSONAL_SUB_OPENID';
+
     public function __construct(StoreOrderProfitSharingDao $dao)
     {
         $this->dao = $dao;
+    }
+
+    /**
+     * 接收方类型
+     * 后台选「微信用户」时用 PERSONAL_SUB_OPENID：openid 取自店铺小程序（支付里的 sub_appid）
+     */
+    public function getReceiverType(): string
+    {
+        return (int)sys_config('profit_sharing_receiver_type', 1) === 2
+            ? self::RECEIVER_PERSONAL_SUB
+            : self::RECEIVER_MERCHANT;
+    }
+
+    /**
+     * 是否个人接收方（零钱）
+     */
+    public function isPersonalReceiver(?string $receiverType = null): bool
+    {
+        $type = $receiverType ?? $this->getReceiverType();
+        return $type === self::RECEIVER_PERSONAL || $type === self::RECEIVER_PERSONAL_SUB;
+    }
+
+    /**
+     * 接收方账号（商户号或 openid）
+     */
+    public function getReceiverAccount(): string
+    {
+        if ($this->isPersonalReceiver()) {
+            return trim((string)sys_config('profit_sharing_receiver_openid', ''));
+        }
+        return trim((string)sys_config('profit_sharing_receiver_mchid', ''));
+    }
+
+    /**
+     * 服务商 AppID（sp_appid）
+     */
+    public function getSpAppid(): string
+    {
+        return trim((string)sys_config('sp_appid', ''));
+    }
+
+    /**
+     * 特约侧 AppID（sub_appid，店铺小程序）
+     */
+    public function getSubAppid(): string
+    {
+        return trim((string)sys_config('routine_appId', ''));
     }
 
     /**
@@ -52,7 +106,7 @@ class ProfitSharingServices extends BaseServices
             && (int)sys_config('profit_sharing_open', 0) === 1
             && (int)sys_config('pay_wechat_type', 0) === 1
             && trim((string)sys_config('pay_sub_merchant_id', '')) !== ''
-            && trim((string)sys_config('profit_sharing_receiver_mchid', '')) !== '';
+            && $this->getReceiverAccount() !== '';
     }
 
     /**
@@ -81,9 +135,10 @@ class ProfitSharingServices extends BaseServices
     }
 
     /**
-     * 支付成功后发起分账（建议走队列）
+     * 支付成功后发起分账（建议走队列；失败会清接收方缓存并重试一次添加+分账）
+     * @param bool $finalAttempt 队列最后一轮：分账仍失败则解冻剩余资金，避免商户无法结算
      */
-    public function handleOrderPaid(int $orderId): bool
+    public function handleOrderPaid(int $orderId, bool $finalAttempt = false): bool
     {
         if (!$this->isEnabled() || $orderId <= 0) {
             return true;
@@ -113,76 +168,328 @@ class ProfitSharingServices extends BaseServices
             return true;
         }
 
+        $receiverType = $this->getReceiverType();
+        $receiverAccount = $this->getReceiverAccount();
+        $spAppid = $this->getSpAppid();
+        if ($spAppid === '') {
+            Log::error('微信分账失败:缺少sp_appid order_id=' . ($order['order_id'] ?? ''));
+            if ($finalAttempt) {
+                return $this->unfreezeAfterShareFail($orderId, '缺少sp_appid');
+            }
+            return false;
+        }
+        if ($receiverType === self::RECEIVER_PERSONAL_SUB && $this->getSubAppid() === '') {
+            Log::error('微信分账失败:缺少小程序sub_appid order_id=' . ($order['order_id'] ?? ''));
+            if ($finalAttempt) {
+                return $this->unfreezeAfterShareFail($orderId, '缺少小程序sub_appid');
+            }
+            return false;
+        }
+
         $amountFen = $this->calcAmountFen((string)$order['pay_price']);
         $outOrderNo = 'PS' . $order['order_id'] . substr((string)time(), -4);
-        $record = [
-            'oid' => $orderId,
-            'order_id' => $order['order_id'],
-            'trade_no' => $order['trade_no'],
-            'sub_mchid' => trim((string)sys_config('pay_sub_merchant_id')),
-            'receiver_mchid' => trim((string)sys_config('profit_sharing_receiver_mchid')),
-            'ratio' => $this->getRatio(),
-            'amount' => bcdiv((string)$amountFen, '100', 2),
-            'amount_fen' => $amountFen,
-            'out_order_no' => $outOrderNo,
-            'status' => self::STATUS_WAIT,
-            'add_time' => time(),
-        ];
-        $id = $this->dao->save($record)->id;
+
+        // 复用待分账/失败记录，避免队列重试产生多条流水
+        $exist = $this->dao->getOne(['oid' => $orderId, 'status' => self::STATUS_WAIT])
+            ?: $this->dao->getOne(['oid' => $orderId, 'status' => self::STATUS_FAIL]);
+        if ($exist) {
+            $exist = is_array($exist) ? $exist : $exist->toArray();
+            $id = (int)$exist['id'];
+            // 上次已受理但处理中：用原单号查询，避免重复请求分账
+            if ((int)$exist['status'] === self::STATUS_WAIT && $this->isProcessingResult($exist['result'] ?? '')) {
+                try {
+                    $pay = $this->getV3Pay();
+                    $res = $pay->profitSharingQueryOrder(
+                        (string)$exist['out_order_no'],
+                        (string)($exist['sub_mchid'] ?: sys_config('pay_sub_merchant_id')),
+                        (string)$order['trade_no']
+                    );
+                    $this->applyProfitSharingResult($id, $res);
+                    return true;
+                } catch (\Throwable $e) {
+                    Log::warning('微信分账查询未完成:' . $e->getMessage() . ' order_id=' . $order['order_id']);
+                    // 仍处理中时不解冻，避免与进行中的分账冲突
+                    return false;
+                }
+            }
+            $this->dao->update($id, [
+                'out_order_no' => $outOrderNo,
+                'receiver_type' => $receiverType,
+                'receiver_mchid' => $receiverAccount,
+                'ratio' => $this->getRatio(),
+                'amount' => bcdiv((string)$amountFen, '100', 2),
+                'amount_fen' => $amountFen,
+                'status' => self::STATUS_WAIT,
+                'fail_msg' => '',
+            ]);
+            $record = array_merge($exist, [
+                'sub_mchid' => $exist['sub_mchid'] ?: trim((string)sys_config('pay_sub_merchant_id')),
+                'out_order_no' => $outOrderNo,
+            ]);
+        } else {
+            $record = [
+                'oid' => $orderId,
+                'order_id' => $order['order_id'],
+                'trade_no' => $order['trade_no'],
+                'sub_mchid' => trim((string)sys_config('pay_sub_merchant_id')),
+                'receiver_type' => $receiverType,
+                'receiver_mchid' => $receiverAccount,
+                'ratio' => $this->getRatio(),
+                'amount' => bcdiv((string)$amountFen, '100', 2),
+                'amount_fen' => $amountFen,
+                'out_order_no' => $outOrderNo,
+                'status' => self::STATUS_WAIT,
+                'add_time' => time(),
+            ];
+            $id = $this->dao->save($record)->id;
+        }
 
         try {
             $pay = $this->getV3Pay();
-            $this->ensureReceiver($pay);
-
-            if ($amountFen <= 0) {
-                $pay->profitSharingUnfreeze([
-                    'sub_mchid' => $record['sub_mchid'],
-                    'transaction_id' => $order['trade_no'],
-                    'out_order_no' => $outOrderNo,
-                    'description' => '无需抽成，解冻剩余资金',
-                ]);
-                $this->dao->update($id, [
-                    'status' => self::STATUS_SKIP,
-                    'finish_time' => time(),
-                    'result' => json_encode(['msg' => 'amount_zero_unfreeze'], JSON_UNESCAPED_UNICODE),
-                ]);
-                return true;
+            $this->runProfitSharing($pay, $order, $record, $id, $receiverType, $receiverAccount, $amountFen, $outOrderNo);
+            return true;
+        } catch (\Throwable $e) {
+            // 处理中：保留原分账单号，交由后续查询，禁止换单号重入；未终态勿解冻
+            if (strpos($e->getMessage(), '分账处理中') !== false) {
+                Log::warning('微信分账处理中，等待查询 order_id=' . $order['order_id']);
+                return false;
             }
+            // 接收方可能被删或缓存过期：清缓存后强制重加，再分账一次
+            $this->clearReceiverCache($receiverType, $receiverAccount);
+            Log::warning('微信分账首次失败，清缓存后重试:' . $e->getMessage() . ' order_id=' . $order['order_id']);
+            try {
+                $outOrderNo = 'PS' . $order['order_id'] . substr((string)time(), -4);
+                $this->dao->update($id, ['out_order_no' => $outOrderNo, 'status' => self::STATUS_WAIT, 'fail_msg' => '', 'result' => '']);
+                $pay = $this->getV3Pay();
+                $this->ensureReceiver($pay, $receiverType, $receiverAccount, true);
+                $this->runProfitSharing($pay, $order, $record, $id, $receiverType, $receiverAccount, $amountFen, $outOrderNo);
+                return true;
+            } catch (\Throwable $e2) {
+                if (strpos($e2->getMessage(), '分账处理中') !== false) {
+                    Log::warning('微信分账重试后处理中，等待查询 order_id=' . $order['order_id']);
+                    return false;
+                }
+                $this->clearReceiverCache($receiverType, $receiverAccount);
+                $this->dao->update($id, [
+                    'status' => self::STATUS_FAIL,
+                    'fail_msg' => mb_substr($e2->getMessage(), 0, 500),
+                    'finish_time' => time(),
+                ]);
+                Log::error('微信分账重试仍失败:' . $e2->getMessage() . ' order_id=' . $order['order_id']);
+                if ($finalAttempt) {
+                    return $this->unfreezeRemainingFunds($order, $record, $id, $e2->getMessage());
+                }
+                return false;
+            }
+        }
+    }
 
-            $res = $pay->profitSharingOrder([
+    /**
+     * 分账最终失败后解冻剩余资金（按订单）
+     */
+    public function unfreezeAfterShareFail(int $orderId, string $failMsg = ''): bool
+    {
+        if ($orderId <= 0) {
+            return false;
+        }
+        $existSuccess = $this->dao->getOne(['oid' => $orderId, 'status' => self::STATUS_SUCCESS]);
+        $existSkip = $this->dao->getOne(['oid' => $orderId, 'status' => self::STATUS_SKIP]);
+        if ($existSuccess || $existSkip) {
+            return true;
+        }
+
+        /** @var StoreOrderServices $orderServices */
+        $orderServices = app()->make(StoreOrderServices::class);
+        $order = $orderServices->get($orderId);
+        if (!$order) {
+            return false;
+        }
+        $order = is_array($order) ? $order : $order->toArray();
+        if (empty($order['trade_no'])) {
+            return false;
+        }
+
+        $exist = $this->dao->getOne(['oid' => $orderId, 'status' => self::STATUS_WAIT])
+            ?: $this->dao->getOne(['oid' => $orderId, 'status' => self::STATUS_FAIL]);
+        if ($exist) {
+            $record = is_array($exist) ? $exist : $exist->toArray();
+            $id = (int)$record['id'];
+            // 仍在处理中：先查终态，未完成则不解冻，避免与进行中的分账冲突
+            if ((int)$record['status'] === self::STATUS_WAIT && $this->isProcessingResult($record['result'] ?? '')) {
+                try {
+                    $pay = $this->getV3Pay();
+                    $res = $pay->profitSharingQueryOrder(
+                        (string)$record['out_order_no'],
+                        (string)($record['sub_mchid'] ?: sys_config('pay_sub_merchant_id')),
+                        (string)$order['trade_no']
+                    );
+                    $this->applyProfitSharingResult($id, $res);
+                    return true;
+                } catch (\Throwable $e) {
+                    Log::error('微信分账最终仍处理中，暂不解冻:' . $e->getMessage() . ' order_id=' . ($order['order_id'] ?? ''));
+                    return false;
+                }
+            }
+        } else {
+            $record = [
+                'sub_mchid' => trim((string)sys_config('pay_sub_merchant_id')),
+                'trade_no' => $order['trade_no'],
+            ];
+            $id = (int)$this->dao->save([
+                'oid' => $orderId,
+                'order_id' => $order['order_id'],
+                'trade_no' => $order['trade_no'],
                 'sub_mchid' => $record['sub_mchid'],
-                'appid' => trim((string)sys_config('sp_appid')),
+                'receiver_type' => $this->getReceiverType(),
+                'receiver_mchid' => $this->getReceiverAccount(),
+                'ratio' => $this->getRatio(),
+                'amount' => '0.00',
+                'amount_fen' => 0,
+                'out_order_no' => '',
+                'status' => self::STATUS_FAIL,
+                'fail_msg' => mb_substr($failMsg ?: '分账失败', 0, 500),
+                'add_time' => time(),
+            ])->id;
+        }
+
+        return $this->unfreezeRemainingFunds($order, $record, $id, $failMsg ?: ((string)($record['fail_msg'] ?? '分账失败')));
+    }
+
+    /**
+     * 解冻待分账剩余资金，保证特约商户可结算
+     */
+    protected function unfreezeRemainingFunds(array $order, array $record, int $id, string $failMsg): bool
+    {
+        $outOrderNo = 'PU' . ($order['order_id'] ?? $id) . substr((string)time(), -4);
+        try {
+            $pay = $this->getV3Pay();
+            $res = $pay->profitSharingUnfreeze([
+                'sub_mchid' => $record['sub_mchid'] ?: trim((string)sys_config('pay_sub_merchant_id')),
                 'transaction_id' => $order['trade_no'],
                 'out_order_no' => $outOrderNo,
-                'receivers' => [[
-                    'type' => 'MERCHANT_ID',
-                    'account' => $record['receiver_mchid'],
-                    'amount' => $amountFen,
-                    'description' => '平台服务费',
-                ]],
-                'unfreeze_unsplit' => true,
+                'description' => '分账失败，解冻剩余资金',
             ]);
-
             $this->dao->update($id, [
-                'status' => self::STATUS_SUCCESS,
-                'wx_order_id' => $res['order_id'] ?? '',
+                'status' => self::STATUS_FAIL,
+                'fail_msg' => mb_substr($failMsg . '；已解冻剩余资金', 0, 500),
+                'out_order_no' => $outOrderNo,
+                'result' => json_encode(['msg' => 'share_fail_unfreeze', 'unfreeze' => $res], JSON_UNESCAPED_UNICODE),
                 'finish_time' => time(),
-                'result' => json_encode($res, JSON_UNESCAPED_UNICODE),
             ]);
+            Log::warning('微信分账失败已解冻剩余资金 order_id=' . ($order['order_id'] ?? ''));
             return true;
         } catch (\Throwable $e) {
             $this->dao->update($id, [
                 'status' => self::STATUS_FAIL,
-                'fail_msg' => mb_substr($e->getMessage(), 0, 500),
+                'fail_msg' => mb_substr($failMsg . '；解冻失败:' . $e->getMessage(), 0, 500),
                 'finish_time' => time(),
             ]);
-            Log::error('微信分账失败:' . $e->getMessage() . ' order_id=' . $order['order_id']);
+            Log::error('微信分账失败且解冻失败:' . $e->getMessage() . ' order_id=' . ($order['order_id'] ?? ''));
             return false;
         }
     }
 
     /**
-     * 退款前按比例回退已分账金额
+     * 执行解冻或请求分账
+     */
+    protected function runProfitSharing($pay, array $order, array $record, int $id, string $receiverType, string $receiverAccount, int $amountFen, string $outOrderNo): void
+    {
+        $this->ensureReceiver($pay, $receiverType, $receiverAccount);
+
+        if ($amountFen <= 0) {
+            $pay->profitSharingUnfreeze([
+                'sub_mchid' => $record['sub_mchid'],
+                'transaction_id' => $order['trade_no'],
+                'out_order_no' => $outOrderNo,
+                'description' => '无需抽成，解冻剩余资金',
+            ]);
+            $this->dao->update($id, [
+                'status' => self::STATUS_SKIP,
+                'finish_time' => time(),
+                'result' => json_encode(['msg' => 'amount_zero_unfreeze'], JSON_UNESCAPED_UNICODE),
+            ]);
+            return;
+        }
+
+        $receiver = [
+            'type' => $receiverType,
+            'account' => $receiverAccount,
+            'amount' => $amountFen,
+            'description' => '平台服务费',
+        ];
+        $receiverName = $this->getReceiverDisplayName($receiverType);
+        if ($receiverName !== '') {
+            $receiver['name'] = $receiverName;
+        }
+
+        $orderData = [
+            'sub_mchid' => $record['sub_mchid'],
+            'appid' => $this->getSpAppid(),
+            'transaction_id' => $order['trade_no'],
+            'out_order_no' => $outOrderNo,
+            'receivers' => [$receiver],
+            'unfreeze_unsplit' => true,
+        ];
+        // PERSONAL_SUB_OPENID：openid 属特约 sub_appid；PERSONAL_OPENID：属服务商 appid
+        if ($receiverType === self::RECEIVER_PERSONAL_SUB) {
+            $orderData['sub_appid'] = $this->getSubAppid();
+        }
+
+        $res = $pay->profitSharingOrder($orderData);
+        $this->applyProfitSharingResult($id, $res);
+    }
+
+    /**
+     * 上次分账是否仍在处理中
+     */
+    protected function isProcessingResult($result): bool
+    {
+        if (!$result) {
+            return false;
+        }
+        if (is_string($result)) {
+            $decoded = json_decode($result, true);
+        } else {
+            $decoded = $result;
+        }
+        return is_array($decoded) && (($decoded['state'] ?? '') === 'PROCESSING');
+    }
+
+    /**
+     * 按官方终态落库：FINISHED + 接收方 SUCCESS 才算成功
+     */
+    protected function applyProfitSharingResult(int $id, array $res): void
+    {
+        $state = (string)($res['state'] ?? '');
+        if ($state === 'PROCESSING') {
+            $this->dao->update($id, [
+                'status' => self::STATUS_WAIT,
+                'wx_order_id' => $res['order_id'] ?? '',
+                'result' => json_encode($res, JSON_UNESCAPED_UNICODE),
+            ]);
+            throw new PayException('分账处理中，请稍后查询');
+        }
+        if ($state !== 'FINISHED') {
+            throw new PayException('分账状态异常:' . ($state !== '' ? $state : 'unknown'));
+        }
+        foreach ($res['receivers'] ?? [] as $receiver) {
+            $result = (string)($receiver['result'] ?? '');
+            if ($result !== 'SUCCESS') {
+                $reason = (string)($receiver['fail_reason'] ?? $result);
+                throw new PayException('分账接收方失败:' . $reason);
+            }
+        }
+        $this->dao->update($id, [
+            'status' => self::STATUS_SUCCESS,
+            'wx_order_id' => $res['order_id'] ?? '',
+            'finish_time' => time(),
+            'result' => json_encode($res, JSON_UNESCAPED_UNICODE),
+            'fail_msg' => '',
+        ]);
+    }
+
+    /**
+     * 退款前按比例回退已分账金额（仅商户号接收方；个人零钱微信不支持回退）
      * @param array $order 原支付订单
      * @param string $refundPrice 本次退款金额（元）
      */
@@ -200,11 +507,17 @@ class ProfitSharingServices extends BaseServices
             return true;
         }
 
+        $receiverType = (string)($record['receiver_type'] ?? self::RECEIVER_MERCHANT);
+        if ($this->isPersonalReceiver($receiverType)) {
+            // 微信分账回退不支持个人接收方，已分到零钱的金额无法通过接口退回
+            Log::warning('微信分账回退跳过:个人接收方不支持回退 order_id=' . ($order['order_id'] ?? ''));
+            return true;
+        }
+
         $payPrice = (string)($order['pay_price'] ?? '0');
         if (bccomp($payPrice, '0', 2) <= 0) {
             return true;
         }
-        // 按退款金额占实付比例回退抽成；全额退则全额回退
         $alreadyReturned = (int)($record['return_amount_fen'] ?? 0);
         $remainFen = (int)$record['amount_fen'] - $alreadyReturned;
         if ($remainFen <= 0) {
@@ -251,38 +564,72 @@ class ProfitSharingServices extends BaseServices
     }
 
     /**
-     * 确保接收方已添加（按子商户缓存）
+     * 确保接收方已添加（按子商户+账号缓存，分账任务用）
+     * @param bool $force 跳过缓存强制调用微信添加
      */
-    protected function ensureReceiver($pay): void
+    protected function ensureReceiver($pay, string $receiverType, string $receiverAccount, bool $force = false): void
     {
-        $subMchid = trim((string)sys_config('pay_sub_merchant_id'));
-        $receiver = trim((string)sys_config('profit_sharing_receiver_mchid'));
-        $cacheKey = 'wx_profit_sharing_receiver_' . $subMchid . '_' . $receiver;
-        if (Cache::get($cacheKey)) {
+        $cacheKey = $this->receiverCacheKey($receiverType, $receiverAccount);
+        if (!$force && Cache::get($cacheKey)) {
             return;
         }
+        $this->addReceiver($pay, $receiverType, $receiverAccount);
+        Cache::set($cacheKey, 1, 86400 * 30);
+    }
+
+    /**
+     * 调用微信添加分账接收方
+     * @return string exists|added
+     */
+    protected function addReceiver($pay, string $receiverType, string $receiverAccount): string
+    {
         $data = [
-            'sub_mchid' => $subMchid,
-            'appid' => trim((string)sys_config('sp_appid')),
-            'type' => 'MERCHANT_ID',
-            'account' => $receiver,
+            'sub_mchid' => trim((string)sys_config('pay_sub_merchant_id')),
+            'appid' => $this->getSpAppid(),
+            'type' => $receiverType,
+            'account' => $receiverAccount,
             'relation_type' => 'SERVICE_PROVIDER',
         ];
-        $name = trim((string)sys_config('profit_sharing_receiver_name', ''));
+        if ($receiverType === self::RECEIVER_PERSONAL_SUB) {
+            $data['sub_appid'] = $this->getSubAppid();
+        }
+        $name = $this->getReceiverDisplayName($receiverType);
         if ($name !== '') {
             $data['name'] = $name;
         }
         try {
             $pay->profitSharingAddReceiver($data);
+            return 'added';
         } catch (\Throwable $e) {
-            // 已存在时微信可能报错，允许继续分账
-            if (strpos($e->getMessage(), '已存在') === false
-                && stripos($e->getMessage(), 'RESOURCE_ALREADY_EXISTS') === false
-                && stripos($e->getMessage(), 'ALREADY_EXISTS') === false) {
-                throw $e;
+            if (strpos($e->getMessage(), '已存在') !== false
+                || stripos($e->getMessage(), 'RESOURCE_ALREADY_EXISTS') !== false
+                || stripos($e->getMessage(), 'ALREADY_EXISTS') !== false) {
+                return 'exists';
             }
+            throw $e;
         }
-        Cache::set($cacheKey, 1, 86400 * 30);
+    }
+
+    protected function receiverCacheKey(string $receiverType, string $receiverAccount): string
+    {
+        $subMchid = trim((string)sys_config('pay_sub_merchant_id'));
+        return 'wx_profit_sharing_receiver_' . $subMchid . '_' . $receiverType . '_' . md5($receiverAccount);
+    }
+
+    protected function clearReceiverCache(string $receiverType, string $receiverAccount): void
+    {
+        Cache::delete($this->receiverCacheKey($receiverType, $receiverAccount));
+    }
+
+    /**
+     * 接收方名称（商户全称或个人实名）
+     */
+    protected function getReceiverDisplayName(string $receiverType): string
+    {
+        if ($this->isPersonalReceiver($receiverType)) {
+            return trim((string)sys_config('profit_sharing_receiver_user_name', ''));
+        }
+        return trim((string)sys_config('profit_sharing_receiver_name', ''));
     }
 
     /**

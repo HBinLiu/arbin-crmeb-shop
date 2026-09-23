@@ -282,6 +282,18 @@ class V3WechatPay extends BasePay implements PayInterface
     }
 
     /**
+     * 查询分账结果
+     * @param string $outOrderNo
+     * @param string $subMchid
+     * @param string $transactionId
+     * @return mixed
+     */
+    public function profitSharingQueryOrder(string $outOrderNo, string $subMchid, string $transactionId)
+    {
+        return $this->instance->v3pay->profitSharingQueryOrder($outOrderNo, $subMchid, $transactionId);
+    }
+
+    /**
      * 解冻剩余资金
      * @param array $data
      * @return mixed
