@@ -13,18 +13,21 @@ namespace app\services\order;
 
 
 use app\dao\order\StoreOrderDao;
+use app\jobs\ProfitSharingJob;
 use app\services\activity\bargain\StoreBargainServices;
 use app\services\activity\combination\StoreCombinationServices;
 use app\services\activity\combination\StorePinkServices;
 use app\services\activity\seckill\StoreSeckillServices;
 use app\services\agent\BrokeragePeerServices;
 use app\services\BaseServices;
+use app\services\pay\PayServices;
 use app\services\user\member\MemberCardServices;
 use app\services\user\UserBillServices;
 use app\services\user\UserBrokerageServices;
 use app\services\user\UserServices;
 use crmeb\exceptions\ApiException;
 use crmeb\utils\Str;
+use think\facade\Env;
 use think\facade\Log;
 
 /**
@@ -173,6 +176,16 @@ class StoreOrderTakeServices extends BaseServices
                     'add_time' => date('Y-m-d H:i:s', $order['add_time']),
                 ]]);
 
+                // 小程序交易规范：确认收货并结算后才可分账（支付成功时调用会报「交易被冻结」）
+                if (($order['pay_type'] ?? '') === PayServices::WEIXIN_PAY) {
+                    $orderId = (int)$order['id'];
+                    if ((int)sys_config('queue_open', 0) === 1 && Env::get('cache.driver', 'file') === 'redis') {
+                        // 稍延迟，等微信侧结算落账
+                        ProfitSharingJob::dispatchSecs(60, 'doJob', [$orderId, 1, 'product']);
+                    } else {
+                        ProfitSharingJob::dispatch('doJob', [$orderId, 1, 'product']);
+                    }
+                }
 
             } catch (\Throwable $exception) {
 

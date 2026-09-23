@@ -13,6 +13,7 @@ namespace app\services\pay;
 
 use app\dao\order\StoreOrderProfitSharingDao;
 use app\services\BaseServices;
+use app\services\order\OtherOrderServices;
 use app\services\order\StoreOrderServices;
 use app\services\pay\PayServices;
 use crmeb\exceptions\PayException;
@@ -27,6 +28,11 @@ use think\facade\Log;
  */
 class ProfitSharingServices extends BaseServices
 {
+    /** 商品订单 */
+    const BIZ_PRODUCT = 'product';
+    /** 购买会员 */
+    const BIZ_MEMBER = 'member';
+
     /** 待分账 */
     const STATUS_WAIT = 0;
     /** 分账成功 */
@@ -151,22 +157,30 @@ class ProfitSharingServices extends BaseServices
     }
 
     /**
-     * 支付成功后发起分账（建议走队列；失败会清接收方缓存并重试一次添加+分账）
+     * 确认收货/会员虚拟发货结算后发起分账（小程序须结算后方可分账）
      * @param bool $finalAttempt 队列最后一轮：分账仍失败则解冻剩余资金，避免商户无法结算
+     * @param string $bizType product=商品订单 member=购买会员
      */
-    public function handleOrderPaid(int $orderId, bool $finalAttempt = false): bool
+    public function handleOrderPaid(int $orderId, bool $finalAttempt = false, string $bizType = self::BIZ_PRODUCT): bool
     {
-        if (!$this->isEnabled() || $orderId <= 0) {
+        if ($orderId <= 0) {
+            return true;
+        }
+        $bizType = $this->normalizeBizType($bizType);
+        if (!$this->isEnabled()) {
+            Log::info('微信分账跳过:未启用或配置不全 orderId=' . $orderId . ' biz=' . $bizType
+                . ' mer_type=' . (int)sys_config('mer_type', 0)
+                . ' open=' . (int)sys_config('profit_sharing_open', 0)
+                . ' pay_wechat_type=' . (int)sys_config('pay_wechat_type', 0)
+                . ' sub_mchid=' . (trim((string)sys_config('pay_sub_merchant_id', '')) !== '' ? '1' : '0')
+                . ' receiver=' . ($this->getReceiverAccount() !== '' ? '1' : '0'));
             return true;
         }
 
-        /** @var StoreOrderServices $orderServices */
-        $orderServices = app()->make(StoreOrderServices::class);
-        $order = $orderServices->get($orderId);
+        $order = $this->loadOrderForSharing($orderId, $bizType);
         if (!$order) {
             return true;
         }
-        $order = is_array($order) ? $order : $order->toArray();
         if ((int)$order['paid'] !== 1) {
             return true;
         }
@@ -174,12 +188,12 @@ class ProfitSharingServices extends BaseServices
             return true;
         }
         if (empty($order['trade_no'])) {
-            Log::error('微信分账失败:订单缺少trade_no order_id=' . ($order['order_id'] ?? ''));
+            Log::error('微信分账失败:订单缺少trade_no order_id=' . ($order['order_id'] ?? '') . ' biz=' . $bizType);
             return false;
         }
 
-        $existSuccess = $this->dao->getOne(['oid' => $orderId, 'status' => self::STATUS_SUCCESS]);
-        $existSkip = $this->dao->getOne(['oid' => $orderId, 'status' => self::STATUS_SKIP]);
+        $existSuccess = $this->dao->getOne(['oid' => $orderId, 'biz_type' => $bizType, 'status' => self::STATUS_SUCCESS]);
+        $existSkip = $this->dao->getOne(['oid' => $orderId, 'biz_type' => $bizType, 'status' => self::STATUS_SKIP]);
         if ($existSuccess || $existSkip) {
             return true;
         }
@@ -191,7 +205,7 @@ class ProfitSharingServices extends BaseServices
         } catch (\Throwable $e) {
             Log::error('微信分账失败:' . $e->getMessage() . ' order_id=' . ($order['order_id'] ?? ''));
             if ($finalAttempt) {
-                return $this->unfreezeAfterShareFail($orderId, $e->getMessage());
+                return $this->unfreezeAfterShareFail($orderId, $e->getMessage(), $bizType);
             }
             return false;
         }
@@ -199,24 +213,24 @@ class ProfitSharingServices extends BaseServices
         if ($spAppid === '') {
             Log::error('微信分账失败:缺少sp_appid order_id=' . ($order['order_id'] ?? ''));
             if ($finalAttempt) {
-                return $this->unfreezeAfterShareFail($orderId, '缺少sp_appid');
+                return $this->unfreezeAfterShareFail($orderId, '缺少sp_appid', $bizType);
             }
             return false;
         }
         if ($receiverType === self::RECEIVER_PERSONAL_SUB && $this->getSubAppid() === '') {
             Log::error('微信分账失败:缺少小程序sub_appid order_id=' . ($order['order_id'] ?? ''));
             if ($finalAttempt) {
-                return $this->unfreezeAfterShareFail($orderId, '缺少小程序sub_appid');
+                return $this->unfreezeAfterShareFail($orderId, '缺少小程序sub_appid', $bizType);
             }
             return false;
         }
 
         $amountFen = $this->calcAmountFen((string)$order['pay_price']);
-        $outOrderNo = 'PS' . $order['order_id'] . substr((string)time(), -4);
+        $outOrderNo = 'PS' . ($bizType === self::BIZ_MEMBER ? 'M' : '') . $order['order_id'] . substr((string)time(), -4);
 
         // 复用待分账/失败记录，避免队列重试产生多条流水
-        $exist = $this->dao->getOne(['oid' => $orderId, 'status' => self::STATUS_WAIT])
-            ?: $this->dao->getOne(['oid' => $orderId, 'status' => self::STATUS_FAIL]);
+        $exist = $this->dao->getOne(['oid' => $orderId, 'biz_type' => $bizType, 'status' => self::STATUS_WAIT])
+            ?: $this->dao->getOne(['oid' => $orderId, 'biz_type' => $bizType, 'status' => self::STATUS_FAIL]);
         if ($exist) {
             $exist = is_array($exist) ? $exist : $exist->toArray();
             $id = (int)$exist['id'];
@@ -233,7 +247,6 @@ class ProfitSharingServices extends BaseServices
                     return true;
                 } catch (\Throwable $e) {
                     Log::warning('微信分账查询未完成:' . $e->getMessage() . ' order_id=' . $order['order_id']);
-                    // 仍处理中时不解冻，避免与进行中的分账冲突
                     return false;
                 }
             }
@@ -254,6 +267,7 @@ class ProfitSharingServices extends BaseServices
         } else {
             $record = [
                 'oid' => $orderId,
+                'biz_type' => $bizType,
                 'order_id' => $order['order_id'],
                 'trade_no' => $order['trade_no'],
                 'sub_mchid' => trim((string)sys_config('pay_sub_merchant_id')),
@@ -274,16 +288,22 @@ class ProfitSharingServices extends BaseServices
             $this->runProfitSharing($pay, $order, $record, $id, $receiverType, $receiverAccount, $amountFen, $outOrderNo);
             return true;
         } catch (\Throwable $e) {
-            // 处理中：保留原分账单号，交由后续查询，禁止换单号重入；未终态勿解冻
             if (strpos($e->getMessage(), '分账处理中') !== false) {
                 Log::warning('微信分账处理中，等待查询 order_id=' . $order['order_id']);
                 return false;
             }
-            // 接收方可能被删或缓存过期：清缓存后强制重加，再分账一次
+            if ($this->isSettlementFrozenError($e->getMessage())) {
+                $this->dao->update($id, [
+                    'status' => self::STATUS_WAIT,
+                    'fail_msg' => mb_substr($e->getMessage(), 0, 500),
+                ]);
+                Log::warning('微信分账等待结算:' . $e->getMessage() . ' order_id=' . $order['order_id']);
+                return false;
+            }
             $this->clearReceiverCache($receiverType, $receiverAccount);
             Log::warning('微信分账首次失败，清缓存后重试:' . $e->getMessage() . ' order_id=' . $order['order_id']);
             try {
-                $outOrderNo = 'PS' . $order['order_id'] . substr((string)time(), -4);
+                $outOrderNo = 'PS' . ($bizType === self::BIZ_MEMBER ? 'M' : '') . $order['order_id'] . substr((string)time(), -4);
                 $this->dao->update($id, ['out_order_no' => $outOrderNo, 'status' => self::STATUS_WAIT, 'fail_msg' => '', 'result' => '']);
                 $pay = $this->getV3Pay();
                 $this->ensureReceiver($pay, $receiverType, $receiverAccount, true);
@@ -292,6 +312,14 @@ class ProfitSharingServices extends BaseServices
             } catch (\Throwable $e2) {
                 if (strpos($e2->getMessage(), '分账处理中') !== false) {
                     Log::warning('微信分账重试后处理中，等待查询 order_id=' . $order['order_id']);
+                    return false;
+                }
+                if ($this->isSettlementFrozenError($e2->getMessage())) {
+                    $this->dao->update($id, [
+                        'status' => self::STATUS_WAIT,
+                        'fail_msg' => mb_substr($e2->getMessage(), 0, 500),
+                    ]);
+                    Log::warning('微信分账重试仍等待结算:' . $e2->getMessage() . ' order_id=' . $order['order_id']);
                     return false;
                 }
                 $this->clearReceiverCache($receiverType, $receiverAccount);
@@ -309,37 +337,87 @@ class ProfitSharingServices extends BaseServices
         }
     }
 
-    /**
-     * 分账最终失败后解冻剩余资金（按订单）
-     */
-    public function unfreezeAfterShareFail(int $orderId, string $failMsg = ''): bool
+    protected function normalizeBizType(string $bizType): string
     {
-        if ($orderId <= 0) {
-            return false;
-        }
-        $existSuccess = $this->dao->getOne(['oid' => $orderId, 'status' => self::STATUS_SUCCESS]);
-        $existSkip = $this->dao->getOne(['oid' => $orderId, 'status' => self::STATUS_SKIP]);
-        if ($existSuccess || $existSkip) {
-            return true;
-        }
+        return $bizType === self::BIZ_MEMBER ? self::BIZ_MEMBER : self::BIZ_PRODUCT;
+    }
 
+    protected function loadOrderForSharing(int $orderId, string $bizType): ?array
+    {
+        if ($bizType === self::BIZ_MEMBER) {
+            /** @var OtherOrderServices $otherOrderServices */
+            $otherOrderServices = app()->make(OtherOrderServices::class);
+            $order = $otherOrderServices->get($orderId);
+            if (!$order) {
+                return null;
+            }
+            return is_array($order) ? $order : $order->toArray();
+        }
         /** @var StoreOrderServices $orderServices */
         $orderServices = app()->make(StoreOrderServices::class);
         $order = $orderServices->get($orderId);
         if (!$order) {
+            return null;
+        }
+        return is_array($order) ? $order : $order->toArray();
+    }
+
+    /**
+     * 是否因小程序交易未结算导致分账失败（确认收货后方可分账）
+     */
+    protected function isSettlementFrozenError(string $msg): bool
+    {
+        return strpos($msg, '交易被冻结') !== false
+            || strpos($msg, '确认收货后') !== false
+            || strpos($msg, '还未结算') !== false;
+    }
+
+    /**
+     * 最近一次分账失败原因（供队列终态解冻判断）
+     */
+    public function getLatestFailMsg(int $orderId, string $bizType = self::BIZ_PRODUCT): string
+    {
+        if ($orderId <= 0) {
+            return '';
+        }
+        $bizType = $this->normalizeBizType($bizType);
+        $list = $this->dao->selectList(['oid' => $orderId, 'biz_type' => $bizType], 'fail_msg', 0, 1, 'id desc');
+        $row = $list ? $list->toArray() : [];
+        return (string)(($row[0]['fail_msg'] ?? '') ?: '');
+    }
+
+    /**
+     * 分账最终失败后解冻剩余资金（按订单）
+     */
+    public function unfreezeAfterShareFail(int $orderId, string $failMsg = '', string $bizType = self::BIZ_PRODUCT): bool
+    {
+        if ($orderId <= 0) {
             return false;
         }
-        $order = is_array($order) ? $order : $order->toArray();
+        $bizType = $this->normalizeBizType($bizType);
+        if ($this->isSettlementFrozenError($failMsg)) {
+            Log::warning('微信分账最终仍未结算，跳过解冻 orderId=' . $orderId . ' biz=' . $bizType);
+            return false;
+        }
+        $existSuccess = $this->dao->getOne(['oid' => $orderId, 'biz_type' => $bizType, 'status' => self::STATUS_SUCCESS]);
+        $existSkip = $this->dao->getOne(['oid' => $orderId, 'biz_type' => $bizType, 'status' => self::STATUS_SKIP]);
+        if ($existSuccess || $existSkip) {
+            return true;
+        }
+
+        $order = $this->loadOrderForSharing($orderId, $bizType);
+        if (!$order) {
+            return false;
+        }
         if (empty($order['trade_no'])) {
             return false;
         }
 
-        $exist = $this->dao->getOne(['oid' => $orderId, 'status' => self::STATUS_WAIT])
-            ?: $this->dao->getOne(['oid' => $orderId, 'status' => self::STATUS_FAIL]);
+        $exist = $this->dao->getOne(['oid' => $orderId, 'biz_type' => $bizType, 'status' => self::STATUS_WAIT])
+            ?: $this->dao->getOne(['oid' => $orderId, 'biz_type' => $bizType, 'status' => self::STATUS_FAIL]);
         if ($exist) {
             $record = is_array($exist) ? $exist : $exist->toArray();
             $id = (int)$record['id'];
-            // 仍在处理中：先查终态，未完成则不解冻，避免与进行中的分账冲突
             if ((int)$record['status'] === self::STATUS_WAIT && $this->isProcessingResult($record['result'] ?? '')) {
                 try {
                     $pay = $this->getV3Pay();
@@ -362,6 +440,7 @@ class ProfitSharingServices extends BaseServices
             ];
             $id = (int)$this->dao->save([
                 'oid' => $orderId,
+                'biz_type' => $bizType,
                 'order_id' => $order['order_id'],
                 'trade_no' => $order['trade_no'],
                 'sub_mchid' => $record['sub_mchid'],
@@ -523,7 +602,7 @@ class ProfitSharingServices extends BaseServices
         if (!$this->isEnabled() || empty($order['id'])) {
             return true;
         }
-        $record = $this->dao->getOne(['oid' => (int)$order['id'], 'status' => self::STATUS_SUCCESS]);
+        $record = $this->dao->getOne(['oid' => (int)$order['id'], 'biz_type' => self::BIZ_PRODUCT, 'status' => self::STATUS_SUCCESS]);
         if (!$record) {
             return true;
         }

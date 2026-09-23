@@ -13,6 +13,8 @@ namespace app\services\order;
 
 
 use app\dao\order\OtherOrderDao;
+use app\jobs\OtherOrderJob;
+use app\jobs\ProfitSharingJob;
 use app\services\BaseServices;
 use app\services\pay\PayServices;
 use app\services\statistic\CapitalFlowServices;
@@ -23,7 +25,8 @@ use app\services\user\UserServices;
 use app\services\user\member\MemberCardServices;
 use crmeb\exceptions\ApiException;
 use think\App;
-use app\jobs\OtherOrderJob;
+use think\facade\Env;
+use think\facade\Log;
 
 /**
  * Class OtherOrderServices
@@ -315,7 +318,7 @@ class OtherOrderServices extends BaseServices
                 $res1 = true;
                 break;
         }
-        if ($paytype == PayServices::ALIAPY_PAY && isset($other['trade_no'])) {
+        if (isset($other['trade_no']) && $other['trade_no'] !== '') {
             $updata['trade_no'] = $other['trade_no'];
         }
         $updata['paid'] = 1;
@@ -358,8 +361,20 @@ class OtherOrderServices extends BaseServices
         }
 
         $orderInfo['pay_type'] = $paytype;
-        // 小程序订单服务
+        // 小程序订单服务：会员支付完成立即上报虚拟发货
         event('OrderShippingListener', [$type == 'pay_member' ? 'member' : 'offline_scan', $orderInfo, 3, '', '']);
+
+        // 购买会员分账：虚拟发货后按官方 T+2 结算，再请求分账（多留 1 小时缓冲）
+        if ($res && $type === 'pay_member' && $paytype === PayServices::WEIXIN_PAY) {
+            $memberOrderId = (int)$orderInfo['id'];
+            $delaySecs = 2 * 86400 + 3600; // T+2 + 1h
+            if ((int)sys_config('queue_open', 0) === 1 && Env::get('cache.driver', 'file') === 'redis') {
+                ProfitSharingJob::dispatchSecs($delaySecs, 'doJob', [$memberOrderId, 1, 'member']);
+            } else {
+                // 无队列无法做 T+2 延迟，立即调会因未结算失败；仅记日志，待开队列后由重试/补跑处理
+                Log::warning('会员分账需开启 redis 消息队列以按发货后 T+2 延迟执行 order_id=' . ($orderInfo['order_id'] ?? $memberOrderId));
+            }
+        }
         return false !== $res;
     }
 

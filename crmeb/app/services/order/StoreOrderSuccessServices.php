@@ -17,9 +17,7 @@ use app\services\activity\lottery\LuckLotteryServices;
 use app\services\activity\combination\StorePinkServices;
 use app\services\BaseServices;
 use app\services\pay\PayServices;
-use app\jobs\ProfitSharingJob;
 use crmeb\exceptions\ApiException;
-use think\facade\Env;
 
 /**
  * Class StoreOrderSuccessServices
@@ -124,17 +122,6 @@ class StoreOrderSuccessServices extends BaseServices
             'store_name' => $orderInfo['storeName'],
             'add_time' => date('Y-m-d H:i:s', $orderInfo['add_time']),
         ]]);
-
-        // 服务商分账：支付成功后延迟入队（微信资金到账后再请求分账）
-        if ($res1 && $paytype === PayServices::WEIXIN_PAY) {
-            $orderId = (int)$orderInfo['id'];
-            // 仅「开队列 + redis」时延迟入队；否则 dispatchSecs 会静默空跑，表里永远无记录
-            if ((int)sys_config('queue_open', 0) === 1 && Env::get('cache.driver', 'file') === 'redis') {
-                ProfitSharingJob::dispatchSecs(30, 'doJob', [$orderId]);
-            } else {
-                ProfitSharingJob::dispatch('doJob', [$orderId]);
-            }
-        }
 
         $res = $res1 && $resPink;
         return false !== $res;

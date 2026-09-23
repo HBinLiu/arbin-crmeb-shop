@@ -28,4 +28,41 @@ class StoreOrderProfitSharing extends BaseModel
     protected $name = 'store_order_profit_sharing';
 
     protected $updateTime = false;
+
+    /**
+     * @param $query
+     * @param $value
+     */
+    public function searchBizTypeAttr($query, $value)
+    {
+        if ($value !== '' && $value !== null) {
+            $query->where('biz_type', $value);
+        }
+    }
+
+    /**
+     * @param $query
+     * @param $value
+     */
+    public function searchOidAttr($query, $value)
+    {
+        if ($value !== '' && $value !== null) {
+            $query->where('oid', $value);
+        }
+    }
+
+    /**
+     * @param $query
+     * @param $value
+     */
+    public function searchStatusAttr($query, $value)
+    {
+        if ($value !== '' && $value !== null) {
+            if (is_array($value)) {
+                $query->whereIn('status', $value);
+            } else {
+                $query->where('status', $value);
+            }
+        }
+    }
 }

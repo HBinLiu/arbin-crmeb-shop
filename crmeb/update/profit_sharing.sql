@@ -4,6 +4,7 @@
 CREATE TABLE IF NOT EXISTS `eb_store_order_profit_sharing` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `oid` int(11) NOT NULL DEFAULT '0' COMMENT '订单id',
+  `biz_type` varchar(16) NOT NULL DEFAULT 'product' COMMENT '业务类型 product商品/member会员',
   `order_id` varchar(64) NOT NULL DEFAULT '' COMMENT '订单号',
   `trade_no` varchar(64) NOT NULL DEFAULT '' COMMENT '微信支付交易号',
   `sub_mchid` varchar(32) NOT NULL DEFAULT '' COMMENT '特约商户号',

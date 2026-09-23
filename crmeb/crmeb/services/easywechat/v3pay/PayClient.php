@@ -193,8 +193,8 @@ class PayClient extends BaseClient
                 $data['payer']['sub_openid'] = $payer['openid'];
                 $data['sub_appid'] = $appid;
             }
-            //仅商品订单开启分账标记；会员/充值等不打标记，避免冻款却无分账任务
-            if (!empty($this->app['config']['v3_payment']['profit_sharing']) && $attach === 'product') {
+            // 商品订单、购买会员打分账标记（充值等不打，避免冻款无任务）
+            if (!empty($this->app['config']['v3_payment']['profit_sharing']) && in_array($attach, ['product', 'member'], true)) {
                 $data['settle_info'] = ['profit_sharing' => true];
             }
 

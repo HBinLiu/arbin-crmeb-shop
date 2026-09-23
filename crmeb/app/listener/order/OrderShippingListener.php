@@ -72,7 +72,8 @@ class OrderShippingListener implements ListenerInterface
                     $item_desc = '用户购买' . $order['member_type'] . '会员卡';
                     $out_trade_no = $order['order_id'];
                     $pay_uid = $order['uid'];
-                    $secs = 10;
+                    // 支付完成立即上报虚拟发货（资金结算按发货后 T+2）
+                    $secs = 0;
                     $path = '/pages/annex/vip_paid/index';
                 } else {
                     return;
