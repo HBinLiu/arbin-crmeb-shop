@@ -268,8 +268,8 @@ class StoreCouponIssueServices extends BaseServices
         if (!$uid) {
             return ['list' => [], 'spread_time' => 0];
         }
-        $user = app()->make(\app\services\user\UserServices::class)->getUserInfo($uid, 'uid,spread_uid,spread_time');
-        if (!$user || !$this->spreadParentIsPromoter($uid)) {
+        $user = app()->make(\app\services\user\UserServices::class)->getUserInfo($uid, 'uid,spread_uid,spread_time,is_promoter');
+        if (!$user || !$this->canClaimSpreadLimitCoupon($uid)) {
             return ['list' => [], 'spread_time' => 0];
         }
         $list = $this->dao->getSpreadClaimList($uid);
@@ -310,6 +310,24 @@ class StoreCouponIssueServices extends BaseServices
             return false;
         }
         return (bool)$userServices->checkUserPromoter($spreadUid);
+    }
+
+    /**
+     * 「上级为推广员」券：仅被分享人可领
+     * - 已绑定上级，且上级为有分销权限的推广员
+     * - 本人不是推广员（分享人/推广员本人不可领）
+     * @param int $uid
+     * @return bool
+     */
+    public function canClaimSpreadLimitCoupon(int $uid): bool
+    {
+        if (!$uid || !$this->spreadParentIsPromoter($uid)) {
+            return false;
+        }
+        /** @var \app\services\user\UserServices $userServices */
+        $userServices = app()->make(\app\services\user\UserServices::class);
+        // 用库字段 is_promoter，避免人人分销下 checkUserPromoter 把所有人判成推广员
+        return (int)$userServices->value(['uid' => $uid], 'is_promoter') !== 1;
     }
 
     /**
@@ -401,7 +419,7 @@ class StoreCouponIssueServices extends BaseServices
             /** @var StoreCouponIssueUserServices $issueUser */
             $issueUser = app()->make(StoreCouponIssueUserServices::class);
             foreach ($couponList as $item) {
-                if ($this->couponNeedSpreadParent($item) && !$this->spreadParentIsPromoter($uid)) {
+                if ($this->couponNeedSpreadParent($item) && !$this->canClaimSpreadLimitCoupon($uid)) {
                     continue;
                 }
                 $data['cid'] = $item['id'];
@@ -520,9 +538,10 @@ class StoreCouponIssueServices extends BaseServices
         if ($user->is_money_level <= 0 && $issueCouponInfo['receive_type'] == 4) {
             throw new ApiException('请先开通付费会员才能领取会员券');
         }
-        if (!empty($issueCouponInfo['spread_limit']) || (int)($issueCouponInfo['user_type'] ?? 0) === 3) {
-            if (!$this->spreadParentIsPromoter((int)$user['uid'])) {
-                throw new ApiException('上级需为有分销权限的推广员才能领取');
+        $issueCouponArr = is_array($issueCouponInfo) ? $issueCouponInfo : $issueCouponInfo->toArray();
+        if ($this->couponNeedSpreadParent($issueCouponArr)) {
+            if (!$this->canClaimSpreadLimitCoupon((int)$user['uid'])) {
+                throw new ApiException('仅被分享人可领取：需已绑定推广员上级，且本人不是推广员');
             }
         }
         $uid = $user->uid;
@@ -614,10 +633,10 @@ class StoreCouponIssueServices extends BaseServices
         $storeCouponIssueUser = app()->make(StoreCouponIssueUserServices::class);
         if ($this->couponNeedSpreadParent($coupon)) {
             $user = array_values(array_filter($user, function ($uid) {
-                return $this->spreadParentIsPromoter((int)$uid);
+                return $this->canClaimSpreadLimitCoupon((int)$uid);
             }));
             if (!$user) {
-                throw new AdminException('上级需为有分销权限的推广员才能领取');
+                throw new AdminException('仅被分享人可领取：需已绑定推广员上级，且本人不是推广员');
             }
         }
         foreach ($user as $k => $v) {

@@ -377,6 +377,8 @@ class StoreCouponIssueDao extends BaseDao
         return $this->getModel()->where('status', 1)
             ->where('is_del', 0)
             ->where('remain_count > 0 OR is_permanent = 1')
+            // 「上级为推广员」券不走下单自动领，只允许被分享人主动领取
+            ->where('spread_limit', 0)
             ->where(function ($query) use ($isMember) {
                 if ($isMember) {
                     $query->where('receive_type', 1)->whereOr('receive_type', 4);
@@ -452,17 +454,23 @@ class StoreCouponIssueDao extends BaseDao
     }
 
     /**
-     * 未绑定上级时不展示「仅绑定可领」的券
+     * 未满足「被分享人」条件时不展示「上级为推广员」限制券
      * @param \think\db\Query $query
      * @param int $uid
      */
     protected function spreadLimitWhere($query, int $uid)
     {
-        $spreadUid = $uid ? (int)\think\facade\Db::name('user')->where('uid', $uid)->value('spread_uid') : 0;
-        $hasPromoter = $spreadUid && app()->make(\app\services\user\UserServices::class)->checkUserPromoter($spreadUid);
-        $query->where(function ($q) use ($hasPromoter) {
+        $canClaim = false;
+        if ($uid) {
+            $user = \think\facade\Db::name('user')->where('uid', $uid)->field('spread_uid,is_promoter')->find();
+            // 推广员本人（分享人）不可见；仅下级且上级为推广员可见
+            if ($user && (int)($user['is_promoter'] ?? 0) !== 1 && !empty($user['spread_uid'])) {
+                $canClaim = app()->make(\app\services\user\UserServices::class)->checkUserPromoter((int)$user['spread_uid']);
+            }
+        }
+        $query->where(function ($q) use ($canClaim) {
             $q->where('spread_limit', 0);
-            if ($hasPromoter) {
+            if ($canClaim) {
                 $q->whereOr('spread_limit', 1);
             }
         });

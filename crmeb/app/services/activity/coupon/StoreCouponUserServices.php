@@ -515,6 +515,10 @@ class StoreCouponUserServices extends BaseServices
             }
         }
         if ($canReceiveCoupon) {
+            // 「上级为推广员」券禁止下单自动领，只允许被分享人主动领取
+            if (app()->make(StoreCouponIssueServices::class)->couponNeedSpreadParent($canReceiveCoupon)) {
+                return true;
+            }
             $data = [];
             $issueData = [];
             /** @var StoreCouponIssueUserServices $storeCouponIssueUser */
@@ -523,6 +527,8 @@ class StoreCouponUserServices extends BaseServices
             $data['uid'] = $uid;
             $data['coupon_title'] = $canReceiveCoupon['title'];
             $data['coupon_price'] = $canReceiveCoupon['coupon_price'];
+            // 折扣券必须写入；缺省会落成满减，8 折的 80 会被展示成 80 元
+            $data['coupon_type'] = (int)($canReceiveCoupon['coupon_type'] ?? 1) === 2 ? 2 : 1;
             $data['use_min_price'] = $canReceiveCoupon['use_min_price'];
             $data['add_time'] = time();
             if ($canReceiveCoupon['coupon_time']) {
