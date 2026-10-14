@@ -156,6 +156,18 @@ class PosterServices
         $color = imagecolorallocate($imageRes, 0, 0, 0);
         imagefill($imageRes, 0, 0, $color);
         imagecopyresampled($imageRes, $background, 0, 0, 0, 0, imagesx($background), imagesy($background), imagesx($background), imagesy($background));
+        // 可选纯色矩形（用于盖住底图白区文案）
+        if (!empty($config['rect'])) {
+            foreach ($config['rect'] as $val) {
+                $rgb = array_map('intval', explode(',', $val['color'] ?? '255,255,255'));
+                $rectColor = imagecolorallocate($imageRes, $rgb[0] ?? 255, $rgb[1] ?? 255, $rgb[2] ?? 255);
+                $left = (int)($val['left'] ?? 0);
+                $top = (int)($val['top'] ?? 0);
+                $right = $left + (int)($val['width'] ?? 0);
+                $bottom = $top + (int)($val['height'] ?? 0);
+                imagefilledrectangle($imageRes, $left, $top, $right, $bottom, $rectColor);
+            }
+        }
         if (!empty($config['image'])) {
             foreach ($config['image'] as $key => $val) {
                 $val = array_merge($imageDefault, $val);
@@ -311,8 +323,8 @@ class PosterServices
     }
 
     /**
-     * 分销海报合成配置：小程序码居中放入底部白区，不绘制昵称/邀请文案
-     * 设计稿基准 600x1000，白区约 left=238 top=736 size=125
+     * 分销海报合成配置：白区盖住底图文案后居中放小程序码，不绘制昵称/邀请文案
+     * 设计稿基准 600x1000，白框约 left=114 top=736 size=247x167
      * @param string $qrUrl
      * @param string $background
      * @return array
@@ -333,10 +345,23 @@ class PosterServices
                 $bh = (int)$info[1];
             }
         }
-        $qrLeft = (int)round($bw * 238 / 600);
-        $qrTop = (int)round($bh * 736 / 1000);
-        $qrSize = (int)round($bw * 125 / 600);
+        $boxLeft = (int)round($bw * 114 / 600);
+        $boxTop = (int)round($bh * 736 / 1000);
+        $boxW = (int)round($bw * 247 / 600);
+        $boxH = (int)round($bh * 167 / 1000);
+        $qrSize = (int)round(min($boxW, $boxH) * 0.82);
+        $qrLeft = $boxLeft + (int)round(($boxW - $qrSize) / 2);
+        $qrTop = $boxTop + (int)round(($boxH - $qrSize) / 2);
         return [
+            'rect' => [
+                [
+                    'left' => $boxLeft,
+                    'top' => $boxTop,
+                    'width' => $boxW,
+                    'height' => $boxH,
+                    'color' => '255,255,255',
+                ],
+            ],
             'image' => [
                 [
                     'url' => $qrUrl,

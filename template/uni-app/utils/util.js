@@ -453,17 +453,18 @@ export default {
         ctx.fillStyle = "#fff";
         ctx.fillRect(0, 0, w, h);
         ctx.drawImage(arr2[1], 0, 0, w, h);
-        // 二维码放入海报底部白色区域（按 600x1000 设计稿比例），不绘制昵称/邀请文案
-        let codex = 238 / 600;
-        let codey = 736 / 1000;
-        let codeSize = 125 / 600;
-        ctx.drawImage(
-          arr2[0],
-          w * codex,
-          h * codey,
-          w * codeSize,
-          w * codeSize
-        );
+        // 白区盖住底图昵称/邀请等文案，再居中放小程序码（不绘制昵称、邀请加入）
+        // 设计稿 600x1000，底部白框约 left=114 top=736 size=247x167
+        const boxX = w * (114 / 600);
+        const boxY = h * (736 / 1000);
+        const boxW = w * (247 / 600);
+        const boxH = h * (167 / 1000);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(boxX, boxY, boxW, boxH);
+        const codeSize = Math.min(boxW, boxH) * 0.82;
+        const codeX = boxX + (boxW - codeSize) / 2;
+        const codeY = boxY + (boxH - codeSize) / 2;
+        ctx.drawImage(arr2[0], codeX, codeY, codeSize, codeSize);
         ctx.save();
         ctx.draw(true, function () {
           uni.canvasToTempFilePath({
