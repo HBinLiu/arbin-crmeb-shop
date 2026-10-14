@@ -220,7 +220,7 @@ class UserLevelServices extends BaseServices
         $field[] = Form::input('name', '等级名称', isset($vipInfo) ? $vipInfo->name : '')->maxlength(10)->col(24)->required();
         $field[] = Form::number('grade', '等级', isset($vipInfo) ? $vipInfo->grade : 0)->min(0)->precision(0)->required();
         $field[] = Form::number('discount', '享受折扣', isset($vipInfo) ? $vipInfo->discount : 100)->min(0)->max(100)->placeholder('输入折扣数100，代表原价，90代表9折')->required();
-        $field[] = Form::number('exp_num', '解锁经验值', isset($vipInfo) ? $vipInfo->exp_num : 0)->min(0)->precision(0)->required();
+        $field[] = Form::number('exp_num', '解锁经验值', isset($vipInfo) ? $vipInfo->exp_num : 0)->min(0)->precision(0)->placeholder('填 0 表示注册即可解锁该等级')->required();
         $field[] = Form::frameImage('icon', '图标', Url::buildUrl(config('app.admin_prefix', 'admin') . '/widget.images/index', array('fodder' => 'icon')), isset($vipInfo) ? $vipInfo->icon : '')->icon('el-icon-picture-outline')->width('950px')->height('560px')->props(['footer' => false]);
         $field[] = Form::frameImage('image', '用户等级背景', Url::buildUrl(config('app.admin_prefix', 'admin') . '/widget.images/index', array('fodder' => 'image')), isset($vipInfo) ? $vipInfo->image : '')->icon('el-icon-picture-outline')->width('950px')->height('560px')->props(['footer' => false]);
         $field[] = Form::radio('is_show', '是否显示', isset($vipInfo) ? $vipInfo->is_show : 0)->options([['label' => '显示', 'value' => 1], ['label' => '隐藏', 'value' => 0]])->col(24);

@@ -633,7 +633,13 @@ export default {
         memberStyleConfig: {
           title: '会员样式',
           tabVal: 0,
-          tabList: [{ name: '样式一' }, { name: '样式二' }, { name: '样式三' }, { name: '样式四' }],
+          tabList: [
+            { name: '样式一' },
+            { name: '样式二' },
+            { name: '样式三' },
+            { name: '样式四' },
+            { name: '不显示' },
+          ],
         },
         menuConfig: {
           title: '最多可添加2张图片，建议宽度40 * 40px',

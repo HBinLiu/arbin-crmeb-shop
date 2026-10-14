@@ -99,6 +99,7 @@ class StoreCouponIssueServices extends BaseServices
                 'status' => $data['status'],
                 'user_type' => (int)($data['user_type'] ?? 1) === 3 ? 3 : ((int)($data['user_type'] ?? 1) === 2 ? 2 : 1),
                 'spread_limit' => (int)($data['user_type'] ?? 1) === 3 ? 1 : 0,
+                'mutex_level' => (int)($data['mutex_level'] ?? 0) === 1 ? 1 : 0,
             ]);
             if (!$res) throw new AdminException('修改失败');
             return (int)$data['id'];
@@ -160,6 +161,7 @@ class StoreCouponIssueServices extends BaseServices
 
         $data['title'] = $data['coupon_title'];
         $data['remain_count'] = $data['total_count'];
+        $data['mutex_level'] = (int)($data['mutex_level'] ?? 0) === 1 ? 1 : 0;
         $data['coupon_type'] = (int)($data['coupon_type'] ?? 1) === 2 ? 2 : 1;
         if ($data['coupon_type'] === 2) {
             $zhe = (float)$data['coupon_price'];

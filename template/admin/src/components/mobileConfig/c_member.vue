@@ -223,7 +223,7 @@ export default {
             configNme: 'assetConfig',
           });
         }
-        // Member Style 1 (Index 0)
+        // Member Style 1 (Index 0)；Index 4 = 不显示，不展示开通会员相关配置
         if (this.configObj.memberStyleConfig.tabVal == 0) {
           tempArr.push({
             components: toolCom.c_menu_list,
@@ -339,7 +339,12 @@ export default {
           },
         ];
         const memberStyleIndex = styleArr.findIndex((item) => item.configNme === 'memberStyleText');
-        if (this.configObj.memberStyleConfig.tabVal !== 2 && this.configObj.memberStyleConfig.tabVal !== 3) {
+        // 样式四用独立背景；「不显示」无需会员背景色
+        if (
+          this.configObj.memberStyleConfig.tabVal !== 2 &&
+          this.configObj.memberStyleConfig.tabVal !== 3 &&
+          this.configObj.memberStyleConfig.tabVal !== 4
+        ) {
           styleArr.splice(memberStyleIndex + 1, 0, {
             components: toolCom.c_bg_color,
             configNme: 'cardBgColor',
@@ -566,8 +571,25 @@ export default {
         this.$set(data, 'memberStyleConfig', {
           title: '会员样式',
           tabVal: 0,
-          tabList: [{ name: '样式一' }, { name: '样式二' }, { name: '样式三' }, { name: '样式四' }],
+          tabList: [
+            { name: '样式一' },
+            { name: '样式二' },
+            { name: '样式三' },
+            { name: '样式四' },
+            { name: '不显示' },
+          ],
         });
+      } else if (
+        data.memberStyleConfig.tabList &&
+        data.memberStyleConfig.tabList.length < 5
+      ) {
+        data.memberStyleConfig.tabList = [
+          { name: '样式一' },
+          { name: '样式二' },
+          { name: '样式三' },
+          { name: '样式四' },
+          { name: '不显示' },
+        ];
       }
       if (!data.iconStyleConfig) {
         this.$set(data, 'iconStyleConfig', {

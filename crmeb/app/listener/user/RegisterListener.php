@@ -14,6 +14,7 @@ namespace app\listener\user;
 use app\jobs\AgentJob;
 use app\services\activity\coupon\StoreCouponIssueServices;
 use app\services\user\UserBillServices;
+use app\services\user\UserLevelServices;
 use app\services\user\UserServices;
 use app\services\user\UserSpreadServices;
 use crmeb\interfaces\ListenerInterface;
@@ -67,6 +68,12 @@ class RegisterListener implements ListenerInterface
             /**@var StoreCouponIssueServices $storeCoupon */
             $storeCoupon = app()->make(StoreCouponIssueServices::class);
             $storeCoupon->userFirstSubGiveCoupon((int)$uid);
+
+            // 按解锁经验赋等级：新用户经验一般为 0，只会挂上 exp_num<=当前经验 的等级（如默认 88 折等级填 0）
+            try {
+                app()->make(UserLevelServices::class)->detection((int)$uid);
+            } catch (\Throwable $e) {
+            }
 
             //人人分销开启推广权限
             if (sys_config('brokerage_func_status') && sys_config('store_brokerage_statu') == 2) {

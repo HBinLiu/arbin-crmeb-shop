@@ -309,4 +309,49 @@ class PosterServices
         }
         return $pids;
     }
+
+    /**
+     * 分销海报合成配置：小程序码居中放入底部白区，不绘制昵称/邀请文案
+     * 设计稿基准 600x1000，白区约 left=238 top=736 size=125
+     * @param string $qrUrl
+     * @param string $background
+     * @return array
+     */
+    public static function getSpreadPosterConfig(string $qrUrl, string $background): array
+    {
+        $bw = 600;
+        $bh = 1000;
+        $bg = $background;
+        if ($bg && substr($bg, 0, 1) === '/') {
+            $bg = substr($bg, 1);
+        }
+        $bgHttp = $bg ? str_replace('https://', 'http://', $bg) : '';
+        if ($bgHttp) {
+            $info = @getimagesize($bgHttp);
+            if ($info && !empty($info[0]) && !empty($info[1])) {
+                $bw = (int)$info[0];
+                $bh = (int)$info[1];
+            }
+        }
+        $qrLeft = (int)round($bw * 238 / 600);
+        $qrTop = (int)round($bh * 736 / 1000);
+        $qrSize = (int)round($bw * 125 / 600);
+        return [
+            'image' => [
+                [
+                    'url' => $qrUrl,
+                    'stream' => 0,
+                    'left' => $qrLeft,
+                    'top' => $qrTop,
+                    'right' => 0,
+                    'bottom' => 0,
+                    'width' => $qrSize,
+                    'height' => $qrSize,
+                    'opacity' => 100,
+                ],
+            ],
+            'text' => [],
+            'background' => $background,
+        ];
+    }
 }

@@ -1557,6 +1557,7 @@ class UserServices extends BaseServices
         }
         $user['yesterDay'] = $frozenPrices->getUsersBokerageSum(['uid' => $uid, 'pm' => 1], 'yesterday');
         $user['recharge_switch'] = (int)sys_config('recharge_switch');//充值开关
+        $user['integral_open'] = (int)sys_config('integral_func_status', 1) === 1;//积分功能开关
         $user['adminid'] = $storeService->checkoutIsService(['uid' => $uid, 'status' => 1, 'customer' => 1]);
         if ($user['phone'] && $user['user_type'] != 'h5') {
             $user['switchUserInfo'][] = $userInfo;

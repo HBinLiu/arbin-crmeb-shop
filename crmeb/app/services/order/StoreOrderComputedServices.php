@@ -112,8 +112,11 @@ class StoreOrderComputedServices extends BaseServices
         $bargainId = $this->paramData['bargainId'] ?? 0;
         $isActivity = $combinationId || $seckillId || $bargainId;
         if (!$isActivity) {
-            //使用优惠劵
-            [$payPrice, $couponPrice] = $this->useCouponId($couponId, $uid, $cartInfo, $payPrice, $isCreate);
+            //使用优惠劵（互斥券会还原其他优惠，并禁用积分抵扣）
+            [$payPrice, $couponPrice, $mutexDiscount] = $this->useCouponId($couponId, $uid, $cartInfo, $payPrice, $isCreate);
+            if ($mutexDiscount) {
+                $useIntegral = false;
+            }
             //使用积分
             [$payPrice, $deductionPrice, $usedIntegral, $SurplusIntegral] = $this->useIntegral($useIntegral, $userInfo, $payPrice, $other);
         }
@@ -153,6 +156,7 @@ class StoreOrderComputedServices extends BaseServices
     {
         //使用优惠劵
         $res1 = true;
+        $mutexDiscount = false;
         if ($couponId) {
             /** @var StoreCouponUserServices $couponServices */
             $couponServices = app()->make(StoreCouponUserServices::class);
@@ -161,6 +165,20 @@ class StoreOrderComputedServices extends BaseServices
                 throw new ApiException('选择的优惠劵无效');
             }
             $type = $couponInfo['applicable_type'] ?? 0;
+            $mutexDiscount = (int)($couponInfo['mutex_level'] ?? 0) === 1;
+            // 互斥：还原等级折/会员价等，按商品原价计券，且不可再叠积分
+            if ($mutexDiscount) {
+                $discountSaved = '0';
+                foreach ($cartInfo as $cart) {
+                    $originUnit = $this->cartUnitPriceForCoupon($cart, true);
+                    $curTotal = bcmul((string)($cart['truePrice'] ?? 0), (string)$cart['cart_num'], 2);
+                    $originTotal = bcmul($originUnit, (string)$cart['cart_num'], 2);
+                    if (bccomp($originTotal, $curTotal, 2) > 0) {
+                        $discountSaved = bcadd($discountSaved, bcsub($originTotal, $curTotal, 2), 2);
+                    }
+                }
+                $payPrice = (float)bcadd((string)$payPrice, $discountSaved, 2);
+            }
             $flag = false;
             $price = 0;
             $count = 0;
@@ -168,7 +186,8 @@ class StoreOrderComputedServices extends BaseServices
                 case 0:
                 case 3:
                     foreach ($cartInfo as $cart) {
-                        $price = bcadd($price, bcmul((string)$cart['truePrice'], (string)$cart['cart_num'], 2), 2);
+                        $unit = $this->cartUnitPriceForCoupon($cart, $mutexDiscount);
+                        $price = bcadd($price, bcmul($unit, (string)$cart['cart_num'], 2), 2);
                         $count++;
                     }
                     break;
@@ -181,7 +200,8 @@ class StoreOrderComputedServices extends BaseServices
                         $cateIds = array_column($category_ids, 'id');
                         foreach ($cartInfo as $cart) {
                             if (isset($cart['productInfo']['cate_id']) && array_intersect(explode(',', $cart['productInfo']['cate_id']), $cateIds)) {
-                                $price = bcadd($price, bcmul((string)$cart['truePrice'], (string)$cart['cart_num'], 2), 2);
+                                $unit = $this->cartUnitPriceForCoupon($cart, $mutexDiscount);
+                                $price = bcadd($price, bcmul($unit, (string)$cart['cart_num'], 2), 2);
                                 $count++;
                             }
                         }
@@ -190,7 +210,8 @@ class StoreOrderComputedServices extends BaseServices
                 case 2:
                     foreach ($cartInfo as $cart) {
                         if (isset($cart['product_id']) && in_array($cart['product_id'], explode(',', $couponInfo['product_id']))) {
-                            $price = bcadd($price, bcmul((string)$cart['truePrice'], (string)$cart['cart_num'], 2), 2);
+                            $unit = $this->cartUnitPriceForCoupon($cart, $mutexDiscount);
+                            $price = bcadd($price, bcmul($unit, (string)$cart['cart_num'], 2), 2);
                             $count++;
                         }
                     }
@@ -217,7 +238,30 @@ class StoreOrderComputedServices extends BaseServices
         if (!$res1) {
             throw new ApiException('使用优惠劵失败');
         }
-        return [$payPrice, $couponPrice];
+        return [$payPrice, $couponPrice, $mutexDiscount];
+    }
+
+    /**
+     * 计券用单价；互斥时取商品原价（不叠等级折/会员价等）
+     * @param array $cart
+     * @param bool $mutexDiscount
+     * @return string
+     */
+    protected function cartUnitPriceForCoupon(array $cart, bool $mutexDiscount): string
+    {
+        $true = (string)($cart['truePrice'] ?? 0);
+        if (!$mutexDiscount) {
+            return $true;
+        }
+        $origin = $cart['productInfo']['attrInfo']['price'] ?? ($cart['productInfo']['price'] ?? null);
+        if ($origin !== null && $origin !== '') {
+            return (string)$origin;
+        }
+        $vip = (string)($cart['vip_truePrice'] ?? 0);
+        if (bccomp($vip, '0', 2) > 0) {
+            return bcadd($true, $vip, 2);
+        }
+        return $true;
     }
 
     /**
@@ -236,7 +280,7 @@ class StoreOrderComputedServices extends BaseServices
         $usable = bcsub((string)$userInfo['integral'], (string)$userBillServices->getBillSum(['uid' => $userInfo['uid'], 'is_frozen' => 1]), 0);
 
         $SurplusIntegral = $usable;
-        if ($useIntegral && $userInfo['integral'] > 0 && $other['integralRatio'] > 0) {
+        if ($useIntegral && (int)sys_config('integral_func_status', 1) === 1 && $userInfo['integral'] > 0 && $other['integralRatio'] > 0) {
             //积分抵扣上限
             $integralMaxNum = sys_config('integral_max_num', 200);
             if ($integralMaxNum > 0 && $usable > $integralMaxNum) {

@@ -77,6 +77,16 @@
             <!--                        <el-radio :label="3">会员券</el-radio>-->
           </el-radio-group>
         </el-form-item>
+        <el-form-item label="与其他优惠：">
+          <el-radio-group v-model="formData.mutex_level">
+            <el-radio :label="0">可叠加</el-radio>
+            <el-radio :label="1">互斥</el-radio>
+          </el-radio-group>
+          <div class="tip">
+            可叠加：可与用户等级折扣、付费会员价、积分抵扣等一起用；<br />
+            互斥：使用本券时不能再享等级折/会员价/积分抵扣等，按商品原价计算本券。
+          </div>
+        </el-form-item>
         <el-form-item v-show="formData.type === 2">
           <template>
             <div class="acea-row">
@@ -266,6 +276,7 @@ export default {
         category_id: 0,
         receive_limit: 1,
         spread_limit: 0,
+        mutex_level: 0,
         coupon_type: 1,
       },
       categoryList: [],
@@ -330,6 +341,7 @@ export default {
           this.formData.sort = data.sort;
           this.formData.receive_limit = data.receive_limit;
           this.formData.spread_limit = data.spread_limit ? 1 : 0;
+          this.formData.mutex_level = data.mutex_level == 1 ? 1 : 0;
           if ('productInfo' in data) {
             this.productList = data.productInfo;
           }

@@ -53,31 +53,10 @@
 						<view class='iconfont icon-s-chongzhijilu'></view>
 						<view>{{$t(`充值记录`)}}</view>
 					</navigator>
-					<navigator class='item' hover-class='none' url='/pages/users/user_integral/index'>
+					<navigator class='item' hover-class='none' url='/pages/users/user_integral/index'
+						v-if="integral_open">
 						<view class='iconfont icon-jifenzhongxin'></view>
 						<view>{{$t(`积分中心`)}}</view>
-					</navigator>
-				</view>
-				<view class='advert acea-row row-between-wrapper'>
-					<navigator class='item acea-row row-between-wrapper' hover-class='none'
-						url='/pages/users/user_sgin/index'>
-						<view class='text'>
-							<view class='name'>{{$t(`签到领积分`)}}</view>
-							<view>{{$t(`赚积分抵现金`)}}</view>
-						</view>
-						<view class='pictrue'>
-							<image src='../static/gift.png'></image>
-						</view>
-					</navigator>
-					<navigator class='item on acea-row row-between-wrapper' hover-class='none'
-						url='/pages/users/user_get_coupon/index'>
-						<view class='text'>
-							<view class='name'>{{$t(`领取优惠券`)}}</view>
-							<view>{{$t(`满减享优惠`)}}</view>
-						</view>
-						<view class='pictrue'>
-							<image src='../static/money.png'></image>
-						</view>
 					</navigator>
 				</view>
 				<view class='list'>
@@ -168,6 +147,7 @@
 				hostProduct: [],
 				isClose: false,
 				recharge_switch: 0,
+				integral_open: false,
 				activity: {},
 				isAuto: false, //没有授权的不会自动授权
 				isShowAuth: false, //是否隐藏授权
@@ -231,6 +211,7 @@
 				getUserInfo().then(res => {
 					that.$set(that, 'userInfo', res.data);
 					that.recharge_switch = res.data.recharge_switch;
+					that.integral_open = !!res.data.integral_open;
 				});
 			},
 			/**

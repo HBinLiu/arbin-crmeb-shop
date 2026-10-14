@@ -70,7 +70,14 @@ class UserLevel extends AuthController
         if (!$data['grade']) return app('json')->fail('请输入等级');
         if (!$data['icon']) return app('json')->fail('请上传等级图标');
         if (!$data['image']) return app('json')->fail('请上传等级背景图标');
-        if (!$data['exp_num']) return app('json')->fail('请输入升级经验值');
+        // 允许 0：注册用户经验为 0 即可解锁（作默认等级）
+        if ($data['exp_num'] === '' || $data['exp_num'] === null) {
+            return app('json')->fail('请输入升级经验值');
+        }
+        $data['exp_num'] = (int)$data['exp_num'];
+        if ($data['exp_num'] < 0) {
+            return app('json')->fail('升级经验值不能小于0');
+        }
         $this->services->save((int)$data['id'], $data);
         return app('json')->success('保存成功');
     }

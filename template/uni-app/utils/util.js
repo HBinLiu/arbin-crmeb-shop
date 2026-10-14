@@ -453,18 +453,10 @@ export default {
         ctx.fillStyle = "#fff";
         ctx.fillRect(0, 0, w, h);
         ctx.drawImage(arr2[1], 0, 0, w, h);
-        ctx.setTextAlign("left");
-        ctx.setFontSize(12);
-        ctx.setFillStyle("#333");
-
-        // x:240 y:426
-        let codex = 0.1906;
-        let codey = 0.7746;
-        let codeSize = 0.21666;
-        let namex = 0.4283;
-        let namey = 0.8215;
-        let markx = 0.4283;
-        let marky = 0.8685;
+        // 二维码放入海报底部白色区域（按 600x1000 设计稿比例），不绘制昵称/邀请文案
+        let codex = 238 / 600;
+        let codey = 736 / 1000;
+        let codeSize = 125 / 600;
         ctx.drawImage(
           arr2[0],
           w * codex,
@@ -472,18 +464,6 @@ export default {
           w * codeSize,
           w * codeSize
         );
-        if (w < 270) {
-          ctx.setFontSize(8);
-        } else {
-          ctx.setFontSize(10);
-        }
-        ctx.fillText(nickname, w * namex, h * namey);
-        if (w < 270) {
-          ctx.setFontSize(8);
-        } else {
-          ctx.setFontSize(10);
-        }
-        ctx.fillText(i18n.t(`邀请您加入`) + sitename, w * markx, h * marky);
         ctx.save();
         ctx.draw(true, function () {
           uni.canvasToTempFilePath({

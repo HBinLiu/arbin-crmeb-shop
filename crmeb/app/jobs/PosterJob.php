@@ -42,7 +42,6 @@ class PosterJob extends BaseJobs
         /** @var QrcodeServices $qrcodeService */
         $qrcodeService = app()->make(QrcodeServices::class);
 
-        $rootPath = app()->getRootPath();
         try {
             $resRoutine          = true;//小程序
             $resWap              = true;//公众号
@@ -92,52 +91,11 @@ class PosterJob extends BaseJobs
                 $urlCode_wap = $imageInfo_wap['dir'];
             } else $urlCode_wap = $imageInfo_wap['att_dir'];
             if ($imageInfo_wap['image_type'] == 1) $urlCode_wap = $siteUrl . $urlCode_wap;
-            $siteUrl  = set_http_type($siteUrl, $isSsl ? 0 : 1);
-            $filelink = [
-                'Bold'   => 'public\statics\font\Alibaba-PuHuiTi-Regular.otf',
-                'Normal' => 'public\statics\font\Alibaba-PuHuiTi-Regular.otf',
-            ];
-            if (!file_exists($filelink['Bold'])) return false;
-            if (!file_exists($filelink['Normal'])) return false;
+            $siteUrl = set_http_type($siteUrl, $isSsl ? 0 : 1);
             foreach ($routineSpreadBanner as $key => &$item) {
                 $posterInfo_routine = '海报生成失败:(';
-                $config             = array(
-                    'image'      => array(
-                        array(
-                            'url'     => $urlCode_routine,     //二维码资源
-                            'stream'  => 0,
-                            'left'    => 114,
-                            'top'     => 790,
-                            'right'   => 0,
-                            'bottom'  => 0,
-                            'width'   => 120,
-                            'height'  => 120,
-                            'opacity' => 100
-                        )
-                    ),
-                    'text'       => array(
-                        array(
-                            'text'      => $user['nickname'],
-                            'left'      => 250,
-                            'top'       => 840,
-                            'fontPath'  => $rootPath . $filelink['Bold'],     //字体文件
-                            'fontSize'  => 16,             //字号
-                            'fontColor' => '40,40,40',       //字体颜色
-                            'angle'     => 0,
-                        ),
-                        array(
-                            'text'      => '邀请您加入' . sys_config('site_name'),
-                            'left'      => 250,
-                            'top'       => 880,
-                            'fontPath'  => $rootPath . $filelink['Normal'],     //字体文件
-                            'fontSize'  => 16,             //字号
-                            'fontColor' => '40,40,40',       //字体颜色
-                            'angle'     => 0,
-                        )
-                    ),
-                    'background' => $item['pic']
-                );
-                $resRoutine         = $resRoutine && $posterInfo_routine = PosterServices::setSharePoster($config, 'routine/spread/poster', $user['uid'] . '_' . $user['is_promoter'] . '_user_routine_poster_' . $key . '.jpg');
+                $config             = PosterServices::getSpreadPosterConfig($urlCode_routine, $item['pic']);
+                $resRoutine         = $resRoutine && $posterInfo_routine = PosterServices::setSharePoster($config, 'routine/spread/poster', $user['uid'] . '_' . $user['is_promoter'] . '_user_routine_poster_v2_' . $key . '.jpg');
                 if (!is_array($posterInfo_routine)) return false;
                 $attachment->attachmentAdd($posterInfo_routine['name'], $posterInfo_routine['size'], $posterInfo_routine['type'], $posterInfo_routine['dir'], $posterInfo_routine['thumb_path'], 1, $posterInfo_routine['image_type'], $posterInfo_routine['time'], 2);
                 if ($resRoutine) {
@@ -150,43 +108,8 @@ class PosterJob extends BaseJobs
             }
             foreach ($routineSpreadBanner as $key => &$item) {
                 $posterInfo_wap = '海报生成失败:(';
-                $config         = array(
-                    'image'      => array(
-                        array(
-                            'url'     => $urlCode_wap,     //二维码资源
-                            'stream'  => 0,
-                            'left'    => 114,
-                            'top'     => 790,
-                            'right'   => 0,
-                            'bottom'  => 0,
-                            'width'   => 120,
-                            'height'  => 120,
-                            'opacity' => 100
-                        )
-                    ),
-                    'text'       => array(
-                        array(
-                            'text'      => $user['nickname'],
-                            'left'      => 250,
-                            'top'       => 840,
-                            'fontPath'  => $rootPath . $filelink['Bold'],     //字体文件
-                            'fontSize'  => 16,             //字号
-                            'fontColor' => '40,40,40',       //字体颜色
-                            'angle'     => 0,
-                        ),
-                        array(
-                            'text'      => '邀请您加入' . sys_config('site_name'),
-                            'left'      => 250,
-                            'top'       => 880,
-                            'fontPath'  => $rootPath . $filelink['Normal'],     //字体文件
-                            'fontSize'  => 16,             //字号
-                            'fontColor' => '40,40,40',       //字体颜色
-                            'angle'     => 0,
-                        )
-                    ),
-                    'background' => $item['pic']
-                );
-                $resWap         = $resWap && $posterInfo_wap = PosterServices::setSharePoster($config, 'wap/spread/poster', $user['uid'] . '_' . $user['is_promoter'] . '_user_wap_poster_' . $key . '.jpg');
+                $config         = PosterServices::getSpreadPosterConfig($urlCode_wap, $item['pic']);
+                $resWap         = $resWap && $posterInfo_wap = PosterServices::setSharePoster($config, 'wap/spread/poster', $user['uid'] . '_' . $user['is_promoter'] . '_user_wap_poster_v2_' . $key . '.jpg');
                 if (!is_array($posterInfo_wap)) return false;
                 $attachment->attachmentAdd($posterInfo_wap['name'], $posterInfo_wap['size'], $posterInfo_wap['type'], $posterInfo_wap['dir'], $posterInfo_wap['thumb_path'], 1, $posterInfo_wap['image_type'], $posterInfo_wap['time'], 2);
                 if ($resWap) {

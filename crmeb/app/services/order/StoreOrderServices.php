@@ -1778,7 +1778,7 @@ HTML;
         /** @var UserBillServices $userBillServices */
         $userBillServices = app()->make(UserBillServices::class);
         $data['usable_integral'] = bcsub((string)$user['integral'], (string)$userBillServices->getBillSum(['uid' => $user['uid'], 'is_frozen' => 1]), 0);
-        $data['integral_open'] = sys_config('integral_ratio', 0) > 0;
+        $data['integral_open'] = (int)sys_config('integral_func_status', 1) === 1 && sys_config('integral_ratio', 0) > 0;
 
         //自动领取优惠券
         app()->make(StoreCouponUserServices::class)->autoReceiveCoupon($user['uid'], $cartGroup);

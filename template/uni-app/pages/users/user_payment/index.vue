@@ -19,7 +19,7 @@
 						<view class="pic-number-pic">
 							{{ item.price }}<span class="pic-number"> {{$t(`元`)}}</span>
 						</view>
-						<view class="pic-number">{{$t(`赠送`)}}: {{ item.give_money }} {{$t(`元`)}} </view>
+						<view class="pic-number" v-if="Number(item.give_money) > 0">{{$t(`赠送`)}}: {{ item.give_money }} {{$t(`元`)}} </view>
 					</view>
 					<view class="pic-box pic-box-color acea-row row-center-wrapper"
 						:class="activePic == picList.length ? 'pic-box-color-active' : ''" @click="picCharge(picList.length)">

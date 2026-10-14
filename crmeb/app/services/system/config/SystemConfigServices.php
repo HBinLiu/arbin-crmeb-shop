@@ -147,6 +147,15 @@ class SystemConfigServices extends BaseServices
             ],
             'show_value' => 1
         ],
+        'integral_func_status' => [
+            'son_type' => [
+                'integral_ratio' => '',
+                'order_give_integral' => '',
+                'integral_max_num' => '',
+                'integral_frozen' => '',
+            ],
+            'show_value' => 1
+        ],
         'balance_func_status' => [
             'son_type' => [
                 'recharge_attention' => '',

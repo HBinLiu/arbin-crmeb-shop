@@ -734,6 +734,7 @@ class PublicController
         $data['member_func_status'] = sys_config('member_func_status'); //用户等级启用
         $data['balance_func_status'] = sys_config('balance_func_status'); //余额功能启用
         $data['recharge_switch'] = sys_config('recharge_switch'); //小程序充值开关
+        $data['integral_func_status'] = (int)sys_config('integral_func_status', 1); //积分功能开关
         $data['member_card_status'] = sys_config('member_card_status'); //是否开启付费会员
         $data['member_price_status'] = sys_config('member_price_status'); //商品会员折扣价展示启用
         $data['ali_pay_status'] = sys_config('ali_pay_status') != '0'; //支付宝是否启用
