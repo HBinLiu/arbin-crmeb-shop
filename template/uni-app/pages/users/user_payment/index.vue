@@ -585,8 +585,11 @@
 		background-color: #fff;
 		border-radius: 10rpx;
 		padding-top: 1rpx;
+		padding-bottom: 60rpx;
 		border-top-right-radius: 39rpx;
 		border-top-left-radius: 39rpx;
+		border-bottom-right-radius: 39rpx;
+		border-bottom-left-radius: 39rpx;
 	}
 
 	.payment .nav {
@@ -687,10 +690,12 @@
 
 		.pic-box {
 			width: 32%;
-			height: auto;
+			/* 固定高度：含金额行 + 赠送行，无赠送时也占位对齐 */
+			height: 130rpx;
+			box-sizing: border-box;
 			border-radius: 20rpx;
 			margin-top: 21rpx;
-			padding: 20rpx 0;
+			padding: 16rpx 0;
 			margin-right: 12rpx;
 
 			&:nth-child(3n) {
@@ -705,6 +710,8 @@
 
 		.pic-number {
 			font-size: 22rpx;
+			height: 32rpx;
+			line-height: 32rpx;
 		}
 
 		.pic-number-pic {
