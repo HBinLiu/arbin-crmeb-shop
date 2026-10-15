@@ -324,7 +324,7 @@ class PosterServices
 
     /**
      * 分销海报合成配置：角标内正方形白区，放大小程序码，不绘制昵称/邀请文案
-     * 设计稿基准 600x1000，白区 left=200 top=736 side=160
+     * 设计稿基准 600x1000，白区 left=220 top=736 side=160
      * @param string $qrUrl
      * @param string $background
      * @return array
@@ -345,7 +345,7 @@ class PosterServices
                 $bh = (int)$info[1];
             }
         }
-        $boxLeft = (int)round($bw * 200 / 600);
+        $boxLeft = (int)round($bw * 220 / 600);
         $boxTop = (int)round($bh * 736 / 1000);
         $boxW = (int)round($bw * 160 / 600);
         $boxH = (int)round($bh * 160 / 1000);

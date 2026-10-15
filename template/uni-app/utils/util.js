@@ -454,8 +454,8 @@ export default {
         ctx.fillRect(0, 0, w, h);
         ctx.drawImage(arr2[1], 0, 0, w, h);
         // 角标内正方形白区（顶/右对齐），放大小程序码填满，不绘制昵称/邀请
-        // 设计稿 600x1000：left=200 top=736 side=160
-        const boxX = w * (200 / 600);
+        // 设计稿 600x1000：left=220 top=736 side=160
+        const boxX = w * (220 / 600);
         const boxY = h * (736 / 1000);
         const boxW = w * (160 / 600);
         const boxH = h * (160 / 1000);
