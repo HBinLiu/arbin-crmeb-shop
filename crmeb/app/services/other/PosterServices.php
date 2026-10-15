@@ -323,8 +323,8 @@ class PosterServices
     }
 
     /**
-     * 分销海报合成配置：白区盖住底图文案后居中放小程序码，不绘制昵称/邀请文案
-     * 设计稿基准 600x1000，白框约 left=114 top=736 size=247x167
+     * 分销海报合成配置：角标内正方形白区，放大小程序码，不绘制昵称/邀请文案
+     * 设计稿基准 600x1000，白区 left=200 top=736 side=160
      * @param string $qrUrl
      * @param string $background
      * @return array
@@ -345,11 +345,11 @@ class PosterServices
                 $bh = (int)$info[1];
             }
         }
-        $boxLeft = (int)round($bw * 114 / 600);
+        $boxLeft = (int)round($bw * 200 / 600);
         $boxTop = (int)round($bh * 736 / 1000);
-        $boxW = (int)round($bw * 247 / 600);
-        $boxH = (int)round($bh * 167 / 1000);
-        $qrSize = (int)round(min($boxW, $boxH) * 0.82);
+        $boxW = (int)round($bw * 160 / 600);
+        $boxH = (int)round($bh * 160 / 1000);
+        $qrSize = (int)round(min($boxW, $boxH) * 0.92);
         $qrLeft = $boxLeft + (int)round(($boxW - $qrSize) / 2);
         $qrTop = $boxTop + (int)round(($boxH - $qrSize) / 2);
         return [

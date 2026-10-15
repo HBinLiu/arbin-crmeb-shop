@@ -453,15 +453,15 @@ export default {
         ctx.fillStyle = "#fff";
         ctx.fillRect(0, 0, w, h);
         ctx.drawImage(arr2[1], 0, 0, w, h);
-        // 白区盖住底图昵称/邀请等文案，再居中放小程序码（不绘制昵称、邀请加入）
-        // 设计稿 600x1000，底部白框约 left=114 top=736 size=247x167
-        const boxX = w * (114 / 600);
+        // 角标内正方形白区（顶/右对齐），放大小程序码填满，不绘制昵称/邀请
+        // 设计稿 600x1000：left=200 top=736 side=160
+        const boxX = w * (200 / 600);
         const boxY = h * (736 / 1000);
-        const boxW = w * (247 / 600);
-        const boxH = h * (167 / 1000);
+        const boxW = w * (160 / 600);
+        const boxH = h * (160 / 1000);
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(boxX, boxY, boxW, boxH);
-        const codeSize = Math.min(boxW, boxH) * 0.82;
+        const codeSize = Math.min(boxW, boxH) * 0.92;
         const codeX = boxX + (boxW - codeSize) / 2;
         const codeY = boxY + (boxH - codeSize) / 2;
         ctx.drawImage(arr2[0], codeX, codeY, codeSize, codeSize);
